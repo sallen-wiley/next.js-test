@@ -3,6 +3,7 @@
 import {
   Container,
   Typography,
+  Alert,
   Box,
   Button,
   Stack,
@@ -11,7 +12,7 @@ import {
 
 export default function Home() {
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="md">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Material UI - Next.js Example
@@ -27,6 +28,12 @@ export default function Home() {
             <Button variant="outlined" color="secondary">
               Secondary Button
             </Button>
+          </Stack>
+          <Stack sx={{ width: "100%" }} spacing={2}>
+            <Alert severity="success">This is a success Alert.</Alert>
+            <Alert severity="info">This is an info Alert.</Alert>
+            <Alert severity="warning">This is a warning Alert.</Alert>
+            <Alert severity="error">This is an error Alert.</Alert>
           </Stack>
         </Paper>
       </Box>

@@ -4,6 +4,7 @@ import { createTheme as createMuiTheme } from "@mui/material/styles";
 import { createPalette } from "./palette/index";
 import { createTypography } from "./typography";
 import { createComponents } from "./components/index";
+import { breakpoints, spacing } from "./foundations";
 
 import "./types";
 
@@ -13,10 +14,18 @@ export const createTheme = (mode: PaletteMode = "light") => {
   const palette = createPalette(mode);
   const typography = createTypography();
 
+  // Client-customizable shape (border radius can vary per client)
+  const shape = {
+    borderRadius: 1, // Default value, can be overridden by client theme
+  };
+
   // Create base theme
   const baseTheme = createMuiTheme({
     palette,
     typography,
+    breakpoints,
+    spacing,
+    shape, // Client-customizable
     // Add other base configurations here
   });
 
@@ -25,8 +34,7 @@ export const createTheme = (mode: PaletteMode = "light") => {
 
   // Return complete theme
   return createMuiTheme({
-    palette,
-    typography,
+    ...baseTheme,
     components,
     // Other global theme settings
   });
