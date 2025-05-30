@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import { createTheme as createMuiTheme } from '@mui/material/styles';
-import { createPalette } from './palette/index';
-import { createTypography } from './typography';
-import { createComponents } from './components/index';
+import { createTheme as createMuiTheme } from "@mui/material/styles";
+import { createPalette } from "./palette/index";
+import { createTypography } from "./typography";
+import { createComponents } from "./components/index";
 
-import { PaletteMode } from '@mui/material';
+import "./types";
 
-export const createTheme = (mode: PaletteMode = 'light') => {
+import { PaletteMode } from "@mui/material";
+
+export const createTheme = (mode: PaletteMode = "light") => {
   const palette = createPalette(mode);
   const typography = createTypography();
-  
+
   // Create base theme
   const baseTheme = createMuiTheme({
     palette,

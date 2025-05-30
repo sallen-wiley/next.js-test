@@ -1,6 +1,13 @@
-'use client';
+"use client";
 
-import { Container, Typography, Box, Button, Stack, Paper } from '@mui/material';
+import {
+  Container,
+  Typography,
+  Box,
+  Button,
+  Stack,
+  Paper,
+} from "@mui/material";
 
 export default function Home() {
   return (

@@ -1,5 +1,7 @@
 import { PaletteMode } from "@mui/material";
+import { lighten, darken } from "@mui/material/styles";
 import * as colors from "./colors";
+// import * as colors from "@mui/material/colors";
 
 export const createPalette = (mode: PaletteMode) => ({
   mode,
@@ -23,6 +25,24 @@ export const createPalette = (mode: PaletteMode) => ({
   },
   success: {
     main: colors.green[500],
+  },
+  neutral: {
+    main: colors.grey[800],
+    light: lighten(colors.grey[800], 0.1),
+    dark: darken(colors.grey[800], 0.1),
+    contrastText: colors.common.white,
+  },
+  black: {
+    main: colors.common.black,
+    light: lighten(colors.common.black, 0.1),
+    dark: darken(colors.common.black, 0.1),
+    contrastText: colors.common.white,
+  },
+  white: {
+    main: colors.common.white,
+    light: lighten(colors.common.white, 0.1),
+    dark: darken(colors.common.white, 0.1),
+    contrastText: colors.common.black,
   },
   text: {
     primary: colors.common.black,
