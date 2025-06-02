@@ -1,0 +1,8 @@
+{
+  "codeConnect": {
+    "include": ["/**/*.{tsx,jsx}"],
+    "exclude": ["node_modules/**", "dist/**", ".next/**"],
+    "label": "MUI React",
+    "interactiveSetupFigmaFileUrl": "https://www.figma.com/design/3ZH2uUGxYtIItgBpwjz4NC"
+  }
+}
