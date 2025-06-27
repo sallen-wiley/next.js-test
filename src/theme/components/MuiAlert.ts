@@ -1,38 +1,37 @@
 import * as colors from "../palette/colors";
 import { Theme } from "@mui/material/styles";
 
-const MuiAlert = {
-  // Change colors of alerts
+const createMuiAlert = (theme: Theme) => ({
   styleOverrides: {
-    standardSuccess: ({ theme }: { theme: Theme }) => ({
+    standardSuccess: {
       backgroundColor: colors.green[50],
       color: theme.palette.text.primary,
-    }),
-    outlinedSuccess: ({ theme }: { theme: Theme }) => ({
+    },
+    outlinedSuccess: {
       color: theme.palette.success.main,
-    }),
-    standardError: ({ theme }: { theme: Theme }) => ({
+    },
+    standardError: {
       backgroundColor: colors.red[50],
       color: theme.palette.text.primary,
-    }),
-    outlinedError: ({ theme }: { theme: Theme }) => ({
+    },
+    outlinedError: {
       color: theme.palette.error.main,
-    }),
-    standardInfo: ({ theme }: { theme: Theme }) => ({
+    },
+    standardInfo: {
       backgroundColor: colors.blue[50],
       color: theme.palette.text.primary,
-    }),
-    outlinedInfo: ({ theme }: { theme: Theme }) => ({
+    },
+    outlinedInfo: {
       color: theme.palette.info.main,
-    }),
-    standardWarning: ({ theme }: { theme: Theme }) => ({
+    },
+    standardWarning: {
       backgroundColor: colors.orange[50],
       color: theme.palette.text.primary,
-    }),
-    outlinedWarning: ({ theme }: { theme: Theme }) => ({
+    },
+    outlinedWarning: {
       color: theme.palette.warning.main,
-    }),
+    },
   },
-};
+});
 
-export default MuiAlert;
+export default createMuiAlert;

@@ -1,4 +1,4 @@
-// src/figma/Button.figma.tsx
+// src/components/mui/Button.figma.tsx
 import React from "react";
 import { Button } from "@mui/material";
 import figma from "@figma/code-connect";
@@ -40,8 +40,16 @@ figma.connect(
 
       children: figma.string("Label"),
 
-      startIcon: figma.instance("↳ Start Icon"),
-      endIcon: figma.instance("↳ End Icon"),
+      // Use your existing boolean properties to conditionally include icons
+      startIcon: figma.boolean("Start Icon", {
+        true: figma.children("Icon Left"),
+        false: undefined,
+      }),
+
+      endIcon: figma.boolean("End Icon", {
+        true: figma.children("Icon Right"),
+        false: undefined,
+      }),
     },
 
     example: ({
@@ -52,21 +60,6 @@ figma.connect(
       children,
       startIcon,
       endIcon,
-    }: {
-      color:
-        | "inherit"
-        | "primary"
-        | "secondary"
-        | "success"
-        | "error"
-        | "info"
-        | "warning";
-      disabled: boolean;
-      size: "small" | "medium" | "large";
-      variant: "text" | "outlined" | "contained";
-      children: string;
-      startIcon?: React.ReactNode;
-      endIcon?: React.ReactNode;
     }) => (
       <Button
         color={color}

@@ -1,11 +1,11 @@
-import { Theme } from "@mui/material/styles";
 import MuiAlert from "./MuiAlert";
+import MuiChip from "./MuiChip";
+import { MuiButtonBase, MuiButton } from "./MuiButton";
+import { Theme } from "@mui/material/styles";
 
 export const createComponents = (theme: Theme) => ({
-  // Component overrides will go here
-  // For example:
-  // MuiButton: {
-  //   styleOverrides: { ... }
-  // }
-  MuiAlert,
+  MuiAlert: typeof MuiAlert === "function" ? MuiAlert(theme) : MuiAlert,
+  MuiChip: typeof MuiChip === "function" ? MuiChip(theme) : MuiChip,
+  MuiButton,
+  MuiButtonBase,
 });

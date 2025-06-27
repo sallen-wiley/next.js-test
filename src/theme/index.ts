@@ -9,6 +9,7 @@ import { breakpoints, spacing } from "./foundations";
 import "./types";
 
 import { PaletteMode } from "@mui/material";
+// import clientTheme from "./clientTheme";
 
 export const createTheme = (mode: PaletteMode = "light") => {
   const palette = createPalette(mode);
@@ -32,12 +33,14 @@ export const createTheme = (mode: PaletteMode = "light") => {
   // Add component overrides
   const components = createComponents(baseTheme);
 
-  // Return complete theme
-  return createMuiTheme({
-    ...baseTheme,
-    components,
-    // Other global theme settings
-  });
+  // Merge baseTheme with clientTheme
+  return createMuiTheme(
+    {
+      ...baseTheme,
+      components,
+    }
+    // clientTheme // This will override or extend the base theme
+  );
 };
 
 // Default export for immediate use

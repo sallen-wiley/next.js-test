@@ -1,46 +1,34 @@
 "use client";
-
-import {
-  Container,
-  Typography,
-  Alert,
-  Box,
-  Button,
-  Stack,
-  Paper,
-} from "@mui/material";
-import NotificationCenter from "../components/product/NotificationCenter";
+import { Container, Typography, Paper, Stack } from "@mui/material";
+import Grid from "@mui/material/Grid";
+import ArticleCard from "@/components/product/ArticleCardFigma";
 
 export default function Home() {
   return (
     <>
-      <Container maxWidth="md">
-        <Box sx={{ my: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Material UI - Next.js Example
-          </Typography>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="body1" paragraph>
-              This is a simple example of using Material UI with Next.js.
+      <Container maxWidth="lg">
+        <Grid container spacing={4} sx={{ my: 4 }}>
+          <Grid size={12}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Notification and help centre demo
             </Typography>
-            <Stack direction="row" spacing={2}>
-              <Button variant="contained" color="primary">
-                Primary Button
-              </Button>
-              <Button variant="outlined" color="secondary">
-                Secondary Button
-              </Button>
+          </Grid>
+          <Grid size={12}>
+            <Paper elevation={3} sx={{ p: 3 }}>
+              <Typography variant="body1">
+                Look for the notification icon in the top right corner of the
+                screen.
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid size={12}>
+            <Stack direction="column" spacing={4}>
+              <ArticleCard />
+              <ArticleCard />
             </Stack>
-            <Stack sx={{ width: "100%" }} spacing={2}>
-              <Alert severity="success">This is a success Alert.</Alert>
-              <Alert severity="info">This is an info Alert.</Alert>
-              <Alert severity="warning">This is a warning Alert.</Alert>
-              <Alert severity="error">This is an error Alert.</Alert>
-            </Stack>
-          </Paper>
-        </Box>
+          </Grid>
+        </Grid>
       </Container>
-      <NotificationCenter />
     </>
   );
 }

@@ -1,6 +1,6 @@
 {
   "codeConnect": {
-    "include": ["/**/*.{tsx,jsx}"],
+    "include": ["**/*.figma.tsx", "**/*.figma.template.js"],
     "exclude": ["node_modules/**", "dist/**", ".next/**"],
     "label": "MUI React",
     "interactiveSetupFigmaFileUrl": "https://www.figma.com/design/3ZH2uUGxYtIItgBpwjz4NC"
