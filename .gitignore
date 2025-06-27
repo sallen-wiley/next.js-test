@@ -42,3 +42,5 @@ next-env.d.ts
 
 # Piny
 /public/_piny
+*storybook.log
+storybook-static
