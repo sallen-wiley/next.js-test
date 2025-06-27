@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Button } from "@mui/material";
 
 const meta: Meta<typeof Button> = {
-  title: "MUI Components/Button",
+  title: "MUI Components/Inputs/Button",
   component: Button,
   parameters: {
     layout: "centered",
