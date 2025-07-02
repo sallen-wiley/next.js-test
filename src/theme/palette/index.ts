@@ -9,7 +9,7 @@ export const createPalette = (mode: PaletteMode) => ({
   // You can expand this with your custom palette settings
   contrastThreshold: 4.5,
   primary: {
-    main: colors.blue[500],
+    main: colors.cyan[500],
     dark: colors.blue[800],
   },
   secondary: {

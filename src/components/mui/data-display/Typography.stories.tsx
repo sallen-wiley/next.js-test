@@ -481,10 +481,10 @@ export const WileyColors: Story = {
       <Typography variant="h4" gutterBottom color="success">
         Success Color
       </Typography>
-      <Typography variant="body1" gutterBottom color="text.primary">
+      <Typography variant="h4" gutterBottom color="text.primary">
         Primary text color
       </Typography>
-      <Typography variant="body1" color="text.secondary">
+      <Typography variant="h4" color="text.secondary">
         Secondary text color
       </Typography>
     </Box>

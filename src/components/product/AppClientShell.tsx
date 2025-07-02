@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
-import AXHeader from "./AXHeader";
+import PPHeader from "./PPHeader";
 import NotificationCenter from "./NotificationCenter";
 import AppMenuDrawer from "../app/AppMenuDrawer";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import SupportMenuFabMenu from "./SupportMenuFabMenu";
+import SupportMenu from "./SupportMenu";
 
 export default function AppClientShell({
   children,
@@ -25,7 +26,8 @@ export default function AppClientShell({
   return (
     <Box sx={{ width: "100%" }}>
       {/* AppBar/Header - always at the top */}
-      <AXHeader
+      <PPHeader
+        logoAffix="Open Access Dashboard"
         onNotificationClick={() => setNotificationOpen(true)}
         unreadCount={unreadCount}
         onMenuClick={!isDesktop ? () => setDrawerOpen(true) : undefined}
@@ -50,7 +52,7 @@ export default function AppClientShell({
           }}
         >
           {/* Main Content */}
-          <Box component="main" sx={{ flexGrow: 1, p: 3, mt: "80px" }}>
+          <Box component="main" sx={{ flexGrow: 1 }}>
             {children}
           </Box>
           <SupportMenuFabMenu />

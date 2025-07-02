@@ -1,16 +1,6 @@
 "use client";
 import React from "react";
-import {
-  Box,
-  Button,
-  Divider,
-  Typography,
-  IconButton,
-  Badge,
-} from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import AccountCircleIcon from "@mui/icons-material/AccountCircleRounded";
-import MenuIcon from "@mui/icons-material/Menu";
+import { Box, Divider, Typography } from "@mui/material";
 
 function PrimaryLogo({
   primaryLogoAffix = true,
@@ -54,7 +44,7 @@ function PrimaryLogo({
               whiteSpace: "nowrap",
             }}
           >
-            Open Access Dashboard
+            Publishing Platforms
           </Typography>
         </Box>
       )}
@@ -62,15 +52,7 @@ function PrimaryLogo({
   );
 }
 
-export default function AXHeader({
-  onNotificationClick,
-  unreadCount = 0,
-  onMenuClick,
-}: {
-  onNotificationClick: () => void;
-  unreadCount?: number;
-  onMenuClick?: () => void;
-}) {
+export default function AppHeader() {
   return (
     <Box
       sx={{
@@ -106,65 +88,7 @@ export default function AXHeader({
             px: "15px",
           }}
         >
-          {/* Menu button to open drawer */}
-          {onMenuClick && (
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              onClick={onMenuClick}
-              edge="start"
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
           <PrimaryLogo />
-          <Box display="flex" alignItems="center" gap={2}>
-            {/* Show full buttons with icons on lg and xl, icon button on md and below */}
-            <Box
-              sx={{
-                display: { xs: "none", lg: "flex" },
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <Button variant="text" startIcon={<AccountCircleIcon />}>
-                My account
-              </Button>
-              <Badge badgeContent={unreadCount} color="error">
-                <Button
-                  variant="text"
-                  startIcon={<NotificationsIcon sx={{ fontSize: 24 }} />}
-                  onClick={onNotificationClick}
-                  color="primary"
-                  aria-label="Show notifications"
-                  sx={{ position: "relative" }}
-                >
-                  Notifications
-                </Button>
-              </Badge>
-            </Box>
-            <Box
-              sx={{
-                display: { xs: "flex", lg: "none" },
-                alignItems: "center",
-                gap: 2,
-              }}
-            >
-              <IconButton color="primary" aria-label="My account">
-                <AccountCircleIcon />
-              </IconButton>
-              <IconButton
-                color="primary"
-                onClick={onNotificationClick}
-                aria-label="Show notifications"
-              >
-                <Badge badgeContent={unreadCount} color="error">
-                  <NotificationsIcon sx={{ fontSize: 24 }} />
-                </Badge>
-              </IconButton>
-            </Box>
-          </Box>
         </Box>
         <Divider />
       </Box>
