@@ -17,7 +17,7 @@ export const createTheme = (mode: PaletteMode = "light") => {
 
   // Client-customizable shape (border radius can vary per client)
   const shape = {
-    borderRadius: 10, // Default value, can be overridden by client theme
+    borderRadius: 1, // Default value, can be overridden by client theme
   };
 
   // Create base theme

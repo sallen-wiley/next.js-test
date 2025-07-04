@@ -149,6 +149,7 @@ const TypographyLayoutComponent: React.FC<TypographyLayoutProps> = ({
 const meta: Meta<typeof Typography> = {
   title: "MUI Components/Data Display/Typography",
   component: Typography,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
     docs: {

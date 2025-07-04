@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Button } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const meta: Meta<typeof Button> = {
   title: "MUI Components/Inputs/Button",
   component: Button,
+  tags: ["autodocs"],
   parameters: {
     layout: "centered",
   },
@@ -33,6 +36,17 @@ const meta: Meta<typeof Button> = {
     disabled: {
       control: { type: "boolean" },
     },
+    disableElevation: {
+      control: { type: "boolean" },
+    },
+    startIcon: {
+      control: { type: "boolean" },
+      description: "Show Add icon at start",
+    },
+    endIcon: {
+      control: { type: "boolean" },
+      description: "Show Delete icon at end",
+    },
   },
 };
 
@@ -44,7 +58,18 @@ export const Primary: Story = {
     children: "Primary Button",
     variant: "contained",
     color: "primary",
+    startIcon: false,
+    endIcon: false,
   },
+  render: (args) => (
+    <Button
+      {...args}
+      startIcon={args.startIcon ? <AddIcon /> : undefined}
+      endIcon={args.endIcon ? <DeleteIcon /> : undefined}
+    >
+      {args.children}
+    </Button>
+  ),
 };
 
 export const WileyBranding: Story = {
@@ -52,7 +77,18 @@ export const WileyBranding: Story = {
     children: "Wiley Blue",
     variant: "contained",
     color: "primary",
+    startIcon: false,
+    endIcon: false,
   },
+  render: (args) => (
+    <Button
+      {...args}
+      startIcon={args.startIcon ? <AddIcon /> : undefined}
+      endIcon={args.endIcon ? <DeleteIcon /> : undefined}
+    >
+      {args.children}
+    </Button>
+  ),
 };
 
 export const CustomColors: Story = {
@@ -60,7 +96,18 @@ export const CustomColors: Story = {
     children: "Neutral Color",
     variant: "contained",
     color: "neutral",
+    startIcon: false,
+    endIcon: false,
   },
+  render: (args) => (
+    <Button
+      {...args}
+      startIcon={args.startIcon ? <AddIcon /> : undefined}
+      endIcon={args.endIcon ? <DeleteIcon /> : undefined}
+    >
+      {args.children}
+    </Button>
+  ),
 };
 
 export const TextWithUnderline: Story = {
@@ -68,20 +115,16 @@ export const TextWithUnderline: Story = {
     children: "Text Button (with underline)",
     variant: "text",
     color: "primary",
+    startIcon: false,
+    endIcon: false,
   },
-};
-
-export const NoRipple: Story = {
-  args: {
-    children: "No Ripple Effect",
-    variant: "contained",
-    color: "primary",
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: "Buttons have ripple disabled by default in this theme.",
-      },
-    },
-  },
+  render: (args) => (
+    <Button
+      {...args}
+      startIcon={args.startIcon ? <AddIcon /> : undefined}
+      endIcon={args.endIcon ? <DeleteIcon /> : undefined}
+    >
+      {args.children}
+    </Button>
+  ),
 };
