@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
-import PPHeader from "./PPHeader";
+import GlobalHeader from "../app/GlobalHeader";
+import HeaderActions from "./HeaderActions";
 import NotificationCenter from "./NotificationCenter";
 import AppMenuDrawer from "../app/AppMenuDrawer";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import SupportMenuFabMenu from "./SupportMenuFabMenu";
-import SupportMenu from "./SupportMenu";
+// import SupportMenu from "./SupportMenu";
 
 export default function AppClientShell({
   children,
@@ -26,10 +27,16 @@ export default function AppClientShell({
   return (
     <Box sx={{ width: "100%" }}>
       {/* AppBar/Header - always at the top */}
-      <PPHeader
+      <GlobalHeader
         logoAffix="Open Access Dashboard"
-        onNotificationClick={() => setNotificationOpen(true)}
-        unreadCount={unreadCount}
+        fixed={true}
+        containerProps={{ maxWidth: false }}
+        rightSlot={
+          <HeaderActions
+            onNotificationClick={() => setNotificationOpen(true)}
+            unreadCount={unreadCount}
+          />
+        }
         onMenuClick={!isDesktop ? () => setDrawerOpen(true) : undefined}
       />
       <NotificationCenter

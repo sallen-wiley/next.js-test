@@ -10,21 +10,33 @@ export const createPalette = (mode: PaletteMode) => ({
   contrastThreshold: 4.5,
   primary: {
     main: colors.blue[500],
+    dark: colors.blue[800],
+    light: colors.blue[400],
   },
   secondary: {
     main: colors.pink[500],
+    dark: colors.pink[600],
+    light: colors.pink[400],
   },
   error: {
     main: colors.red[500],
+    dark: colors.red[700],
+    light: colors.red[300],
   },
   warning: {
     main: colors.orange[500],
+    dark: colors.orange[700],
+    light: colors.orange[300],
   },
   info: {
     main: colors.blue[500],
+    dark: colors.blue[800],
+    light: colors.blue[400],
   },
   success: {
     main: colors.green[500],
+    dark: colors.green[700],
+    light: colors.green[300],
   },
   neutral: {
     main: colors.grey[800],

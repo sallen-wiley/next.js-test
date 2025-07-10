@@ -1,0 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap");
+
+/* .storybook/preview.css: Global Storybook styles for font inheritance in portals */
+
+html,
+body,
+#storybook-root,
+#root,
+[id^="storybook-preview-"],
+.MuiAutocomplete-popper {
+  font-family: "Open Sans", Arial, Helvetica, sans-serif !important;
+}
+
+/* Ensure dropdowns rendered in portals inherit the font */
+.MuiAutocomplete-popper,
+.MuiAutocomplete-listbox,
+.MuiAutocomplete-option {
+  font-family: "Open Sans", Arial, Helvetica, sans-serif !important;
+}
