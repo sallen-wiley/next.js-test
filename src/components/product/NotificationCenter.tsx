@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Drawer,
   Box,
@@ -11,6 +11,9 @@ import {
   Avatar,
   Stack,
   Button,
+  Menu,
+  MenuItem,
+  Alert,
 } from "@mui/material";
 import {
   CloseRounded as CloseIcon,
@@ -35,6 +38,7 @@ interface Notification {
     muiName: string;
   };
   unread: boolean;
+  articleTitle?: string; // Optional academic article title
 }
 
 interface NotificationCenterProps {
@@ -64,6 +68,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       timestamp: "5 minutes ago",
       icon: EmailIcon,
       unread: true,
+      articleTitle: "Deep Learning for Natural Language Processing",
     },
     {
       id: 3,
@@ -93,6 +98,57 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       unread: false,
     },
   ]);
+
+  // DND State
+  const [doNotDisturb, setDoNotDisturb] = useState<{
+    active: boolean;
+    until: number | null;
+  }>({ active: false, until: null });
+  const [dndCountdown, setDndCountdown] = useState<string>("");
+  const dndIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [dndMenuAnchor, setDndMenuAnchor] = useState<null | HTMLElement>(null);
+
+  // Helper to format countdown (minutes only)
+  const formatCountdown = (ms: number) => {
+    if (ms <= 0) return "0m";
+    const totalMinutes = Math.ceil(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+
+  // DND Countdown effect (update every minute)
+  useEffect(() => {
+    if (doNotDisturb.active && doNotDisturb.until) {
+      if (dndIntervalRef.current) clearInterval(dndIntervalRef.current);
+      setDndCountdown(formatCountdown(doNotDisturb.until - Date.now()));
+      dndIntervalRef.current = setInterval(() => {
+        const msLeft = doNotDisturb.until! - Date.now();
+        setDndCountdown(formatCountdown(msLeft));
+        if (msLeft <= 0) {
+          setDoNotDisturb({ active: false, until: null });
+        }
+      }, 60000); // update every minute
+      return () => {
+        if (dndIntervalRef.current) clearInterval(dndIntervalRef.current);
+      };
+    } else {
+      setDndCountdown("");
+      if (dndIntervalRef.current) clearInterval(dndIntervalRef.current);
+    }
+  }, [doNotDisturb]);
+
+  // DND Controls
+  const handleSetDnd = (durationMs: number | null) => {
+    setDndMenuAnchor(null);
+    if (durationMs === null) {
+      setDoNotDisturb({ active: true, until: null });
+    } else {
+      setDoNotDisturb({ active: true, until: Date.now() + durationMs });
+    }
+  };
+  const handleCancelDnd = () => setDoNotDisturb({ active: false, until: null });
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
@@ -124,10 +180,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
           : notification
       )
     );
-  };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
   };
 
   const markAllAsRead = () => {
@@ -162,8 +214,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             p: 2,
             borderBottom: 1,
             borderColor: "divider",
-            bgcolor: "primary.main",
-            color: "primary.contrastText",
+            flexShrink: 0,
           }}
         >
           <Box
@@ -186,52 +237,118 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </IconButton>
           </Box>
 
-          {notifications.length > 0 && (
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              <Chip
-                label={`${unreadCount} unread`}
-                size="small"
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.2)",
-                  color: "inherit",
-                  fontSize: "0.75rem",
-                }}
-              />
+          {/* Header Actions Row: Unread Chip left, actions right */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 2,
+              mb: 1,
+            }}
+          >
+            {/* Unread Chip left-aligned */}
+            <Chip
+              label={`${unreadCount} unread`}
+              size="small"
+              sx={{
+                bgcolor: "rgba(255,255,255,0.2)",
+                color: "inherit",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+              }}
+            />
+            {/* Actions right-aligned */}
+            <Box sx={{ display: "flex", gap: 1 }}>
               {unreadCount > 0 && (
-                <Chip
-                  label="Mark all read"
+                <Button
+                  variant="outlined"
+                  color="inherit"
                   size="small"
                   onClick={markAllAsRead}
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.1)",
-                    color: "inherit",
-                    fontSize: "0.75rem",
-                    cursor: "pointer",
-                    "&:hover": {
-                      bgcolor: "rgba(255,255,255,0.2)",
-                    },
-                  }}
-                />
+                  sx={{ textTransform: "none", fontWeight: 600 }}
+                >
+                  Mark all as read
+                </Button>
               )}
+              <Button
+                variant="outlined"
+                color={doNotDisturb.active ? "warning" : "inherit"}
+                size="small"
+                onClick={(e) => setDndMenuAnchor(e.currentTarget)}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                {doNotDisturb.active
+                  ? doNotDisturb.until
+                    ? `DND: ${dndCountdown} left`
+                    : "DND: Permanent"
+                  : "Do Not Disturb"}
+              </Button>
+              <Menu
+                anchorEl={dndMenuAnchor}
+                open={Boolean(dndMenuAnchor)}
+                onClose={() => setDndMenuAnchor(null)}
+              >
+                <MenuItem onClick={() => handleSetDnd(30 * 60 * 1000)}>
+                  30 minutes
+                </MenuItem>
+                <MenuItem onClick={() => handleSetDnd(60 * 60 * 1000)}>
+                  1 hour
+                </MenuItem>
+                <MenuItem onClick={() => handleSetDnd(2 * 60 * 60 * 1000)}>
+                  2 hours
+                </MenuItem>
+                <MenuItem onClick={() => handleSetDnd(null)}>
+                  Permanently
+                </MenuItem>
+                {doNotDisturb.active && (
+                  <MenuItem
+                    onClick={handleCancelDnd}
+                    sx={{ color: "error.main" }}
+                  >
+                    Disable DND
+                  </MenuItem>
+                )}
+              </Menu>
             </Box>
-          )}
+          </Box>
         </Box>
 
-        {/* Notifications List */}
+        {/* Notifications List (scrollable area, includes DND alert) */}
         <Box
           sx={{
             flex: 1,
+            minHeight: 0,
             overflow: "auto",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
+          {/* DND Alert at top of list if active */}
+          {doNotDisturb.active && (
+            <Alert
+              severity="warning"
+              action={
+                <Button color="inherit" size="small" onClick={handleCancelDnd}>
+                  Disable
+                </Button>
+              }
+              sx={{ mb: 2, flexShrink: 0 }}
+            >
+              Do Not Disturb is enabled.{" "}
+              {doNotDisturb.until
+                ? `New push notifications are paused for ${dndCountdown}.`
+                : "Push notifications are paused permanently."}
+            </Alert>
+          )}
           {notifications.length === 0 ? (
             <Box
               sx={{
+                flex: 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "100%",
                 p: 3,
                 textAlign: "center",
               }}
@@ -251,10 +368,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </Typography>
             </Box>
           ) : (
-            <Stack spacing={0}>
+            <Stack spacing={0} sx={{ flex: 1 }}>
               {notifications.map((notification, index) => {
                 const IconComponent = notification.icon;
-
                 return (
                   <React.Fragment key={notification.id}>
                     <Card
@@ -327,7 +443,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                               variant="body2"
                               color="text.secondary"
                               sx={{
-                                mb: 1,
                                 display: "-webkit-box",
                                 WebkitLineClamp: 2,
                                 WebkitBoxOrient: "vertical",
@@ -336,9 +451,18 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             >
                               {notification.message}
                             </Typography>
+                            {notification.articleTitle && (
+                              <Typography
+                                variant="caption"
+                                sx={{ mb: 1, fontStyle: "italic" }}
+                              >
+                                {notification.articleTitle}
+                              </Typography>
+                            )}
 
                             <Box
                               sx={{
+                                mt: 1,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
@@ -380,37 +504,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             </Stack>
           )}
         </Box>
-
-        {/* Footer Actions */}
-        {notifications.length > 0 && (
-          <Box
-            sx={{
-              p: 2,
-              borderTop: 1,
-              borderColor: "divider",
-              bgcolor: "background.paper",
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              <Button
-                variant="outlined"
-                color="error"
-                size="small"
-                onClick={clearAllNotifications}
-                sx={{
-                  textTransform: "none",
-                }}
-              >
-                Clear All
-              </Button>
-            </Box>
-          </Box>
-        )}
       </Box>
     </Drawer>
   );

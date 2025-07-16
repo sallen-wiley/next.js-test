@@ -57,12 +57,25 @@ const customPink = {
   900: "#200218",
 };
 
+const customOrange = {
+  50: "#FFF0E8",
+  100: "#FAD8C6",
+  200: "#F5B58F",
+  300: "#ED7632",
+  400: "#DE5A08",
+  500: "#CC4E00",
+  600: "#B44800",
+  700: "#973C00",
+  800: "#742E00",
+  900: "#3D1800",
+};
+
 // Export merged colors (MUI + white-label overrides)
 export const blue = customBlue;
 export const green = customGreen;
 export const grey = { ...muiColors.grey /* add overrides if needed */ };
 export const red = customRed;
-export const orange = { ...muiColors.orange /* add overrides if needed */ };
+export const orange = customOrange;
 export const pink = customPink;
 
 // Re-export unmodified MUI colors
