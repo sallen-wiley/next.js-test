@@ -3,6 +3,7 @@ import MuiChip from "./MuiChip";
 import { MuiButtonBase, MuiButton } from "./MuiButton";
 import { MuiTextField, MuiInputLabel, MuiOutlinedInput } from "./MuiForm";
 import { Theme } from "@mui/material/styles";
+import MuiContainer from "./MuiContainer";
 
 export const createComponents = (theme: Theme) => ({
   MuiAlert: typeof MuiAlert === "function" ? MuiAlert(theme) : MuiAlert,
@@ -12,4 +13,6 @@ export const createComponents = (theme: Theme) => ({
   MuiTextField,
   MuiInputLabel,
   MuiOutlinedInput,
+  MuiContainer:
+    typeof MuiContainer === "function" ? MuiContainer(theme) : MuiContainer,
 });

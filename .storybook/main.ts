@@ -5,6 +5,8 @@ const config: StorybookConfig = {
     "../src/**/*.mdx", // Add MDX support for docs
     "../src/components/mui/**/*.stories.@(js|jsx|mjs|ts|tsx)",
     "../src/components/product/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../src/theme/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../src/components/theme/**/*.stories.@(js|jsx|mjs|ts|tsx)",
   ],
   addons: [
     "@chromatic-com/storybook",

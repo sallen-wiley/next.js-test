@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid";
 export default function Home() {
   return (
     <>
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" fixed={true}>
         <Grid container spacing={4} sx={{ mt: 4 }}>
           <Grid size={12}>
             <Typography variant="h4" component="h1" gutterBottom>

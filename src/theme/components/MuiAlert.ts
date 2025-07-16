@@ -8,6 +8,7 @@ const createMuiAlert = (theme: Theme) => ({
       color: theme.palette.text.primary,
     },
     outlinedSuccess: {
+      borderColor: theme.palette.success.main, // default is the theme's 'light' color
       color: theme.palette.success.main,
     },
     standardError: {
@@ -15,6 +16,7 @@ const createMuiAlert = (theme: Theme) => ({
       color: theme.palette.text.primary,
     },
     outlinedError: {
+      borderColor: theme.palette.error.main, // default is the theme's 'light' color
       color: theme.palette.error.main,
     },
     standardInfo: {
@@ -22,6 +24,7 @@ const createMuiAlert = (theme: Theme) => ({
       color: theme.palette.text.primary,
     },
     outlinedInfo: {
+      borderColor: theme.palette.info.main, // default is the theme's 'light' color
       color: theme.palette.info.main,
     },
     standardWarning: {
@@ -29,6 +32,7 @@ const createMuiAlert = (theme: Theme) => ({
       color: theme.palette.text.primary,
     },
     outlinedWarning: {
+      borderColor: theme.palette.warning.main, // default is the theme's 'light' color
       color: theme.palette.warning.main,
     },
   },
