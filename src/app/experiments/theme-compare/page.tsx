@@ -96,6 +96,7 @@ function SampleComponents() {
                       label={`${
                         color.charAt(0).toUpperCase() + color.slice(1)
                       } Chip`}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       color={color as any}
                       variant={variant}
                       size="medium"
@@ -109,6 +110,7 @@ function SampleComponents() {
                       label={`Small ${
                         color.charAt(0).toUpperCase() + color.slice(1)
                       }`}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       color={color as any}
                       variant={variant}
                       size="small"
