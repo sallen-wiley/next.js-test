@@ -1,4 +1,4 @@
-import type { CSSObject } from "@mui/system";
+// import type { CSSObject } from "@mui/system";
 const MuiButtonBase = {
   // disable ripple
   defaultProps: {
@@ -23,7 +23,7 @@ const MuiButton = {
   styleOverrides: {
     // prevent text transforming on buttons
     root: {
-      textTransform: "none" as CSSObject["textTransform"],
+      // textTransform: "none" as CSSObject["textTransform"], // may not be needed if the Button typeography is changed in Typography section within the MUI theme structure
     },
     // add optional extra large button
     sizeExtraLarge: {

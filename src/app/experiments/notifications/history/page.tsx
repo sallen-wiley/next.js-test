@@ -292,7 +292,7 @@ export default function NotificationsHistory() {
               <Typography variant="subtitle2">Action Items:</Typography>
               <ul>
                 {detailNotif.actionItems.map((item, i) => (
-                  <li key={i}>{item}</li>
+                  <li key={item + i}>{item}</li>
                 ))}
               </ul>
             </Stack>
