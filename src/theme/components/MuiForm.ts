@@ -42,6 +42,9 @@ const MuiOutlinedInput = {
         borderWidth: 2,
         // increase width to compensate for low contrast between Wiley dark blue and default border color
       },
+      "&:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: undefined, // or use theme.palette.action.hover if you want MUI's default
+      },
     },
     notchedOutline: ({ theme }: { theme: Theme }) => ({
       borderColor: theme.palette.text.secondary,

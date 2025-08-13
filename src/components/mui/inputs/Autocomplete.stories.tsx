@@ -27,6 +27,8 @@ const meta: Meta<typeof Autocomplete> = {
     sx: { control: "object" },
     disabled: { control: "boolean" },
     autoHighlight: { control: "boolean" },
+    // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+    helperText: { control: "text" },
   },
 };
 
@@ -37,6 +39,8 @@ export const ComboBox: Story = {
   args: {
     sx: { width: 300 },
     disabled: false,
+    // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+    helperText: "Pick your favorite movie",
   },
   render: (args) => (
     <Autocomplete
@@ -45,7 +49,8 @@ export const ComboBox: Story = {
       sx={args.sx}
       disabled={args.disabled}
       renderInput={(params: AutocompleteRenderInputParams) => (
-        <TextField {...params} label="Movie" />
+        // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+        <TextField {...params} label="Movie" helperText={args.helperText} />
       )}
       getOptionLabel={(option) => option.label}
     />
@@ -57,6 +62,8 @@ export const CountrySelect: Story = {
     sx: { width: 300 },
     disabled: false,
     autoHighlight: true,
+    // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+    helperText: "Select a country from the list",
   },
   render: (args) => (
     <Autocomplete
@@ -100,6 +107,8 @@ export const CountrySelect: Story = {
         <TextField
           {...params}
           label="Choose a country"
+          // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+          helperText={args.helperText}
           slotProps={{
             htmlInput: {
               ...params.inputProps,
@@ -140,6 +149,8 @@ const groupedFilmOptions: GroupedFilmOption[] = (
 export const Grouped: Story = {
   args: {
     sx: { width: 300 },
+    // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+    helperText: "Grouped by first letter",
   },
   render: (args) => (
     <Autocomplete
@@ -148,7 +159,12 @@ export const Grouped: Story = {
       groupBy={(option: GroupedFilmOption) => option.firstLetter || ""}
       getOptionLabel={(option: GroupedFilmOption) => option.label}
       renderInput={(params: AutocompleteRenderInputParams) => (
-        <TextField {...params} label="With categories" />
+        <TextField
+          {...params}
+          label="With categories"
+          // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+          helperText={args.helperText}
+        />
       )}
     />
   ),
@@ -165,6 +181,8 @@ const timeSlots = Array.from(new Array(24 * 2)).map(
 export const DisabledOptions: Story = {
   args: {
     sx: { width: 300 },
+    // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+    helperText: "Some options are disabled",
   },
   render: (args) => (
     <Autocomplete
@@ -174,7 +192,12 @@ export const DisabledOptions: Story = {
         option === timeSlots[0] || option === timeSlots[2]
       }
       renderInput={(params: AutocompleteRenderInputParams) => (
-        <TextField {...params} label="Disabled options" />
+        <TextField
+          {...params}
+          label="Disabled options"
+          // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+          helperText={args.helperText}
+        />
       )}
     />
   ),
@@ -224,6 +247,8 @@ export const SearchAsYouType: Story = {
   args: {
     sx: { width: 300 },
     disabled: false,
+    // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+    helperText: "Type to search for a film",
   },
   render: (args) => {
     const [inputValue, setInputValue] = React.useState("");
@@ -238,7 +263,7 @@ export const SearchAsYouType: Story = {
       }
       setLoading(true);
       (async () => {
-        await sleep(2000); // Simulate network delay
+        await sleep(3000); // Simulate network delay
         if (active) {
           setOptions(
             asyncFilms.filter((film) =>
@@ -261,6 +286,7 @@ export const SearchAsYouType: Story = {
         options={options}
         loading={loading}
         inputValue={inputValue}
+        noOptionsText="No options. Try typing."
         onInputChange={(_, value) => setInputValue(value)}
         getOptionLabel={(option) => option.title}
         isOptionEqualToValue={(option, value) => option.title === value.title}
@@ -268,6 +294,8 @@ export const SearchAsYouType: Story = {
           <TextField
             {...params}
             label="Search as you type"
+            // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+            helperText={args.helperText}
             slotProps={{
               input: {
                 ...params.InputProps,
@@ -291,6 +319,8 @@ export const SearchAsYouType: Story = {
 export const LimitTags: Story = {
   args: {
     sx: { width: 500 },
+    // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+    helperText: "Select multiple favorites (max 2 tags shown)",
   },
   render: (args) => (
     <Autocomplete
@@ -301,7 +331,13 @@ export const LimitTags: Story = {
       getOptionLabel={(option) => option.label}
       defaultValue={[top100Films[13], top100Films[12], top100Films[11]]}
       renderInput={(params) => (
-        <TextField {...params} label="limitTags" placeholder="Favorites" />
+        <TextField
+          {...params}
+          label="limitTags"
+          placeholder="Favorites"
+          // @ts-expect-error: helperText is not a valid prop for Autocomplete, but used in stories
+          helperText={args.helperText}
+        />
       )}
       sx={args.sx}
     />

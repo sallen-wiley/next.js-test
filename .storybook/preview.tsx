@@ -23,7 +23,7 @@ const preview: Preview = {
         <div style={{ fontFamily: "Open Sans, sans-serif" }}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <div style={{ padding: "1rem" }}>
+            <div>
               <Story />
             </div>
           </ThemeProvider>

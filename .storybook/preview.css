@@ -9,6 +9,7 @@ body,
 [id^="storybook-preview-"],
 .MuiAutocomplete-popper {
   font-family: "Open Sans", Arial, Helvetica, sans-serif !important;
+  padding: 0 !important;
 }
 
 /* Ensure dropdowns rendered in portals inherit the font */
