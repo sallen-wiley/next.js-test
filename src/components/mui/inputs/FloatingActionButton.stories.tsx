@@ -6,7 +6,7 @@ import AddIcon from "@mui/icons-material/AddRounded";
 import EditIcon from "@mui/icons-material/EditRounded";
 import FavoriteIcon from "@mui/icons-material/FavoriteRounded";
 import NavigationIcon from "@mui/icons-material/NavigationRounded";
-import QuestionMarkIcon from "@mui/icons-material/QuestionMarkRounded";
+import QuestionMarkIcon from "@mui/icons-material/HelpRounded";
 
 const meta: Meta<typeof Fab> = {
   title: "MUI Components/Inputs/Floating Action Button",
@@ -59,7 +59,6 @@ type FabDemoProps = {
   disabled: boolean;
   icon: "add" | "edit" | "favorite" | "navigation" | "question" | "none";
   label?: string;
-  ariaLabel?: string;
   sx?: object;
 };
 
@@ -67,8 +66,8 @@ const iconMap = {
   add: <AddIcon />,
   edit: <EditIcon />,
   favorite: <FavoriteIcon />,
-  navigation: <NavigationIcon sx={{ mr: 1 }} />,
-  question: <QuestionMarkIcon sx={{ mr: 1 }} />,
+  navigation: <NavigationIcon />,
+  question: <QuestionMarkIcon />,
 };
 
 const FabDemo: React.FC<FabDemoProps> = ({
@@ -78,21 +77,35 @@ const FabDemo: React.FC<FabDemoProps> = ({
   disabled,
   icon,
   label,
-  ariaLabel,
   sx,
-}) => (
-  <Fab
-    color={color}
-    variant={variant === "extended" ? "extended" : undefined}
-    size={size}
-    disabled={disabled}
-    aria-label={ariaLabel}
-    sx={sx}
-  >
-    {icon !== "none" && iconMap[icon as keyof typeof iconMap]}
-    {variant === "extended" && label}
-  </Fab>
-);
+}) => {
+  let iconElement = null;
+  if (icon !== "none") {
+    const baseIcon = iconMap[icon as keyof typeof iconMap];
+    // We use React.cloneElement to conditionally add margin-right (mr) to the icon
+    // only when the FAB is in the 'extended' variant. This keeps the icon components
+    // pure and reusable for both icon-only and extended FABs, applying spacing only
+    // in the layout context where it is needed.
+    iconElement =
+      variant === "extended"
+        ? React.cloneElement(baseIcon, {
+            sx: { mr: 1, ...(baseIcon.props.sx || {}) },
+          })
+        : baseIcon;
+  }
+  return (
+    <Fab
+      color={color}
+      variant={variant === "extended" ? "extended" : undefined}
+      size={size}
+      disabled={disabled}
+      sx={sx}
+    >
+      {iconElement}
+      {variant === "extended" && label}
+    </Fab>
+  );
+};
 
 export const Default: Story = {
   args: {
@@ -104,7 +117,6 @@ export const Default: Story = {
     // @ts-expect-error: icon is not a valid prop for Fab, but used in stories
     icon: "add",
     label: "",
-    ariaLabel: "add",
     sx: {},
   },
   argTypes: {
@@ -119,10 +131,6 @@ export const Default: Story = {
       description: "Label for extended variant.",
       if: { arg: "variant", eq: "extended" },
     },
-    ariaLabel: {
-      control: { type: "text" },
-      description: "aria-label for accessibility.",
-    },
     sx: {
       control: "object",
       description: "The system prop for custom styles.",
@@ -135,17 +143,17 @@ export const AllVariants: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <Box sx={{ "& > :not(style)": { m: 1 } }}>
-      <Fab color="primary" aria-label="add">
+      <Fab color="primary">
         <AddIcon />
       </Fab>
-      <Fab color="secondary" aria-label="edit">
+      <Fab color="secondary">
         <EditIcon />
       </Fab>
       <Fab variant="extended">
         <NavigationIcon sx={{ mr: 1 }} />
         Navigate
       </Fab>
-      <Fab disabled aria-label="like">
+      <Fab disabled>
         <FavoriteIcon />
       </Fab>
     </Box>
@@ -156,13 +164,13 @@ export const Sizes: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <Box sx={{ "& > :not(style)": { m: 1 } }}>
-      <Fab size="small" color="secondary" aria-label="add">
+      <Fab size="small" color="secondary">
         <AddIcon />
       </Fab>
-      <Fab size="medium" color="secondary" aria-label="add">
+      <Fab size="medium" color="secondary">
         <AddIcon />
       </Fab>
-      <Fab color="secondary" aria-label="add">
+      <Fab color="secondary">
         <AddIcon />
       </Fab>
     </Box>
@@ -198,7 +206,6 @@ export const HelpCenter: Story = {
     // @ts-expect-error: icon is not a valid prop for Fab, but used in stories
     icon: "question",
     label: "Help",
-    ariaLabel: "add",
 
     sx: {
       border: 2,
@@ -227,14 +234,6 @@ export const HelpCenter: Story = {
         arg: "variant",
         eq: "extended",
       },
-    },
-
-    ariaLabel: {
-      control: {
-        type: "text",
-      },
-
-      description: "aria-label for accessibility.",
     },
 
     sx: {
