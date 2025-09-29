@@ -80,6 +80,13 @@ export default function Home() {
               </Paper>
               <Paper elevation={3} sx={{ p: 3 }}>
                 <Typography variant="body1">
+                  <Link href="/typography-demo">
+                    Typography Demo - Mixed Font System
+                  </Link>
+                </Typography>
+              </Paper>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="body1">
                   <Link href="/experiments/notifications/admin">
                     Notifications admin
                   </Link>

@@ -2,7 +2,7 @@ import type { Preview } from "@storybook/nextjs-vite";
 import React from "react";
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import theme from "../src/theme/index";
+import { wileyTheme } from "../src/themes";
 import "./preview.css";
 
 const preview: Preview = {
@@ -21,7 +21,7 @@ const preview: Preview = {
     (Story) => {
       return (
         <div style={{ fontFamily: "Open Sans, sans-serif" }}>
-          <ThemeProvider theme={theme}>
+          <ThemeProvider theme={wileyTheme} defaultMode="light">
             <CssBaseline />
             <div>
               <Story />

@@ -1,16 +1,18 @@
 "use client";
 import React from "react";
 import { Box, Container, Divider } from "@mui/material";
-import theme from "@/theme";
+import { useTheme } from "@mui/material/styles";
 import PrimaryLogo from "../product/PrimaryLogo";
 
 // AppHeader component renders the application header with the primary logo and a divider
 export default function AppHeader() {
+  const theme = useTheme();
+
   return (
     // Box component to control the background color and header positioning
     <Box
       sx={{
-        bgcolor: theme.palette.common.white,
+        bgcolor: theme.palette.background.paper,
         width: "100%",
         display: "flex",
         flexDirection: "column",

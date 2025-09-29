@@ -16,36 +16,36 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
-import { blue as themeBlue } from "@/theme/palette/colors";
+import { blue } from "@mui/material/colors";
 
 const resources = [
   {
     title: "Account Dashboard",
     description: "Manage your open access accounts and view analytics.",
-    icon: <DashboardIcon sx={{ fontSize: 48, color: themeBlue[500] }} />,
+    icon: <DashboardIcon sx={{ fontSize: 48, color: blue[500] }} />,
     href: "/woaa/dashboard",
-    gradient: `linear-gradient(135deg, ${themeBlue[700]} 0%, ${themeBlue[500]} 100%)`,
+    gradient: `linear-gradient(135deg, ${blue[700]} 0%, ${blue[500]} 100%)`,
   },
   {
     title: "Notification Center",
     description: "View and manage notifications for your account.",
-    icon: <NotificationsActiveIcon sx={{ fontSize: 48, color: themeBlue[500] }} />,
+    icon: <NotificationsActiveIcon sx={{ fontSize: 48, color: blue[500] }} />,
     href: "/experiments/notification-admin",
-    gradient: `linear-gradient(135deg, ${themeBlue[800]} 0%, ${themeBlue[700]} 100%)`,
+    gradient: `linear-gradient(135deg, ${blue[800]} 0%, ${blue[700]} 100%)`,
   },
   {
     title: "Preferences",
     description: "Set your notification and account preferences.",
-    icon: <SettingsIcon sx={{ fontSize: 48, color: themeBlue[500] }} />,
+    icon: <SettingsIcon sx={{ fontSize: 48, color: blue[500] }} />,
     href: "/experiments/notification-preferences",
-    gradient: `linear-gradient(135deg, ${themeBlue[900]} 0%, ${themeBlue[800]} 100%)`,
+    gradient: `linear-gradient(135deg, ${blue[900]} 0%, ${blue[800]} 100%)`,
   },
   {
     title: "Support",
     description: "Contact support or access help resources.",
-    icon: <SupportAgentIcon sx={{ fontSize: 48, color: themeBlue[500] }} />,
+    icon: <SupportAgentIcon sx={{ fontSize: 48, color: blue[500] }} />,
     href: "#",
-    gradient: `linear-gradient(135deg, ${themeBlue[600]} 0%, ${themeBlue[700]} 100%)`,
+    gradient: `linear-gradient(135deg, ${blue[600]} 0%, ${blue[700]} 100%)`,
   },
 ];
 
@@ -73,7 +73,7 @@ export default function Home() {
           width: "100vw",
           minHeight: 320,
           position: "relative",
-          background: `linear-gradient(90deg, ${themeBlue[900]} 0%, ${themeBlue[700]} 100%)`,
+          background: `linear-gradient(90deg, ${blue[900]} 0%, ${blue[700]} 100%)`,
           display: "flex",
           alignItems: "center",
           py: 6,
@@ -95,12 +95,7 @@ export default function Home() {
           }}
         />
         <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1 }}>
-          <Typography
-            variant="h2"
-            color="white"
-            fontWeight={700}
-            gutterBottom
-          >
+          <Typography variant="h2" color="white" fontWeight={700} gutterBottom>
             Wiley Open Access Account Admin
           </Typography>
           <Typography variant="h5" color="white" sx={{ maxWidth: 600 }}>
@@ -116,7 +111,10 @@ export default function Home() {
         </Typography>
         <Grid container spacing={4}>
           {resources.map((resource) => (
-            <Grid size={{ xs: 12, sm: 12, md: 6, lg: 3, xl: 3 }} key={resource.title}>
+            <Grid
+              size={{ xs: 12, sm: 12, md: 6, lg: 3, xl: 3 }}
+              key={resource.title}
+            >
               <Card
                 sx={{
                   height: 220,
@@ -188,18 +186,10 @@ export default function Home() {
               © {new Date().getFullYear()} Wiley. All rights reserved.
             </Typography>
             <Stack direction="row" spacing={2}>
-              <Link
-                href="#"
-                color="inherit"
-                underline="hover"
-              >
+              <Link href="#" color="inherit" underline="hover">
                 Privacy Policy
               </Link>
-              <Link
-                href="#"
-                color="inherit"
-                underline="hover"
-              >
+              <Link href="#" color="inherit" underline="hover">
                 Terms of Service
               </Link>
             </Stack>

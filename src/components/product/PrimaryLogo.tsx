@@ -1,12 +1,13 @@
 import React from "react";
 import { Box, Typography, Link } from "@mui/material";
-import theme from "@/theme";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * PrimaryLogo component renders the primary logo SVG with an optional affix text.
  * @param affix - The affix text to show next to the logo. If not provided, affix is hidden.
  */
 export default function PrimaryLogo({ affix }: { affix?: string }) {
+  const theme = useTheme();
   // If affix is not provided, do not show the affix section
   const showAffix = Boolean(affix);
   return (

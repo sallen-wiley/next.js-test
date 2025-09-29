@@ -1,7 +1,6 @@
 "use client";
 import {
   ThemeProvider,
-  createTheme,
   CssBaseline,
   Typography,
   Button,
@@ -13,10 +12,7 @@ import {
   Box,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import theme from "@/theme/index";
-import wiley2025ThemeOptions from "../../../theme/wiley2025Theme";
-
-const wiley2025Theme = createTheme(wiley2025ThemeOptions);
+import { wileyTheme, sageTheme } from "@/themes";
 
 function SampleComponents() {
   const colors = [
@@ -145,19 +141,19 @@ export default function ThemeComparePage() {
   return (
     <Grid container sx={{ minHeight: "100vh" }} columns={12}>
       <Grid size={6} sx={{ borderRight: { md: "2px solid #eee" }, p: 4 }}>
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={wileyTheme}>
           <CssBaseline />
           <Typography variant="h5" gutterBottom>
-            Current Wiley Theme
+            Wiley Theme
           </Typography>
           <SampleComponents />
         </ThemeProvider>
       </Grid>
       <Grid size={6} sx={{ p: 4 }}>
-        <ThemeProvider theme={wiley2025Theme}>
+        <ThemeProvider theme={sageTheme}>
           <CssBaseline />
           <Typography variant="h5" gutterBottom>
-            Wiley2025 Theme
+            Sage Theme
           </Typography>
           <SampleComponents />
         </ThemeProvider>
