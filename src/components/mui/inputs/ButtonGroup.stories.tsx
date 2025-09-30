@@ -112,15 +112,9 @@ export const SizesAndColors: Story = {
         "& > *": { m: 1 },
       }}
     >
-      <ButtonGroup size="small">
-        {buttons}
-      </ButtonGroup>
-      <ButtonGroup color="secondary">
-        {buttons}
-      </ButtonGroup>
-      <ButtonGroup size="large">
-        {buttons}
-      </ButtonGroup>
+      <ButtonGroup size="small">{buttons}</ButtonGroup>
+      <ButtonGroup color="secondary">{buttons}</ButtonGroup>
+      <ButtonGroup size="large">{buttons}</ButtonGroup>
     </Box>
   ),
 };
@@ -129,9 +123,7 @@ export const Vertical: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <Box sx={{ display: "flex", "& > *": { m: 1 } }}>
-      <ButtonGroup orientation="vertical">
-        {buttons}
-      </ButtonGroup>
+      <ButtonGroup orientation="vertical">{buttons}</ButtonGroup>
       <ButtonGroup orientation="vertical" variant="contained">
         {buttons}
       </ButtonGroup>
@@ -145,7 +137,11 @@ export const Vertical: Story = {
 export const SplitButton: Story = {
   parameters: { controls: { disable: true } },
   render: () => {
-    const options = ["Create a merge commit", "Squash and merge", "Rebase and merge"];
+    const options = [
+      "Create a merge commit",
+      "Squash and merge",
+      "Rebase and merge",
+    ];
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef<HTMLDivElement>(null);
     const [selectedIndex, setSelectedIndex] = React.useState(1);
@@ -178,10 +174,7 @@ export const SplitButton: Story = {
 
     return (
       <React.Fragment>
-        <ButtonGroup
-          variant="contained"
-          ref={anchorRef}
-        >
+        <ButtonGroup variant="contained" ref={anchorRef}>
           <Button onClick={handleClick}>{options[selectedIndex]}</Button>
           <Button
             size="small"

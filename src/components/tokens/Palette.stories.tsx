@@ -1,23 +1,29 @@
 import * as React from "react";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Box, Typography, Paper, Chip } from "@mui/material";
-import * as colors from "../../theme/palette/colors";
-import { WileyColors } from "../../theme/palette/WileyColors";
-import theme from "../../theme";
+import { useTheme } from "@mui/material/styles";
 
-export default {
+// Create a wrapper component for the stories
+const PaletteDemo = () => null;
+
+const meta: Meta<typeof PaletteDemo> = {
   title: "Tokens/Palette",
+  component: PaletteDemo,
   parameters: {
     layout: "centered",
     docs: {
       description: {
         component:
-          "Demonstrates the theme palette colors and the full set of available colors (including MUI and custom overrides).",
+          "Demonstrates the theme palette colors available in the current MUI theme.",
       },
     },
   },
 };
 
-// Helper: Known palette keys to display
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// Helper: Standard MUI palette keys to display
 const PALETTE_KEYS = [
   "primary",
   "secondary",
@@ -25,9 +31,6 @@ const PALETTE_KEYS = [
   "warning",
   "info",
   "success",
-  "neutral",
-  "black",
-  "white",
   "text",
   "background",
   "action",
@@ -54,149 +57,57 @@ const ColorSwatch = ({ color, label }: { color: string; label: string }) => (
   </Box>
 );
 
-// Use theme.palette for the theme colors
-export const ThemePalette = () => {
-  const palette = theme.palette;
-  return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
-        Theme Palette Colors (from ThemeProvider)
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2 }}>
-        These colors are sourced from the actual theme object, including any
-        client or runtime overrides.
-      </Typography>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: 4,
-        }}
-      >
-        {PALETTE_KEYS.map((key) => {
-          const value = palette[key];
-          if (!value) return null;
-          if (key === "text") {
+export const ThemePalette: Story = {
+  render: () => {
+    const theme = useTheme();
+    const palette = theme.palette;
+
+    return (
+      <Box>
+        <Typography variant="h5" gutterBottom>
+          Theme Palette Colors
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          These colors are sourced from the actual MUI theme object, including
+          any custom overrides applied to your theme.
+        </Typography>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 4,
+          }}
+        >
+          {PALETTE_KEYS.map((key) => {
+            const value = palette[key];
+            if (!value || typeof value !== "object") return null;
+
             return (
               <Box key={key} sx={{ minWidth: 180, mb: 2 }}>
-                <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                  text
+                <Typography
+                  variant="subtitle1"
+                  sx={{ mb: 1, textTransform: "capitalize" }}
+                >
+                  {key}
                 </Typography>
-                {Object.entries(value).map(([variant, color]) => (
-                  <ColorSwatch
-                    key={variant}
-                    color={color as string}
-                    label={variant}
-                  />
-                ))}
+                {Object.entries(value).map(([variant, color]) => {
+                  // Only show string color values
+                  if (typeof color !== "string") return null;
+                  return (
+                    <ColorSwatch key={variant} color={color} label={variant} />
+                  );
+                })}
               </Box>
             );
-          }
-          return (
-            <Box key={key} sx={{ minWidth: 180, mb: 2 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                {key}
-              </Typography>
-              {Object.entries(value).map(([variant, color]) =>
-                typeof color === "string" ? (
-                  <ColorSwatch key={variant} color={color} label={variant} />
-                ) : null
-              )}
-            </Box>
-          );
-        })}
+          })}
+        </Box>
       </Box>
-    </Box>
-  );
+    );
+  },
 };
 
-// Type-safe color group check
-function isColorGroup(obj: unknown): obj is Record<string, string | number> {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    Object.values(obj).some((v) => typeof v === "string")
-  );
-}
-
-export const AllAvailableColors = () => {
-  return (
-    <Box mt={6}>
-      <Typography variant="h5" gutterBottom>
-        All Available Colors (MUI + Custom Overrides)
-      </Typography>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 4,
-        }}
-      >
-        {Object.entries(colors).map(([group, value]) => {
-          if (!isColorGroup(value)) return null;
-          return (
-            <Box key={group} sx={{ mb: 2 }}>
-              <Typography
-                variant="subtitle1"
-                sx={{ textTransform: "capitalize", mb: 1 }}
-              >
-                {group}
-              </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {Object.entries(value).map(([shade, color]) => (
-                  <ColorSwatch
-                    key={shade}
-                    color={color as string}
-                    label={shade}
-                  />
-                ))}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
-    </Box>
-  );
-};
-
-export const WileyBrandColors = () => {
-  return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
-        Wiley Brand Colors
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
-        Core brand colors that form the foundation of our design system. These
-        are the primary colors used across Wiley products.
-      </Typography>
-
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: 3,
-        }}
-      >
-        {Object.entries(WileyColors).map(([colorName, shades]) => (
-          <Box key={colorName} sx={{ mb: 3 }}>
-            <Typography
-              variant="subtitle1"
-              sx={{ textTransform: "capitalize", mb: 2, fontWeight: "bold" }}
-            >
-              {colorName}
-            </Typography>
-            {Object.entries(shades).map(([shade, color]) => (
-              <ColorSwatch key={shade} color={color} label={shade} />
-            ))}
-          </Box>
-        ))}
-      </Box>
-    </Box>
-  );
-};
-
-export const ColorUsageExamples = () => {
-  return (
+export const ColorUsageExamples: Story = {
+  render: () => (
     <Box>
       <Typography variant="h5" gutterBottom>
         Color Usage Examples
@@ -296,9 +207,91 @@ export const ColorUsageExamples = () => {
         </Box>
       </Box>
     </Box>
-  );
+  ),
 };
 
-ThemePalette.storyName = "Theme Palette Colors";
-AllAvailableColors.storyName = "Extended Palette Colors";
-ColorUsageExamples.storyName = "Usage Examples";
+export const ColorModeComparison: Story = {
+  render: () => {
+    const theme = useTheme();
+
+    return (
+      <Box>
+        <Typography variant="h5" gutterBottom>
+          Light/Dark Mode Demo
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+          Use the Color Mode toolbar above to switch between light and dark
+          modes and see how the theme colors adapt.
+        </Typography>
+
+        <Box sx={{ display: "grid", gap: 3 }}>
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              Current Mode Colors
+            </Typography>
+            <Box
+              sx={{
+                p: 3,
+                bgcolor: "background.default",
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="body1" sx={{ color: "text.primary", mb: 1 }}>
+                Primary Text on Default Background
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: "text.secondary", mb: 2 }}
+              >
+                Secondary Text on Default Background
+              </Typography>
+
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: "background.paper",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 1,
+                  mb: 2,
+                }}
+              >
+                <Typography variant="body1" sx={{ color: "text.primary" }}>
+                  Text on Paper Background
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                <Chip
+                  label="Primary"
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                  }}
+                />
+                <Chip
+                  label="Secondary"
+                  sx={{
+                    bgcolor: "secondary.main",
+                    color: "secondary.contrastText",
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              Theme Detection
+            </Typography>
+            <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+              Current mode: {theme.palette.mode}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    );
+  },
+};

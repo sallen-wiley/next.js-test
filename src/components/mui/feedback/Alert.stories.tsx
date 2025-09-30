@@ -56,6 +56,8 @@ export const WithCustomIcon: Story = {
     children: "Here is a gentle confirmation that your action was successful.",
   },
   render: (args) => (
-    <Alert {...args} icon={<CheckIcon fontSize="inherit" />}>{args.children}</Alert>
+    <Alert {...args} icon={<CheckIcon fontSize="inherit" />}>
+      {args.children}
+    </Alert>
   ),
 };

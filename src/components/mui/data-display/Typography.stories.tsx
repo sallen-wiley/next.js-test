@@ -468,10 +468,10 @@ export const WileyColors: Story = {
   render: () => (
     <Box sx={{ width: "100%", maxWidth: 500 }}>
       <Typography variant="h4" gutterBottom color="primary">
-        Primary Color (Wiley Blue)
+        Primary Color
       </Typography>
       <Typography variant="h4" gutterBottom color="secondary">
-        Secondary Color (Wiley Pink)
+        Secondary Color
       </Typography>
       <Typography variant="h4" gutterBottom color="error">
         Error Color
