@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Box, Typography, Paper, Chip } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, useColorScheme } from "@mui/material/styles";
 
 // Create a wrapper component for the stories
 const PaletteDemo = () => null;
@@ -51,7 +51,7 @@ const ColorSwatch = ({ color, label }: { color: string; label: string }) => (
     <Typography variant="body2" sx={{ minWidth: 120 }}>
       {label}
     </Typography>
-    <Typography variant="caption" sx={{ color: "#666" }}>
+    <Typography variant="caption" sx={{ color: "text.secondary" }}>
       {color}
     </Typography>
   </Box>
@@ -212,7 +212,10 @@ export const ColorUsageExamples: Story = {
 
 export const ColorModeComparison: Story = {
   render: () => {
-    const theme = useTheme();
+    const { mode, systemMode } = useColorScheme();
+
+    // Handle system mode by checking systemMode when mode is 'system'
+    const currentMode = mode === "system" ? systemMode : mode;
 
     return (
       <Box>
@@ -286,9 +289,17 @@ export const ColorModeComparison: Story = {
             <Typography variant="subtitle2" gutterBottom>
               Theme Detection
             </Typography>
-            <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-              Current mode: {theme.palette.mode}
+            <Typography variant="body2" sx={{ fontFamily: "monospace", mb: 1 }}>
+              Current mode: {currentMode || "loading..."}
             </Typography>
+            <Typography variant="body2" sx={{ fontFamily: "monospace", mb: 1 }}>
+              Selected mode: {mode || "system"}
+            </Typography>
+            {mode === "system" && (
+              <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+                System preference: {systemMode || "detecting..."}
+              </Typography>
+            )}
           </Box>
         </Box>
       </Box>

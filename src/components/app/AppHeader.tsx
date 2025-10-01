@@ -1,4 +1,5 @@
 "use client";
+import type {} from "@mui/material/themeCssVarsAugmentation";
 import React from "react";
 import { Box, Container, Divider } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -12,7 +13,7 @@ export default function AppHeader() {
     // Box component to control the background color and header positioning
     <Box
       sx={{
-        bgcolor: theme.palette.background.paper,
+        bgcolor: (theme.vars || theme).palette.background.paper,
         width: "100%",
         display: "flex",
         flexDirection: "column",

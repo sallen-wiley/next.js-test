@@ -23,6 +23,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Pagination,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -117,6 +118,15 @@ export default function Home() {
             {/* Chip */}
             <Chip label="Chip Example" color="primary" sx={{ mt: 2, mr: 2 }} />
             <Chip label="Success" color="success" sx={{ mt: 2 }} />
+
+            {/* Pagination */}
+            <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+              <Pagination count={10} color="primary" />
+            </Box>
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+              <Pagination count={5} variant="outlined" color="secondary" />
+            </Box>
+
             {/* Card */}
             <Card sx={{ maxWidth: 345, mt: 4 }}>
               <CardContent>
@@ -173,14 +183,14 @@ export default function Home() {
           backgroundColor: "transparent",
           boxShadow: "none",
           "&:hover": {
-            backgroundColor: "rgba(0,0,0,0.04)",
+            backgroundColor: "action.hover",
             boxShadow: "none",
           },
           minHeight: 56,
           minWidth: 56,
         }}
       >
-        <PsychologyAltIcon sx={{ color: "black", fontSize: 96 }} />
+        <PsychologyAltIcon sx={{ color: "text.primary", fontSize: 96 }} />
       </Fab>
     </Box>
   );

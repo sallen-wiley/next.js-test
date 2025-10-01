@@ -1,5 +1,5 @@
 "use client";
-import GlobalHeader from "@/components/app/GlobalHeader";
+import { useHeaderConfig } from "@/contexts/HeaderContext";
 import {
   Box,
   Container,
@@ -50,23 +50,23 @@ const resources = [
 ];
 
 export default function Home() {
+  // Configure header for this specific page
+  useHeaderConfig({
+    containerProps: { maxWidth: "xl" },
+    rightSlot: (
+      <Button
+        variant="contained"
+        color="primary"
+        href="/login"
+        sx={{ borderRadius: 2, fontWeight: 600 }}
+      >
+        Log In
+      </Button>
+    ),
+  });
+
   return (
     <>
-      <GlobalHeader
-        logoAffix="Open Access Accounts"
-        fixed={false}
-        containerProps={{ maxWidth: "xl" }}
-        rightSlot={
-          <Button
-            variant="contained"
-            color="primary"
-            href="/login"
-            sx={{ borderRadius: 2, fontWeight: 600 }}
-          >
-            Log In
-          </Button>
-        }
-      />
       {/* Hero Section */}
       <Box
         sx={{

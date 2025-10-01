@@ -58,81 +58,71 @@ let wileyTheme = createTheme({
       xl: 1441,
     },
   },
-  colorSchemes: {
-    light: {
-      palette: {
-        contrastThreshold: 4.5,
-        primary: {
-          main: colors.blue[500],
-          dark: colors.blue[800],
-          light: colors.blue[400],
-        },
-        secondary: {
-          main: colors.pink[500],
-          dark: colors.pink[600],
-          light: colors.pink[400],
-        },
-        error: {
-          main: colors.red[500],
-          dark: colors.red[700],
-          light: colors.red[300],
-        },
-        warning: {
-          main: colors.orange[500],
-          dark: colors.orange[700],
-          light: colors.orange[300],
-        },
-        info: {
-          main: colors.blue[500],
-          dark: colors.blue[800],
-          light: colors.blue[400],
-        },
-        success: {
-          main: colors.green[500],
-          dark: colors.green[700],
-          light: colors.green[300],
-        },
-        neutral: {
-          main: colors.grey[800],
-          light: lighten(colors.grey[800], 0.1),
-          dark: darken(colors.grey[800], 0.1),
-          contrastText: colors.common.white,
-        },
-        black: {
-          main: colors.common.black,
-          light: lighten(colors.common.black, 0.1),
-          dark: darken(colors.common.black, 0.1),
-          contrastText: colors.common.white,
-        },
-        white: {
-          main: colors.common.white,
-          light: lighten(colors.common.white, 0.1),
-          dark: darken(colors.common.white, 0.1),
-          contrastText: colors.common.black,
-        },
-        text: {
-          primary: colors.common.black,
-          secondary: colors.grey[800],
-          disabled: colors.grey[600],
-        },
-      },
+  palette: {
+    // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
+    contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
+    primary: {
+      main: colors.blue[500],
+      dark: colors.blue[800],
+      light: colors.blue[400],
     },
+    secondary: {
+      main: colors.pink[500],
+      dark: colors.pink[600],
+      light: colors.pink[400],
+    },
+    error: {
+      main: colors.red[500],
+      dark: colors.red[700],
+      light: colors.red[300],
+    },
+    warning: {
+      main: colors.orange[500],
+      dark: colors.orange[700],
+      light: colors.orange[300],
+    },
+    info: {
+      main: colors.blue[500],
+      dark: colors.blue[800],
+      light: colors.blue[400],
+    },
+    success: {
+      main: colors.green[500],
+      dark: colors.green[700],
+      light: colors.green[300],
+    },
+    neutral: {
+      main: colors.grey[800],
+      light: lighten(colors.grey[800], 0.1),
+      dark: darken(colors.grey[800], 0.1),
+      contrastText: colors.common.white,
+    },
+    black: {
+      main: colors.common.black,
+      light: lighten(colors.common.black, 0.1),
+      dark: darken(colors.common.black, 0.1),
+      contrastText: colors.common.white,
+    },
+    white: {
+      main: colors.common.white,
+      light: lighten(colors.common.white, 0.1),
+      dark: darken(colors.common.white, 0.1),
+      contrastText: colors.common.black,
+    },
+  },
+  colorSchemes: {
     dark: {
       palette: {
-        primary: {
-          main: "#42A5F5",
-          light: "#90CAF9",
-          dark: "#1976D2",
-        },
-        secondary: {
-          main: "#FF8A65",
-          light: "#FFAB91",
-          dark: "#FF6B35",
-        },
+        // Only customize specific colors for dark mode
+        // Everything else is automatically generated from your base palette
         background: {
           default: "#0A1929",
           paper: "#132F4C",
         },
+        // Example: You could also customize specific brand colors for dark mode
+        // primary: {
+        //   main: '#64B5F6', // Lighter blue for dark mode
+        // },
       },
     },
   },
@@ -279,38 +269,55 @@ wileyTheme = createTheme(wileyTheme, {
 
     MuiAlert: {
       styleOverrides: {
-        standardSuccess: {
-          backgroundColor: wileyTheme.customPalette.successLightest,
-          color: wileyTheme.palette.text.primary,
-        },
-        outlinedSuccess: {
-          borderColor: wileyTheme.palette.success.main,
-          color: wileyTheme.palette.success.main,
-        },
-        standardError: {
-          backgroundColor: wileyTheme.customPalette.errorLightest,
-          color: wileyTheme.palette.text.primary,
-        },
-        outlinedError: {
-          borderColor: wileyTheme.palette.error.main,
-          color: wileyTheme.palette.error.main,
-        },
-        standardInfo: {
-          backgroundColor: wileyTheme.customPalette.infoLightest,
-          color: wileyTheme.palette.text.primary,
-        },
-        outlinedInfo: {
-          borderColor: wileyTheme.palette.info.main,
-          color: wileyTheme.palette.info.main,
-        },
-        standardWarning: {
-          backgroundColor: wileyTheme.customPalette.warningLightest,
-          color: wileyTheme.palette.text.primary,
-        },
-        outlinedWarning: {
-          borderColor: wileyTheme.palette.warning.main,
-          color: wileyTheme.palette.warning.main,
-        },
+        standardSuccess: ({ theme }: { theme: Theme }) => ({
+          // Light mode custom colors, dark mode uses defaults
+          ...theme.applyStyles("light", {
+            backgroundColor: theme.customPalette.successLightest,
+            color: theme.palette.text.primary,
+          }),
+        }),
+        outlinedSuccess: ({ theme }: { theme: Theme }) => ({
+          ...theme.applyStyles("light", {
+            borderColor: theme.palette.success.main,
+            color: theme.palette.success.main,
+          }),
+        }),
+        standardError: ({ theme }: { theme: Theme }) => ({
+          ...theme.applyStyles("light", {
+            backgroundColor: theme.customPalette.errorLightest,
+            color: theme.palette.text.primary,
+          }),
+        }),
+        outlinedError: ({ theme }: { theme: Theme }) => ({
+          ...theme.applyStyles("light", {
+            borderColor: theme.palette.error.main,
+            color: theme.palette.error.main,
+          }),
+        }),
+        standardInfo: ({ theme }: { theme: Theme }) => ({
+          ...theme.applyStyles("light", {
+            backgroundColor: theme.customPalette.infoLightest,
+            color: theme.palette.text.primary,
+          }),
+        }),
+        outlinedInfo: ({ theme }: { theme: Theme }) => ({
+          ...theme.applyStyles("light", {
+            borderColor: theme.palette.info.main,
+            color: theme.palette.info.main,
+          }),
+        }),
+        standardWarning: ({ theme }: { theme: Theme }) => ({
+          ...theme.applyStyles("light", {
+            backgroundColor: theme.customPalette.warningLightest,
+            color: theme.palette.text.primary,
+          }),
+        }),
+        outlinedWarning: ({ theme }: { theme: Theme }) => ({
+          ...theme.applyStyles("light", {
+            borderColor: theme.palette.warning.main,
+            color: theme.palette.warning.main,
+          }),
+        }),
       },
     },
 
@@ -418,32 +425,39 @@ wileyTheme = createTheme(wileyTheme, {
             borderColor: undefined, // or use theme.palette.action.hover if you want MUI's default
           },
         },
-        notchedOutline: {
-          borderColor: wileyTheme.palette.text.secondary,
-          // reuse the secondary text color for the border
+        notchedOutline: ({ theme }: { theme: Theme }) => ({
+          // Color-specific styles that change with color scheme
+          ...theme.applyStyles("light", {
+            borderColor: theme.palette.text.secondary,
+            // reuse the secondary text color for the border in light mode only
+          }),
+          // Dark mode uses default border color
           "& legend": {
             fontSize: `${SHRUNK_LABEL_SCALE}em`,
             // increase the font size of the invisible label used to 'notch' the outline. This should match the MuiInput Label transformation value
             maxWidth: "100%",
           },
-        },
+        }),
       },
     },
 
     MuiPaginationItem: {
       styleOverrides: {
-        root: {
-          fontWeight: wileyTheme.typography.button.fontWeight,
-          "&.MuiPaginationItem-outlinedPrimary": {
-            color: wileyTheme.palette.primary.main,
-          },
-          "&.MuiPaginationItem-textPrimary": {
-            color: wileyTheme.palette.primary.main,
-            "&.Mui-selected": {
-              color: wileyTheme.palette.primary.contrastText,
+        root: ({ theme }: { theme: Theme }) => ({
+          fontWeight: theme.typography.button.fontWeight,
+          // Light mode custom colors, dark mode uses defaults
+          ...theme.applyStyles("light", {
+            "&.MuiPaginationItem-outlinedPrimary": {
+              color: theme.palette.primary.main,
             },
-          },
-        },
+            "&.MuiPaginationItem-textPrimary": {
+              color: theme.palette.primary.main,
+              "&.Mui-selected": {
+                color: theme.palette.primary.contrastText,
+              },
+            },
+          }),
+        }),
       },
     },
 

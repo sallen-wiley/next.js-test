@@ -1,4 +1,5 @@
 "use client";
+import type {} from '@mui/material/themeCssVarsAugmentation';
 import React from "react";
 import { Box, Container, Divider, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -24,19 +25,19 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
 }) => {
   return (
     <Box
-      sx={{
-        bgcolor: "#fff",
+      sx={(theme) => ({
+        bgcolor: (theme.vars || theme).palette.background.paper,
         width: "100%",
         px: 0,
         display: "flex",
         flexDirection: "column",
         alignItems: "normal",
-        zIndex: (theme) => theme.zIndex.drawer + 1,
+        zIndex: theme.zIndex.drawer + 1,
         position: fixed ? "fixed" : "relative",
         top: 0,
         left: 0,
         right: 0,
-      }}
+      })}
     >
       <Container {...containerProps}>
         <Box

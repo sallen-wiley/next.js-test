@@ -1,9 +1,17 @@
 "use client";
+import { useHeaderConfig } from "@/contexts/HeaderContext";
 import ArticleCard from "@/components/product/ArticleCardFigma";
 import { Container, Typography, Paper, Stack } from "@mui/material";
 import Grid from "@mui/material/Grid";
 
 export default function Home() {
+  // Configure header for dashboard
+  useHeaderConfig({
+    logoAffix: "Open Access Dashboard",
+    containerProps: { maxWidth: false },
+    // No rightSlot needed for dashboard
+  });
+
   return (
     <>
       <Container maxWidth="xl" fixed={true}>
