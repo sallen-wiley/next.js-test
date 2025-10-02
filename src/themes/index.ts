@@ -1,9 +1,11 @@
+import defaultTheme from "./default";
 import sageTheme from "./sage";
 import wileyTheme from "./wiley";
 import techTheme from "./tech";
 
 // Available themes with different typography approaches
 export const themes = {
+  default: defaultTheme, // Standard Material-UI theme with Roboto
   sage: sageTheme, // Source Serif 4 - Elegant serif for nature/organic brands
   wiley: wileyTheme, // Inter - Modern sans-serif for professional/academic
   tech: techTheme, // IBM Plex Mono - Monospace for tech/development brands
@@ -17,5 +19,5 @@ export const getTheme = (themeName: keyof typeof themes = "wiley") => {
 // Available theme names
 export const themeNames = Object.keys(themes) as Array<keyof typeof themes>;
 
-export { sageTheme, wileyTheme, techTheme };
+export { defaultTheme, sageTheme, wileyTheme, techTheme };
 export default themes;

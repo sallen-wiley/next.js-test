@@ -26,6 +26,12 @@ const themeMetadata: Record<
   ThemeName,
   { label: string; description: string; color: string; icon: string }
 > = {
+  default: {
+    label: "Default",
+    description: "Standard Material-UI theme",
+    color: "#1976D2",
+    icon: "🎨",
+  },
   sage: {
     label: "Sage",
     description: "Nature-inspired with serif headings",
@@ -35,7 +41,7 @@ const themeMetadata: Record<
   wiley: {
     label: "Wiley",
     description: "Professional academic theme",
-    color: "#1976D2",
+    color: "#3F51B5",
     icon: "📚",
   },
   tech: {
