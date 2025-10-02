@@ -378,21 +378,19 @@ wileyTheme = createTheme(wileyTheme, {
     },
 
     MuiTextField: {
-      defaultProps: {
-        slotProps: {
-          inputLabel: {
-            shrink: true, // Ensure the label is always shrunk
-          },
-        },
-      },
+      // Remove defaultProps that depend on JS timing - we'll handle this via CSS
     },
 
     MuiInputLabel: {
-      defaultProps: {
-        shrink: true,
-      },
       styleOverrides: {
         root: ({ theme }: { theme: Theme }) => ({
+          // Force all labels to be in shrunk position via CSS
+          // This ensures immediate application regardless of JS timing
+          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
+          transform: `translate(14px, ${
+            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16 // 16px is the default font size in MUI, so we multiply by SHRUNK_LABEL_SCALE and SHRUNK_LABEL_LINEHEIGHT to get the correct translation
+          }px) scale(${SHRUNK_LABEL_SCALE})`,
+          transformOrigin: "top left",
           // Color-specific styles that change with color scheme
           ...theme.applyStyles("light", {
             color: theme.colorSchemes.light.palette.text.primary,
@@ -402,13 +400,28 @@ wileyTheme = createTheme(wileyTheme, {
           }),
         }),
         outlined: {
-          "&.MuiInputLabel-shrink": {
-            lineHeight: SHRUNK_LABEL_LINEHEIGHT,
-            transform: `translate(14px, ${
-              SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16 // 16px is the default font size in MUI, so we multiply by SHRUNK_LABEL_SCALE and SHRUNK_LABEL_LINEHEIGHT to get the correct translation
-            }px) scale(${SHRUNK_LABEL_SCALE})`,
-            // required to accommodate for the larger shrunk label size
-          },
+          // Ensure consistent styling for outlined variant
+          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
+          transform: `translate(14px, ${
+            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16
+          }px) scale(${SHRUNK_LABEL_SCALE})`,
+          transformOrigin: "top left",
+        },
+        filled: {
+          // Ensure consistent styling for filled variant
+          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
+          transform: `translate(12px, ${
+            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16 - 6 // Slightly different positioning for filled variant
+          }px) scale(${SHRUNK_LABEL_SCALE})`,
+          transformOrigin: "top left",
+        },
+        standard: {
+          // Ensure consistent styling for standard variant
+          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
+          transform: `translate(0, ${
+            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16 - 10 // Different positioning for standard variant
+          }px) scale(${SHRUNK_LABEL_SCALE})`,
+          transformOrigin: "top left",
         },
       },
     },
@@ -436,6 +449,13 @@ wileyTheme = createTheme(wileyTheme, {
             fontSize: `${SHRUNK_LABEL_SCALE}em`,
             // increase the font size of the invisible label used to 'notch' the outline. This should match the MuiInput Label transformation value
             maxWidth: "100%",
+            // Force the legend to always show (as if label is always shrunk)
+            // width: "auto",
+          },
+          // Always show the notch as if label is shrunk
+          "& legend > span": {
+            // paddingLeft: "5px",
+            // paddingRight: "5px",
           },
         }),
       },

@@ -12,13 +12,12 @@ import {
   Typography,
   Chip,
 } from "@mui/material";
-import {
-  Palette as PaletteIcon,
-  LightMode,
-  DarkMode,
-  SettingsBrightness,
-  Check,
-} from "@mui/icons-material";
+// Individual icon imports to avoid loading entire icon library
+import PaletteIcon from "@mui/icons-material/Palette";
+import LightMode from "@mui/icons-material/LightMode";
+import DarkMode from "@mui/icons-material/DarkMode";
+import SettingsBrightness from "@mui/icons-material/SettingsBrightness";
+import Check from "@mui/icons-material/Check";
 import { useThemeContext, ThemeName, ColorMode } from "@/contexts/ThemeContext";
 import { useColorScheme } from "@mui/material/styles";
 

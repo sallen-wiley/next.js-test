@@ -106,7 +106,11 @@ export default function Home() {
               sx={{ width: 200, mt: 2 }}
             />
             {/* Select */}
-            <Select defaultValue={10} sx={{ mt: 2, mb: 2, minWidth: 120 }}>
+            <Select
+              label="Number"
+              defaultValue={10}
+              sx={{ mt: 2, mb: 2, minWidth: 120 }}
+            >
               <MenuItem value={10}>Ten</MenuItem>
               <MenuItem value={20}>Twenty</MenuItem>
               <MenuItem value={30}>Thirty</MenuItem>
