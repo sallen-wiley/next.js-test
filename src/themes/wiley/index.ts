@@ -255,6 +255,25 @@ wileyTheme = createTheme(wileyTheme, {
       defaultProps: {
         disableRipple: true,
       },
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          "&.Mui-focusVisible": {
+            outline: "2px solid",
+            outlineOffset: "2px",
+            // Color-specific styles that change with color scheme
+            ...theme.applyStyles("light", {
+              outlineColor: theme.palette.common.black,
+            }),
+            ...theme.applyStyles("dark", {
+              outlineColor: theme.palette.common.white,
+            }),
+          },
+          "&.Mui-focusVisibleOnDark:focus-visible": {
+            outline: "2px solid white",
+            outlineOffset: "2px",
+          },
+        }),
+      },
     },
 
     // Theme-aware components (can access theme values)

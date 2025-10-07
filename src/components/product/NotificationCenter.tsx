@@ -15,15 +15,13 @@ import {
   MenuItem,
   Alert,
 } from "@mui/material";
-import {
-  CloseRounded as CloseIcon,
-  NotificationsRounded as NotificationsIcon,
-  InfoRounded as InfoIcon,
-  WarningRounded as WarningIcon,
-  PersonRounded as PersonIcon,
-  EmailRounded as EmailIcon,
-  SecurityRounded as SecurityIcon,
-} from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/CloseRounded";
+import NotificationsIcon from "@mui/icons-material/NotificationsRounded";
+import InfoIcon from "@mui/icons-material/InfoRounded";
+import WarningIcon from "@mui/icons-material/WarningRounded";
+import PersonIcon from "@mui/icons-material/PersonRounded";
+import EmailIcon from "@mui/icons-material/EmailRounded";
+import SecurityIcon from "@mui/icons-material/SecurityRounded";
 
 import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { SvgIconTypeMap } from "@mui/material/SvgIcon";
