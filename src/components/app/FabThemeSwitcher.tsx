@@ -20,6 +20,8 @@ import SettingsBrightness from "@mui/icons-material/SettingsBrightness";
 import Check from "@mui/icons-material/Check";
 import { useThemeContext, ThemeName, ColorMode } from "@/contexts/ThemeContext";
 import { useColorScheme } from "@mui/material/styles";
+import { useLogoContext } from "@/contexts/LogoContext";
+import type { TenantType } from "@/components/product/PrimaryLogo";
 
 // Theme metadata for better UX
 const themeMetadata: Record<
@@ -73,9 +75,40 @@ const modeMetadata: Record<
   },
 };
 
+const tenantMetadata: Record<
+  TenantType,
+  { label: string; description: string; color: string; icon: string }
+> = {
+  wiley: {
+    label: "Wiley",
+    description: "Professional academic publishing",
+    color: "#3F51B5",
+    icon: "📚",
+  },
+  sage: {
+    label: "Sage",
+    description: "Research and educational content",
+    color: "#2E8B57",
+    icon: "🌿",
+  },
+  ieee: {
+    label: "IEEE",
+    description: "Electrical and electronics engineering",
+    color: "#295FA3",
+    icon: "⚡",
+  },
+  default: {
+    label: "Default",
+    description: "Standard brand logo",
+    color: "#1976D2",
+    icon: "🎨",
+  },
+};
+
 export const FabThemeSwitcher: React.FC = () => {
   const { currentTheme, setTheme, availableThemes } = useThemeContext();
   const { mode, setMode, systemMode } = useColorScheme();
+  const { currentTenant, setTenant, availableTenants } = useLogoContext();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -93,6 +126,10 @@ export const FabThemeSwitcher: React.FC = () => {
 
   const handleModeChange = (newMode: ColorMode) => {
     setMode(newMode);
+  };
+
+  const handleTenantChange = (tenant: TenantType) => {
+    setTenant(tenant);
   };
 
   const getCurrentModeDescription = () => {
@@ -226,6 +263,63 @@ export const FabThemeSwitcher: React.FC = () => {
               }}
             >
               <ListItemIcon sx={{ minWidth: 36 }}>{meta.icon}</ListItemIcon>
+              <ListItemText
+                primary={meta.label}
+                secondary={meta.description}
+                primaryTypographyProps={{ fontWeight: isSelected ? 600 : 400 }}
+              />
+              {isSelected && <Check sx={{ color: "primary.main", ml: 1 }} />}
+            </MenuItem>
+          );
+        })}
+
+        <Divider sx={{ my: 1 }} />
+
+        {/* Logo Selection Section */}
+        <Box sx={{ px: 2, py: 1 }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Logo
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Current: {tenantMetadata[currentTenant].label}
+          </Typography>
+        </Box>
+
+        {availableTenants.map((tenant) => {
+          const meta = tenantMetadata[tenant];
+          const isSelected = currentTenant === tenant;
+
+          return (
+            <MenuItem
+              key={tenant}
+              onClick={() => handleTenantChange(tenant)}
+              sx={{
+                mx: 1,
+                borderRadius: 1,
+                backgroundColor: isSelected ? "action.selected" : "transparent",
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    backgroundColor: meta.color,
+                    color: "white",
+                    fontSize: "12px",
+                  }}
+                >
+                  {meta.icon}
+                </Box>
+              </ListItemIcon>
               <ListItemText
                 primary={meta.label}
                 secondary={meta.description}

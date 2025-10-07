@@ -4,6 +4,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LogoProvider } from "@/contexts/LogoContext";
 import FabThemeSwitcher from "@/components/app/FabThemeSwitcher";
 
 export const metadata = {
@@ -22,9 +23,11 @@ export default function RootLayout({
         <InitColorSchemeScript attribute="class" />
         <AppRouterCacheProvider>
           <ThemeProvider defaultTheme="wiley">
-            <CssBaseline />
-            {children}
-            <FabThemeSwitcher />
+            <LogoProvider defaultTenant="wiley">
+              <CssBaseline />
+              {children}
+              <FabThemeSwitcher />
+            </LogoProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

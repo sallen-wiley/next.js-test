@@ -4,10 +4,19 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import { themes, getTheme } from "@/themes";
 import type { Theme } from "@mui/material/styles";
+import type { TenantType } from "@/components/product/PrimaryLogo";
 
 // Define the available theme names
 export type ThemeName = keyof typeof themes;
 export type ColorMode = "light" | "dark" | "system";
+
+// Theme to tenant logo mapping
+const themeToTenantMap: Record<ThemeName, TenantType> = {
+  wiley: "wiley",
+  sage: "sage",
+  tech: "default", // Tech theme uses default logo
+  default: "default",
+};
 
 // Theme context interface
 interface ThemeContextType {
@@ -15,6 +24,7 @@ interface ThemeContextType {
   setTheme: (themeName: ThemeName) => void;
   availableThemes: ThemeName[];
   theme: Theme;
+  currentTenant: TenantType;
 }
 
 // Create the context
@@ -57,12 +67,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   const theme = getTheme(currentTheme);
   const availableThemes = Object.keys(themes) as ThemeName[];
+  const currentTenant = themeToTenantMap[currentTheme];
 
   const contextValue: ThemeContextType = {
     currentTheme,
     setTheme,
     availableThemes,
     theme,
+    currentTenant,
   };
 
   return (
