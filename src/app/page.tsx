@@ -70,6 +70,13 @@ export default function Home() {
             <Stack direction="column" spacing={4}>
               <Paper elevation={3} sx={{ p: 3 }}>
                 <Typography variant="body1">
+                  <Link href="/onboarding-demos">
+                    Onboarding Workflow Demos
+                  </Link>
+                </Typography>
+              </Paper>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="body1">
                   <Link href="/woaa">WOAA</Link>
                 </Typography>
               </Paper>
