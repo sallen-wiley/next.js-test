@@ -85,6 +85,12 @@ const tenantMetadata: Record<
     color: "#3F51B5",
     icon: "📚",
   },
+  wiley2025: {
+    label: "Wiley 2025",
+    description: "New Wiley brand identity",
+    color: "#00d975",
+    icon: "✨",
+  },
   sage: {
     label: "Sage",
     description: "Research and educational content",

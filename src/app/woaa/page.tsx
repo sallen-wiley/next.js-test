@@ -1,4 +1,5 @@
 "use client";
+import type {} from "@mui/material/themeCssVarsAugmentation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import {
   Box,
@@ -11,55 +12,89 @@ import {
   Stack,
   Grid,
   Button,
+  useTheme,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
-import { blue } from "@mui/material/colors";
-
-const resources = [
-  {
-    title: "Account Dashboard",
-    description: "Manage your open access accounts and view analytics.",
-    icon: <DashboardIcon sx={{ fontSize: 48, color: blue[500] }} />,
-    href: "/woaa/dashboard",
-    gradient: `linear-gradient(135deg, ${blue[700]} 0%, ${blue[500]} 100%)`,
-  },
-  {
-    title: "Notification Center",
-    description: "View and manage notifications for your account.",
-    icon: <NotificationsActiveIcon sx={{ fontSize: 48, color: blue[500] }} />,
-    href: "/experiments/notification-admin",
-    gradient: `linear-gradient(135deg, ${blue[800]} 0%, ${blue[700]} 100%)`,
-  },
-  {
-    title: "Preferences",
-    description: "Set your notification and account preferences.",
-    icon: <SettingsIcon sx={{ fontSize: 48, color: blue[500] }} />,
-    href: "/experiments/notification-preferences",
-    gradient: `linear-gradient(135deg, ${blue[900]} 0%, ${blue[800]} 100%)`,
-  },
-  {
-    title: "Support",
-    description: "Contact support or access help resources.",
-    icon: <SupportAgentIcon sx={{ fontSize: 48, color: blue[500] }} />,
-    href: "#",
-    gradient: `linear-gradient(135deg, ${blue[600]} 0%, ${blue[700]} 100%)`,
-  },
-];
 
 export default function Home() {
+  const theme = useTheme();
+
+  // Resources array using theme colors for gradients
+  const resources = [
+    {
+      title: "Account Dashboard",
+      description: "Manage your open access accounts and view analytics.",
+      icon: (
+        <DashboardIcon
+          sx={{
+            fontSize: 48,
+            color: (theme.vars || theme).palette.text.primary,
+          }}
+        />
+      ),
+      href: "/woaa/dashboard",
+      gradient: `linear-gradient(135deg, ${
+        (theme.vars || theme).palette.background.default
+      } 0%, ${(theme.vars || theme).palette.background.paper} 100%)`,
+    },
+    {
+      title: "Notification Center",
+      description: "View and manage notifications for your account.",
+      icon: (
+        <NotificationsActiveIcon
+          sx={{
+            fontSize: 48,
+            color: (theme.vars || theme).palette.text.primary,
+          }}
+        />
+      ),
+      href: "/experiments/notification-admin",
+      gradient: `linear-gradient(135deg, ${
+        (theme.vars || theme).palette.background.paper
+      } 0%, ${(theme.vars || theme).palette.background.default} 100%)`,
+    },
+    {
+      title: "Preferences",
+      description: "Set your notification and account preferences.",
+      icon: (
+        <SettingsIcon
+          sx={{
+            fontSize: 48,
+            color: (theme.vars || theme).palette.text.secondary,
+          }}
+        />
+      ),
+      href: "/experiments/notification-preferences",
+      gradient: `linear-gradient(135deg, ${
+        (theme.vars || theme).palette.background.default
+      } 30%, ${(theme.vars || theme).palette.background.paper} 100%)`,
+    },
+    {
+      title: "Support",
+      description: "Contact support or access help resources.",
+      icon: (
+        <SupportAgentIcon
+          sx={{
+            fontSize: 48,
+            color: (theme.vars || theme).palette.text.secondary,
+          }}
+        />
+      ),
+      href: "#",
+      gradient: `linear-gradient(135deg, ${
+        (theme.vars || theme).palette.background.paper
+      } 30%, ${(theme.vars || theme).palette.background.default} 100%)`,
+    },
+  ];
+
   // Configure header for this specific page
   useHeaderConfig({
     containerProps: { maxWidth: "xl" },
     rightSlot: (
-      <Button
-        variant="contained"
-        color="primary"
-        href="/login"
-        sx={{ borderRadius: 2, fontWeight: 600 }}
-      >
+      <Button variant="contained" color="primary" href="/login">
         Log In
       </Button>
     ),
@@ -73,7 +108,9 @@ export default function Home() {
           width: "100vw",
           minHeight: 320,
           position: "relative",
-          background: `linear-gradient(90deg, ${blue[900]} 0%, ${blue[700]} 100%)`,
+          background: `linear-gradient(90deg, ${
+            (theme.vars || theme).palette.background.default
+          } 0%, ${(theme.vars || theme).palette.background.paper} 100%)`,
           display: "flex",
           alignItems: "center",
           py: 6,
@@ -88,17 +125,27 @@ export default function Home() {
             right: { xs: 16, md: 64 },
             top: { xs: 32, md: 48 },
             fontSize: { xs: 120, md: 200 },
-            color: "rgba(255,255,255,0.08)",
+            color: (theme.vars || theme).palette.action.disabled,
+            opacity: 0.1,
             zIndex: 0,
             pointerEvents: "none",
             userSelect: "none",
           }}
         />
         <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1 }}>
-          <Typography variant="h2" color="white" fontWeight={700} gutterBottom>
+          <Typography
+            variant="h2"
+            color={(theme.vars || theme).palette.text.primary}
+            fontWeight={700}
+            gutterBottom
+          >
             Wiley Open Access Account Admin
           </Typography>
-          <Typography variant="h5" color="white" sx={{ maxWidth: 600 }}>
+          <Typography
+            variant="h5"
+            color={(theme.vars || theme).palette.text.secondary}
+            sx={{ maxWidth: 600 }}
+          >
             Welcome to your customer admin dashboard. Manage your open access
             accounts, notifications, and preferences all in one place.
           </Typography>
@@ -123,7 +170,7 @@ export default function Home() {
                   justifyContent: "center",
                   alignItems: "center",
                   background: resource.gradient,
-                  color: "#fff",
+                  color: (theme.vars || theme).palette.text.primary,
                   boxShadow: 3,
                   borderRadius: 3,
                   transition: "transform 0.2s, box-shadow 0.2s",
@@ -151,11 +198,14 @@ export default function Home() {
                       variant="h6"
                       fontWeight={600}
                       gutterBottom
-                      color="#fff"
+                      color={(theme.vars || theme).palette.text.primary}
                     >
                       {resource.title}
                     </Typography>
-                    <Typography variant="body2" color="#e3f2fd">
+                    <Typography
+                      variant="body2"
+                      color={(theme.vars || theme).palette.text.secondary}
+                    >
                       {resource.description}
                     </Typography>
                   </CardContent>
@@ -169,8 +219,8 @@ export default function Home() {
       <Box
         component="footer"
         sx={{
-          background: "#222",
-          color: "#fff",
+          background: (theme.vars || theme).palette.background.paper,
+          color: (theme.vars || theme).palette.text.primary,
           py: 4,
           mt: "auto",
         }}

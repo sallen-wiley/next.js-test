@@ -79,7 +79,7 @@ const sageTheme = createTheme({
     // Buttons use monospace font
     button: {
       fontFamily: "'IBM Plex Mono'",
-      fontWeight: 500,
+      // fontWeight: 800,
       letterSpacing: "0.02em",
     },
 

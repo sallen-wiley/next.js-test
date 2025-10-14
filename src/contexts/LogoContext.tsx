@@ -35,7 +35,13 @@ export const LogoProvider: React.FC<LogoProviderProps> = ({
   const [currentTenant, setCurrentTenant] = useState<TenantType>(defaultTenant);
 
   // Available tenant options
-  const availableTenants: TenantType[] = ["wiley", "sage", "ieee", "default"];
+  const availableTenants: TenantType[] = [
+    "wiley",
+    "wiley2025",
+    "sage",
+    "ieee",
+    "default",
+  ];
 
   // Load tenant preference from localStorage on mount
   useEffect(() => {
@@ -58,8 +64,6 @@ export const LogoProvider: React.FC<LogoProviderProps> = ({
   };
 
   return (
-    <LogoContext.Provider value={contextValue}>
-      {children}
-    </LogoContext.Provider>
+    <LogoContext.Provider value={contextValue}>{children}</LogoContext.Provider>
   );
 };
