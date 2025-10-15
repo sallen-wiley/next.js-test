@@ -87,9 +87,19 @@ export default function Home() {
               </Paper>
               <Paper elevation={3} sx={{ p: 3 }}>
                 <Typography variant="body1">
-                  <Link href="/typography-demo">
-                    Typography Demo - Mixed Font System
+                  <Link href="/reviewer-dashboard">
+                    Reviewer Invitation Dashboard
                   </Link>
+                </Typography>
+              </Paper>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="body1">
+                  <Link href="/data-demo">Real Data Demo</Link>
+                </Typography>
+              </Paper>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="body1">
+                  <Link href="/typography-demo">Typography Demo</Link>
                 </Typography>
               </Paper>
               <Paper elevation={3} sx={{ p: 3 }}>

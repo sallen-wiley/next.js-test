@@ -99,8 +99,6 @@ import FormatColorFillIcon from "@mui/icons-material/FormatColorFill";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import Fab from "@mui/material/Fab";
-import PsychologyAltIcon from "@mui/icons-material/PsychologyAlt";
-import { keyframes } from "@mui/system";
 
 export default function Home() {
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -123,17 +121,6 @@ export default function Home() {
     switch2: false,
     switch3: true,
   });
-
-  // Define wobble keyframes
-  const wobble = keyframes`
-    0% { transform: rotate(0deg); }
-    15% { transform: rotate(-10deg); }
-    30% { transform: rotate(8deg); }
-    45% { transform: rotate(-6deg); }
-    60% { transform: rotate(4deg); }
-    75% { transform: rotate(-2deg); }
-    100% { transform: rotate(0deg); }
-  `;
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget);
@@ -1238,7 +1225,7 @@ export default function Home() {
         {/* Speed Dial */}
         <SpeedDial
           ariaLabel="SpeedDial example"
-          sx={{ position: "fixed", bottom: 16, left: 16 }}
+          sx={{ position: "fixed", bottom: 16, right: 24 }}
           icon={<SpeedDialIcon />}
           open={speedDialOpen}
           onClose={() => setSpeedDialOpen(false)}
@@ -1254,28 +1241,6 @@ export default function Home() {
           ))}
         </SpeedDial>
       </Container>
-
-      {/* Original FAB with wobble animation */}
-      <Fab
-        aria-label="psychology"
-        sx={{
-          position: "fixed",
-          bottom: 32,
-          right: 32,
-          animation: `${wobble} 1.2s ease-in-out infinite`,
-          zIndex: 1200,
-          backgroundColor: "transparent",
-          boxShadow: "none",
-          "&:hover": {
-            backgroundColor: "action.hover",
-            boxShadow: "none",
-          },
-          minHeight: 56,
-          minWidth: 56,
-        }}
-      >
-        <PsychologyAltIcon sx={{ color: "text.primary", fontSize: 96 }} />
-      </Fab>
     </Box>
   );
 }
