@@ -3,6 +3,14 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { Box, Typography, Paper, Chip } from "@mui/material";
 import { useTheme, useColorScheme } from "@mui/material/styles";
 
+// Import all theme color palettes
+import * as wileyColors from "../../themes/wiley/colors";
+import * as sageColors from "../../themes/sage/colors";
+import * as techColors from "../../themes/tech/colors";
+import * as phenomColors from "../../themes/phenom/colors";
+import * as wiley2025Colors from "../../themes/wiley2025/colors";
+import * as muiColors from "@mui/material/colors";
+
 // Create a wrapper component for the stories
 const PaletteDemo = () => null;
 
@@ -56,6 +64,87 @@ const ColorSwatch = ({ color, label }: { color: string; label: string }) => (
     </Typography>
   </Box>
 );
+
+// Component for displaying full color palettes from colors.ts files
+const FullColorPalette = ({
+  colors,
+  title,
+}: {
+  colors: Record<string, unknown>;
+  title: string;
+}) => {
+  const renderColorGroup = (
+    colorName: string,
+    colorObject: Record<string, unknown>
+  ) => {
+    if (!colorObject || typeof colorObject !== "object") return null;
+
+    // Handle different color object structures
+    const colorEntries = Object.entries(colorObject).filter(
+      ([key, value]) => typeof value === "string" && key !== "contrastText"
+    );
+
+    if (colorEntries.length === 0) return null;
+
+    // Sort entries to show main shades first (50-900), then accent colors (A100-A700)
+    const sortedEntries = colorEntries.sort(([a], [b]) => {
+      // Handle accent colors (A100, A200, etc.)
+      const aIsAccent = a.startsWith("A");
+      const bIsAccent = b.startsWith("A");
+
+      if (aIsAccent && !bIsAccent) return 1; // Accent colors come after main colors
+      if (!aIsAccent && bIsAccent) return -1;
+
+      if (aIsAccent && bIsAccent) {
+        // Sort accent colors numerically
+        return parseInt(a.slice(1)) - parseInt(b.slice(1));
+      }
+
+      // Sort main colors numerically
+      return parseInt(a) - parseInt(b);
+    });
+
+    return (
+      <Box key={colorName} sx={{ mb: 3 }}>
+        <Typography variant="h6" sx={{ mb: 2, textTransform: "capitalize" }}>
+          {colorName}
+        </Typography>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+            gap: 1,
+          }}
+        >
+          {sortedEntries.map(([shade, color]) => (
+            <ColorSwatch
+              key={`${colorName}-${shade}`}
+              color={color as string}
+              label={`${colorName}[${shade}]`}
+            />
+          ))}
+        </Box>
+      </Box>
+    );
+  };
+
+  return (
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        {title}
+      </Typography>
+
+      {Object.entries(colors)
+        .filter(
+          ([key, value]) =>
+            key !== "default" && typeof value === "object" && value !== null
+        )
+        .map(([colorName, colorObject]) =>
+          renderColorGroup(colorName, colorObject as Record<string, unknown>)
+        )}
+    </Box>
+  );
+};
 
 export const ThemePalette: Story = {
   render: () => {
@@ -305,4 +394,120 @@ export const ColorModeComparison: Story = {
       </Box>
     );
   },
+};
+
+// Individual Theme Full Palette Stories
+export const DefaultFullPalette: Story = {
+  render: () => (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Default (Material-UI) - Full Color Palette
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+        Complete Material Design color palette (2014) with all 19 color hues and
+        shades 50-900, plus accent colors A100-A700. These are the standard
+        colors available in @mui/material/colors.
+      </Typography>
+
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        Available Color Hues:
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, fontFamily: "monospace" }}>
+        red, pink, purple, deepPurple, indigo, blue, lightBlue, cyan, teal,
+        green, lightGreen, lime, yellow, amber, orange, deepOrange, brown, grey,
+        blueGrey
+      </Typography>
+
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+        Each hue includes shades: 50, 100, 200, 300, 400, 500 (main), 600, 700,
+        800, 900
+        <br />
+        Most hues also include accent colors: A100, A200, A400, A700
+      </Typography>
+
+      <FullColorPalette
+        colors={muiColors}
+        title="Material-UI Standard Colors"
+      />
+    </Box>
+  ),
+};
+
+export const WileyFullPalette: Story = {
+  render: () => (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Wiley Theme - Full Color Palette
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+        Custom Wiley theme colors with brand-specific blue, green, red, pink,
+        and orange palettes. Includes custom overrides alongside standard MUI
+        colors.
+      </Typography>
+      <FullColorPalette colors={wileyColors} title="Wiley Theme Colors" />
+    </Box>
+  ),
+};
+
+export const SageFullPalette: Story = {
+  render: () => (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Sage Theme - Full Color Palette
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+        Nature-inspired palette with green and brown color families designed for
+        organic/natural brands.
+      </Typography>
+      <FullColorPalette colors={sageColors} title="Sage Theme Colors" />
+    </Box>
+  ),
+};
+
+export const TechFullPalette: Story = {
+  render: () => (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Tech Theme - Full Color Palette
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+        Modern tech palette with blue and gray color families optimized for
+        technology/development brands.
+      </Typography>
+      <FullColorPalette colors={techColors} title="Tech Theme Colors" />
+    </Box>
+  ),
+};
+
+export const PhenomFullPalette: Story = {
+  render: () => (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Phenom Theme - Full Color Palette
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+        Comprehensive palette with multiple blue and green variations mapped to
+        MUI color structure. Features brand-specific primary blue, dark blue,
+        green, and dark green families.
+      </Typography>
+      <FullColorPalette colors={phenomColors} title="Phenom Theme Colors" />
+    </Box>
+  ),
+};
+
+export const Wiley2025FullPalette: Story = {
+  render: () => (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        Wiley 2025 Theme - Full Color Palette
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
+        2025 brand refresh colors for Wiley with updated palette and styling.
+      </Typography>
+      <FullColorPalette
+        colors={wiley2025Colors}
+        title="Wiley 2025 Theme Colors"
+      />
+    </Box>
+  ),
 };

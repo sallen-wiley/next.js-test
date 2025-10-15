@@ -62,14 +62,14 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: colors.blue[500],
-      dark: colors.blue[800],
+      main: colors.blue[700],
+      dark: colors.cyan[700],
       light: colors.blue[400],
     },
     secondary: {
-      main: colors.pink[500],
-      dark: colors.pink[600],
-      light: colors.pink[400],
+      main: colors.lightGreen[700],
+      dark: colors.green[700],
+      light: colors.green[400],
     },
     error: {
       main: colors.red[500],
@@ -127,7 +127,7 @@ let theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "'Open Sans'", // Modern, readable sans-serif
+    fontFamily: "'Nunito'",
     h1: {
       fontSize: "3rem",
       fontWeight: 700,
@@ -210,7 +210,7 @@ let theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 1, // Clean, modern corners
+    borderRadius: 4,
   },
 
   // Custom palette with lightest shades (following MUI docs pattern)
@@ -235,19 +235,19 @@ theme = createTheme(theme, {
     MuiCssBaseline: {
       styleOverrides: `
         @font-face {
-          font-family: 'Open Sans';
+          font-family: 'Nunito';
           font-style: normal;
           font-display: swap;
           font-weight: 100 900;
-          src: url('/fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf') format('truetype');
+          src: url('/fonts/Nunito/Nunito-VariableFont_wght.ttf') format('truetype');
         }
 
         @font-face {
-          font-family: 'Open Sans';
+          font-family: 'Nunito';
           font-style: italic;
           font-display: swap;
           font-weight: 100 900;
-          src: url('/fonts/Open_Sans/OpenSans-Italic-VariableFont_wdth,wght.ttf') format('truetype');
+          src: url('/fonts/Nunito/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
         }
       `,
     },

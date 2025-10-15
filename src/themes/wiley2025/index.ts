@@ -127,7 +127,7 @@ let theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "'Open Sans'", // Modern, readable sans-serif
+    fontFamily: "'Inter'", // Use Inter for 2025 refresh
     h1: {
       fontSize: "3rem",
       fontWeight: 700,
@@ -235,19 +235,19 @@ theme = createTheme(theme, {
     MuiCssBaseline: {
       styleOverrides: `
         @font-face {
-          font-family: 'Open Sans';
+          font-family: 'Inter';
           font-style: normal;
           font-display: swap;
           font-weight: 100 900;
-          src: url('/fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf') format('truetype');
+          src: url('/fonts/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
         }
 
         @font-face {
-          font-family: 'Open Sans';
+          font-family: 'Inter';
           font-style: italic;
           font-display: swap;
           font-weight: 100 900;
-          src: url('/fonts/Open_Sans/OpenSans-Italic-VariableFont_wdth,wght.ttf') format('truetype');
+          src: url('/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
         }
       `,
     },

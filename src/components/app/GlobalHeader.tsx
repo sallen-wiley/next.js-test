@@ -1,7 +1,14 @@
 "use client";
-import type {} from '@mui/material/themeCssVarsAugmentation';
+import type {} from "@mui/material/themeCssVarsAugmentation";
 import React from "react";
-import { Box, Container, Divider, IconButton } from "@mui/material";
+import {
+  Box,
+  Container,
+  Divider,
+  IconButton,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import PrimaryLogo from "../product/PrimaryLogo";
 
@@ -23,6 +30,9 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
   rightSlot,
   onMenuClick,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   return (
     <Box
       sx={(theme) => ({
@@ -61,7 +71,7 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
               <MenuIcon />
             </IconButton>
           )}
-          <PrimaryLogo affix={logoAffix} />
+          <PrimaryLogo affix={isMobile ? undefined : logoAffix} />
           <Box>{rightSlot}</Box>
         </Box>
       </Container>

@@ -1,4 +1,4 @@
-export const wileyColors = {
+export const brandColors = {
   blue: {
     dark: "#123D80",
     medium: "#1B5BA0",
@@ -20,3 +20,6 @@ export const wileyColors = {
     bright: "#FFC805",
   },
 };
+
+// Keep the original export for backward compatibility
+export const wileyColors = brandColors;

@@ -43,8 +43,20 @@ const themeMetadata: Record<
   wiley: {
     label: "Wiley",
     description: "Professional academic theme",
-    color: "#3F51B5",
+    color: "#123D80",
     icon: "📚",
+  },
+  wiley2025: {
+    label: "Wiley 2025",
+    description: "2025 brand refresh",
+    color: "#1E3A8A",
+    icon: "🚀",
+  },
+  phenom: {
+    label: "Phenom",
+    description: "Modern, vibrant theme",
+    color: "#0F172A",
+    icon: "⚡",
   },
   tech: {
     label: "Tech",
@@ -82,14 +94,14 @@ const tenantMetadata: Record<
   wiley: {
     label: "Wiley",
     description: "Professional academic publishing",
-    color: "#3F51B5",
+    color: "#123D80",
     icon: "📚",
   },
   wiley2025: {
     label: "Wiley 2025",
     description: "New Wiley brand identity",
-    color: "#00d975",
-    icon: "✨",
+    color: "#1E3A8A",
+    icon: "🚀",
   },
   sage: {
     label: "Sage",

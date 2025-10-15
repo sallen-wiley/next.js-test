@@ -4,7 +4,14 @@ import { ThemeProvider } from "@mui/material/styles";
 import { useColorScheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
-import { wileyTheme, sageTheme, techTheme } from "../src/themes";
+import {
+  defaultTheme,
+  sageTheme,
+  wileyTheme,
+  wiley2025Theme,
+  phenomTheme,
+  techTheme,
+} from "../src/themes";
 
 // Component that handles color scheme switching using MUI's useColorScheme hook
 const ColorSchemeHandler: React.FC<{
@@ -57,8 +64,11 @@ const preview: Preview = {
         title: "Theme",
         icon: "paintbrush",
         items: [
-          { value: "wiley", title: "Wiley Theme" },
+          { value: "default", title: "Default Theme" },
           { value: "sage", title: "Sage Theme" },
+          { value: "wiley", title: "Wiley Theme" },
+          { value: "wiley2025", title: "Wiley 2025 Theme" },
+          { value: "phenom", title: "Phenom Theme" },
           { value: "tech", title: "Tech Theme" },
         ],
         dynamicTitle: true,
@@ -86,8 +96,11 @@ const preview: Preview = {
 
       // Select the theme based on the global
       const themes = {
-        wiley: wileyTheme,
+        default: defaultTheme,
         sage: sageTheme,
+        wiley: wileyTheme,
+        wiley2025: wiley2025Theme,
+        phenom: phenomTheme,
         tech: techTheme,
       };
 

@@ -1,13 +1,14 @@
 "use client";
 import type {} from "@mui/material/themeCssVarsAugmentation";
 import React from "react";
-import { Box, Container, Divider } from "@mui/material";
+import { Box, Container, Divider, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import PrimaryLogo from "../product/PrimaryLogo";
 
 // AppHeader component renders the application header with the primary logo and a divider
 export default function AppHeader() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
     // Box component to control the background color and header positioning
@@ -32,7 +33,9 @@ export default function AppHeader() {
             height: 80,
           }}
         >
-          <PrimaryLogo affix="Publishing Platforms UX" />
+          <PrimaryLogo
+            affix={isMobile ? undefined : "Publishing Platforms UX"}
+          />
         </Box>
       </Container>
       <Divider />

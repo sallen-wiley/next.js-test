@@ -349,7 +349,6 @@ export default function PrimaryLogo({
           />
           <Typography
             sx={{
-              fontFamily: "'Open Sans', sans-serif",
               fontWeight: 400,
               fontSize: 24,
               lineHeight: "24px",
