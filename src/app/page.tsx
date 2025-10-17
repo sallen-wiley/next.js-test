@@ -99,6 +99,18 @@ export default function Home() {
               </Paper>
               <Paper elevation={3} sx={{ p: 3 }}>
                 <Typography variant="body1">
+                  <Link href="/write-demo">Write Operations Demo</Link>
+                </Typography>
+                <Typography
+                  variant="caption"
+                  display="block"
+                  color="text.secondary"
+                >
+                  Test creating articles with mock and real data
+                </Typography>
+              </Paper>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="body1">
                   <Link href="/typography-demo">Typography Demo</Link>
                 </Typography>
               </Paper>

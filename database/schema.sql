@@ -1,7 +1,65 @@
 -- Reviewer Invitation System Database Schema
 
+-- Create user_profiles table to extend Supabase auth with roles and metadata
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    full_name TEXT,
+    role TEXT CHECK (role IN ('admin', 'editor', 'designer', 'product_manager', 'reviewer', 'guest')) DEFAULT 'guest',
+    department TEXT,
+    permissions TEXT[] DEFAULT '{}', -- Additional fine-grained permissions
+    is_active BOOLEAN DEFAULT true,
+    last_login TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security on user_profiles
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for users to read their own profile
+CREATE POLICY "Users can view own profile" ON user_profiles
+    FOR SELECT USING (auth.uid() = id);
+
+-- Create policy for users to update their own profile (except role)
+CREATE POLICY "Users can update own profile" ON user_profiles
+    FOR UPDATE USING (auth.uid() = id)
+    WITH CHECK (role = (SELECT role FROM user_profiles WHERE id = auth.uid()));
+
+-- Create policy for admins to manage all profiles
+CREATE POLICY "Admins can manage all profiles" ON user_profiles
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM user_profiles 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Create function to handle new user profile creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_profiles (id, email, full_name, role)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+        COALESCE(NEW.raw_user_meta_data->>'role', 'guest')
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger to automatically create profile for new users
+CREATE OR REPLACE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Sample user roles data (you can update these after creating users)
+-- This will be populated when users are created
+
 -- Create manuscripts table
-CREATE TABLE manuscripts (
+CREATE TABLE IF NOT EXISTS manuscripts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     authors TEXT[] NOT NULL DEFAULT '{}',
@@ -18,7 +76,7 @@ CREATE TABLE manuscripts (
 );
 
 -- Create potential_reviewers table
-CREATE TABLE potential_reviewers (
+CREATE TABLE IF NOT EXISTS potential_reviewers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
@@ -40,7 +98,7 @@ CREATE TABLE potential_reviewers (
 );
 
 -- Create reviewer_manuscript_matches table (for storing match scores)
-CREATE TABLE reviewer_manuscript_matches (
+CREATE TABLE IF NOT EXISTS reviewer_manuscript_matches (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     manuscript_id UUID REFERENCES manuscripts(id) ON DELETE CASCADE,
     reviewer_id UUID REFERENCES potential_reviewers(id) ON DELETE CASCADE,
@@ -50,7 +108,7 @@ CREATE TABLE reviewer_manuscript_matches (
 );
 
 -- Create review_invitations table
-CREATE TABLE review_invitations (
+CREATE TABLE IF NOT EXISTS review_invitations (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     manuscript_id UUID REFERENCES manuscripts(id) ON DELETE CASCADE,
     reviewer_id UUID REFERENCES potential_reviewers(id) ON DELETE CASCADE,
@@ -68,7 +126,7 @@ CREATE TABLE review_invitations (
 );
 
 -- Create invitation_queue table
-CREATE TABLE invitation_queue (
+CREATE TABLE IF NOT EXISTS invitation_queue (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     manuscript_id UUID REFERENCES manuscripts(id) ON DELETE CASCADE,
     reviewer_id UUID REFERENCES potential_reviewers(id) ON DELETE CASCADE,
@@ -82,7 +140,7 @@ CREATE TABLE invitation_queue (
 );
 
 -- Create reviewer_metrics table (for tracking historical performance)
-CREATE TABLE reviewer_metrics (
+CREATE TABLE IF NOT EXISTS reviewer_metrics (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     reviewer_id UUID REFERENCES potential_reviewers(id) ON DELETE CASCADE,
     total_invitations INTEGER DEFAULT 0,
@@ -96,10 +154,12 @@ CREATE TABLE reviewer_metrics (
     UNIQUE(reviewer_id)
 );
 
--- Insert sample manuscript
-INSERT INTO manuscripts (id, title, authors, journal, submission_date, abstract, keywords, subject_area, status, editor_id) VALUES
+-- Insert sample data using proper UUIDs
+-- We'll let the database generate UUIDs and create sample data step by step
+
+-- Insert sample manuscripts
+INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, keywords, subject_area, status, editor_id) VALUES
 (
-    'ms-001',
     'Deep Learning Approaches for Natural Language Processing in Scientific Literature',
     ARRAY['Dr. Sarah Chen', 'Prof. Michael Rodriguez', 'Dr. Jennifer Liu'],
     'Journal of Computational Linguistics',
@@ -109,12 +169,66 @@ INSERT INTO manuscripts (id, title, authors, journal, submission_date, abstract,
     'Computer Science - Computational Linguistics',
     'under_review',
     'editor-001'
+),
+(
+    'Machine Learning Applications in Climate Change Prediction',
+    ARRAY['Dr. Emily Watson', 'Prof. James Miller'],
+    'Environmental Science Journal',
+    '2024-09-15T10:30:00Z',
+    'A comprehensive study on using machine learning algorithms to predict climate change patterns and their impact on global ecosystems.',
+    ARRAY['machine learning', 'climate change', 'prediction models', 'environmental science'],
+    'Environmental Science',
+    'submitted',
+    'editor-002'
+),
+(
+    'Quantum Computing Algorithms for Cryptographic Applications',
+    ARRAY['Prof. Alexander Kim', 'Dr. Maria Santos', 'Dr. Robert Johnson'],
+    'Quantum Information Science',
+    '2024-08-20T14:15:00Z',
+    'Investigation of quantum computing algorithms and their potential applications in modern cryptographic systems and security protocols.',
+    ARRAY['quantum computing', 'cryptography', 'algorithms', 'security'],
+    'Computer Science - Quantum Computing',
+    'revision_required',
+    'editor-001'
+),
+(
+    'Biomedical Engineering Innovations in Drug Delivery Systems',
+    ARRAY['Dr. Lisa Chang', 'Prof. Michael Brown'],
+    'Biomedical Engineering Review',
+    '2024-07-10T11:45:00Z',
+    'Novel approaches to targeted drug delivery using nanotechnology and biocompatible materials for enhanced therapeutic efficacy.',
+    ARRAY['biomedical engineering', 'drug delivery', 'nanotechnology', 'therapeutics'],
+    'Biomedical Engineering',
+    'accepted',
+    'editor-003'
+),
+(
+    'Artificial Intelligence in Medical Diagnosis: A Systematic Review',
+    ARRAY['Dr. Jennifer Park', 'Prof. David Wilson', 'Dr. Amanda Lee'],
+    'Medical AI Journal',
+    '2024-06-05T16:20:00Z',
+    'Systematic review of artificial intelligence applications in medical diagnosis, examining accuracy, reliability, and clinical implementation challenges.',
+    ARRAY['artificial intelligence', 'medical diagnosis', 'systematic review', 'healthcare'],
+    'Medical Informatics',
+    'under_review',
+    'editor-002'
+),
+(
+    'Sustainable Energy Storage Solutions for Smart Grid Systems',
+    ARRAY['Prof. Thomas Anderson', 'Dr. Sarah Kim'],
+    'Renewable Energy Technology',
+    '2024-05-22T09:10:00Z',
+    'Analysis of sustainable energy storage technologies and their integration into smart grid systems for improved energy efficiency.',
+    ARRAY['sustainable energy', 'energy storage', 'smart grid', 'renewable technology'],
+    'Engineering - Energy Systems',
+    'submitted',
+    'editor-003'
 );
 
 -- Insert sample potential reviewers
-INSERT INTO potential_reviewers (id, name, email, affiliation, department, expertise_areas, current_review_load, max_review_capacity, average_review_time_days, recent_publications, h_index, last_review_completed, availability_status, response_rate, quality_score, conflicts_of_interest) VALUES
+INSERT INTO potential_reviewers (name, email, affiliation, department, expertise_areas, current_review_load, max_review_capacity, average_review_time_days, recent_publications, h_index, last_review_completed, availability_status, response_rate, quality_score, conflicts_of_interest) VALUES
 (
-    'rev-001',
     'Dr. Alice Thompson',
     'a.thompson@stanford.edu',
     'Stanford University',
@@ -127,7 +241,6 @@ INSERT INTO potential_reviewers (id, name, email, affiliation, department, exper
     ARRAY[]::TEXT[]
 ),
 (
-    'rev-002',
     'Prof. David Kim',
     'd.kim@mit.edu',
     'MIT',
@@ -140,7 +253,6 @@ INSERT INTO potential_reviewers (id, name, email, affiliation, department, exper
     ARRAY[]::TEXT[]
 ),
 (
-    'rev-003',
     'Dr. Maria Gonzalez',
     'm.gonzalez@berkeley.edu',
     'UC Berkeley',
@@ -153,7 +265,6 @@ INSERT INTO potential_reviewers (id, name, email, affiliation, department, exper
     ARRAY[]::TEXT[]
 ),
 (
-    'rev-006',
     'Prof. Robert Zhang',
     'r.zhang@toronto.ca',
     'University of Toronto',
@@ -166,57 +277,10 @@ INSERT INTO potential_reviewers (id, name, email, affiliation, department, exper
     ARRAY['Dr. Sarah Chen']
 );
 
--- Insert reviewer-manuscript match scores
-INSERT INTO reviewer_manuscript_matches (manuscript_id, reviewer_id, match_score) VALUES
-('ms-001', 'rev-001', 95.0),
-('ms-001', 'rev-002', 88.0),
-('ms-001', 'rev-003', 91.0),
-('ms-001', 'rev-006', 93.0);
-
--- Insert sample review invitations
-INSERT INTO review_invitations (id, manuscript_id, reviewer_id, invited_date, due_date, status, response_date, invitation_round, reminder_count, notes) VALUES
-(
-    'inv-001',
-    'ms-001', 'rev-001',
-    '2024-10-10T10:00:00Z',
-    '2024-11-10T23:59:59Z',
-    'accepted',
-    '2024-10-12T14:30:00Z',
-    1, 0,
-    null
-),
-(
-    'inv-002',
-    'ms-001', 'rev-003',
-    '2024-10-10T10:00:00Z',
-    '2024-11-10T23:59:59Z',
-    'pending',
-    null,
-    1, 1,
-    'Sent reminder on Oct 13'
-),
-(
-    'inv-003',
-    'ms-001', 'rev-006',
-    '2024-10-10T10:00:00Z',
-    '2024-11-10T23:59:59Z',
-    'declined',
-    '2024-10-11T09:15:00Z',
-    1, 0,
-    'Declined due to conflict of interest with author Dr. Sarah Chen'
-);
-
--- Insert sample invitation queue
-INSERT INTO invitation_queue (id, manuscript_id, reviewer_id, queue_position, created_date, scheduled_send_date, priority, notes) VALUES
-(
-    'queue-001',
-    'ms-001', 'rev-002',
-    1,
-    '2024-10-12T15:00:00Z',
-    '2024-10-17T09:00:00Z',
-    'high',
-    'Backup reviewer - high match score'
-);
+-- Note: For match scores, invitations, and queue entries, 
+-- you would normally get the actual UUIDs from the above inserts
+-- For demo purposes, we'll create these relationships after the main data is inserted
+-- You can run additional queries to link them based on email/title matching
 
 -- Enable Row Level Security (optional)
 ALTER TABLE manuscripts ENABLE ROW LEVEL SECURITY;

@@ -1,14 +1,8 @@
-// Supabase client configuration
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+// Supabase client configuration with SSR support
+import { createClient } from "@/utils/supabase/client";
 
-// For now, we'll use placeholder values and mock mode
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
-const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
-
-// Create a mock client if we don't have real credentials
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
+// Create the client - now uses SSR-compatible version
+export const supabase = createClient();
 
 // Type definitions for reviewer invitation system
 export interface Manuscript {

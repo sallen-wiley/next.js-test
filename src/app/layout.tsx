@@ -6,6 +6,7 @@ import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LogoProvider } from "@/contexts/LogoContext";
 import FabThemeSwitcher from "@/components/app/FabThemeSwitcher";
+import AuthWrapper from "@/components/auth/AuthWrapper";
 
 export const metadata = {
   title: "Material UI App",
@@ -25,8 +26,10 @@ export default function RootLayout({
           <ThemeProvider defaultTheme="wiley">
             <LogoProvider defaultTenant="wiley">
               <CssBaseline />
-              {children}
-              <FabThemeSwitcher />
+              <AuthWrapper>
+                {children}
+                <FabThemeSwitcher />
+              </AuthWrapper>
             </LogoProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>

@@ -85,6 +85,63 @@ npm run chromatic             # Deploy to Chromatic for visual testing
 npm run lint                  # ESLint with Next.js and Storybook rules
 ```
 
+## Import Preferences
+
+### Material UI Icons
+
+- **Do NOT use barrel imports** for Material UI icons
+- ❌ Avoid: `import { Add, Delete, Edit } from '@mui/icons-material';`
+- ✅ Use: Individual imports for better tree-shaking and performance
+
+```tsx
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+```
+
+### Other Import Guidelines
+
+- Use barrel imports for internal components and utilities
+- Keep Material UI component imports as barrels (these are optimized)
+- Individual icon imports improve bundle size and build performance
+
+## PowerShell Command Guidelines
+
+When generating terminal commands, always use proper PowerShell syntax:
+
+### ✅ Correct PowerShell Syntax
+
+```powershell
+# Command chaining
+cd C:\path\to\directory; Get-ChildItem
+command1; command2; command3
+
+# File operations
+Copy-Item source.txt destination.txt
+Move-Item old.txt new.txt
+Remove-Item file.txt
+New-Item -ItemType Directory -Path "folder"
+
+# Environment variables
+$env:VARIABLE_NAME
+```
+
+### ❌ Avoid Unix/Bash Syntax
+
+```bash
+# Don't use these in PowerShell
+cd /path && ls -la && rm file.txt    # Wrong: && operator, Unix paths
+cp file1 file2                       # Wrong: Unix commands
+mkdir folder                         # Works but prefer New-Item
+```
+
+### Key PowerShell Differences
+
+- Use `;` for command chaining (not `&&`)
+- Use `\` for Windows paths (not `/`)
+- Use PowerShell cmdlets (Copy-Item, not cp)
+- Variables use `$env:` prefix
+
 ## Deployment & Branching
 
 - **Vercel Deployment**: Automated on pushes to main branch
