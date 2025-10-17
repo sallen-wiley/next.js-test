@@ -39,7 +39,19 @@ export function useUserProfile() {
           .eq("id", user.id)
           .single();
 
-        console.log("Profile fetch result:", { data, error });
+        console.log("Profile fetch result:", {
+          data,
+          error: error
+            ? {
+                message: error.message,
+                code: error.code,
+                details: error.details,
+                hint: error.hint,
+                statusCode: (error as { status?: number })?.status,
+                stringified: JSON.stringify(error, null, 2),
+              }
+            : null,
+        });
 
         if (error) {
           // If profile doesn't exist, create it

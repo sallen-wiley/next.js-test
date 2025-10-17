@@ -59,20 +59,20 @@ export default function RoleManager() {
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     setError(null);
     setSuccess(null);
-    
+
     try {
       console.log(`Attempting to update user ${userId} to role ${newRole}`);
-      
+
       const { data, error } = await supabase
         .from("user_profiles")
         .update({ role: newRole, updated_at: new Date().toISOString() })
         .eq("id", userId)
         .select(); // Add select to see what was actually updated
 
-      console.log('Update result:', { data, error });
+      console.log("Update result:", { data, error });
 
       if (error) {
-        console.error('Supabase error details:', error);
+        console.error("Supabase error details:", error);
         setError(`Failed to update role: ${error.message}`);
       } else if (!data || data.length === 0) {
         setError("No rows were updated. Check permissions or policies.");
@@ -85,7 +85,11 @@ export default function RoleManager() {
       }
     } catch (err) {
       console.error("Error updating role:", err);
-      setError(`Failed to update role: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setError(
+        `Failed to update role: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 
