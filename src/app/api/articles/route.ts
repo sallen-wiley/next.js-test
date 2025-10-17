@@ -1,7 +1,7 @@
 // API route for fetching articles (supports both mock and real data)
 import { NextRequest, NextResponse } from "next/server";
 import { mockArticles } from "@/services/dataService";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/server";
 
 const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true";
 
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(newArticle);
     } else {
       // Real: Insert into Supabase
+      const supabase = await createClient();
       const { data, error } = await supabase
         .from("manuscripts")
         .insert(body)
@@ -86,6 +87,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Use real Supabase data
+      const supabase = await createClient();
       let query = supabase
         .from("manuscripts")
         .select("*", { count: "exact" })
