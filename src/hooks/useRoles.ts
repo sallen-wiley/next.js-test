@@ -27,12 +27,19 @@ export function useUserProfile() {
     async function fetchProfile() {
       if (!user) return;
 
+      console.log("Attempting to fetch profile for user:", {
+        id: user.id,
+        email: user.email,
+      });
+
       try {
         const { data, error } = await supabase
           .from("user_profiles")
           .select("*")
           .eq("id", user.id)
           .single();
+
+        console.log("Profile fetch result:", { data, error });
 
         if (error) {
           // If profile doesn't exist, create it
@@ -56,7 +63,7 @@ export function useUserProfile() {
               setProfile(newProfile);
             }
           } else {
-            // Better error logging
+            // Better error logging with explicit JSON stringification
             const errorMessage = error?.message || "Unknown error";
             const errorCode = error?.code || "No code";
             const errorDetails = error?.details || "No details";
@@ -66,7 +73,10 @@ export function useUserProfile() {
               message: errorMessage,
               code: errorCode,
               details: errorDetails,
-              fullError: error,
+              hint: error?.hint,
+              fullError: JSON.stringify(error, null, 2),
+              userId: user?.id,
+              userEmail: user?.email,
             });
           }
         } else {
