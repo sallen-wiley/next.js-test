@@ -56,6 +56,17 @@ sx={{
   color: "white", // Always white text on dark image
 }}
 
+// different theme color tokens for light vs. dark mode
+sx={[
+  {
+    bgcolor: "background.default",
+  },
+  (theme) =>
+    theme.applyStyles("dark", {
+      bgcolor: "action.hover",
+  }),
+]}
+
 #### Context Usage
 
 ```tsx

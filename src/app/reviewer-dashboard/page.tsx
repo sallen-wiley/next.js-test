@@ -582,16 +582,22 @@ export default function ReviewerInvitationDashboard() {
 
                 {/* Footer Section */}
                 <Box
-                  sx={{
-                    bgcolor: "grey.50",
-                    p: 2,
-                    pt: 1.5,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderTop: "1px solid",
-                    borderTopColor: "divider",
-                  }}
+                  sx={[
+                    {
+                      bgcolor: "background.default",
+                      p: 2,
+                      pt: 1.5,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      borderTop: "1px solid",
+                      borderTopColor: "divider",
+                    },
+                    (theme) =>
+                      theme.applyStyles("dark", {
+                        bgcolor: "action.hover",
+                      }),
+                  ]}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                     <Typography

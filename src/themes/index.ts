@@ -7,12 +7,12 @@ import techTheme from "./tech";
 
 // Available themes with different typography approaches
 export const themes = {
-  default: defaultTheme, // Standard Material-UI theme with Roboto
-  sage: sageTheme, // Source Serif 4 - Elegant serif for nature/organic brands
-  wiley: wileyTheme, // Open Sans - Modern sans-serif for professional/academic
-  wiley2025: wiley2025Theme, // Inter - 2025 brand refresh
-  phenom: phenomTheme, // Roboto - Clean, modern theme
-  tech: techTheme, // IBM Plex Mono - Monospace for tech/development brands
+  default: defaultTheme,
+  sage: sageTheme,
+  wiley: wileyTheme,
+  wiley2025: wiley2025Theme,
+  phenom: phenomTheme,
+  tech: techTheme,
 };
 
 // Helper to get theme by name with fallback

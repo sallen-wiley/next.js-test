@@ -4,7 +4,6 @@ import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import FaceIcon from "@mui/icons-material/Face";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import Alert from "@mui/material/Alert";
@@ -122,13 +121,7 @@ export default function ArticleCard() {
                 variant="outlined"
                 size="small"
               />
-              <Chip
-                label="Revision 2"
-                icon={<FaceIcon />}
-                color="neutral"
-                variant="outlined"
-                size="small"
-              />
+              <Chip label="Revision 2" variant="outlined" size="small" />
             </Stack>
             {/* Metadata Groups */}
             <Stack direction="column" spacing={0.5}>

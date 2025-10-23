@@ -115,6 +115,10 @@ let theme = createTheme({
           main: colors.teal[600],
           contrastText: colors.cyan[900],
         },
+        secondary: {
+          main: colors.cyan[400],
+          contrastText: colors.teal[900],
+        },
         background: {
           default: colors.common.black,
           paper: colors.cyan[900],
