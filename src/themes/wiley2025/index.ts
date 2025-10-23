@@ -1,6 +1,5 @@
 "use client";
 import { createTheme, Theme, Palette } from "@mui/material/styles";
-import { lighten, darken } from "@mui/material/styles";
 import * as colors from "./colors";
 
 // Type augmentations for custom theme properties
@@ -62,67 +61,68 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: colors.blue[500],
-      dark: colors.blue[800],
-      light: colors.blue[400],
+      main: colors.cyan[900],
     },
     secondary: {
-      main: colors.pink[500],
-      dark: colors.pink[600],
-      light: colors.pink[400],
+      main: colors.teal[600],
+      contrastText: colors.cyan[900],
     },
     error: {
-      main: colors.red[500],
-      dark: colors.red[700],
-      light: colors.red[300],
+      main: colors.red[600],
     },
     warning: {
-      main: colors.orange[500],
-      dark: colors.orange[700],
-      light: colors.orange[300],
+      main: colors.orange[800],
     },
     info: {
-      main: colors.blue[500],
-      dark: colors.blue[800],
-      light: colors.blue[400],
+      main: colors.blue[700],
     },
     success: {
-      main: colors.green[500],
-      dark: colors.green[700],
-      light: colors.green[300],
+      main: colors.green[700],
     },
+    // Custom brand colors using color objects
     neutral: {
-      main: colors.grey[800],
-      light: lighten(colors.grey[800], 0.1),
-      dark: darken(colors.grey[800], 0.1),
-      contrastText: colors.common.white,
+      main: colors.grey[100],
+      light: colors.grey[50],
+      dark: colors.grey[300],
+      contrastText: colors.cyan[900],
     },
     black: {
       main: colors.common.black,
-      light: lighten(colors.common.black, 0.1),
-      dark: darken(colors.common.black, 0.1),
+      light: colors.grey[800],
+      dark: colors.blue[900],
       contrastText: colors.common.white,
     },
     white: {
       main: colors.common.white,
-      light: lighten(colors.common.white, 0.1),
-      dark: darken(colors.common.white, 0.1),
+      light: colors.grey[50],
+      dark: colors.grey[100],
       contrastText: colors.common.black,
+    },
+    text: {
+      primary: colors.common.black,
+      secondary: colors.grey[800],
+      disabled: colors.grey[500],
+    },
+    background: {
+      default: colors.common.white,
+      paper: colors.grey[50],
     },
   },
   colorSchemes: {
     dark: {
       palette: {
-        // Only customize specific colors for dark mode
-        // Everything else is automatically generated from your base palette
-        background: {
-          default: "#0A1929",
-          paper: "#132F4C",
+        primary: {
+          main: colors.teal[600],
+          contrastText: colors.cyan[900],
         },
-        // Example: You could also customize specific brand colors for dark mode
-        // primary: {
-        //   main: '#64B5F6', // Lighter blue for dark mode
-        // },
+        background: {
+          default: colors.common.black,
+          paper: colors.cyan[900],
+        },
+        text: {
+          primary: colors.common.white,
+          secondary: colors.grey[100],
+        },
       },
     },
   },
@@ -189,11 +189,12 @@ let theme = createTheme({
       letterSpacing: "0.01071em",
     },
     button: {
-      fontWeight: 600,
+      fontFamily: "'IBM Plex Mono'", // Use IBM Plex Mono for buttons
+      fontWeight: 500, // Medium weight for buttons as per Figma tokens
       fontSize: "0.875rem",
       lineHeight: 1.75,
       letterSpacing: "0.02857em",
-      textTransform: "none",
+      textTransform: "uppercase",
     },
     caption: {
       fontWeight: 400,
@@ -210,13 +211,13 @@ let theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 1, // Clean, modern corners
+    borderRadius: 8, // Clean, modern corners
   },
 
   // Custom palette with lightest shades (following MUI docs pattern)
   customPalette: {
-    primaryLightest: colors.blue[50],
-    secondaryLightest: colors.pink[50],
+    primaryLightest: colors.cyan[50],
+    secondaryLightest: colors.teal[50],
     errorLightest: colors.red[50],
     warningLightest: colors.orange[50],
     infoLightest: colors.blue[50],
@@ -248,6 +249,30 @@ theme = createTheme(theme, {
           font-display: swap;
           font-weight: 100 900;
           src: url('/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 500;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-Medium.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 600;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-SemiBold.ttf') format('truetype');
         }
       `,
     },

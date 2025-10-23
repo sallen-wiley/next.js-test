@@ -18,7 +18,7 @@ function AuthContent({ children }: AuthWrapperProps) {
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
-    return <div>Loading...</div>;
+    return <div>Loading...not mounted</div>;
   }
 
   if (loading) {

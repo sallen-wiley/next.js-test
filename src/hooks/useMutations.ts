@@ -58,7 +58,17 @@ export function useCreateArticle() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create article");
+
+        // Handle specific error codes
+        if (response.status === 401) {
+          throw new Error("Please log in to create articles");
+        } else if (response.status === 403) {
+          throw new Error(
+            "You don't have permission to create articles. Only admin and designer roles are allowed."
+          );
+        } else {
+          throw new Error(errorData.error || "Failed to create article");
+        }
       }
 
       const result = await response.json();
@@ -98,7 +108,17 @@ export function useUpdateArticle() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update article");
+
+        // Handle specific error codes
+        if (response.status === 401) {
+          throw new Error("Please log in to update articles");
+        } else if (response.status === 403) {
+          throw new Error(
+            "You don't have permission to update articles. Only admin and designer roles are allowed."
+          );
+        } else {
+          throw new Error(errorData.error || "Failed to update article");
+        }
       }
 
       const result = await response.json();
@@ -136,7 +156,17 @@ export function useDeleteArticle() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete article");
+
+        // Handle specific error codes
+        if (response.status === 401) {
+          throw new Error("Please log in to delete articles");
+        } else if (response.status === 403) {
+          throw new Error(
+            "You don't have permission to delete articles. Only admin and designer roles are allowed."
+          );
+        } else {
+          throw new Error(errorData.error || "Failed to delete article");
+        }
       }
 
       setState({ loading: false, error: null, success: true });

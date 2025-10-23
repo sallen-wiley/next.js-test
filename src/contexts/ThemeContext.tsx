@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import { themes, getTheme } from "@/themes";
 import type { Theme } from "@mui/material/styles";
@@ -39,15 +39,16 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
   defaultTheme = "wiley",
 }) => {
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>(defaultTheme);
-
-  // Load theme preference from localStorage on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("app-theme") as ThemeName;
-    if (savedTheme && themes[savedTheme]) {
-      setCurrentTheme(savedTheme);
+  // Initialize state with localStorage immediately (if available) to prevent theme flash
+  const [currentTheme, setCurrentTheme] = useState<ThemeName>(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("app-theme") as ThemeName;
+      if (savedTheme && themes[savedTheme]) {
+        return savedTheme;
+      }
     }
-  }, []);
+    return defaultTheme;
+  });
 
   // Save theme to localStorage when it changes
   const setTheme = (themeName: ThemeName) => {

@@ -5,8 +5,15 @@ import { Box, Container, Divider, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import PrimaryLogo from "../product/PrimaryLogo";
 
+interface AppHeaderProps {
+  /** The title text to show next to the logo. If not provided, defaults to "Publishing Platforms UX" */
+  title?: string;
+}
+
 // AppHeader component renders the application header with the primary logo and a divider
-export default function AppHeader() {
+export default function AppHeader({
+  title = "Publishing Platforms UX",
+}: AppHeaderProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -33,9 +40,7 @@ export default function AppHeader() {
             height: 80,
           }}
         >
-          <PrimaryLogo
-            affix={isMobile ? undefined : "Publishing Platforms UX"}
-          />
+          <PrimaryLogo affix={isMobile ? undefined : title} />
         </Box>
       </Container>
       <Divider />

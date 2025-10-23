@@ -185,6 +185,28 @@ figma.connect(Component, "figma-url", {
 - `/experiments` - Experimental features and new patterns
 - `/onboarding-demos` - User experience flows
 
+## Database Information (Supabase)
+
+### Schema Access Pattern:
+
+- **Dynamic Schema Inspection**: When working with database functions, inspect current schema using Supabase client queries rather than assuming structure
+- **TypeScript Types**: Reference existing types in `src/types/roles.ts` for user roles and permissions
+- **Authentication**: Supabase Auth with RLS policies - check permissions before operations
+- **Data Service Patterns**: Follow patterns in `src/services/dataService.ts` for data operations
+
+### Key Tables (inspect structure dynamically):
+
+- `user_profiles` - RBAC and user management
+- `manuscripts` - Main content with array fields (authors, keywords)
+- `potential_reviewers` - Reviewer database with metrics
+- `review_invitations` & `invitation_queue` - Invitation workflow system
+
+### Development Approach:
+
+- Always check table structure with sample queries when building functions
+- Use existing TypeScript interfaces where available
+- Respect RLS policies in data operations
+
 ## Critical Implementation Details
 
 ### Theme Type Augmentation

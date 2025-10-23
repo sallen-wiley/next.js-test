@@ -1,90 +1,88 @@
-// src/theme/palette/colors.ts
-
 // original muiColors https://mui.com/material-ui/customization/color/#color-palette
 import * as muiColors from "@mui/material/colors";
 import { brandColors } from "./brandColors";
 
-// White-label color overrides (using brand colors as a baseline)
-const customBlue = {
-  50: "#D8F0FA",
-  100: "#8CC8EE",
-  200: "#4BA1DC",
-  300: "#2B7EC3",
-  400: brandColors.blue.medium,
-  500: brandColors.blue.dark,
-  600: "#0B2760",
-  700: "#071943",
-  800: "#040E28",
-  900: "#020613",
+export const green = {
+  50: brandColors["System Positive"][50],
+  100: brandColors["System Positive"][100],
+  200: brandColors["System Positive"][200],
+  300: brandColors["System Positive"][300],
+  400: brandColors["System Positive"][400],
+  500: brandColors["System Positive"][500],
+  600: brandColors["System Positive"][600],
+  700: brandColors["System Positive"][700],
+  800: brandColors["System Positive"][800],
+  900: brandColors["System Positive"][900],
 };
 
-const customGreen = {
-  50: "#E8FFF2",
-  100: "#C2F9DB",
-  200: "#84E6B2",
-  300: "#4DC185",
-  400: "#288F5C",
-  500: brandColors.green.dark,
-  600: "#06351E",
-  700: "#022112",
-  800: "#01140B",
-  900: "#000805",
+export const red = {
+  50: brandColors["System Negative"][50], // #fff1f0
+  100: brandColors["System Negative"][100], // #ffdad6
+  200: brandColors["System Negative"][200], // #ffa39e
+  300: brandColors["System Negative"][300], // #ff7875
+  400: brandColors["System Negative"][400], // #ff6966
+  500: brandColors["System Negative"][500], // #ff4d4f
+  600: brandColors["System Negative"][600], // #cf1322
+  700: brandColors["System Negative"][700], // #a8071a
+  800: brandColors["System Negative"][800], // #820014
+  900: brandColors["System Negative"][900], // #5c0011
 };
 
-const customRed = {
-  50: "#FFE8E8", // ReX light red
-  100: "#FFCBCB",
-  200: "#F9A4A4",
-  300: "#EC7878",
-  400: "#D54D4D",
-  500: "#B72D2D", // ReX main red
-  600: "#941C1C",
-  700: "#711212",
-  800: "#4C0A0A",
-  900: "#260404",
+export const orange = {
+  50: brandColors["System Alert"][50], // #fffbe6
+  100: brandColors["System Alert"][100], // #fff5cc
+  200: brandColors["System Alert"][200], // #ffe58f
+  300: brandColors["System Alert"][300], // #ffd666
+  400: brandColors["System Alert"][400], // #ffc53d
+  500: brandColors["System Alert"][500], // #faad14
+  600: brandColors["System Alert"][600], // #d48806
+  700: brandColors["System Alert"][700], // #ad6800
+  800: brandColors["System Alert"][800], // #874d00
+  900: brandColors["System Alert"][900], // #613400
 };
 
-const customPink = {
-  50: "#FFD6DA",
-  100: "#FFB3BF",
-  200: brandColors.berry.bright,
-  300: "#F96FA4",
-  400: "#E24B98",
-  500: brandColors.berry.medium,
-  600: brandColors.berry.dark,
-  700: "#70134E",
-  800: "#4E0A38",
-  900: "#200218",
+export const grey = {
+  50: brandColors.Neutral[50], // #f8f8f5
+  100: brandColors.Neutral[100], // #f2f2eb
+  200: brandColors.Neutral[200], // #ececec
+  300: brandColors.Neutral[300], // #d7d7d2
+  400: brandColors.Neutral[400], // #bfbfbf
+  500: brandColors.Neutral[500], // #a6a6a1
+  600: brandColors.Neutral[600], // #8c8c88
+  700: brandColors.Neutral[700], // #5d5e5c
+  800: brandColors.Neutral[800], // #302f2f
+  900: brandColors.Neutral[900], // #000000
 };
 
-const customOrange = {
-  50: "#FFF0E8",
-  100: "#FAD8C6",
-  200: "#F5B58F",
-  300: "#ED7632",
-  400: "#DE5A08",
-  500: "#CC4E00",
-  600: "#B44800",
-  700: "#973C00",
-  800: "#742E00",
-  900: "#3D1800",
+export const teal = {
+  50: muiColors.teal[50],
+  100: brandColors["Primary Data"][100],
+  200: brandColors["Primary Data"][200],
+  300: brandColors["Primary Data"][300],
+  400: brandColors["Primary Data"][400],
+  500: brandColors["Primary Data"][500],
+  600: brandColors["Primary Data"][600],
+  700: muiColors.teal[700],
+  800: muiColors.teal[800],
+  900: muiColors.teal[900],
 };
 
-// Export merged colors (MUI + white-label overrides)
-export const blue = customBlue;
-export const green = customGreen;
-export const grey = { ...muiColors.grey /* add overrides if needed */ };
-export const red = customRed;
-export const orange = customOrange;
-export const pink = customPink;
-
-// Re-export unmodified MUI colors
-export const amber = muiColors.amber;
-export const brown = muiColors.brown;
-export const cyan = muiColors.cyan;
-// ... other colors you're not overriding
+export const cyan = {
+  50: muiColors.cyan[50],
+  100: muiColors.cyan[100],
+  200: muiColors.cyan[200],
+  300: muiColors.cyan[300],
+  400: brandColors["Primary Heritage"][400],
+  500: brandColors["Primary Heritage"][500],
+  600: brandColors["Primary Heritage"][600],
+  700: brandColors["Primary Heritage"][700],
+  800: brandColors["Primary Heritage"][800],
+  900: brandColors["Primary Heritage"][900],
+};
 
 export const common = {
-  black: "#000000",
-  white: "#ffffff",
+  black: brandColors.Neutral[900], // #000000
+  white: brandColors.Neutral[0], // #FFFFFF
 };
+
+export const blue = muiColors.blue;

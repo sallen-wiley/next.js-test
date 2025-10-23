@@ -62,34 +62,27 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
+      main: colors.lightGreen[700],
+      dark: colors.green[700],
+      light: colors.green[400],
+      contrastText: colors.common.white,
+    },
+    secondary: {
       main: colors.blue[700],
       dark: colors.cyan[700],
       light: colors.blue[400],
     },
-    secondary: {
-      main: colors.lightGreen[700],
-      dark: colors.green[700],
-      light: colors.green[400],
-    },
     error: {
-      main: colors.red[500],
-      dark: colors.red[700],
-      light: colors.red[300],
+      main: "#D0021B",
     },
     warning: {
-      main: colors.orange[500],
-      dark: colors.orange[700],
-      light: colors.orange[300],
+      main: "#FCB624",
     },
     info: {
-      main: colors.blue[500],
-      dark: colors.blue[800],
-      light: colors.blue[400],
+      main: "#5AC4E4",
     },
     success: {
-      main: colors.green[500],
-      dark: colors.green[700],
-      light: colors.green[300],
+      main: "#81BA40",
     },
     neutral: {
       main: colors.grey[800],
@@ -109,20 +102,18 @@ let theme = createTheme({
       dark: darken(colors.common.white, 0.1),
       contrastText: colors.common.black,
     },
+    background: {
+      default: colors.grey[100],
+      paper: colors.common.white,
+    },
   },
   colorSchemes: {
     dark: {
       palette: {
-        // Only customize specific colors for dark mode
-        // Everything else is automatically generated from your base palette
         background: {
           default: "#0A1929",
           paper: "#132F4C",
         },
-        // Example: You could also customize specific brand colors for dark mode
-        // primary: {
-        //   main: '#64B5F6', // Lighter blue for dark mode
-        // },
       },
     },
   },
@@ -279,6 +270,10 @@ theme = createTheme(theme, {
     // Theme-aware components (can access theme values)
     MuiChip: {
       styleOverrides: {
+        root: {
+          // Use theme shape border radius instead of default fully rounded
+          borderRadius: theme.shape.borderRadius,
+        },
         label: {
           // Chip uses same font weight as buttons
           fontWeight: theme.typography.button.fontWeight,

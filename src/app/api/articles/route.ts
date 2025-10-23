@@ -2,12 +2,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mockArticles } from "@/services/dataService";
 import { createClient } from "@/utils/supabase/server";
+import { canWrite, canDelete } from "@/utils/auth/server";
 
 const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true";
 
 // CREATE new article
 export async function POST(request: NextRequest) {
   try {
+    // Check if user has write permissions (admin or designer)
+    const { authorized, user } = await canWrite();
+
+    if (!authorized) {
+      return NextResponse.json(
+        {
+          error: user
+            ? "Insufficient permissions. Only admin and designer roles can create articles."
+            : "Authentication required. Please log in.",
+        },
+        { status: user ? 403 : 401 }
+      );
+    }
+
     const body = await request.json();
 
     if (USE_MOCK_DATA) {
@@ -16,16 +31,31 @@ export async function POST(request: NextRequest) {
         ...body,
         id: crypto.randomUUID(),
         publication_date: new Date().toISOString(),
+        submission_date: new Date().toISOString(),
         citation_count: 0,
+        open_access: false,
       };
       mockArticles.push(newArticle);
       return NextResponse.json(newArticle);
     } else {
-      // Real: Insert into Supabase
+      // Real: Insert into Supabase manuscripts table
       const supabase = await createClient();
+
+      // Map the article data to manuscript fields
+      const manuscriptData = {
+        title: body.title,
+        authors: body.authors,
+        journal: body.journal,
+        abstract: body.abstract,
+        keywords: body.keywords || [],
+        subject_area: body.subject_area || "General",
+        status: body.status || "submitted",
+        editor_id: user?.id || "system-generated", // Use the authenticated user's ID
+      };
+
       const { data, error } = await supabase
         .from("manuscripts")
-        .insert(body)
+        .insert(manuscriptData)
         .select();
 
       if (error) {
@@ -33,6 +63,130 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 400 });
       }
       return NextResponse.json(data[0]);
+    }
+  } catch (error) {
+    console.error("API Error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// UPDATE existing article
+export async function PUT(request: NextRequest) {
+  try {
+    // Check if user has write permissions (admin or designer)
+    const { authorized, user } = await canWrite();
+
+    if (!authorized) {
+      return NextResponse.json(
+        {
+          error: user
+            ? "Insufficient permissions. Only admin and designer roles can update articles."
+            : "Authentication required. Please log in.",
+        },
+        { status: user ? 403 : 401 }
+      );
+    }
+
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (USE_MOCK_DATA) {
+      // Mock: Update in array
+      const index = mockArticles.findIndex((a) => a.id === id);
+      if (index !== -1) {
+        mockArticles[index] = { ...mockArticles[index], ...updates };
+        return NextResponse.json(mockArticles[index]);
+      } else {
+        return NextResponse.json(
+          { error: "Article not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Real: Update in Supabase
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from("manuscripts")
+        .update(updates)
+        .eq("id", id)
+        .select();
+
+      if (error) {
+        console.error("Supabase error:", error);
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      if (!data || data.length === 0) {
+        return NextResponse.json(
+          { error: "Article not found" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(data[0]);
+    }
+  } catch (error) {
+    console.error("API Error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE article
+export async function DELETE(request: NextRequest) {
+  try {
+    // Check if user has delete permissions (admin or designer)
+    const { authorized, user } = await canDelete();
+
+    if (!authorized) {
+      return NextResponse.json(
+        {
+          error: user
+            ? "Insufficient permissions. Only admin and designer roles can delete articles."
+            : "Authentication required. Please log in.",
+        },
+        { status: user ? 403 : 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "ID is required" }, { status: 400 });
+    }
+
+    if (USE_MOCK_DATA) {
+      // Mock: Remove from array
+      const index = mockArticles.findIndex((a) => a.id === id);
+      if (index !== -1) {
+        mockArticles.splice(index, 1);
+        return NextResponse.json({ success: true });
+      } else {
+        return NextResponse.json(
+          { error: "Article not found" },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Real: Delete from Supabase
+      const supabase = await createClient();
+      const { error } = await supabase
+        .from("manuscripts")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Supabase error:", error);
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      return NextResponse.json({ success: true });
     }
   } catch (error) {
     console.error("API Error:", error);

@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import AppHeader from "@/components/app/AppHeader";
 import {
   Container,
   Typography,
@@ -27,7 +28,6 @@ import {
   Tooltip,
   Avatar,
   Alert,
-  AlertTitle,
   Tabs,
   Tab,
   Badge,
@@ -50,7 +50,6 @@ import ScheduleIcon from "@mui/icons-material/Schedule";
 import StarIcon from "@mui/icons-material/Star";
 
 import {
-  mockManuscript,
   mockPotentialReviewers,
   mockReviewInvitations,
   mockInvitationQueue,
@@ -407,6 +406,7 @@ export default function ReviewerInvitationDashboard() {
 
   return (
     <>
+      <AppHeader title="Review" />
       <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* Header */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -414,17 +414,215 @@ export default function ReviewerInvitationDashboard() {
             <Typography variant="h4" component="h1" gutterBottom>
               Reviewer Invitation Dashboard
             </Typography>
-            <Alert severity="info" sx={{ mb: 3 }}>
-              <AlertTitle>Manuscript Under Review</AlertTitle>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {mockManuscript.title}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Submitted:{" "}
-                {new Date(mockManuscript.submission_date).toLocaleDateString()}{" "}
-                • Subject: {mockManuscript.subject_area}
-              </Typography>
-            </Alert>
+            {/* Manuscript Details Card */}
+            <Card
+              sx={{
+                mb: 3,
+                display: "flex",
+                borderRadius: 1.5,
+                overflow: "hidden",
+                borderLeft: "4px solid",
+                borderLeftColor: "warning.main",
+              }}
+            >
+              <CardContent sx={{ flex: 1, p: 0, pb: "0 !important" }}>
+                {/* Header Section */}
+                <Box sx={{ p: 2, pb: 1 }}>
+                  {/* Top Row - ID, Status, Action Badge */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 2,
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        ID 5694305
+                      </Typography>
+                      <Chip
+                        label="COMMISSIONED"
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          height: 20,
+                          fontSize: "0.6875rem",
+                          fontWeight: 700,
+                          letterSpacing: "0.05em",
+                        }}
+                      />
+                    </Box>
+                    <Chip
+                      label="RESPOND TO INVITE V1"
+                      size="small"
+                      color="warning"
+                      sx={{
+                        height: 24,
+                        fontSize: "0.6875rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.05em",
+                        "& .MuiChip-label": {
+                          px: 1,
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Title */}
+                  <Typography
+                    variant="h6"
+                    color="secondary"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "1rem",
+                      lineHeight: 1.5,
+                      mb: 2,
+                    }}
+                  >
+                    A Key Major Guideline for Engineering Bioactive
+                    Multicomponent Nanofunctionalization for Biomedicine and
+                    Other Applications: Fundamental Models Confirmed by Both
+                    Direct and Indirect Evidence
+                  </Typography>
+
+                  {/* Authors Row */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1,
+                    }}
+                  >
+                    <Typography variant="body2" color="text.primary">
+                      Richard Bennet
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                      <Chip
+                        label="SA"
+                        size="small"
+                        color="neutral"
+                        sx={{
+                          height: 16,
+                          minWidth: 16,
+                        }}
+                      />
+                      <Chip
+                        label="CA"
+                        size="small"
+                        color="neutral"
+                        sx={{
+                          height: 16,
+                          minWidth: 16,
+                        }}
+                      />
+                    </Box>
+                    <Typography variant="body2" color="text.primary">
+                      ,{" "}
+                      <Box component="span" sx={{ fontWeight: 700 }}>
+                        Johnathan Smith
+                      </Box>
+                    </Typography>
+                  </Box>
+
+                  {/* Details Row */}
+                  <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 700 }}
+                        color="text.secondary"
+                      >
+                        Article Type:
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Research Article
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 700 }}
+                        color="text.secondary"
+                      >
+                        Academic Editor:
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Cambria Whitfield
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 700 }}
+                        color="text.secondary"
+                      >
+                        Reviewer Reports:
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <Box component="span" sx={{ fontWeight: 700 }}>
+                          3
+                        </Box>{" "}
+                        invited,{" "}
+                        <Box component="span" sx={{ fontWeight: 700 }}>
+                          1
+                        </Box>{" "}
+                        agreed
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Footer Section */}
+                <Box
+                  sx={{
+                    bgcolor: "grey.50",
+                    p: 2,
+                    pt: 1.5,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderTop: "1px solid",
+                    borderTopColor: "divider",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700 }}
+                      color="text.secondary"
+                    >
+                      Journal:
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Abstract and Applied Analysis
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700 }}
+                      color="text.secondary"
+                    >
+                      Submitted on:
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 400, color: "text.primary" }}
+                    >
+                      15.02.2023 (an hour ago)
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
 
