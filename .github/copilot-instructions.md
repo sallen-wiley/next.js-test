@@ -271,3 +271,20 @@ figma.connect(Component, "figma-url", {
 2. Use Storybook CSF3 format with proper controls
 3. Include accessibility addon testing
 4. Deploy to Chromatic for visual regression testing
+
+## Dynamic Resource Indexing and Recommendations
+
+To ensure guidance is always current across all development resources:
+
+- **Always index the contents of `.github/chatmodes/`, `.github/prompts/`, and `.github/scripts/` at runtime.**
+- **Privacy Policy**: Only files with "-live" in their filename are shared publicly. All others are private by default and for internal use only.
+- For each resource file, extract the name and summary from its frontmatter, description, or header comments.
+- List and briefly describe all available resources in the workspace, categorizing by type (chatmodes, prompts, scripts).
+- When prompted, analyze the current conversation and context to recommend the most suitable resource(s).
+- Do not use a hardcoded list—changes to resource files (additions, removals, edits) are automatically reflected.
+
+**Example prompts:**
+
+> "Index all development resources in `.github/`, summarize their purpose and ideal use case, and recommend the best tools for my current workflow based on recent conversation."
+
+> "List all available chatmodes, prompts, and scripts. Filter to show only public ('-live') resources."
