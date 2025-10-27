@@ -48,6 +48,6 @@ storybook-static
 # localStorage files (Node.js webstorage)
 localStorage.json*
 
-# GitHub folder - ignore all .md files in ANY directory except those with "-live" in the name
-.github/**/*.md
-!.github/**/*-live*.md
+# GitHub folder - ignore all files except those with "-live" in the name
+.github/**/*.*
+!.github/**/*-live*.*
