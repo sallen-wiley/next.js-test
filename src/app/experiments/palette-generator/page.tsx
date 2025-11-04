@@ -70,7 +70,7 @@ interface HueSet {
   name: string; // Display name
   muiName: string; // MUI palette key (primary, secondary, etc.)
   shades: ShadeDefinition[];
-  extrapolationMode: 'functional' | 'expressive';
+  extrapolationMode: "functional" | "expressive";
 }
 
 interface InterpolationPoint {
@@ -371,47 +371,57 @@ const extrapolateWithFallback = (
   targetIndices: number[],
   channel: "h" | "s" | "v",
   shadeValues: number[],
-  mode: 'functional' | 'expressive'
+  mode: "functional" | "expressive"
 ): { values: number[]; anchorUsed: boolean } => {
   // Special handling for hue (always constant for monochromatic palettes)
-  if (channel === 'h') {
+  if (channel === "h") {
     // For hue, use linear extrapolation in both modes (hue should be constant)
     const extrapolated = extrapolateLinear(points, targetIndices);
     return { values: extrapolated, anchorUsed: false };
   }
-  
+
   // FUNCTIONAL MODE: Always use anchors for S and V
-  if (mode === 'functional') {
-    const anchored = extrapolateWithAnchors(points, targetIndices, channel, shadeValues);
+  if (mode === "functional") {
+    const anchored = extrapolateWithAnchors(
+      points,
+      targetIndices,
+      channel,
+      shadeValues
+    );
     return { values: anchored, anchorUsed: true };
   }
-  
+
   // EXPRESSIVE MODE: Try linear extrapolation first
-  if (mode === 'expressive') {
+  if (mode === "expressive") {
     // Step 1: Try linear extrapolation
     const extrapolated = extrapolateLinear(points, targetIndices);
-    
+
     // Step 2: Check if any values are invalid (only outside locked range)
     const minLocked = Math.min(...points.map((p) => p.x));
     const maxLocked = Math.max(...points.map((p) => p.x));
-    
+
     const hasInvalid = extrapolated.some((value, i) => {
       const idx = targetIndices[i];
       // Only check values outside locked range
       if (idx >= minLocked && idx <= maxLocked) return false;
       return isInvalidValue(value, channel);
     });
-    
+
     // Step 3: If all valid, use linear extrapolation
     if (!hasInvalid) {
       return { values: extrapolated, anchorUsed: false };
     }
-    
+
     // Step 4: Fall back to anchors
-    const anchored = extrapolateWithAnchors(points, targetIndices, channel, shadeValues);
+    const anchored = extrapolateWithAnchors(
+      points,
+      targetIndices,
+      channel,
+      shadeValues
+    );
     return { values: anchored, anchorUsed: true };
   }
-  
+
   // Fallback (should never reach here)
   return { values: targetIndices.map(() => 50), anchorUsed: false };
 };
@@ -424,7 +434,7 @@ const DEFAULT_HUE: HueSet = {
   id: "1",
   name: "primary",
   muiName: "primary",
-  extrapolationMode: 'functional',
+  extrapolationMode: "functional",
   shades: MUI_SHADE_VALUES.map((val) => ({
     id: `shade-${val}`,
     value: val,
@@ -601,15 +611,18 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
 
     // HUE: Only use saturated colors (ignore achromatic shades)
     const hPoints = lockedShades
-      .filter((s: ShadeDefinition & { index: number }) => s.selectedForH && s.hsv.s > 5)
+      .filter(
+        (s: ShadeDefinition & { index: number }) =>
+          s.selectedForH && s.hsv.s > 1
+      )
       .map((s: ShadeDefinition & { index: number }) => ({
         x: s.index,
         y: s.hsv.h,
       }));
-    
+
     // If no saturated points, find first saturated shade or default to 0
-    const defaultHue = lockedShades.find(s => s.hsv.s > 5)?.hsv.h ?? 0;
-    
+    const defaultHue = lockedShades.find((s) => s.hsv.s > 1)?.hsv.h ?? 0;
+
     // SATURATION & VALUE: Use all locked shades (including achromatic)
     const sPoints = lockedShades
       .filter((s: ShadeDefinition & { index: number }) => s.selectedForS)
@@ -626,7 +639,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
 
     // Use extrapolation with fallback for each channel
     const mode = hue.extrapolationMode; // Get mode from hue
-    
+
     const hResult =
       hPoints.length > 0
         ? extrapolateWithFallback(hPoints, allIndices, "h", shadeValues, mode)
@@ -678,7 +691,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
     });
 
     // Show dialog if anchors were used (only in expressive mode)
-    if (anyAnchorUsed && hue.extrapolationMode === 'expressive') {
+    if (anyAnchorUsed && hue.extrapolationMode === "expressive") {
       setAnchorDialogOpen(true);
     }
 
@@ -734,29 +747,32 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
 
       {/* Extrapolation Mode Selector */}
       <FormControl fullWidth sx={{ mb: 3 }}>
-        <FormLabel id="extrapolation-mode-label">
-          Extrapolation Mode
-        </FormLabel>
+        <FormLabel id="extrapolation-mode-label">Extrapolation Mode</FormLabel>
         <RadioGroup
           row
           aria-labelledby="extrapolation-mode-label"
           value={hue.extrapolationMode}
-          onChange={(e) => onUpdate({ extrapolationMode: e.target.value as 'functional' | 'expressive' })}
+          onChange={(e) =>
+            onUpdate({
+              extrapolationMode: e.target.value as "functional" | "expressive",
+            })
+          }
         >
-          <FormControlLabel 
-            value="functional" 
+          <FormControlLabel
+            value="functional"
             control={<Radio />}
             label="UI Functional"
           />
-          <FormControlLabel 
-            value="expressive" 
+          <FormControlLabel
+            value="expressive"
             control={<Radio />}
             label="Brand Expressive"
           />
         </RadioGroup>
         <FormHelperText>
-          UI Functional: Light shades trend toward white, dark toward black (better for backgrounds/text).
-          Brand Expressive: Extends your color&apos;s natural curve (better for illustrations/gradients).
+          UI Functional: Light shades trend toward white, dark toward black
+          (better for backgrounds/text). Brand Expressive: Extends your
+          color&apos;s natural curve (better for illustrations/gradients).
         </FormHelperText>
       </FormControl>
 
@@ -828,28 +844,27 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
   const passesAAA = contrastWhite >= 7 || contrastBlack >= 7;
 
   const textColor = contrastWhite > contrastBlack ? "#fff" : "#000";
-  const isAchromatic = shade.hsv.s < 5;
+  const isAchromatic = shade.hsv.s < 1;
 
   const handleColorChange = (newColor: string) => {
     if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
       // Get context hue from other saturated shades in the palette
-      const saturatedShades = hue.shades.filter(s => s.hsv.s > 5);
-      const contextHue = saturatedShades.length > 0
-        ? saturatedShades[0].hsv.h
-        : shade.hsv.h;
-      
+      const saturatedShades = hue.shades.filter((s) => s.hsv.s > 1);
+      const contextHue =
+        saturatedShades.length > 0 ? saturatedShades[0].hsv.h : shade.hsv.h;
+
       const hsv = hexToHsv(newColor);
-      
+
       // If the new color is achromatic, use context hue
-      if (hsv.s < 5) {
+      if (hsv.s < 1) {
         hsv.h = contextHue;
       }
-      
+
       // Clear extrapolationMethod when user manually edits
-      onUpdate({ 
-        color: newColor, 
+      onUpdate({
+        color: newColor,
         hsv,
-        extrapolationMethod: undefined 
+        extrapolationMethod: undefined,
       });
     }
   };
@@ -871,17 +886,22 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
       {!shade.locked && shade.extrapolationMethod && (
         <Chip
           label={
-            shade.extrapolationMethod === 'interpolated' ? 'Interpolated' :
-            shade.extrapolationMethod === 'linear' ? 'Extrapolated' :
-            shade.extrapolationMethod === 'anchored' 
-              ? (hue.extrapolationMode === 'functional' ? 'UI Mode' : 'Anchored')
-              : ''
+            shade.extrapolationMethod === "interpolated"
+              ? "Interpolated"
+              : shade.extrapolationMethod === "linear"
+              ? "Extrapolated"
+              : shade.extrapolationMethod === "anchored"
+              ? hue.extrapolationMode === "functional"
+                ? "UI Mode"
+                : "Anchored"
+              : ""
           }
           size="small"
           color={
-            shade.extrapolationMethod === 'anchored' && hue.extrapolationMode === 'expressive'
-              ? 'warning'  // Yellow warning in expressive mode (indicates fallback)
-              : 'info'     // Blue info badge otherwise
+            shade.extrapolationMethod === "anchored" &&
+            hue.extrapolationMode === "expressive"
+              ? "warning" // Yellow warning in expressive mode (indicates fallback)
+              : "info" // Blue info badge otherwise
           }
           sx={{
             position: "absolute",
@@ -900,12 +920,12 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
           label="Achromatic"
           size="small"
           sx={{
-            position: 'absolute',
+            position: "absolute",
             bottom: 8,
             left: 8,
-            bgcolor: 'rgba(0,0,0,0.6)',
-            color: 'white',
-            fontSize: '0.65rem',
+            bgcolor: "rgba(0,0,0,0.6)",
+            color: "white",
+            fontSize: "0.65rem",
             height: 20,
             zIndex: 1,
           }}
