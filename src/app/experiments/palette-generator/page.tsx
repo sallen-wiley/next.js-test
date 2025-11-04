@@ -22,6 +22,10 @@ import {
   Card,
   CardContent,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import LockIcon from "@mui/icons-material/Lock";
@@ -52,6 +56,7 @@ interface ShadeDefinition {
   selectedForH: boolean;
   selectedForS: boolean;
   selectedForV: boolean;
+  extrapolationMethod?: 'interpolated' | 'linear' | 'anchored';
 }
 
 interface HueSet {
@@ -263,6 +268,125 @@ const splineInterpolation = (
   });
 };
 
+// Extrapolation functions
+const isInvalidValue = (value: number, channel: 'h' | 's' | 'v'): boolean => {
+  if (channel === 'h') return false; // Hue wraps around
+  return value < 0 || value > 100;
+};
+
+const extrapolateLinear = (
+  points: InterpolationPoint[],
+  targetIndices: number[]
+): number[] => {
+  points.sort((a, b) => a.x - b.x);
+  
+  return targetIndices.map(idx => {
+    // Within range: use spline interpolation
+    if (idx >= points[0].x && idx <= points[points.length - 1].x) {
+      return splineInterpolation(points, [idx])[0];
+    }
+    
+    // LEFT extrapolation (lighter shades)
+    if (idx < points[0].x) {
+      if (points.length === 1) return points[0].y;
+      const p0 = points[0];
+      const p1 = points[1];
+      const slope = (p1.y - p0.y) / (p1.x - p0.x);
+      return p0.y + slope * (idx - p0.x);
+    }
+    
+    // RIGHT extrapolation (darker shades)
+    if (idx > points[points.length - 1].x) {
+      if (points.length === 1) return points[0].y;
+      const p1 = points[points.length - 2];
+      const p2 = points[points.length - 1];
+      const slope = (p2.y - p1.y) / (p2.x - p1.x);
+      return p2.y + slope * (idx - p2.x);
+    }
+    
+    return 0; // Fallback
+  });
+};
+
+const extrapolateWithAnchors = (
+  points: InterpolationPoint[],
+  targetIndices: number[],
+  channel: 'h' | 's' | 'v',
+  shadeValues: number[]
+): number[] => {
+  const minShade = shadeValues[0]; // 50
+  const maxShade = shadeValues[shadeValues.length - 1]; // 900
+  const range = maxShade - minShade; // 850
+  
+  // Calculate virtual indices for pure black (shade 0) and pure white (shade 1000)
+  const blackIndex = -minShade / range * (shadeValues.length - 1);
+  const whiteIndex = (1000 - minShade) / range * (shadeValues.length - 1);
+  
+  const extendedPoints = [...points];
+  const minLockedIndex = points[0].x;
+  const maxLockedIndex = points[points.length - 1].x;
+  
+  // Add anchors based on channel
+  if (channel === 'h') {
+    // Hue: keep constant at edge values
+    if (minLockedIndex > 0) {
+      extendedPoints.unshift({ x: blackIndex, y: points[0].y });
+    }
+    if (maxLockedIndex < shadeValues.length - 1) {
+      extendedPoints.push({ x: whiteIndex, y: points[points.length - 1].y });
+    }
+  } else if (channel === 's') {
+    // Saturation: white (light) has no saturation, dark colors maintain richness
+    if (minLockedIndex > 0) {
+      extendedPoints.unshift({ x: blackIndex, y: 0 }); // White anchor
+    }
+    if (maxLockedIndex < shadeValues.length - 1) {
+      const lastS = points[points.length - 1].y;
+      extendedPoints.push({ x: whiteIndex, y: Math.max(lastS * 0.9, 50) }); // Rich dark anchor
+    }
+  } else if (channel === 'v') {
+    // Value: white is full brightness, black has no brightness
+    if (minLockedIndex > 0) {
+      extendedPoints.unshift({ x: blackIndex, y: 100 }); // White anchor
+    }
+    if (maxLockedIndex < shadeValues.length - 1) {
+      extendedPoints.push({ x: whiteIndex, y: 0 }); // Black anchor
+    }
+  }
+  
+  return splineInterpolation(extendedPoints, targetIndices);
+};
+
+const extrapolateWithFallback = (
+  points: InterpolationPoint[],
+  targetIndices: number[],
+  channel: 'h' | 's' | 'v',
+  shadeValues: number[]
+): { values: number[]; anchorUsed: boolean } => {
+  // Step 1: Try linear extrapolation
+  const extrapolated = extrapolateLinear(points, targetIndices);
+  
+  // Step 2: Check if any values are invalid (only outside locked range)
+  const minLocked = Math.min(...points.map(p => p.x));
+  const maxLocked = Math.max(...points.map(p => p.x));
+  
+  const hasInvalid = extrapolated.some((value, i) => {
+    const idx = targetIndices[i];
+    // Only check values outside locked range
+    if (idx >= minLocked && idx <= maxLocked) return false;
+    return isInvalidValue(value, channel);
+  });
+  
+  // Step 3: If all valid, use linear extrapolation
+  if (!hasInvalid) {
+    return { values: extrapolated, anchorUsed: false };
+  }
+  
+  // Step 4: Fall back to anchors
+  const anchored = extrapolateWithAnchors(points, targetIndices, channel, shadeValues);
+  return { values: anchored, anchorUsed: true };
+};
+
 const MUI_SHADE_VALUES = [
   50, 100, 200, 300, 400, 500, 600, 700, 800, 900,
 ] as const;
@@ -427,6 +551,8 @@ function PaletteGenerator() {
 }
 
 function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
+  const [anchorDialogOpen, setAnchorDialogOpen] = useState(false);
+
   const updateShade = (index: number, updates: Partial<ShadeDefinition>) => {
     const newShades = [...hue.shades];
     newShades[index] = { ...newShades[index], ...updates };
@@ -441,6 +567,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
     if (lockedShades.length === 0) return;
 
     const allIndices = hue.shades.map((_: ShadeDefinition, i: number) => i);
+    const shadeValues = MUI_SHADE_VALUES.slice(); // [50, 100, 200, ..., 900]
 
     const hPoints = lockedShades
       .filter((s: ShadeDefinition & { index: number }) => s.selectedForH)
@@ -461,26 +588,57 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         y: s.hsv.v,
       }));
 
-    const interpolatedH = splineInterpolation(hPoints, allIndices);
-    const interpolatedS = splineInterpolation(sPoints, allIndices);
-    const interpolatedV = splineInterpolation(vPoints, allIndices);
+    // Use extrapolation with fallback for each channel
+    const hResult = hPoints.length > 0 
+      ? extrapolateWithFallback(hPoints, allIndices, 'h', shadeValues)
+      : { values: allIndices.map(() => 0), anchorUsed: false };
+    
+    const sResult = sPoints.length > 0 
+      ? extrapolateWithFallback(sPoints, allIndices, 's', shadeValues)
+      : { values: allIndices.map(() => 50), anchorUsed: false };
+    
+    const vResult = vPoints.length > 0 
+      ? extrapolateWithFallback(vPoints, allIndices, 'v', shadeValues)
+      : { values: allIndices.map(() => 50), anchorUsed: false };
+
+    // Check if any channel used anchors
+    const anyAnchorUsed = hResult.anchorUsed || sResult.anchorUsed || vResult.anchorUsed;
 
     const newShades = hue.shades.map((shade: ShadeDefinition, i: number) => {
       if (shade.locked) return shade;
 
-      const h = ((interpolatedH[i] % 360) + 360) % 360;
-      const s = Math.max(0, Math.min(100, interpolatedS[i]));
-      const v = Math.max(0, Math.min(100, interpolatedV[i]));
+      const h = ((hResult.values[i] % 360) + 360) % 360;
+      const s = Math.max(0, Math.min(100, sResult.values[i]));
+      const v = Math.max(0, Math.min(100, vResult.values[i]));
 
       const rgb = hsvToRgb(h, s, v);
       const color = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+      // Determine extrapolation method for this shade
+      const minLocked = Math.min(...lockedShades.map(s => s.index));
+      const maxLocked = Math.max(...lockedShades.map(s => s.index));
+      
+      let extrapolationMethod: 'interpolated' | 'linear' | 'anchored';
+      if (i >= minLocked && i <= maxLocked) {
+        extrapolationMethod = 'interpolated';
+      } else if (anyAnchorUsed) {
+        extrapolationMethod = 'anchored';
+      } else {
+        extrapolationMethod = 'linear';
+      }
 
       return {
         ...shade,
         hsv: { h, s, v },
         color,
+        extrapolationMethod,
       };
     });
+
+    // Show dialog if anchors were used
+    if (anyAnchorUsed) {
+      setAnchorDialogOpen(true);
+    }
 
     onUpdate({ shades: newShades });
   };
@@ -537,6 +695,31 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
       <Box sx={{ mt: 4 }}>
         <CurveVisualization hue={hue} onUpdate={onUpdate} />
       </Box>
+
+      {/* Anchor Warning Dialog */}
+      <Dialog
+        open={anchorDialogOpen}
+        onClose={() => setAnchorDialogOpen(false)}
+        aria-labelledby="anchor-dialog-title"
+      >
+        <DialogTitle id="anchor-dialog-title">
+          Black/White Anchors Used
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Some extrapolated values went out of bounds (saturation or value &lt; 0 or &gt; 100), 
+            so the generator fell back to using black and white anchor points to ensure valid colors.
+          </Typography>
+          <Typography sx={{ mt: 2 }}>
+            Shades marked with &ldquo;Anchored&rdquo; badges used this fallback method for more natural color progression.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAnchorDialogOpen(false)} autoFocus>
+            Got it
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }
@@ -583,8 +766,27 @@ function ShadeCard({ shade, onUpdate }: ShadeCardProps) {
         justifyContent: "space-between",
         border: 2,
         borderColor: shade.locked ? "primary.main" : "divider",
+        position: "relative", // For absolute positioning of badge
       }}
     >
+      {/* Extrapolation Method Badge */}
+      {!shade.locked && shade.extrapolationMethod && (
+        <Chip
+          label={shade.extrapolationMethod === 'anchored' ? 'Anchored' : 
+                 shade.extrapolationMethod === 'linear' ? 'Linear' : 'Interpolated'}
+          size="small"
+          color={shade.extrapolationMethod === 'anchored' ? 'warning' : 'info'}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            fontSize: "0.65rem",
+            height: 20,
+            zIndex: 1,
+          }}
+        />
+      )}
+
       <CardContent sx={{ flexGrow: 1 }}>
         <Typography
           variant="h5"
@@ -607,7 +809,8 @@ function ShadeCard({ shade, onUpdate }: ShadeCardProps) {
               // Only update HSV if we have a complete valid hex color
               if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
                 const hsv = hexToHsv(newColor);
-                onUpdate({ color: newColor, hsv });
+                // Clear extrapolationMethod when user manually edits
+                onUpdate({ color: newColor, hsv, extrapolationMethod: undefined });
               } else {
                 // Update just the color display for partial input
                 onUpdate({ color: newColor, hsv: shade.hsv });
