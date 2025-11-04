@@ -2,6 +2,7 @@
 import { createTheme, Theme, Palette } from "@mui/material/styles";
 import { lighten, darken } from "@mui/material/styles";
 import * as colors from "./colors";
+import { designTokens } from "./brandTokens";
 
 // Type augmentations for custom theme properties
 declare module "@mui/material/styles" {
@@ -73,16 +74,16 @@ let theme = createTheme({
       light: colors.blue[400],
     },
     error: {
-      main: "#D0021B",
+      main: designTokens.colorPrimitives.system.errorRed[100], // #d0021b from design tokens
     },
     warning: {
-      main: "#FCB624",
+      main: designTokens.colorPrimitives.system.alertYellow[100], // #fcb624 from design tokens
     },
     info: {
-      main: "#5AC4E4",
+      main: designTokens.colorPrimitives.secondary.skyBlue[100], // #5ac4e4 from design tokens
     },
     success: {
-      main: "#81BA40",
+      main: designTokens.colorPrimitives.system.successGreen[100], // #81ba40 from design tokens
     },
     neutral: {
       main: colors.grey[800],
@@ -119,85 +120,145 @@ let theme = createTheme({
   },
   typography: {
     fontFamily: "'Nunito'",
+
+    // Map design tokens to MUI typography variants
     h1: {
-      fontSize: "3rem",
-      fontWeight: 700,
-      lineHeight: 1.167,
-      letterSpacing: "-0.01562em",
+      fontSize: `${designTokens.font.title.hero.fontSize}px`,
+      fontWeight: designTokens.font.title.hero.fontWeight,
+      lineHeight:
+        designTokens.font.title.hero.lineHeight /
+        designTokens.font.title.hero.fontSize,
+      letterSpacing: `${designTokens.font.title.hero.letterSpacing}px`,
+      textTransform:
+        designTokens.font.title.hero.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     h2: {
-      fontSize: "2.5rem",
+      fontSize: "2.5rem", // Keeping existing for design consistency
       fontWeight: 700,
       lineHeight: 1.2,
       letterSpacing: "-0.00833em",
     },
     h3: {
-      fontSize: "2.125rem",
-      fontWeight: 700,
-      lineHeight: 1.167,
-      letterSpacing: "0em",
+      fontSize: `${designTokens.font.title.primary.fontSize}px`,
+      fontWeight: designTokens.font.title.primary.fontWeight,
+      lineHeight:
+        designTokens.font.title.primary.lineHeight /
+        designTokens.font.title.primary.fontSize,
+      letterSpacing: `${designTokens.font.title.primary.letterSpacing}px`,
+      textTransform:
+        designTokens.font.title.primary.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     h4: {
-      fontSize: "1.75rem",
+      fontSize: "1.75rem", // Keeping existing for design consistency
       fontWeight: 700,
       lineHeight: 1.286,
       letterSpacing: "0.00735em",
     },
     h5: {
-      fontSize: "1.5rem",
+      fontSize: "1.5rem", // Keeping existing for design consistency
       fontWeight: 700,
       lineHeight: 1.334,
       letterSpacing: "0em",
     },
     h6: {
-      fontSize: "1.25rem",
-      fontWeight: 700,
-      lineHeight: 1.4,
-      letterSpacing: "0.0075em",
+      fontSize: `${designTokens.font.title.small.fontSize}px`,
+      fontWeight: designTokens.font.title.small.fontWeight,
+      lineHeight:
+        designTokens.font.title.small.lineHeight /
+        designTokens.font.title.small.fontSize,
+      letterSpacing: `${designTokens.font.title.small.letterSpacing}px`,
+      textTransform:
+        designTokens.font.title.small.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     subtitle1: {
-      fontWeight: 400,
-      fontSize: "1rem",
-      lineHeight: 1.75,
-      letterSpacing: "0.00938em",
+      fontSize: `${designTokens.font.label.bold.fontSize}px`,
+      fontWeight: designTokens.font.label.bold.fontWeight,
+      lineHeight:
+        designTokens.font.label.bold.lineHeight /
+        designTokens.font.label.bold.fontSize,
+      letterSpacing: `${designTokens.font.label.bold.letterSpacing}px`,
+      textTransform:
+        designTokens.font.label.bold.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     subtitle2: {
-      fontWeight: 500,
-      fontSize: "0.875rem",
-      lineHeight: 1.57,
-      letterSpacing: "0.00714em",
+      fontSize: `${designTokens.font.label.regular.fontSize}px`,
+      fontWeight: designTokens.font.label.regular.fontWeight,
+      lineHeight:
+        designTokens.font.label.regular.lineHeight /
+        designTokens.font.label.regular.fontSize,
+      letterSpacing: `${designTokens.font.label.regular.letterSpacing}px`,
+      textTransform:
+        designTokens.font.label.regular.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     body1: {
-      fontWeight: 400,
-      fontSize: "1rem",
-      lineHeight: 1.5,
-      letterSpacing: "0.00938em",
+      fontSize: `${designTokens.font.paragraph.primary.fontSize}px`,
+      fontWeight: designTokens.font.paragraph.primary.fontWeight,
+      lineHeight:
+        designTokens.font.paragraph.primary.lineHeight /
+        designTokens.font.paragraph.primary.fontSize,
+      letterSpacing: `${designTokens.font.paragraph.primary.letterSpacing}px`,
+      textTransform:
+        designTokens.font.paragraph.primary.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     body2: {
-      fontWeight: 400,
-      fontSize: "0.875rem",
-      lineHeight: 1.5,
-      letterSpacing: "0.01071em",
+      fontSize: `${designTokens.font.paragraph.message.fontSize}px`,
+      fontWeight: designTokens.font.paragraph.message.fontWeight,
+      lineHeight:
+        designTokens.font.paragraph.message.lineHeight /
+        designTokens.font.paragraph.message.fontSize,
+      letterSpacing: `${designTokens.font.paragraph.message.letterSpacing}px`,
+      textTransform:
+        designTokens.font.paragraph.message.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     button: {
-      fontWeight: 600,
-      fontSize: "0.875rem",
-      lineHeight: 1.75,
-      letterSpacing: "0.02857em",
-      textTransform: "none",
+      fontSize: `${designTokens.font.button.large.fontSize}px`,
+      fontWeight: designTokens.font.button.large.fontWeight,
+      lineHeight:
+        designTokens.font.button.large.lineHeight /
+        designTokens.font.button.large.fontSize,
+      letterSpacing: `${designTokens.font.button.large.letterSpacing}px`,
+      textTransform:
+        designTokens.font.button.large.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     caption: {
-      fontWeight: 400,
-      fontSize: "0.75rem",
-      lineHeight: 1.66,
-      letterSpacing: "0.03333em",
+      fontSize: `${designTokens.font.indicator.small.fontSize}px`,
+      fontWeight: designTokens.font.indicator.small.fontWeight,
+      lineHeight:
+        designTokens.font.indicator.small.lineHeight /
+        designTokens.font.indicator.small.fontSize,
+      letterSpacing: `${designTokens.font.indicator.small.letterSpacing}px`,
+      textTransform:
+        designTokens.font.indicator.small.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
     overline: {
-      fontWeight: 400,
-      fontSize: "0.75rem",
-      lineHeight: 2.66,
-      letterSpacing: "0.08333em",
-      textTransform: "uppercase",
+      fontSize: `${designTokens.font.label.small.fontSize}px`,
+      fontWeight: designTokens.font.label.small.fontWeight,
+      lineHeight:
+        designTokens.font.label.small.lineHeight /
+        designTokens.font.label.small.fontSize,
+      letterSpacing: `${designTokens.font.label.small.letterSpacing}px`,
+      textTransform:
+        designTokens.font.label.small.textCase === "uppercase"
+          ? "uppercase"
+          : "none",
     },
   },
   shape: {

@@ -194,7 +194,7 @@ let theme = createTheme({
     },
     button: {
       fontFamily: "'IBM Plex Mono'", // Use IBM Plex Mono for buttons
-      fontWeight: 500, // Medium weight for buttons as per Figma tokens
+      fontWeight: 500,
       fontSize: "0.875rem",
       lineHeight: 1.75,
       letterSpacing: "0.02857em",

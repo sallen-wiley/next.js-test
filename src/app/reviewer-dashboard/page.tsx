@@ -1,6 +1,21 @@
 "use client";
 import * as React from "react";
 import AppHeader from "@/components/app/AppHeader";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useUserProfile } from "@/hooks/useRoles";
+
+// LogRocket type declaration
+declare global {
+  interface Window {
+    LogRocket?: {
+      identify: (
+        userId: string,
+        userTraits: Record<string, string | number | boolean>
+      ) => void;
+      init: (appId: string) => void;
+    };
+  }
+}
 import {
   Container,
   Typography,
@@ -77,6 +92,28 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function ReviewerInvitationDashboard() {
+  // Authentication and user data
+  const { user } = useAuth();
+  const { profile } = useUserProfile();
+
+  // LogRocket user identification
+  React.useEffect(() => {
+    if (user && profile && typeof window !== "undefined" && window.LogRocket) {
+      window.LogRocket.identify(user.id, {
+        name: profile.full_name || profile.email.split("@")[0],
+        email: profile.email,
+        role: profile.role,
+        department: profile.department || "Unknown",
+        isActive: profile.is_active,
+        // Add custom variables for this dashboard context
+        currentPage: "reviewer-dashboard",
+        userAgent: navigator.userAgent,
+        createdAt: profile.created_at,
+        lastLogin: profile.last_login || "Never",
+      });
+    }
+  }, [user, profile]);
+
   const [tabValue, setTabValue] = React.useState(0);
   const [sortBy, setSortBy] = React.useState<string>("match_score");
   const [filterAvailability, setFilterAvailability] = React.useState<string[]>([

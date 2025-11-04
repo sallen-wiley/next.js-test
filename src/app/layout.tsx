@@ -1,5 +1,6 @@
 import "@/themes/types";
 
+import Script from "next/script";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
@@ -21,6 +22,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        {/* LogRocket Scripts */}
+        <Script
+          src="https://cdn.lgrckt-in.com/LogRocket.min.js"
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
+        <Script id="logrocket-init" strategy="beforeInteractive">
+          {`window.LogRocket && window.LogRocket.init('p5tsjd/ppux-test');`}
+        </Script>
+
         <InitColorSchemeScript attribute="class" />
         <AppRouterCacheProvider>
           <ThemeProvider defaultTheme="wiley">

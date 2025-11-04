@@ -2,24 +2,24 @@
 
 // original muiColors https://mui.com/material-ui/customization/color/#color-palette
 import * as muiColors from "@mui/material/colors";
-import { brandColors } from "./brandColors";
+import { designTokens } from "./brandTokens";
 
 // Direct mapping: Phenom Primary Blue → MUI Blue
 // Clear mapping between tenant shades and MUI levels
 const phenomPrimaryBlue = {
   // Lightest shades (backgrounds, subtle elements)
-  50: brandColors.primaryBlue[5], // #F3F8F9 - Tenant 5% → MUI 50 (lightest)
-  100: brandColors.primaryBlue[10], // #E7F1F3 - Tenant 10% → MUI 100
-  200: brandColors.primaryBlue[20], // #CEE3E7 - Tenant 20% → MUI 200
+  50: designTokens.colorPrimitives.primary.blue[5], // #F3F8F9 - Tenant 5% → MUI 50 (lightest)
+  100: designTokens.colorPrimitives.primary.blue[10], // #E7F1F3 - Tenant 10% → MUI 100
+  200: designTokens.colorPrimitives.primary.blue[20], // #CEE3E7 - Tenant 20% → MUI 200
 
   // Mid-range shades (borders, hover states)
   300: "#7DB8C4", // Interpolated between tenant 20% and 40%
-  400: brandColors.primaryBlue[40], // #9DC7CF - Tenant 40% → MUI 400
-  500: brandColors.primaryBlue[60], // #6CABB8 - Tenant 60% → MUI 500 (main)
+  400: designTokens.colorPrimitives.primary.blue[40], // #9DC7CF - Tenant 40% → MUI 400
+  500: designTokens.colorPrimitives.primary.blue[60], // #6CABB8 - Tenant 60% → MUI 500 (main)
 
   // Darker shades (primary elements, text)
-  600: brandColors.primaryBlue[80], // #3B8FA0 - Tenant 80% → MUI 600
-  700: brandColors.primaryBlue[100], // #0A7388 - Tenant 100% → MUI 700
+  600: designTokens.colorPrimitives.primary.blue[80], // #3B8FA0 - Tenant 80% → MUI 600
+  700: designTokens.colorPrimitives.primary.blue[100], // #0A7388 - Tenant 100% → MUI 700
   800: "#075965", // Darker than tenant 100% - for hover/pressed states
   900: "#043B44", // Darkest shade - for high contrast text
 };
@@ -28,18 +28,18 @@ const phenomPrimaryBlue = {
 // Clear mapping between tenant shades and MUI levels
 const phenomPrimaryDarkBlue = {
   // Lightest shades (backgrounds, subtle elements)
-  50: brandColors.primaryDarkBlue[5], // #E4F1F8 - Tenant 5% → MUI 50 (lightest)
-  100: brandColors.primaryDarkBlue[10], // #C9DEF1 - Tenant 10% → MUI 100
-  200: brandColors.primaryDarkBlue[20], // #A4C2DF - Tenant 20% → MUI 200
+  50: designTokens.colorPrimitives.primary.darkBlue[5], // #F2F6F7 - Tenant 5% → MUI 50 (lightest)
+  100: designTokens.colorPrimitives.primary.darkBlue[10], // #E6EDEE - Tenant 10% → MUI 100
+  200: designTokens.colorPrimitives.primary.darkBlue[20], // #CDBDDD - Tenant 20% → MUI 200
 
   // Mid-range shades (borders, hover states)
   300: "#618B96", // Interpolated between tenant 20% and 40%
-  400: brandColors.primaryDarkBlue[40], // #7FA6BD - Tenant 40% → MUI 400
-  500: brandColors.primaryDarkBlue[60], // #5A8A9B - Tenant 60% → MUI 500 (main)
+  400: designTokens.colorPrimitives.primary.darkBlue[40], // #9AB7BC - Tenant 40% → MUI 400
+  500: designTokens.colorPrimitives.primary.darkBlue[60], // #68929A - Tenant 60% → MUI 500 (main)
 
   // Darker shades (primary elements, text)
-  600: brandColors.primaryDarkBlue[80], // #356E79 - Tenant 80% → MUI 600
-  700: brandColors.primaryDarkBlue[100], // #034A57 - Tenant 100% → MUI 700
+  600: designTokens.colorPrimitives.primary.darkBlue[80], // #356E79 - Tenant 80% → MUI 600
+  700: designTokens.colorPrimitives.primary.darkBlue[100], // #034A57 - Tenant 100% → MUI 700
   800: "#024048", // Darker than tenant 100% - for hover/pressed states
   900: "#012A30", // Darkest shade - for high contrast text
 };
@@ -48,18 +48,18 @@ const phenomPrimaryDarkBlue = {
 // Clear mapping between tenant shades and MUI levels
 const phenomPrimaryDarkGreen = {
   // Lightest shades (backgrounds, subtle elements)
-  50: brandColors.primaryDarkGreen[5], // #F5F7F4 - Tenant 5% → MUI 50 (lightest)
-  100: brandColors.primaryDarkGreen[10], // #EBF0EA - Tenant 10% → MUI 100
-  200: brandColors.primaryDarkGreen[20], // #D6E0D5 - Tenant 20% → MUI 200
+  50: designTokens.colorPrimitives.primary.darkGreen[5], // #f3f7f5 - Tenant 5% → MUI 50 (lightest)
+  100: designTokens.colorPrimitives.primary.darkGreen[10], // #e7efeb - Tenant 10% → MUI 100
+  200: designTokens.colorPrimitives.primary.darkGreen[20], // #cfded7 - Tenant 20% → MUI 200
 
   // Mid-range shades (borders, hover states)
   300: "#98B595", // Interpolated between tenant 20% and 40%
-  400: brandColors.primaryDarkGreen[40], // #ADC2AA - Tenant 40% → MUI 400
-  500: brandColors.primaryDarkGreen[60], // #84A380 - Tenant 60% → MUI 500 (main)
+  400: designTokens.colorPrimitives.primary.darkGreen[40], // #a0beaf - Tenant 40% → MUI 400
+  500: designTokens.colorPrimitives.primary.darkGreen[60], // #709d86 - Tenant 60% → MUI 500 (main)
 
   // Darker shades (primary elements, text)
-  600: brandColors.primaryDarkGreen[80], // #5B8555 - Tenant 80% → MUI 600
-  700: brandColors.primaryDarkGreen[100], // #32662B - Tenant 100% → MUI 700
+  600: designTokens.colorPrimitives.primary.darkGreen[80], // #417d5e - Tenant 80% → MUI 600
+  700: designTokens.colorPrimitives.primary.darkGreen[100], // #115c36 - Tenant 100% → MUI 700
   800: "#245420", // Darker than tenant 100% - for hover/pressed states
   900: "#193916", // Darkest shade - for high contrast text
 };
@@ -68,18 +68,18 @@ const phenomPrimaryDarkGreen = {
 // Clear mapping between tenant shades and MUI levels
 const phenomPrimaryGreen = {
   // Lightest shades (backgrounds, subtle elements)
-  50: brandColors.primaryGreen[5], // #F7FAF5 - Tenant 5% → MUI 50 (lightest)
-  100: brandColors.primaryGreen[10], // #EEF6EC - Tenant 10% → MUI 100
-  200: brandColors.primaryGreen[20], // #DDECD8 - Tenant 20% → MUI 200
+  50: designTokens.colorPrimitives.primary.green[5], // #e7efee - Tenant 5% → MUI 50 (lightest)
+  100: designTokens.colorPrimitives.primary.green[10], // #dce9e6 - Tenant 10% → MUI 100
+  200: designTokens.colorPrimitives.primary.green[20], // #c7dfd7 - Tenant 20% → MUI 200
 
   // Mid-range shades (borders, hover states)
   300: "#AED29E", // Interpolated between tenant 20% and 40%
-  400: brandColors.primaryGreen[40], // #BBD9B1 - Tenant 40% → MUI 400
-  500: brandColors.primaryGreen[60], // #9AC68B - Tenant 60% → MUI 500 (main)
+  400: designTokens.colorPrimitives.primary.green[40], // #9bcab5 - Tenant 40% → MUI 400
+  500: designTokens.colorPrimitives.primary.green[60], // #70b695 - Tenant 60% → MUI 500 (main)
 
   // Darker shades (primary elements, text)
-  600: brandColors.primaryGreen[80], // #78B364 - Tenant 80% → MUI 600
-  700: brandColors.primaryGreen[100], // #56A03D - Tenant 100% → MUI 700
+  600: designTokens.colorPrimitives.primary.green[80], // #44a174 - Tenant 80% → MUI 600
+  700: designTokens.colorPrimitives.primary.green[100], // #198c53 - Tenant 100% → MUI 700
   800: "#427E2F", // Darker than tenant 100% - for hover/pressed states
   900: "#2D5621", // Darkest shade - for high contrast text
 };
@@ -101,11 +101,11 @@ const customRed = {
 const customPink = {
   50: "#FFD6DA",
   100: "#FFB3BF",
-  200: brandColors.berry.bright,
+  200: designTokens.colorPrimitives.secondary.warmRed[40], // Using warm red from design tokens
   300: "#F96FA4",
   400: "#E24B98",
-  500: brandColors.berry.medium,
-  600: brandColors.berry.dark,
+  500: designTokens.colorPrimitives.secondary.warmRed[80], // Using warm red from design tokens
+  600: designTokens.colorPrimitives.secondary.warmRed[100], // Using warm red from design tokens
   700: "#70134E",
   800: "#4E0A38",
   900: "#200218",
