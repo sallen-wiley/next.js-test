@@ -337,6 +337,22 @@ const extrapolateWithAnchors = (
   const minLockedIndex = points[0].x;
   const maxLockedIndex = points[points.length - 1].x;
 
+  // Helper function to detect saturation intent from trend
+  const detectSaturationIntent = (sPoints: InterpolationPoint[]) => {
+    if (sPoints.length < 2) return 'maintain';
+    
+    // Look at trend in latter half of locked points
+    const recentPoints = sPoints.slice(-Math.min(2, sPoints.length));
+    if (recentPoints.length < 2) return 'maintain';
+    
+    const slope = (recentPoints[1].y - recentPoints[0].y) / 
+                  (recentPoints[1].x - recentPoints[0].x);
+    
+    if (slope > 5) return 'increase';      // Rising saturation - user wants rich darks
+    if (slope < -5) return 'decrease';     // Falling saturation - user wants natural blacks
+    return 'maintain';                     // Stable saturation - keep last value
+  };
+
   // Add anchors based on channel
   if (channel === "h") {
     // Hue: keep constant at edge values
@@ -347,12 +363,22 @@ const extrapolateWithAnchors = (
       extendedPoints.push({ x: blackIndex, y: points[points.length - 1].y });
     }
   } else if (channel === "s") {
-    // Saturation: white (light) has no saturation, dark colors maintain richness
+    // Saturation: white always has no saturation, dark end depends on user intent
     if (minLockedIndex > 0) {
       extendedPoints.unshift({ x: whiteIndex, y: 0 }); // White anchor (light end)
     }
     if (maxLockedIndex < shadeValues.length - 1) {
-      extendedPoints.push({ x: blackIndex, y: 0 }); // Black anchor (dark end) - black has no saturation
+      const saturationIntent = detectSaturationIntent(points);
+      let darkS = 0; // Default to natural black
+      
+      if (saturationIntent === 'increase') {
+        darkS = 100; // Rich, saturated dark colors
+      } else if (saturationIntent === 'maintain') {
+        darkS = points[points.length - 1].y; // Keep last saturation level
+      }
+      // 'decrease' stays at 0 (natural desaturation to black)
+      
+      extendedPoints.push({ x: blackIndex, y: darkS });
     }
   } else if (channel === "v") {
     // Value: white is full brightness, black has no brightness
