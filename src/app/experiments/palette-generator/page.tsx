@@ -63,6 +63,7 @@ interface ShadeDefinition {
   selectedForS: boolean;
   selectedForV: boolean;
   extrapolationMethod?: "interpolated" | "linear" | "anchored";
+  generationMode?: "functional" | "expressive"; // Mode used when generating this shade
 }
 
 interface HueSet {
@@ -327,9 +328,9 @@ const extrapolateWithAnchors = (
   const maxShade = shadeValues[shadeValues.length - 1]; // 900
   const range = maxShade - minShade; // 850
 
-  // Calculate virtual indices for pure black (shade 0) and pure white (shade 1000)
-  const blackIndex = (-minShade / range) * (shadeValues.length - 1);
-  const whiteIndex = ((1000 - minShade) / range) * (shadeValues.length - 1);
+  // Calculate virtual indices for pure white (shade 0) and pure black (shade 1000)
+  const whiteIndex = (-minShade / range) * (shadeValues.length - 1);
+  const blackIndex = ((1000 - minShade) / range) * (shadeValues.length - 1);
 
   const extendedPoints = [...points];
   const minLockedIndex = points[0].x;
@@ -339,27 +340,29 @@ const extrapolateWithAnchors = (
   if (channel === "h") {
     // Hue: keep constant at edge values
     if (minLockedIndex > 0) {
-      extendedPoints.unshift({ x: blackIndex, y: points[0].y });
+      extendedPoints.unshift({ x: whiteIndex, y: points[0].y });
     }
     if (maxLockedIndex < shadeValues.length - 1) {
-      extendedPoints.push({ x: whiteIndex, y: points[points.length - 1].y });
+      extendedPoints.push({ x: blackIndex, y: points[points.length - 1].y });
     }
   } else if (channel === "s") {
     // Saturation: white (light) has no saturation, dark colors maintain richness
     if (minLockedIndex > 0) {
-      extendedPoints.unshift({ x: blackIndex, y: 0 }); // White anchor
+      extendedPoints.unshift({ x: whiteIndex, y: 0 }); // White anchor (light end)
     }
     if (maxLockedIndex < shadeValues.length - 1) {
       const lastS = points[points.length - 1].y;
-      extendedPoints.push({ x: whiteIndex, y: Math.max(lastS * 0.9, 50) }); // Rich dark anchor
+      // For highly saturated colors (>80), maintain saturation; otherwise slightly reduce
+      const darkSaturation = lastS > 80 ? lastS : Math.max(lastS * 0.9, 50);
+      extendedPoints.push({ x: blackIndex, y: darkSaturation }); // Rich dark anchor (dark end)
     }
   } else if (channel === "v") {
     // Value: white is full brightness, black has no brightness
     if (minLockedIndex > 0) {
-      extendedPoints.unshift({ x: blackIndex, y: 100 }); // White anchor
+      extendedPoints.unshift({ x: whiteIndex, y: 100 }); // White anchor (light end)
     }
     if (maxLockedIndex < shadeValues.length - 1) {
-      extendedPoints.push({ x: whiteIndex, y: 0 }); // Black anchor
+      extendedPoints.push({ x: blackIndex, y: 0 }); // Black anchor (dark end)
     }
   }
 
@@ -687,6 +690,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         hsv: { h, s, v },
         color,
         extrapolationMethod,
+        generationMode: mode, // Store the mode used for generation
       };
     });
 
@@ -865,6 +869,7 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
         color: newColor,
         hsv,
         extrapolationMethod: undefined,
+        generationMode: undefined,
       });
     }
   };
@@ -891,7 +896,7 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
               : shade.extrapolationMethod === "linear"
               ? "Extrapolated"
               : shade.extrapolationMethod === "anchored"
-              ? hue.extrapolationMode === "functional"
+              ? shade.generationMode === "functional"
                 ? "UI Mode"
                 : "Anchored"
               : ""
@@ -899,7 +904,7 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
           size="small"
           color={
             shade.extrapolationMethod === "anchored" &&
-            hue.extrapolationMode === "expressive"
+            shade.generationMode === "expressive"
               ? "warning" // Yellow warning in expressive mode (indicates fallback)
               : "info" // Blue info badge otherwise
           }
