@@ -352,10 +352,7 @@ const extrapolateWithAnchors = (
       extendedPoints.unshift({ x: whiteIndex, y: 0 }); // White anchor (light end)
     }
     if (maxLockedIndex < shadeValues.length - 1) {
-      const lastS = points[points.length - 1].y;
-      // For highly saturated colors (>80), maintain saturation; otherwise slightly reduce
-      const darkSaturation = lastS > 80 ? lastS : Math.max(lastS * 0.9, 50);
-      extendedPoints.push({ x: blackIndex, y: darkSaturation }); // Rich dark anchor (dark end)
+      extendedPoints.push({ x: blackIndex, y: 0 }); // Black anchor (dark end) - black has no saturation
     }
   } else if (channel === "v") {
     // Value: white is full brightness, black has no brightness
