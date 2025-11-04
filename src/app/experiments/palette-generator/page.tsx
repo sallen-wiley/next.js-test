@@ -62,7 +62,7 @@ interface ShadeDefinition {
   selectedForH: boolean;
   selectedForS: boolean;
   selectedForV: boolean;
-  extrapolationMethod?: "interpolated" | "linear" | "anchored";
+  extrapolationMethod?: "interpolated" | "linear" | "adjusted";
   generationMode?: "functional" | "expressive"; // Mode used when generating this shade
 }
 
@@ -676,11 +676,11 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
       const minLocked = Math.min(...lockedShades.map((s) => s.index));
       const maxLocked = Math.max(...lockedShades.map((s) => s.index));
 
-      let extrapolationMethod: "interpolated" | "linear" | "anchored";
+      let extrapolationMethod: "interpolated" | "linear" | "adjusted";
       if (i >= minLocked && i <= maxLocked) {
         extrapolationMethod = "interpolated";
       } else if (anyAnchorUsed) {
-        extrapolationMethod = "anchored";
+        extrapolationMethod = "adjusted";
       } else {
         extrapolationMethod = "linear";
       }
@@ -802,7 +802,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
             white anchor points to ensure valid colors.
           </Typography>
           <Typography sx={{ mt: 2 }}>
-            Shades marked with &ldquo;Anchored&rdquo; badges used this fallback
+            Shades marked with &ldquo;Adjusted&rdquo; badges used this fallback
             method for more natural color progression.
           </Typography>
         </DialogContent>
@@ -895,15 +895,15 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
               ? "Interpolated"
               : shade.extrapolationMethod === "linear"
               ? "Extrapolated"
-              : shade.extrapolationMethod === "anchored"
+              : shade.extrapolationMethod === "adjusted"
               ? shade.generationMode === "functional"
                 ? "UI Mode"
-                : "Anchored"
+                : "Adjusted"
               : ""
           }
           size="small"
           color={
-            shade.extrapolationMethod === "anchored" &&
+            shade.extrapolationMethod === "adjusted" &&
             shade.generationMode === "expressive"
               ? "warning" // Yellow warning in expressive mode (indicates fallback)
               : "info" // Blue info badge otherwise
