@@ -339,18 +339,19 @@ const extrapolateWithAnchors = (
 
   // Helper function to detect saturation intent from trend
   const detectSaturationIntent = (sPoints: InterpolationPoint[]) => {
-    if (sPoints.length < 2) return 'maintain';
-    
+    if (sPoints.length < 2) return "maintain";
+
     // Look at trend in latter half of locked points
     const recentPoints = sPoints.slice(-Math.min(2, sPoints.length));
-    if (recentPoints.length < 2) return 'maintain';
-    
-    const slope = (recentPoints[1].y - recentPoints[0].y) / 
-                  (recentPoints[1].x - recentPoints[0].x);
-    
-    if (slope > 5) return 'increase';      // Rising saturation - user wants rich darks
-    if (slope < -5) return 'decrease';     // Falling saturation - user wants natural blacks
-    return 'maintain';                     // Stable saturation - keep last value
+    if (recentPoints.length < 2) return "maintain";
+
+    const slope =
+      (recentPoints[1].y - recentPoints[0].y) /
+      (recentPoints[1].x - recentPoints[0].x);
+
+    if (slope > 5) return "increase"; // Rising saturation - user wants rich darks
+    if (slope < -5) return "decrease"; // Falling saturation - user wants natural blacks
+    return "maintain"; // Stable saturation - keep last value
   };
 
   // Add anchors based on channel
@@ -370,14 +371,14 @@ const extrapolateWithAnchors = (
     if (maxLockedIndex < shadeValues.length - 1) {
       const saturationIntent = detectSaturationIntent(points);
       let darkS = 0; // Default to natural black
-      
-      if (saturationIntent === 'increase') {
+
+      if (saturationIntent === "increase") {
         darkS = 100; // Rich, saturated dark colors
-      } else if (saturationIntent === 'maintain') {
+      } else if (saturationIntent === "maintain") {
         darkS = points[points.length - 1].y; // Keep last saturation level
       }
       // 'decrease' stays at 0 (natural desaturation to black)
-      
+
       extendedPoints.push({ x: blackIndex, y: darkS });
     }
   } else if (channel === "v") {
@@ -1016,6 +1017,18 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
             "& .MuiInputBase-input": {
               fontFamily: "monospace",
               fontSize: "0.75rem",
+              color: textColor, // Use calculated text color for proper contrast
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: `${textColor}40`, // Semi-transparent border using text color
+              },
+              "&:hover fieldset": {
+                borderColor: `${textColor}60`, // Slightly more opaque on hover
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: textColor, // Full opacity when focused
+              },
             },
           }}
         />
