@@ -10,8 +10,9 @@ import FabThemeSwitcher from "@/components/app/FabThemeSwitcher";
 import AuthWrapper from "@/components/auth/AuthWrapper";
 
 export const metadata = {
-  title: "Material UI App",
-  description: "Next.js application with Material UI",
+  title: "Publishing Platforms UX Test Ground",
+  description:
+    "Explore, design, and test publishing solutions with real-world visuals",
 };
 
 export default function RootLayout({
