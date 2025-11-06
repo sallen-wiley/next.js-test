@@ -7,7 +7,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
 import {
@@ -32,7 +32,7 @@ import {
   FormControlLabel,
   Radio,
   FormHelperText,
-  Tooltip as MuiTooltip,
+  Tooltip,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import LockIcon from "@mui/icons-material/Lock";
@@ -64,7 +64,7 @@ interface ShadeDefinition {
   selectedForS: boolean;
   selectedForV: boolean;
   extrapolationMethod?: "interpolated" | "linear" | "adjusted";
-  generationMode?: "functional" | "expressive"; // Mode used when generating this shade
+  generationMode?: "functional" | "functional-saturated" | "expressive"; // Mode used when generating this shade
 }
 
 interface HueSet {
@@ -72,7 +72,7 @@ interface HueSet {
   name: string; // Display name
   muiName: string; // MUI palette key (primary, secondary, etc.)
   shades: ShadeDefinition[];
-  extrapolationMode: "functional" | "expressive";
+  extrapolationMode: "functional" | "functional-saturated" | "expressive";
 }
 
 interface InterpolationPoint {
@@ -280,11 +280,6 @@ const splineInterpolation = (
 };
 
 // Extrapolation functions
-const isInvalidValue = (value: number, channel: "h" | "s" | "v"): boolean => {
-  if (channel === "h") return false; // Hue wraps around
-  return value < 0 || value > 100;
-};
-
 const extrapolateLinear = (
   points: InterpolationPoint[],
   targetIndices: number[]
@@ -323,7 +318,8 @@ const extrapolateWithAnchors = (
   points: InterpolationPoint[],
   targetIndices: number[],
   channel: "h" | "s" | "v",
-  shadeValues: number[]
+  shadeValues: number[],
+  mode: "functional" | "functional-saturated" | "expressive"
 ): number[] => {
   const minShade = shadeValues[0]; // 50
   const maxShade = shadeValues[shadeValues.length - 1]; // 900
@@ -337,23 +333,6 @@ const extrapolateWithAnchors = (
   const minLockedIndex = points[0].x;
   const maxLockedIndex = points[points.length - 1].x;
 
-  // Helper function to detect saturation intent from trend
-  const detectSaturationIntent = (sPoints: InterpolationPoint[]) => {
-    if (sPoints.length < 2) return "maintain";
-
-    // Look at trend in latter half of locked points
-    const recentPoints = sPoints.slice(-Math.min(2, sPoints.length));
-    if (recentPoints.length < 2) return "maintain";
-
-    const slope =
-      (recentPoints[1].y - recentPoints[0].y) /
-      (recentPoints[1].x - recentPoints[0].x);
-
-    if (slope > 5) return "increase"; // Rising saturation - user wants rich darks
-    if (slope < -5) return "decrease"; // Falling saturation - user wants natural blacks
-    return "maintain"; // Stable saturation - keep last value
-  };
-
   // Add anchors based on channel
   if (channel === "h") {
     // Hue: keep constant at edge values
@@ -364,20 +343,21 @@ const extrapolateWithAnchors = (
       extendedPoints.push({ x: blackIndex, y: points[points.length - 1].y });
     }
   } else if (channel === "s") {
-    // Saturation: white always has no saturation, dark end depends on user intent
+    // Saturation: white always has no saturation, dark end depends on mode
     if (minLockedIndex > 0) {
       extendedPoints.unshift({ x: whiteIndex, y: 0 }); // White anchor (light end)
     }
     if (maxLockedIndex < shadeValues.length - 1) {
-      const saturationIntent = detectSaturationIntent(points);
       let darkS = 0; // Default to natural black
 
-      if (saturationIntent === "increase") {
-        darkS = 100; // Rich, saturated dark colors
-      } else if (saturationIntent === "maintain") {
-        darkS = points[points.length - 1].y; // Keep last saturation level
+      if (mode === "functional") {
+        darkS = 0; // Natural black (S=0)
+      } else if (mode === "functional-saturated") {
+        darkS = 100; // Rich saturated darks (S=100)
+      } else if (mode === "expressive") {
+        // In expressive mode, maintain last saturation level for smoother curves
+        darkS = points[points.length - 1].y;
       }
-      // 'decrease' stays at 0 (natural desaturation to black)
 
       extendedPoints.push({ x: blackIndex, y: darkS });
     }
@@ -399,7 +379,7 @@ const extrapolateWithFallback = (
   targetIndices: number[],
   channel: "h" | "s" | "v",
   shadeValues: number[],
-  mode: "functional" | "expressive"
+  mode: "functional" | "functional-saturated" | "expressive"
 ): { values: number[]; anchorUsed: boolean } => {
   // Special handling for hue (always constant for monochromatic palettes)
   if (channel === "h") {
@@ -408,46 +388,30 @@ const extrapolateWithFallback = (
     return { values: extrapolated, anchorUsed: false };
   }
 
-  // FUNCTIONAL MODE: Always use anchors for S and V
-  if (mode === "functional") {
+  // FUNCTIONAL MODES: Always use anchors for S and V
+  if (mode === "functional" || mode === "functional-saturated") {
     const anchored = extrapolateWithAnchors(
       points,
       targetIndices,
       channel,
-      shadeValues
+      shadeValues,
+      mode
     );
     return { values: anchored, anchorUsed: true };
   }
 
-  // EXPRESSIVE MODE: Try linear extrapolation first
+  // EXPRESSIVE MODE: Use linear extrapolation with clamping
   if (mode === "expressive") {
-    // Step 1: Try linear extrapolation
+    // Step 1: Always use linear extrapolation for natural curve
     const extrapolated = extrapolateLinear(points, targetIndices);
 
-    // Step 2: Check if any values are invalid (only outside locked range)
-    const minLocked = Math.min(...points.map((p) => p.x));
-    const maxLocked = Math.max(...points.map((p) => p.x));
-
-    const hasInvalid = extrapolated.some((value, i) => {
-      const idx = targetIndices[i];
-      // Only check values outside locked range
-      if (idx >= minLocked && idx <= maxLocked) return false;
-      return isInvalidValue(value, channel);
+    // Step 2: Clamp invalid values to valid range while preserving trajectory
+    const clampedValues = extrapolated.map((value) => {
+      // Clamp S and V to 0-100 (hue already handled above)
+      return Math.max(0, Math.min(100, value));
     });
 
-    // Step 3: If all valid, use linear extrapolation
-    if (!hasInvalid) {
-      return { values: extrapolated, anchorUsed: false };
-    }
-
-    // Step 4: Fall back to anchors
-    const anchored = extrapolateWithAnchors(
-      points,
-      targetIndices,
-      channel,
-      shadeValues
-    );
-    return { values: anchored, anchorUsed: true };
+    return { values: clampedValues, anchorUsed: false };
   }
 
   // Fallback (should never reach here)
@@ -558,11 +522,7 @@ function PaletteGenerator() {
             sx={{ mb: 4 }}
           >
             <Box>
-              <Typography
-                variant="h3"
-                component="h1"
-                gutterBottom
-              >
+              <Typography variant="h3" component="h1" gutterBottom>
                 HSV Palette Generator
               </Typography>
               <Typography variant="body1" color="text.secondary">
@@ -782,7 +742,10 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
           value={hue.extrapolationMode}
           onChange={(e) =>
             onUpdate({
-              extrapolationMode: e.target.value as "functional" | "expressive",
+              extrapolationMode: e.target.value as
+                | "functional"
+                | "functional-saturated"
+                | "expressive",
             })
           }
         >
@@ -792,15 +755,20 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
             label="UI Functional"
           />
           <FormControlLabel
+            value="functional-saturated"
+            control={<Radio />}
+            label="UI Functional (Rich Darks)"
+          />
+          <FormControlLabel
             value="expressive"
             control={<Radio />}
             label="Brand Expressive"
           />
         </RadioGroup>
         <FormHelperText>
-          UI Functional: Light shades trend toward white, dark toward black
-          (better for backgrounds/text). Brand Expressive: Extends your
-          color&apos;s natural curve (better for illustrations/gradients).
+          UI Functional: Natural blacks (S=0) for text and backgrounds. UI
+          Functional (Rich Darks): Saturated darks (S=100) for rich UI elements.
+          Brand Expressive: Maintains color saturation curve for illustrations.
         </FormHelperText>
       </FormControl>
 
@@ -919,14 +887,17 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
           right: 8,
           zIndex: 1,
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
           gap: 0.5,
-          alignItems: "flex-end",
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+          justifyContent: "flex-end",
+          maxWidth: "calc(100% - 16px)", // Prevent overflow beyond card bounds
         }}
       >
         {/* Extrapolation Method Badge */}
         {!shade.locked && shade.extrapolationMethod && (
-          <MuiTooltip
+          <Tooltip
             title={
               shade.extrapolationMethod === "interpolated"
                 ? "Generated by interpolating between locked shades"
@@ -960,12 +931,12 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
                   : "info" // Blue info badge otherwise
               }
             />
-          </MuiTooltip>
+          </Tooltip>
         )}
 
         {/* Achromatic Indicator Badge */}
         {isAchromatic && (
-          <MuiTooltip
+          <Tooltip
             title="This color has very low saturation (S < 1) and is considered achromatic (neutral). Its hue won't affect interpolation between other colors."
             placement="top"
           >
@@ -973,8 +944,9 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
               label="Achromatic"
               size="small"
               variant="filled"
+              color="neutral"
             />
-          </MuiTooltip>
+          </Tooltip>
         )}
       </Box>
 
@@ -1058,31 +1030,19 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
           </Typography>
           <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
             {passesAAA && (
-              <MuiTooltip title="Meets WCAG AAA standard (7:1 contrast ratio) - excellent for all text">
-                <Chip
-                  label="AAA"
-                  size="small"
-                  color="success"
-                />
-              </MuiTooltip>
+              <Tooltip title="Meets WCAG AAA standard (7:1 contrast ratio) - excellent for all text">
+                <Chip label="AAA" size="small" color="success" />
+              </Tooltip>
             )}
             {passesAA && (
-              <MuiTooltip title="Meets WCAG AA standard (4.5:1 contrast ratio) - good for normal text">
-                <Chip
-                  label="AA"
-                  size="small"
-                  color="primary"
-                />
-              </MuiTooltip>
+              <Tooltip title="Meets WCAG AA standard (4.5:1 contrast ratio) - good for normal text">
+                <Chip label="AA" size="small" color="primary" />
+              </Tooltip>
             )}
             {!passesAA && (
-              <MuiTooltip title="Fails WCAG standards - insufficient contrast for text accessibility">
-                <Chip
-                  label="Fails"
-                  size="small"
-                  color="error"
-                />
-              </MuiTooltip>
+              <Tooltip title="Fails WCAG standards - insufficient contrast for text accessibility">
+                <Chip label="Fails" size="small" color="error" />
+              </Tooltip>
             )}
           </Stack>
         </Box>
@@ -1207,7 +1167,7 @@ function CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
           <XAxis dataKey="value" stroke="#666" tick={{ fill: "#a0a0a0" }} />
           <YAxis stroke="#666" tick={{ fill: "#a0a0a0" }} domain={[0, 100]} />
-          <Tooltip
+          <RechartsTooltip
             contentStyle={{
               backgroundColor: "#1a1a1a",
               border: "1px solid #333",

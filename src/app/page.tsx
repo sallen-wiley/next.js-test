@@ -1,14 +1,41 @@
 "use client";
 import AppHeader from "@/components/app/AppHeader";
-import {
-  Container,
-  Typography,
-  Paper,
-  Link,
-  Stack,
-  Grid,
-  Box,
-} from "@mui/material";
+import { Container, Typography, Paper, Link, Grid, Box } from "@mui/material";
+
+interface ClickableCardProps {
+  href: string;
+  title: string;
+  description?: string;
+}
+
+function ClickableCard({ href, title, description }: ClickableCardProps) {
+  return (
+    <Link href={href} sx={{ textDecoration: "none" }}>
+      <Paper
+        elevation={1}
+        sx={{
+          p: 3,
+          height: "100%",
+          cursor: "pointer",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            boxShadow: (theme) => theme.shadows[3],
+            transform: "translateY(-4px)",
+          },
+        }}
+      >
+        <Typography variant="body1" color="text.primary">
+          {title}
+        </Typography>
+        {description && (
+          <Typography variant="caption" display="block" color="text.secondary">
+            {description}
+          </Typography>
+        )}
+      </Paper>
+    </Link>
+  );
+}
 
 function Hero() {
   const imageUrl =
@@ -65,73 +92,72 @@ export default function Home() {
       <AppHeader />
       <Hero />
       <Container maxWidth="lg">
-        <Grid container spacing={4} sx={{ my: 4 }}>
-          <Grid size={12}>
-            <Stack direction="column" spacing={4}>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/onboarding-demos">
-                    Onboarding Workflow Demos
-                  </Link>
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/woaa">WOAA</Link>
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/kitchen-sink">Kitchen sink</Link>
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/reviewer-dashboard">
-                    Reviewer Invitation Dashboard
-                  </Link>
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/data-demo">Real Data Demo</Link>
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/write-demo">Write Operations Demo</Link>
-                </Typography>
-                <Typography
-                  variant="caption"
-                  display="block"
-                  color="text.secondary"
-                >
-                  Test creating articles with mock and real data
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/typography-demo">Typography Demo</Link>
-                </Typography>
-              </Paper>
-              <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="body1">
-                  <Link href="/experiments/notifications/admin">
-                    Notifications admin
-                  </Link>
-                </Typography>
-                <Typography variant="body1">
-                  <Link href="/experiments/notifications/history">
-                    Notifications history
-                  </Link>
-                </Typography>
-                <Typography variant="body1">
-                  <Link href="/experiments/notifications/preferences">
-                    Notifications preferences
-                  </Link>
-                </Typography>
-              </Paper>
-            </Stack>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ my: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
+              href="/onboarding-demos"
+              title="Onboarding Workflow Demos"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard href="/woaa" title="WOAA" />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard href="/kitchen-sink" title="Kitchen sink" />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
+              href="/reviewer-dashboard"
+              title="Reviewer Invitation Dashboard"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard href="/data-demo" title="Real Data Demo" />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
+              href="/write-demo"
+              title="Write Operations Demo"
+              description="Test creating articles with mock and real data"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard href="/typography-demo" title="Typography Demo" />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
+              href="/experiments/palette-generator"
+              title="HSV Palette Generator"
+              description="Generate harmonious color palettes using HSV interpolation"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
+              href="/experiments/notifications/admin"
+              title="Notifications admin"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
+              href="/experiments/notifications/history"
+              title="Notifications history"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
+              href="/experiments/notifications/preferences"
+              title="Notifications preferences"
+            />
           </Grid>
         </Grid>
       </Container>

@@ -107,7 +107,15 @@ The project includes a sophisticated theming system with:
 
 ## Learn More
 
-To learn more about the technologies used in this project:
+### Documentation
+
+- **[Setup Guide](SETUP_GUIDE.md)** - Complete setup and development workflow
+- **[Documentation Hub](docs/README.md)** - Comprehensive documentation index
+- **[Authentication Guide](docs/setup/authentication-guide.md)** - Authentication & RBAC system
+- **[Theme Development](docs/development/theme-guide.md)** - Theme creation and customization
+- **[Storybook Guide](docs/development/storybook-guide.md)** - Component development workflow
+
+### Technologies
 
 - [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
 - [Material-UI Documentation](https://mui.com/) - Comprehensive MUI component guide
