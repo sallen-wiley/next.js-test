@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import D3CurveVisualization from './D3CurveVisualization';
+import D3CurveVisualization from "./D3CurveVisualization";
 import {
   Box,
   Paper,
@@ -746,7 +746,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
 
       <ShadeGrid shades={hue.shades} hue={hue} onShadeUpdate={updateShade} />
 
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 2 }}>
         <D3CurveVisualization hue={hue} onUpdate={onUpdate} />
       </Box>
 
