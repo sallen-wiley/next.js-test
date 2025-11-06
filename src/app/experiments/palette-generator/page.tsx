@@ -1,15 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from "recharts";
+import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import D3CurveVisualization from './D3CurveVisualization';
 import {
   Box,
   Paper,
@@ -33,6 +25,8 @@ import {
   Radio,
   FormHelperText,
   Tooltip,
+  Switch,
+  FormGroup,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import LockIcon from "@mui/icons-material/Lock";
@@ -118,6 +112,32 @@ interface ChartDataPoint {
   selectedForS: boolean;
   selectedForV: boolean;
   [key: string]: boolean | number; // Allow dynamic property access
+}
+
+// Draggable chart interfaces
+interface DragPoint {
+  index: number;
+  x: number;
+  y: number;
+  locked: boolean;
+  selected: boolean;
+  isDragging?: boolean;
+  channel: 'h' | 's' | 'v';
+}
+
+interface CurveSettings {
+  showH: boolean;
+  showS: boolean;
+  showV: boolean;
+  smoothMode: boolean;
+}
+
+interface DragState {
+  isDragging: boolean;
+  dragPoint: DragPoint | null;
+  startY: number;
+  chartRect: DOMRect | null;
+  originalValue: number; // Store original value for smooth mode
 }
 
 // HSV to RGB conversion
@@ -775,7 +795,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
       <ShadeGrid shades={hue.shades} hue={hue} onShadeUpdate={updateShade} />
 
       <Box sx={{ mt: 4 }}>
-        <CurveVisualization hue={hue} onUpdate={onUpdate} />
+        <D3CurveVisualization hue={hue} onUpdate={onUpdate} />
       </Box>
 
       {/* Anchor Warning Dialog */}
@@ -1069,20 +1089,386 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
 }
 
 function CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [dragState, setDragState] = useState<DragState>({
+    isDragging: false,
+    dragPoint: null,
+    startY: 0,
+    chartRect: null,
+    originalValue: 0,
+  });
+
+  // Track temporary drag position for visual feedback only
+  const [tempDragData, setTempDragData] = useState<{
+    index: number;
+    channel: 'h' | 's' | 'v';
+    value: number;
+  } | null>(null);
+
+  // Curve visibility settings
+  const [curveSettings, setCurveSettings] = useState<CurveSettings>({
+    showH: true,
+    showS: true,
+    showV: true,
+    smoothMode: false,
+  });
+
+  // Chart data for Recharts - includes temporary drag data for visual feedback
   const chartData = useMemo(() => {
-    return hue.shades.map((shade: ShadeDefinition, i: number) => ({
-      index: i,
-      value: shade.value,
-      h: shade.hsv.h / 3.6, // Scale to 0-100 for chart display
-      hRaw: shade.hsv.h, // Keep original for tooltip
-      s: shade.hsv.s,
-      v: shade.hsv.v,
-      locked: shade.locked,
-      selectedForH: shade.selectedForH,
-      selectedForS: shade.selectedForS,
-      selectedForV: shade.selectedForV,
-    }));
-  }, [hue.shades]);
+    console.log('Rebuilding chartData with tempDragData:', tempDragData); // Debug
+    return hue.shades.map((shade: ShadeDefinition, i: number) => {
+      let h = shade.hsv.h / 3.6; // Scale to 0-100 for chart display
+      let s = shade.hsv.s;
+      let v = shade.hsv.v;
+      
+      // Override with temporary drag data if this point is being dragged
+      if (tempDragData && tempDragData.index === i) {
+        console.log(`Applying tempDragData to index ${i}:`, tempDragData); // Debug
+        if (tempDragData.channel === 'h') h = tempDragData.value / 3.6;
+        else if (tempDragData.channel === 's') s = tempDragData.value;
+        else if (tempDragData.channel === 'v') v = tempDragData.value;
+      }
+      
+      return {
+        index: i,
+        value: shade.value,
+        h,
+        hRaw: h * 3.6, // Keep original scale for tooltip
+        s,
+        v,
+        locked: shade.locked,
+        selectedForH: shade.selectedForH,
+        selectedForS: shade.selectedForS,
+        selectedForV: shade.selectedForV,
+      };
+    });
+  }, [hue.shades, tempDragData]);
+
+  // Calculate actual positions of points for drag overlay
+  const [overlayPoints, setOverlayPoints] = useState<Array<{
+    index: number;
+    channel: 'h' | 's' | 'v';
+    x: number;
+    y: number;
+    selected: boolean;
+    locked: boolean;
+  }>>([]);
+
+  // Function to update overlay positions
+  const updatePositions = useCallback(() => {
+    if (!chartRef.current) return;
+    
+    const chartContainer = chartRef.current;
+    const svgElement = chartContainer.querySelector('svg');
+    if (!svgElement) return;
+    
+    // Find the actual chart area by looking for the clipping rectangle or chart group
+    const clipPath = svgElement.querySelector('defs clipPath rect');
+    const chartGroup = svgElement.querySelector('.recharts-cartesian-grid');
+    
+    let chartArea = { x: 0, y: 0, width: 0, height: 0 };
+    
+    if (clipPath) {
+      // Use the clipping rectangle which defines the actual chart plotting area
+      chartArea = {
+        x: parseFloat(clipPath.getAttribute('x') || '0'),
+        y: parseFloat(clipPath.getAttribute('y') || '0'),
+        width: parseFloat(clipPath.getAttribute('width') || '0'),
+        height: parseFloat(clipPath.getAttribute('height') || '0'),
+      };
+      console.log('Chart area from clipPath:', chartArea);
+    } else if (chartGroup) {
+      // Fallback: use the cartesian grid to determine chart area
+      const gridRect = chartGroup.getBoundingClientRect();
+      const containerRect = chartContainer.getBoundingClientRect();
+      chartArea = {
+        x: gridRect.left - containerRect.left,
+        y: gridRect.top - containerRect.top,
+        width: gridRect.width,
+        height: gridRect.height,
+      };
+      console.log('Chart area from grid:', chartArea);
+    }
+    
+    // If we still don't have dimensions, inspect actual data points
+    if (chartArea.width === 0 || chartArea.height === 0) {
+      // Find all actual data point circles
+      const dataCircles = Array.from(svgElement.querySelectorAll('circle')).filter(circle => {
+        const fill = circle.getAttribute('fill');
+        const r = parseFloat(circle.getAttribute('r') || '0');
+        // Filter for actual data points (not grid dots or other elements)
+        return fill && fill !== 'none' && fill !== 'transparent' && r > 3;
+      });
+      
+      if (dataCircles.length > 0) {
+        const positions = dataCircles.map(circle => ({
+          x: parseFloat(circle.getAttribute('cx') || '0'),
+          y: parseFloat(circle.getAttribute('cy') || '0'),
+        }));
+        
+        const minX = Math.min(...positions.map(p => p.x));
+        const maxX = Math.max(...positions.map(p => p.x));
+        const minY = Math.min(...positions.map(p => p.y));
+        const maxY = Math.max(...positions.map(p => p.y));
+        
+        chartArea = {
+          x: minX - 20, // Add some padding
+          y: minY - 20,
+          width: maxX - minX + 40,
+          height: maxY - minY + 40,
+        };
+        console.log('Chart area from data points:', chartArea);
+      }
+    }
+    
+    // Fallback to manual calculation if DOM inspection fails
+    if (chartArea.width === 0 || chartArea.height === 0) {
+      const containerRect = chartContainer.getBoundingClientRect();
+      chartArea = {
+        x: 65,
+        y: 25,
+        width: containerRect.width - 120,
+        height: 240,
+      };
+      console.log('Chart area fallback:', chartArea);
+    }
+    
+    const newPoints: typeof overlayPoints = [];
+    
+    hue.shades.forEach((shade, index) => {
+      const x = chartArea.x + (index / (hue.shades.length - 1)) * chartArea.width;
+      
+      if (curveSettings.showH) {
+        const hValue = shade.hsv.h / 3.6; // Scale to 0-100 for display
+        const y = chartArea.y + chartArea.height - (hValue / 100) * chartArea.height;
+        newPoints.push({
+          index,
+          channel: 'h',
+          x,
+          y,
+          selected: shade.selectedForH,
+          locked: shade.locked,
+        });
+      }
+      
+      if (curveSettings.showS) {
+        const y = chartArea.y + chartArea.height - (shade.hsv.s / 100) * chartArea.height;
+        newPoints.push({
+          index,
+          channel: 's',
+          x,
+          y,
+          selected: shade.selectedForS,
+          locked: shade.locked,
+        });
+      }
+      
+      if (curveSettings.showV) {
+        const y = chartArea.y + chartArea.height - (shade.hsv.v / 100) * chartArea.height;
+        newPoints.push({
+          index,
+          channel: 'v',
+          x,
+          y,
+          selected: shade.selectedForV,
+          locked: shade.locked,
+        });
+      }
+    });
+    
+    setOverlayPoints(newPoints);
+  }, [hue.shades, curveSettings]);
+
+  // Update overlay positions after chart renders
+  useEffect(() => {
+    // Update positions after a short delay to ensure chart is rendered
+    const timer = setTimeout(updatePositions, 100);
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [updatePositions]);
+
+  // Separate effect for resize handling
+  useEffect(() => {
+    const handleResize = () => {
+      console.log('Window resized, updating positions'); // Debug
+      // Add a small delay to let the chart re-render first
+      setTimeout(updatePositions, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [updatePositions]);
+
+  // Gaussian falloff for smooth mode (equalizer-style)
+  const applyGaussianFalloff = useCallback((targetIndex: number, newValue: number, originalValue: number, channel: 'h' | 's' | 'v') => {
+    if (!curveSettings.smoothMode) return [];
+
+    const sigma = 0.8; // Tighter falloff for more localized effect
+    const maxDistance = 2; // Only affect immediate neighbors (1-2 points away)
+    const lockedIndices = hue.shades
+      .map((shade, idx) => ({ shade, idx }))
+      .filter(({ shade }) => shade.locked)
+      .map(({ idx }) => idx);
+
+    const newShades = [...hue.shades];
+    const delta = newValue - originalValue; // How much the dragged point moved
+
+    hue.shades.forEach((shade, index) => {
+      if (index === targetIndex || shade.locked) return;
+
+      const distance = Math.abs(index - targetIndex);
+      
+      // Only affect nearby points (equalizer-style)
+      if (distance > maxDistance) return;
+
+      // Check if there's a locked point between target and current index
+      const hasLockedBetween = lockedIndices.some(lockedIdx => 
+        (lockedIdx > Math.min(targetIndex, index) && lockedIdx < Math.max(targetIndex, index))
+      );
+
+      if (hasLockedBetween) return;
+
+      // Calculate influence with much stronger falloff
+      const influence = Math.exp(-Math.pow(distance, 2) / (2 * Math.pow(sigma, 2)));
+      
+      // Scale the influence to be more reasonable (max 50% for immediate neighbors)
+      const scaledInfluence = influence * 0.5;
+      const adjustment = delta * scaledInfluence;
+
+      const currentShadeValue = channel === 'h' ? shade.hsv.h : 
+                               channel === 's' ? shade.hsv.s : 
+                               shade.hsv.v;
+      
+      let newShadeValue = currentShadeValue + adjustment;
+      
+      // Clamp values
+      if (channel === 'h') {
+        newShadeValue = ((newShadeValue % 360) + 360) % 360;
+      } else {
+        newShadeValue = Math.max(0, Math.min(100, newShadeValue));
+      }
+
+      const newHsv = { ...shade.hsv };
+      newHsv[channel] = newShadeValue;
+      
+      const rgb = hsvToRgb(newHsv.h, newHsv.s, newHsv.v);
+      const color = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+      newShades[index] = {
+        ...shade,
+        hsv: newHsv,
+        color,
+        extrapolationMethod: undefined,
+      };
+    });
+
+    return newShades;
+  }, [curveSettings.smoothMode, hue.shades]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    console.log('handleMouseMove called, isDragging:', dragState.isDragging); // Debug
+    if (!dragState.isDragging || !dragState.dragPoint || !dragState.chartRect) return;
+
+    console.log('Processing mouse move for drag'); // Debug
+
+    // Calculate chart dimensions (matching Recharts layout)
+    const chartHeight = 240; // ResponsiveContainer height minus margins
+    const chartTop = 30; // Top margin in Recharts
+    
+    // Get mouse position relative to chart
+    const currentY = e.clientY - dragState.chartRect.top - chartTop;
+    const normalizedY = Math.max(0, Math.min(1, 1 - (currentY / chartHeight))); // Invert Y axis
+    
+    let newValue: number;
+    if (dragState.dragPoint.channel === 'h') {
+      newValue = normalizedY * 360; // Hue: 0-360 degrees
+    } else {
+      newValue = normalizedY * 100; // Saturation/Value: 0-100%
+    }
+
+    console.log('Setting tempDragData:', { index: dragState.dragPoint.index, channel: dragState.dragPoint.channel, value: newValue }); // Debug
+
+    // Only update temporary visual data, not the actual chart data
+    setTempDragData({
+      index: dragState.dragPoint.index,
+      channel: dragState.dragPoint.channel,
+      value: newValue
+    });
+  }, [dragState]);
+
+  const handleMouseUp = useCallback(() => {
+    // Apply the final changes to the actual data
+    if (tempDragData && dragState.dragPoint) {
+      const newShades = [...hue.shades];
+      const shadeIndex = tempDragData.index;
+      const shade = newShades[shadeIndex];
+      
+      if (!shade.locked) {
+        const newHsv = { ...shade.hsv };
+        newHsv[tempDragData.channel] = tempDragData.value;
+        
+        const rgb = hsvToRgb(newHsv.h, newHsv.s, newHsv.v);
+        const color = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+        newShades[shadeIndex] = {
+          ...shade,
+          hsv: newHsv,
+          color,
+          extrapolationMethod: undefined,
+        };
+
+        // Apply smooth mode falloff if enabled
+        let finalShades = newShades;
+        if (curveSettings.smoothMode) {
+          finalShades = applyGaussianFalloff(shadeIndex, tempDragData.value, dragState.originalValue, tempDragData.channel);
+          // Update the main dragged point in the smooth result
+          finalShades[shadeIndex] = {
+            ...finalShades[shadeIndex],
+            hsv: newHsv,
+            color,
+            extrapolationMethod: undefined,
+          };
+        }
+
+        onUpdate({ shades: finalShades });
+      }
+    }
+
+    // Clear drag state and temporary data
+    setDragState({
+      isDragging: false,
+      dragPoint: null,
+      startY: 0,
+      chartRect: null,
+      originalValue: 0,
+    });
+    setTempDragData(null);
+  }, [tempDragData, dragState, hue.shades, curveSettings.smoothMode, applyGaussianFalloff, onUpdate]);
+
+  // Set up global mouse events
+  useEffect(() => {
+    if (dragState.isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [dragState.isDragging, handleMouseMove, handleMouseUp]);
+
+  // Track hover state for better visual feedback
+  const [hoveredPoint, setHoveredPoint] = useState<{index: number, channel: string} | null>(null);
 
   const CustomDot = ({
     cx,
@@ -1098,16 +1484,10 @@ function CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     const channel = dataKey;
     const selectedKey = `selectedFor${channel.toUpperCase()}`;
     const isSelected = payload[selectedKey];
-
-    const toggleSelection = () => {
-      const shadeIndex = payload.index;
-      const newShades = [...hue.shades];
-      newShades[shadeIndex] = {
-        ...newShades[shadeIndex],
-        [selectedKey]: !isSelected,
-      };
-      onUpdate({ shades: newShades });
-    };
+    const isDragging = dragState.isDragging && 
+                     dragState.dragPoint?.index === payload.index && 
+                     dragState.dragPoint?.channel === channel;
+    const isHovered = hoveredPoint?.index === payload.index && hoveredPoint?.channel === channel;
 
     const colors: Record<string, string> = {
       h: "#ef4444",
@@ -1115,134 +1495,403 @@ function CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       v: "#3b82f6",
     };
 
+    const baseRadius = payload.locked ? 8 : 6;
+    let radius = baseRadius;
+    if (isDragging) radius = baseRadius + 4;
+    else if (isHovered) radius = baseRadius + 2;
+
     return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={payload.locked ? 6 : 4}
-        fill={isSelected ? colors[channel] : "#666"}
-        stroke="white"
-        strokeWidth={payload.locked ? 2 : 1}
-        style={{ cursor: "pointer" }}
-        onClick={toggleSelection}
-      />
+      <g>
+        {/* Hover ring for visual feedback */}
+        {isHovered && (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius + 4}
+            fill="none"
+            stroke={colors[channel]}
+            strokeWidth={1}
+            strokeOpacity={0.5}
+          />
+        )}
+        
+        {/* Shadow for dragging state */}
+        {isDragging && (
+          <circle
+            cx={cx + 3}
+            cy={cy + 3}
+            r={radius}
+            fill="rgba(0,0,0,0.6)"
+          />
+        )}
+        
+        {/* Lock icon background for locked points */}
+        {payload.locked && (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={12}
+            fill="rgba(255,255,255,0.95)"
+            stroke={colors[channel]}
+            strokeWidth={2}
+          />
+        )}
+        
+        {/* Main point */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill={isSelected ? colors[channel] : "#666"}
+          stroke="white"
+          strokeWidth={payload.locked ? 3 : 2}
+          style={{ 
+            filter: isDragging ? 'brightness(1.4) drop-shadow(0 0 4px rgba(255,255,255,0.8))' : 
+                   isHovered ? 'brightness(1.2)' : 'none',
+          }}
+        />
+        
+        {/* Selection indicator ring for selected points */}
+        {isSelected && !payload.locked && (
+          <circle
+            cx={cx}
+            cy={cy}
+            r={radius + 2}
+            fill="none"
+            stroke={colors[channel]}
+            strokeWidth={2}
+            strokeDasharray="3,2"
+          />
+        )}
+        
+        {/* Lock icon for locked points */}
+        {payload.locked && (
+          <text
+            x={cx}
+            y={cy + 2}
+            textAnchor="middle"
+            fontSize="12"
+            fill={colors[channel]}
+            style={{ fontWeight: 'bold' }}
+          >
+            🔒
+          </text>
+        )}
+      </g>
     );
   };
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        HSV Channel Curves
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography variant="h6">
+          HSV Channel Curves
+        </Typography>
+        
+        {/* Curve Controls */}
+        <Stack direction="row" spacing={2} alignItems="center">
+          <FormGroup row>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={curveSettings.showH}
+                  onChange={(e) => setCurveSettings(prev => ({ ...prev, showH: e.target.checked }))}
+                  size="small"
+                />
+              }
+              label={<Typography variant="caption" sx={{ color: "#ef4444" }}>H</Typography>}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={curveSettings.showS}
+                  onChange={(e) => setCurveSettings(prev => ({ ...prev, showS: e.target.checked }))}
+                  size="small"
+                />
+              }
+              label={<Typography variant="caption" sx={{ color: "#22c55e" }}>S</Typography>}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={curveSettings.showV}
+                  onChange={(e) => setCurveSettings(prev => ({ ...prev, showV: e.target.checked }))}
+                  size="small"
+                />
+              }
+              label={<Typography variant="caption" sx={{ color: "#3b82f6" }}>V</Typography>}
+            />
+          </FormGroup>
+          
+          <FormControlLabel
+            control={
+              <Switch
+                checked={curveSettings.smoothMode}
+                onChange={(e) => setCurveSettings(prev => ({ ...prev, smoothMode: e.target.checked }))}
+                size="small"
+              />
+            }
+            label={<Typography variant="caption">Smooth Mode</Typography>}
+          />
+        </Stack>
+      </Stack>
+
       <Stack
         direction="row"
         spacing={3}
         sx={{ mb: 2, flexWrap: "wrap", fontSize: "0.75rem" }}
       >
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 20, height: 3, bgcolor: "#ef4444" }} />
-          <Typography variant="caption">
-            Hue (H) 0-360° (scaled for display)
-          </Typography>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 20, height: 3, bgcolor: "#22c55e" }} />
-          <Typography variant="caption">Saturation (S) 0-100%</Typography>
-        </Stack>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box sx={{ width: 20, height: 3, bgcolor: "#3b82f6" }} />
-          <Typography variant="caption">Value/Brightness (V) 0-100%</Typography>
-        </Stack>
+        {curveSettings.showH && (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box sx={{ width: 20, height: 3, bgcolor: "#ef4444" }} />
+            <Typography variant="caption">
+              Hue (H) 0-360° (scaled for display)
+            </Typography>
+          </Stack>
+        )}
+        {curveSettings.showS && (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box sx={{ width: 20, height: 3, bgcolor: "#22c55e" }} />
+            <Typography variant="caption">Saturation (S) 0-100%</Typography>
+          </Stack>
+        )}
+        {curveSettings.showV && (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Box sx={{ width: 20, height: 3, bgcolor: "#3b82f6" }} />
+            <Typography variant="caption">Value/Brightness (V) 0-100%</Typography>
+          </Stack>
+        )}
       </Stack>
+      
       <Typography
         variant="caption"
         color="text.secondary"
         sx={{ mb: 2, display: "block" }}
       >
-        Click dots to toggle channel selection for interpolation. Filled dots =
-        selected, empty = ignored. Larger dots = locked shades.
+        Click dots to toggle channel selection for interpolation. Drag selected unlocked points vertically to adjust values.
+        {curveSettings.smoothMode && " Smooth mode applies Gaussian falloff to adjacent points."}
       </Typography>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis dataKey="value" stroke="#666" tick={{ fill: "#a0a0a0" }} />
-          <YAxis stroke="#666" tick={{ fill: "#a0a0a0" }} domain={[0, 100]} />
-          <RechartsTooltip
-            contentStyle={{
-              backgroundColor: "#1a1a1a",
-              border: "1px solid #333",
-              borderRadius: "6px",
-              color: "#e0e0e0",
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="h"
-            stroke="#ef4444"
-            strokeWidth={2}
-            dot={(props: {
-              cx: number;
-              cy: number;
-              payload: ChartDataPoint;
-            }) => {
-              const { cx, cy, payload } = props;
-              return (
-                <CustomDot
-                  key={`h-${payload.index}`}
-                  cx={cx}
-                  cy={cy}
-                  payload={payload}
-                  dataKey="h"
-                />
-              );
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="s"
-            stroke="#22c55e"
-            strokeWidth={2}
-            dot={(props: {
-              cx: number;
-              cy: number;
-              payload: ChartDataPoint;
-            }) => {
-              const { cx, cy, payload } = props;
-              return (
-                <CustomDot
-                  key={`s-${payload.index}`}
-                  cx={cx}
-                  cy={cy}
-                  payload={payload}
-                  dataKey="s"
-                />
-              );
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="v"
-            stroke="#3b82f6"
-            strokeWidth={2}
-            dot={(props: {
-              cx: number;
-              cy: number;
-              payload: ChartDataPoint;
-            }) => {
-              const { cx, cy, payload } = props;
-              return (
-                <CustomDot
-                  key={`v-${payload.index}`}
-                  cx={cx}
-                  cy={cy}
-                  payload={payload}
-                  dataKey="v"
-                />
-              );
-            }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+
+      <Box 
+        ref={chartRef}
+        sx={{ position: 'relative', width: '100%', height: 300 }}
+      >
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart 
+            data={chartData}
+            style={{ pointerEvents: 'none' }} // Disable all Recharts interactions
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis dataKey="value" stroke="#666" tick={{ fill: "#a0a0a0" }} />
+            <YAxis stroke="#666" tick={{ fill: "#a0a0a0" }} domain={[0, 100]} />
+            <RechartsTooltip
+              contentStyle={{
+                backgroundColor: "#1a1a1a",
+                border: "1px solid #333",
+                borderRadius: "6px",
+                color: "#e0e0e0",
+              }}
+            />
+            
+            {/* Hue Line */}
+            {curveSettings.showH && (
+              <Line
+                type="monotone"
+                dataKey="h"
+                stroke="#ef4444"
+                strokeWidth={2}
+                dot={(props: {
+                  cx: number;
+                  cy: number;
+                  payload: ChartDataPoint;
+                }) => {
+                  const { cx, cy, payload } = props;
+                  return (
+                    <CustomDot
+                      key={`h-${payload.index}`}
+                      cx={cx}
+                      cy={cy}
+                      payload={payload}
+                      dataKey="h"
+                    />
+                  );
+                }}
+              />
+            )}
+            
+            {/* Saturation Line */}
+            {curveSettings.showS && (
+              <Line
+                type="monotone"
+                dataKey="s"
+                stroke="#22c55e"
+                strokeWidth={2}
+                dot={(props: {
+                  cx: number;
+                  cy: number;
+                  payload: ChartDataPoint;
+                }) => {
+                  const { cx, cy, payload } = props;
+                  return (
+                    <CustomDot
+                      key={`s-${payload.index}`}
+                      cx={cx}
+                      cy={cy}
+                      payload={payload}
+                      dataKey="s"
+                    />
+                  );
+                }}
+              />
+            )}
+            
+            {/* Value Line */}
+            {curveSettings.showV && (
+              <Line
+                type="monotone"
+                dataKey="v"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={(props: {
+                  cx: number;
+                  cy: number;
+                  payload: ChartDataPoint;
+                }) => {
+                  const { cx, cy, payload } = props;
+                  return (
+                    <CustomDot
+                      key={`v-${payload.index}`}
+                      cx={cx}
+                      cy={cy}
+                      payload={payload}
+                      dataKey="v"
+                    />
+                  );
+                }}
+              />
+            )}
+          </LineChart>
+        </ResponsiveContainer>
+
+        {/* Drag overlay with click and drag handling */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none', // Allow chart events to pass through by default
+          }}
+        >
+          {overlayPoints.map((point, index) => (
+            <Box
+              key={`${point.channel}-${point.index}-${index}`}
+              onMouseEnter={(e) => {
+                e.stopPropagation(); // Prevent chart from seeing this event
+                setHoveredPoint({ index: point.index, channel: point.channel });
+              }}
+              onMouseLeave={(e) => {
+                e.stopPropagation(); // Prevent chart from seeing this event
+                setHoveredPoint(null);
+              }}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent chart from seeing this event
+                console.log('Click on point:', point); // Debug
+                const shadeIndex = point.index;
+                const selectedKey = `selectedFor${point.channel.toUpperCase()}`;
+                const newShades = [...hue.shades];
+                newShades[shadeIndex] = {
+                  ...newShades[shadeIndex],
+                  [selectedKey]: !point.selected,
+                };
+                onUpdate({ shades: newShades });
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation(); // Prevent chart from seeing this event
+                console.log('Mouse down on point:', point); // Debug
+                if (!point.selected || point.locked || !chartRef.current) {
+                  console.log('Drag blocked - selected:', point.selected, 'locked:', point.locked); // Debug
+                  return;
+                }
+
+                e.preventDefault();
+                const chartRect = chartRef.current.getBoundingClientRect();
+                
+                // Get the original value for the channel being dragged
+                const shade = hue.shades[point.index];
+                const originalValue = point.channel === 'h' ? shade.hsv.h : 
+                                     point.channel === 's' ? shade.hsv.s : 
+                                     shade.hsv.v;
+                
+                console.log('Starting drag with original value:', originalValue); // Debug
+                
+                setDragState({
+                  isDragging: true,
+                  dragPoint: { 
+                    index: point.index, 
+                    x: point.x,
+                    y: point.y,
+                    locked: point.locked,
+                    selected: point.selected,
+                    channel: point.channel,
+                    isDragging: true 
+                  },
+                  startY: e.clientY,
+                  chartRect,
+                  originalValue,
+                });
+              }}
+              sx={{
+                position: 'absolute',
+                left: point.x - 15,
+                top: point.y - 15,
+                width: 30,
+                height: 30,
+                cursor: point.selected && !point.locked ? 'ns-resize' : 'pointer',
+                zIndex: 10,
+                borderRadius: '50%',
+                border: '2px solid',
+                borderColor: point.selected ? 
+                  (point.channel === 'h' ? '#ef4444' : 
+                   point.channel === 's' ? '#22c55e' : '#3b82f6') : 
+                  'rgba(255,255,255,0.8)',
+                bgcolor: point.selected ? 
+                  (point.channel === 'h' ? 'rgba(239,68,68,0.2)' : 
+                   point.channel === 's' ? 'rgba(34,197,94,0.2)' : 
+                   'rgba(59,130,246,0.2)') : 
+                  'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(4px)',
+                transition: 'all 0.2s ease-in-out',
+                pointerEvents: 'auto', // Only this specific circle should capture events
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                  borderColor: point.channel === 'h' ? '#ef4444' : 
+                              point.channel === 's' ? '#22c55e' : '#3b82f6',
+                  bgcolor: point.channel === 'h' ? 'rgba(239,68,68,0.3)' : 
+                          point.channel === 's' ? 'rgba(34,197,94,0.3)' : 
+                          'rgba(59,130,246,0.3)',
+                  boxShadow: `0 0 12px ${point.channel === 'h' ? 'rgba(239,68,68,0.5)' : 
+                                        point.channel === 's' ? 'rgba(34,197,94,0.5)' : 
+                                        'rgba(59,130,246,0.5)'}`,
+                },
+                // Special styling for locked points
+                ...(point.locked && {
+                  borderColor: 'rgba(156,163,175,0.8)',
+                  bgcolor: 'rgba(156,163,175,0.2)',
+                  cursor: 'not-allowed',
+                  '&:hover': {
+                    transform: 'none',
+                    borderColor: 'rgba(156,163,175,0.8)',
+                    bgcolor: 'rgba(156,163,175,0.2)',
+                    boxShadow: 'none',
+                  }
+                })
+              }}
+            />
+          ))}
+        </Box>
+      </Box>
     </Box>
   );
 }
