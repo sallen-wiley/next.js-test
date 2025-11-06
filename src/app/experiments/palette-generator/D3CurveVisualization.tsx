@@ -113,6 +113,28 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     originalValue: number;
   } | null>(null);
 
+  // Performance optimization: Reuse drag behaviors instead of creating new ones every render
+  const dragBehaviorsRef = useRef<{
+    h: d3.DragBehavior<
+      SVGCircleElement,
+      ShadeDefinition,
+      ShadeDefinition | d3.SubjectPosition
+    > | null;
+    s: d3.DragBehavior<
+      SVGCircleElement,
+      ShadeDefinition,
+      ShadeDefinition | d3.SubjectPosition
+    > | null;
+    v: d3.DragBehavior<
+      SVGCircleElement,
+      ShadeDefinition,
+      ShadeDefinition | d3.SubjectPosition
+    > | null;
+  }>({ h: null, s: null, v: null });
+
+  // Performance optimization: Debounce requestAnimationFrame calls
+  const frameRequestRef = useRef<number | null>(null);
+
   // Curve visibility settings
   const [curveSettings, setCurveSettings] = useState<CurveSettings>({
     showH: true,
@@ -130,6 +152,33 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   const width = dimensions.width - margin.left - margin.right;
   const height = dimensions.height - margin.top - margin.bottom;
 
+  // Performance optimization: Create drag behaviors once on mount, reuse across renders
+  useEffect(() => {
+    // Only create if they don't exist
+    if (!dragBehaviorsRef.current.h) {
+      dragBehaviorsRef.current.h = d3
+        .drag<SVGCircleElement, ShadeDefinition>()
+        .filter(function (event) {
+          // Only handle primary button (left click) or touch events
+          return !event.ctrlKey && !event.button;
+        });
+    }
+    if (!dragBehaviorsRef.current.s) {
+      dragBehaviorsRef.current.s = d3
+        .drag<SVGCircleElement, ShadeDefinition>()
+        .filter(function (event) {
+          return !event.ctrlKey && !event.button;
+        });
+    }
+    if (!dragBehaviorsRef.current.v) {
+      dragBehaviorsRef.current.v = d3
+        .drag<SVGCircleElement, ShadeDefinition>()
+        .filter(function (event) {
+          return !event.ctrlKey && !event.button;
+        });
+    }
+  }, []); // Empty dependency array - only run once
+
   // Scales
   const xScale = useMemo(() => {
     return d3
@@ -145,6 +194,18 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   const yScaleHue = useMemo(() => {
     return d3.scaleLinear().domain([0, 360]).range([height, 0]);
   }, [height]);
+
+  // Performance optimization: Memoize shade data to prevent unnecessary re-renders
+  const shadeKeys = useMemo(
+    () =>
+      hue.shades
+        .map(
+          (s) =>
+            `${s.value}-${s.hsv.h}-${s.hsv.s}-${s.hsv.v}-${s.selectedForH}-${s.selectedForS}-${s.selectedForV}-${s.locked}`
+        )
+        .join("|"),
+    [hue.shades]
+  );
 
   // Line generators - using smooth curves by default for better visual appeal
   const lineH = useMemo(() => {
@@ -258,7 +319,14 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     ) => {
       if (!svgRef.current || !dragStateRef.current) return;
 
-      requestAnimationFrame(() => {
+      // Performance optimization: Skip this drag event if we already have one queued
+      if (frameRequestRef.current !== null) {
+        return; // Skip redundant drag events within the same frame
+      }
+
+      frameRequestRef.current = requestAnimationFrame(() => {
+        frameRequestRef.current = null; // Reset for next frame
+
         if (!dragStateRef.current || !svgRef.current) return;
 
         let y: number | null = null;
@@ -358,12 +426,18 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
         } else {
           onUpdate({ shades: newShades });
         }
-      });
+      }); // End of requestAnimationFrame callback
     },
     [yScale, yScaleHue, hue.shades, applyGaussianFalloff, onUpdate]
   );
 
   const handleDragEnd = useCallback(() => {
+    // Cancel any pending frame requests
+    if (frameRequestRef.current !== null) {
+      cancelAnimationFrame(frameRequestRef.current);
+      frameRequestRef.current = null;
+    }
+
     dragStateRef.current = null;
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
@@ -520,6 +594,41 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       if (!curveSettings[`show${channel.toUpperCase() as "H" | "S" | "V"}`])
         return;
 
+      // Get the reusable drag behavior for this channel
+      const dragBehavior = dragBehaviorsRef.current[channel];
+      if (!dragBehavior) return;
+
+      // Update the handlers on the existing drag behavior (lightweight operation)
+      dragBehavior
+        .on("start", function (event, d) {
+          const index = hue.shades.indexOf(d);
+          const selectedKey =
+            `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
+          const isSelected = d[selectedKey] as boolean;
+
+          if (!isSelected || d.locked) return;
+
+          document.body.style.cursor = "ns-resize";
+          document.body.style.userSelect = "none";
+          document.body.style.touchAction = "none"; // Disable touch scrolling during drag
+
+          dragStateRef.current = {
+            isDragging: true,
+            pointIndex: index,
+            channel,
+            originalValue: d.hsv[channel],
+          };
+        })
+        .on("drag", function (event) {
+          if (!dragStateRef.current || !svgRef.current) return;
+          handleDrag(event);
+        })
+        .on("end", function () {
+          // Re-enable touch scrolling
+          document.body.style.touchAction = "";
+          handleDragEnd();
+        });
+
       g.selectAll(`.point-${channel}`)
         .data(hue.shades)
         .enter()
@@ -542,7 +651,6 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
         .attr("stroke", color)
         .attr("stroke-width", 2)
         .style("cursor", "pointer")
-        .style("touch-action", "none") // Disable all touch gestures on draggable points
         .on("click", function (event, d) {
           const index = hue.shades.indexOf(d);
           const selectedKey = `selectedFor${channel.toUpperCase()}`;
@@ -553,54 +661,15 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           };
           onUpdate({ shades: newShades });
         })
-        .call(
-          d3
-            .drag<SVGCircleElement, ShadeDefinition>()
-            .filter(function (event) {
-              // Only handle primary button (left click) or touch events
-              return !event.ctrlKey && !event.button;
-            })
-            .on("start", function (event, d) {
-              const index = hue.shades.indexOf(d);
-              const selectedKey =
-                `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
-              const isSelected = d[selectedKey] as boolean;
-
-              if (!isSelected || d.locked) return;
-
-              // Prevent default to avoid scroll conflicts on touch devices
-              event.sourceEvent?.preventDefault();
-
-              document.body.style.cursor = "ns-resize";
-              document.body.style.userSelect = "none";
-              document.body.style.touchAction = "none"; // Disable touch scrolling during drag
-
-              dragStateRef.current = {
-                isDragging: true,
-                pointIndex: index,
-                channel,
-                originalValue: d.hsv[channel],
-              };
-            })
-            .on("drag", function (event) {
-              if (!dragStateRef.current || !svgRef.current) return;
-              // Prevent default to avoid scroll conflicts
-              event.sourceEvent?.preventDefault();
-              handleDrag(event);
-            })
-            .on("end", function () {
-              // Re-enable touch scrolling
-              document.body.style.touchAction = "";
-              handleDragEnd();
-            })
-        );
+        .call(dragBehavior); // Reuse the same behavior object
     };
 
     addPoints("h", (theme.vars || theme).palette.error.main, yScaleHue);
     addPoints("s", (theme.vars || theme).palette.success.main, yScale);
     addPoints("v", (theme.vars || theme).palette.primary.main, yScale);
   }, [
-    hue.shades,
+    shadeKeys, // Use memoized keys for efficient re-render detection
+    hue.shades, // Still needed for the actual data in the effect body
     curveSettings,
     xScale,
     yScale,
@@ -694,7 +763,6 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           height={dimensions.height}
           style={{
             background: theme.palette.background.paper,
-            touchAction: "manipulation", // Allow basic touch interactions like scrolling
           }}
         />
       </Box>
