@@ -47,3 +47,8 @@ storybook-static
 
 # localStorage files (Node.js webstorage)
 localStorage.json*
+
+# GitHub folder - ignore all files except those with "-live" in the name and copilot-instructions.md
+.github/**/*.*
+!.github/**/*-live*.*
+!.github/copilot-instructions.md
