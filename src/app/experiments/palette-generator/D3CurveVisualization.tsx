@@ -194,52 +194,57 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     return newShades;
   }, [curveSettings.smoothMode, hue.shades]);
 
-  // Handle drag events
+  // Handle drag events with requestAnimationFrame for smooth performance
   const handleDrag = useCallback((event: MouseEvent) => {
     if (!dragStateRef.current || !svgRef.current) return;
 
-    const rect = svgRef.current.getBoundingClientRect();
-    const y = event.clientY - rect.top - margin.top;
-    
-    let newValue: number;
-    if (dragStateRef.current.channel === 'h') {
-      newValue = Math.max(0, Math.min(360, yScaleHue.invert(y)));
-    } else {
-      newValue = Math.max(0, Math.min(100, yScale.invert(y)));
-    }
+    // Use requestAnimationFrame for smooth updates
+    requestAnimationFrame(() => {
+      if (!dragStateRef.current || !svgRef.current) return;
 
-    const newShades = [...hue.shades];
-    const shade = newShades[dragStateRef.current.pointIndex];
-    
-    if (shade.locked) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const y = event.clientY - rect.top - margin.top;
+      
+      let newValue: number;
+      if (dragStateRef.current.channel === 'h') {
+        newValue = Math.max(0, Math.min(360, yScaleHue.invert(y)));
+      } else {
+        newValue = Math.max(0, Math.min(100, yScale.invert(y)));
+      }
 
-    const newHsv = { ...shade.hsv };
-    newHsv[dragStateRef.current.channel] = newValue;
-    
-    const rgb = hsvToRgb(newHsv.h, newHsv.s, newHsv.v);
-    const color = rgbToHex(rgb.r, rgb.g, rgb.b);
+      const newShades = [...hue.shades];
+      const shade = newShades[dragStateRef.current.pointIndex];
+      
+      if (shade.locked) return;
 
-    newShades[dragStateRef.current.pointIndex] = {
-      ...shade,
-      hsv: newHsv,
-      color,
-      extrapolationMethod: undefined,
-    };
+      const newHsv = { ...shade.hsv };
+      newHsv[dragStateRef.current.channel] = newValue;
+      
+      const rgb = hsvToRgb(newHsv.h, newHsv.s, newHsv.v);
+      const color = rgbToHex(rgb.r, rgb.g, rgb.b);
 
-    // Apply smooth mode falloff if enabled
-    const smoothShades = applyGaussianFalloff(dragStateRef.current.pointIndex, newValue, dragStateRef.current.originalValue, dragStateRef.current.channel);
-    if (smoothShades) {
-      // Update the main dragged point in the smooth result
-      smoothShades[dragStateRef.current.pointIndex] = {
-        ...smoothShades[dragStateRef.current.pointIndex],
+      newShades[dragStateRef.current.pointIndex] = {
+        ...shade,
         hsv: newHsv,
         color,
         extrapolationMethod: undefined,
       };
-      onUpdate({ shades: smoothShades });
-    } else {
-      onUpdate({ shades: newShades });
-    }
+
+      // Apply smooth mode falloff if enabled
+      const smoothShades = applyGaussianFalloff(dragStateRef.current.pointIndex, newValue, dragStateRef.current.originalValue, dragStateRef.current.channel);
+      if (smoothShades) {
+        // Update the main dragged point in the smooth result
+        smoothShades[dragStateRef.current.pointIndex] = {
+          ...smoothShades[dragStateRef.current.pointIndex],
+          hsv: newHsv,
+          color,
+          extrapolationMethod: undefined,
+        };
+        onUpdate({ shades: smoothShades });
+      } else {
+        onUpdate({ shades: newShades });
+      }
+    });
   }, [yScale, yScaleHue, margin.top, hue.shades, applyGaussianFalloff, onUpdate]);
 
   const handleDragEnd = useCallback(() => {
