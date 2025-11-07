@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useMemo } from "react";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import { themes, getTheme } from "@/themes";
 import type { Theme } from "@mui/material/styles";
@@ -56,7 +56,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     localStorage.setItem("app-theme", themeName);
   };
 
-  const theme = getTheme(currentTheme);
+  const theme = useMemo(() => getTheme(currentTheme), [currentTheme]);
   const availableThemes = Object.keys(themes) as ThemeName[];
 
   const contextValue: ThemeContextType = {
