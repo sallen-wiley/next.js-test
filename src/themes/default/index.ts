@@ -5,7 +5,7 @@ import { createTheme } from "@mui/material/styles";
 // This provides the standard Material-UI experience with light/dark mode support
 const defaultTheme = createTheme({
   cssVariables: {
-    colorSchemeSelector: "class", // Enable manual mode switching
+    colorSchemeSelector: "data", // Enable manual mode switching
   },
   colorSchemes: {
     light: {

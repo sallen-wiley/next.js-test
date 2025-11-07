@@ -48,7 +48,7 @@ declare module "@mui/material/styles" {
 // Step 1: Create base theme with palette, typography, shape, etc.
 let theme = createTheme({
   cssVariables: {
-    colorSchemeSelector: "class", // Enable manual mode switching
+    colorSchemeSelector: "data", // Enable manual mode switching
   },
   breakpoints: {
     values: {

@@ -4,7 +4,7 @@ import { createTheme } from "@mui/material/styles";
 // Sage theme using Source Serif 4 for an elegant, nature-inspired look
 const sageTheme = createTheme({
   cssVariables: {
-    colorSchemeSelector: "class", // Enable manual mode switching
+    colorSchemeSelector: "data", // Enable manual mode switching
   },
   colorSchemes: {
     light: {

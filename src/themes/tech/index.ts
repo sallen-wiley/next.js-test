@@ -4,7 +4,7 @@ import { createTheme } from "@mui/material/styles";
 // Tech theme using IBM Plex Mono for a coding/development focused brand
 const techTheme = createTheme({
   cssVariables: {
-    colorSchemeSelector: "class", // Enable manual mode switching
+    colorSchemeSelector: "data", // Enable manual mode switching
   },
   colorSchemes: {
     light: {
