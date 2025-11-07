@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./AuthProvider";
 import SupabaseAuth from "./SupabaseAuth";
+import FullPageLoader from "../app/FullPageLoader";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -18,11 +19,11 @@ function AuthContent({ children }: AuthWrapperProps) {
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
-    return <div>Loading...not mounted</div>;
+    return <FullPageLoader message="Initializing application..." />;
   }
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <FullPageLoader message="Authenticating..." />;
   }
 
   // Check if user is authenticated
@@ -46,7 +47,7 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
-    return <div>Loading...</div>;
+    return <FullPageLoader message="Loading application..." />;
   }
 
   // If auth is disabled, just render children

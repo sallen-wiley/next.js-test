@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
 import { useAuth } from "./AuthProvider";
+import FullPageLoader from "../app/FullPageLoader";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -82,11 +83,7 @@ export default function SupabaseAuth() {
   };
 
   if (loading) {
-    return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Typography>Loading...</Typography>
-      </Container>
-    );
+    return <FullPageLoader message="Checking authentication status..." />;
   }
 
   return (
