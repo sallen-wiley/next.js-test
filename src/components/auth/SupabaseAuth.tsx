@@ -38,7 +38,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function SupabaseAuth() {
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, signUp, resetPasswordForEmail, loading } = useAuth();
   const [tab, setTab] = useState(0);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,13 +60,21 @@ export default function SupabaseAuth() {
         if (result.error) {
           setError(result.error.message || "Failed to sign in");
         }
-      } else {
+      } else if (tab === 1) {
         // Sign Up
         result = await signUp(email, password);
         if (result.error) {
           setError(result.error.message || "Failed to sign up");
         } else {
           setSuccess("Check your email for confirmation link!");
+        }
+      } else if (tab === 2) {
+        // Forgot Password
+        result = await resetPasswordForEmail(email);
+        if (result.error) {
+          setError(result.error.message || "Failed to send reset email");
+        } else {
+          setSuccess("Password reset email sent! Check your inbox.");
         }
       }
     } catch {
@@ -102,6 +110,7 @@ export default function SupabaseAuth() {
             <Tabs value={tab} onChange={handleTabChange} variant="fullWidth">
               <Tab label="Sign In" />
               <Tab label="Sign Up" />
+              <Tab label="Forgot Password" />
             </Tabs>
 
             {error && (
@@ -178,6 +187,35 @@ export default function SupabaseAuth() {
                     disabled={isLoading}
                   >
                     {isLoading ? "Creating Account..." : "Create Account"}
+                  </Button>
+                </Stack>
+              </Box>
+            </TabPanel>
+
+            <TabPanel value={tab} index={2}>
+              <Box component="form" onSubmit={handleSubmit}>
+                <Stack spacing={3}>
+                  <Typography variant="body2" color="text.secondary">
+                    Enter your email address and we&apos;ll send you a link to
+                    reset your password.
+                  </Typography>
+                  <TextField
+                    type="email"
+                    label="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    fullWidth
+                    autoFocus
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Sending..." : "Send Reset Link"}
                   </Button>
                 </Stack>
               </Box>
