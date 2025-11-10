@@ -539,40 +539,22 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
-  // Global cleanup: ensure drag state is cleared on any mouseup/touchend, with diagnostic logging
+  // Global cleanup: ensure drag state is cleared on any mouseup/touchend
   useEffect(() => {
-    const handleGlobalMouseUp = () => {
-      console.log("Global mouseup - clearing drag state");
-      dragStateRef.current = null;
-      // If you use React state for drag, also clear it here:
-      if (typeof setDragState === "function") {
-        setDragState({ isDragging: false, draggedPointIndex: null });
-      }
-      if (typeof handleDragEnd === "function") {
+    const handleGlobalEnd = () => {
+      if (dragStateRef.current) {
         handleDragEnd();
       }
     };
 
-    const handleGlobalTouchEnd = () => {
-      console.log("Global touchend - clearing drag state");
-      dragStateRef.current = null;
-      if (typeof setDragState === "function") {
-        setDragState({ isDragging: false, draggedPointIndex: null });
-      }
-      if (typeof handleDragEnd === "function") {
-        handleDragEnd();
-      }
-    };
-
-    window.addEventListener("mouseup", handleGlobalMouseUp);
-    window.addEventListener("touchend", handleGlobalTouchEnd);
+    window.addEventListener("mouseup", handleGlobalEnd);
+    window.addEventListener("touchend", handleGlobalEnd);
 
     return () => {
-      console.log("Cleaning up global listeners");
-      window.removeEventListener("mouseup", handleGlobalMouseUp);
-      window.removeEventListener("touchend", handleGlobalTouchEnd);
+      window.removeEventListener("mouseup", handleGlobalEnd);
+      window.removeEventListener("touchend", handleGlobalEnd);
     };
-  }, []);
+  }, [handleDragEnd]);
 
   // CREATION PHASE: Initialize chart structure once (runs when dimensions/visibility/theme changes)
   const initializeChart = useCallback(() => {
@@ -721,12 +703,11 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       const dragBehavior = dragBehaviorsRef.current[channel];
       if (!dragBehavior) return;
 
-      // Update drag behavior handlers (attached once to circles) with diagnostic logging
+      // Update drag behavior handlers (attached once to circles)
       dragBehavior
         .on("start", function (event, d) {
           // Find the correct index using id
           const index = shades.findIndex((point) => point.id === d.id);
-          console.log("Drag start:", index, d);
           if (index === -1) return; // Safety: shade not found in array
 
           const selectedKey =
@@ -747,15 +728,11 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
             originalValue: d.hsv[channel],
           };
         })
-        .on("drag", function (event, d) {
-          const index = shades.indexOf(d);
-          console.log("Dragging:", index, d);
+        .on("drag", function (event) {
           if (!dragStateRef.current || !svgRef.current) return;
           handleDrag(event);
         })
-        .on("end", function (event, d) {
-          const index = shades.indexOf(d);
-          console.log("Drag end:", index, d);
+        .on("end", function () {
           document.body.style.touchAction = "";
           handleDragEnd();
         });
