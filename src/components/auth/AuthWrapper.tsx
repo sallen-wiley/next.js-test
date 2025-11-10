@@ -19,7 +19,7 @@ function AuthContent({ children }: AuthWrapperProps) {
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
-    return <FullPageLoader message="Initializing application..." />;
+    return null;
   }
 
   if (loading) {
@@ -47,7 +47,7 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
-    return <FullPageLoader message="Loading application..." />;
+    return null;
   }
 
   // If auth is disabled, just render children

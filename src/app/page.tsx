@@ -128,10 +128,6 @@ export default function Home() {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ClickableCard href="/typography-demo" title="Typography Demo" />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ClickableCard
               href="/experiments/palette-generator"
               title="HSV Palette Generator"

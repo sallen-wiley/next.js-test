@@ -18,9 +18,7 @@ export async function GET(request: Request) {
 
       if (session) {
         // Redirect to reset password page for recovery flows
-        return NextResponse.redirect(
-          new URL("/reset-password", request.url)
-        );
+        return NextResponse.redirect(new URL("/reset-password", request.url));
       }
 
       // Otherwise redirect to the next URL or home
