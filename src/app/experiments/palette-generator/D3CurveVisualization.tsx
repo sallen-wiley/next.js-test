@@ -264,9 +264,26 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       const sigma = 0.8;
       const maxDistance = 2;
 
+      // Helper function to check if there's a locked node between target and i
+      const hasLockedNodeBetween = (start: number, end: number): boolean => {
+        const [min, max] = start < end ? [start, end] : [end, start];
+        for (let j = min + 1; j < max; j++) {
+          if (j >= 0 && j < newShades.length && newShades[j]?.locked) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       for (let i = 0; i < newShades.length; i++) {
         const distance = Math.abs(i - targetIndex);
-        if (distance <= maxDistance && i !== targetIndex) {
+        // Skip if: it's the target itself, it's locked, too far away, or there's a locked node in between
+        if (
+          distance <= maxDistance &&
+          i !== targetIndex &&
+          !newShades[i].locked &&
+          !hasLockedNodeBetween(targetIndex, i)
+        ) {
           const weight = Math.exp(-(distance * distance) / (2 * sigma * sigma));
           const currentValue =
             channel === "h"
@@ -411,8 +428,8 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         const newShades = [...shades];
         const shade = newShades[dragStateRef.current.pointIndex];
 
-        // Don't allow dragging locked shades (they are fixed)
-        if (shade.locked) return;
+        // Safety check: ensure shade exists and is not locked
+        if (!shade || shade.locked) return;
 
         const newHsv = { ...shade.hsv };
         newHsv[dragStateRef.current.channel] = newValue;
@@ -520,6 +537,41 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
     return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
+
+  // Global cleanup: ensure drag state is cleared on any mouseup/touchend, with diagnostic logging
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      console.log("Global mouseup - clearing drag state");
+      dragStateRef.current = null;
+      // If you use React state for drag, also clear it here:
+      if (typeof setDragState === "function") {
+        setDragState({ isDragging: false, draggedPointIndex: null });
+      }
+      if (typeof handleDragEnd === "function") {
+        handleDragEnd();
+      }
+    };
+
+    const handleGlobalTouchEnd = () => {
+      console.log("Global touchend - clearing drag state");
+      dragStateRef.current = null;
+      if (typeof setDragState === "function") {
+        setDragState({ isDragging: false, draggedPointIndex: null });
+      }
+      if (typeof handleDragEnd === "function") {
+        handleDragEnd();
+      }
+    };
+
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    window.addEventListener("touchend", handleGlobalTouchEnd);
+
+    return () => {
+      console.log("Cleaning up global listeners");
+      window.removeEventListener("mouseup", handleGlobalMouseUp);
+      window.removeEventListener("touchend", handleGlobalTouchEnd);
+    };
   }, []);
 
   // CREATION PHASE: Initialize chart structure once (runs when dimensions/visibility/theme changes)
@@ -669,10 +721,14 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       const dragBehavior = dragBehaviorsRef.current[channel];
       if (!dragBehavior) return;
 
-      // Update drag behavior handlers (attached once to circles)
+      // Update drag behavior handlers (attached once to circles) with diagnostic logging
       dragBehavior
         .on("start", function (event, d) {
-          const index = shades.indexOf(d);
+          // Find the correct index using id
+          const index = shades.findIndex((point) => point.id === d.id);
+          console.log("Drag start:", index, d);
+          if (index === -1) return; // Safety: shade not found in array
+
           const selectedKey =
             `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
           const isSelected = d[selectedKey] as boolean;
@@ -691,11 +747,15 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
             originalValue: d.hsv[channel],
           };
         })
-        .on("drag", function (event) {
+        .on("drag", function (event, d) {
+          const index = shades.indexOf(d);
+          console.log("Dragging:", index, d);
           if (!dragStateRef.current || !svgRef.current) return;
           handleDrag(event);
         })
-        .on("end", function () {
+        .on("end", function (event, d) {
+          const index = shades.indexOf(d);
+          console.log("Drag end:", index, d);
           document.body.style.touchAction = "";
           handleDragEnd();
         });
@@ -712,7 +772,10 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         .style("cursor", "pointer")
         .on("click", function (event, d) {
           const index = shades.indexOf(d);
+          if (index === -1) return; // Safety: shade not found in array
+
           const newShades = [...shades];
+          if (!newShades[index]) return; // Safety: index out of bounds
 
           // Toggle the locked state
           const newLockedState = !newShades[index].locked;
