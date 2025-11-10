@@ -135,6 +135,28 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   // Performance optimization: Debounce requestAnimationFrame calls
   const frameRequestRef = useRef<number | null>(null);
 
+  // Performance optimization: Throttle parent updates (color recalculation) to 15fps
+  const throttledUpdateRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingShadesRef = useRef<ShadeDefinition[] | null>(null);
+
+  // Throttled color update function (15fps for parent re-renders)
+  const throttledColorUpdate = useCallback(
+    (shades: ShadeDefinition[]) => {
+      pendingShadesRef.current = shades;
+
+      if (!throttledUpdateRef.current) {
+        throttledUpdateRef.current = setTimeout(() => {
+          if (pendingShadesRef.current) {
+            onUpdate({ shades: pendingShadesRef.current });
+            pendingShadesRef.current = null;
+          }
+          throttledUpdateRef.current = null;
+        }, 66); // 15fps (~66ms)
+      }
+    },
+    [onUpdate]
+  );
+
   // Curve visibility settings
   const [curveSettings, setCurveSettings] = useState<CurveSettings>({
     showH: true,
@@ -194,18 +216,6 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   const yScaleHue = useMemo(() => {
     return d3.scaleLinear().domain([0, 360]).range([height, 0]);
   }, [height]);
-
-  // Performance optimization: Memoize shade data to prevent unnecessary re-renders
-  const shadeKeys = useMemo(
-    () =>
-      hue.shades
-        .map(
-          (s) =>
-            `${s.value}-${s.hsv.h}-${s.hsv.s}-${s.hsv.v}-${s.selectedForH}-${s.selectedForS}-${s.selectedForV}-${s.locked}`
-        )
-        .join("|"),
-    [hue.shades]
-  );
 
   // Line generators - using smooth curves by default for better visual appeal
   const lineH = useMemo(() => {
@@ -415,20 +425,53 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           dragStateRef.current.channel
         );
 
-        if (smoothShades) {
-          smoothShades[dragStateRef.current.pointIndex] = {
-            ...smoothShades[dragStateRef.current.pointIndex],
-            hsv: newHsv,
-            color,
-            extrapolationMethod: undefined,
-          };
-          onUpdate({ shades: smoothShades });
-        } else {
-          onUpdate({ shades: newShades });
+        const finalShades = smoothShades
+          ? (() => {
+              smoothShades[dragStateRef.current!.pointIndex] = {
+                ...smoothShades[dragStateRef.current!.pointIndex],
+                hsv: newHsv,
+                color,
+                extrapolationMethod: undefined,
+              };
+              return smoothShades;
+            })()
+          : newShades;
+
+        // OPTIMIZATION: Immediate visual update (60fps) without triggering parent re-render
+        // Update the visual representation directly in the DOM
+        const svg = d3.select(svgRef.current);
+        const channel = dragStateRef.current.channel;
+        const scale = channel === "h" ? yScaleHue : yScale;
+
+        // Update circles immediately for this channel
+        svg
+          .selectAll(`.point-${channel}`)
+          .data(finalShades)
+          .attr("cy", (d) => scale(d.hsv[channel]));
+
+        // Update path immediately for this channel
+        if (channel === "h" && lineH) {
+          svg.select(".line-h").datum(finalShades).attr("d", lineH);
+        } else if (channel === "s" && lineS) {
+          svg.select(".line-s").datum(finalShades).attr("d", lineS);
+        } else if (channel === "v" && lineV) {
+          svg.select(".line-v").datum(finalShades).attr("d", lineV);
         }
+
+        // OPTIMIZATION: Throttled parent update (15fps) for color recalculation
+        throttledColorUpdate(finalShades);
       }); // End of requestAnimationFrame callback
     },
-    [yScale, yScaleHue, hue.shades, applyGaussianFalloff, onUpdate]
+    [
+      yScale,
+      yScaleHue,
+      hue.shades,
+      applyGaussianFalloff,
+      throttledColorUpdate,
+      lineH,
+      lineS,
+      lineV,
+    ]
   );
 
   const handleDragEnd = useCallback(() => {
@@ -438,10 +481,20 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       frameRequestRef.current = null;
     }
 
+    // Flush any pending throttled updates immediately on drag end
+    if (throttledUpdateRef.current !== null) {
+      clearTimeout(throttledUpdateRef.current);
+      throttledUpdateRef.current = null;
+      if (pendingShadesRef.current) {
+        onUpdate({ shades: pendingShadesRef.current });
+        pendingShadesRef.current = null;
+      }
+    }
+
     dragStateRef.current = null;
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
-  }, []);
+  }, [onUpdate]);
 
   // Handle resize
   useEffect(() => {
@@ -460,12 +513,12 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
-  // Render D3 chart
-  useEffect(() => {
+  // CREATION PHASE: Initialize chart structure once (runs when dimensions/visibility/theme changes)
+  const initializeChart = useCallback(() => {
     if (!svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove(); // Clear previous render
+    svg.selectAll("*").remove(); // ONLY clear on initialization
 
     // Add full SVG background
     svg
@@ -492,17 +545,16 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     // Add grid
     const xGrid = g
       .append("g")
-      .attr("class", "grid")
+      .attr("class", "grid x-grid")
       .attr("transform", `translate(0,${height})`)
       .call(
         d3
           .axisBottom(xScale)
-          .tickValues([50, 100, 200, 300, 400, 500, 600, 700, 800, 900]) // Align grid with shade values
+          .tickValues([50, 100, 200, 300, 400, 500, 600, 700, 800, 900])
           .tickSize(-height)
           .tickFormat(() => "")
       );
 
-    // Style x-grid
     xGrid
       .selectAll("line")
       .style("stroke", (theme.vars || theme).palette.divider)
@@ -512,7 +564,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
 
     const yGrid = g
       .append("g")
-      .attr("class", "grid")
+      .attr("class", "grid y-grid")
       .call(
         d3
           .axisLeft(yScale)
@@ -520,7 +572,6 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           .tickFormat(() => "")
       );
 
-    // Style y-grid
     yGrid
       .selectAll("line")
       .style("stroke", (theme.vars || theme).palette.divider)
@@ -531,15 +582,15 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     // Add axes
     const xAxis = g
       .append("g")
+      .attr("class", "x-axis")
       .attr("transform", `translate(0,${height})`)
       .call(
         d3
           .axisBottom(xScale)
-          .tickValues([50, 100, 200, 300, 400, 500, 600, 700, 800, 900]) // Show actual shade values
+          .tickValues([50, 100, 200, 300, 400, 500, 600, 700, 800, 900])
           .tickFormat((d) => d.toString())
       );
 
-    // Style x-axis
     xAxis
       .selectAll("text")
       .style("fill", (theme.vars || theme).palette.text.secondary);
@@ -547,9 +598,11 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       .selectAll("path, line")
       .style("stroke", (theme.vars || theme).palette.text.secondary);
 
-    const yAxis = g.append("g").call(d3.axisLeft(yScale));
+    const yAxis = g
+      .append("g")
+      .attr("class", "y-axis")
+      .call(d3.axisLeft(yScale));
 
-    // Style y-axis
     yAxis
       .selectAll("text")
       .style("fill", (theme.vars || theme).palette.text.secondary);
@@ -557,48 +610,40 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       .selectAll("path, line")
       .style("stroke", (theme.vars || theme).palette.text.secondary);
 
-    // Add lines
-    if (curveSettings.showH && lineH) {
+    // Create path elements with class names (no data yet)
+    if (curveSettings.showH) {
       g.append("path")
-        .datum(hue.shades)
+        .attr("class", "line-h")
         .attr("fill", "none")
         .attr("stroke", (theme.vars || theme).palette.error.main)
-        .attr("stroke-width", 2)
-        .attr("d", lineH);
+        .attr("stroke-width", 2);
     }
 
-    if (curveSettings.showS && lineS) {
+    if (curveSettings.showS) {
       g.append("path")
-        .datum(hue.shades)
+        .attr("class", "line-s")
         .attr("fill", "none")
         .attr("stroke", (theme.vars || theme).palette.success.main)
-        .attr("stroke-width", 2)
-        .attr("d", lineS);
+        .attr("stroke-width", 2);
     }
 
-    if (curveSettings.showV && lineV) {
+    if (curveSettings.showV) {
       g.append("path")
-        .datum(hue.shades)
+        .attr("class", "line-v")
         .attr("fill", "none")
         .attr("stroke", (theme.vars || theme).palette.primary.main)
-        .attr("stroke-width", 2)
-        .attr("d", lineV);
+        .attr("stroke-width", 2);
     }
 
-    // Add points
-    const addPoints = (
-      channel: "h" | "s" | "v",
-      color: string,
-      scale: d3.ScaleLinear<number, number>
-    ) => {
+    // Create point groups and attach drag behaviors ONCE
+    const createPoints = (channel: "h" | "s" | "v", color: string) => {
       if (!curveSettings[`show${channel.toUpperCase() as "H" | "S" | "V"}`])
         return;
 
-      // Get the reusable drag behavior for this channel
       const dragBehavior = dragBehaviorsRef.current[channel];
       if (!dragBehavior) return;
 
-      // Update the handlers on the existing drag behavior (lightweight operation)
+      // Update drag behavior handlers (attached once to circles)
       dragBehavior
         .on("start", function (event, d) {
           const index = hue.shades.indexOf(d);
@@ -610,7 +655,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
 
           document.body.style.cursor = "ns-resize";
           document.body.style.userSelect = "none";
-          document.body.style.touchAction = "none"; // Disable touch scrolling during drag
+          document.body.style.touchAction = "none";
 
           dragStateRef.current = {
             isDragging: true,
@@ -624,30 +669,17 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           handleDrag(event);
         })
         .on("end", function () {
-          // Re-enable touch scrolling
           document.body.style.touchAction = "";
           handleDragEnd();
         });
 
+      // Create circles with class names and attach drag
       g.selectAll(`.point-${channel}`)
         .data(hue.shades)
         .enter()
         .append("circle")
         .attr("class", `point-${channel}`)
-        .attr("cx", (d) => xScale(d.value)) // Use shade.value instead of index
-        .attr("cy", (d) => scale(d.hsv[channel]))
-        .attr("r", (d) => {
-          const selectedKey =
-            `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
-          return d[selectedKey] ? 8 : 5;
-        })
-        .attr("fill", (d) => {
-          const selectedKey =
-            `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
-          return d[selectedKey]
-            ? color
-            : (theme.vars || theme).palette.background.default;
-        })
+        .attr("r", 5)
         .attr("stroke", color)
         .attr("stroke-width", 2)
         .style("cursor", "pointer")
@@ -661,32 +693,99 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           };
           onUpdate({ shades: newShades });
         })
-        .call(dragBehavior); // Reuse the same behavior object
+        .call(dragBehavior); // Attach drag behavior ONCE
     };
 
-    addPoints("h", (theme.vars || theme).palette.error.main, yScaleHue);
-    addPoints("s", (theme.vars || theme).palette.success.main, yScale);
-    addPoints("v", (theme.vars || theme).palette.primary.main, yScale);
+    createPoints("h", (theme.vars || theme).palette.error.main);
+    createPoints("s", (theme.vars || theme).palette.success.main);
+    createPoints("v", (theme.vars || theme).palette.primary.main);
   }, [
-    shadeKeys, // Use memoized keys for efficient re-render detection
-    hue.shades, // Still needed for the actual data in the effect body
+    dimensions.width,
+    dimensions.height,
     curveSettings,
+    theme,
+    margin,
+    width,
+    height,
+    xScale,
+    yScale,
+    handleDrag,
+    handleDragEnd,
+    onUpdate,
+    hue.shades, // Needed for initial data binding
+  ]);
+
+  // UPDATE PHASE: Only update attributes of existing elements (runs at 60fps during drag)
+  const updateChart = useCallback(() => {
+    if (!svgRef.current) return;
+
+    const svg = d3.select(svgRef.current);
+
+    // Update path data for each visible channel
+    if (curveSettings.showH && lineH) {
+      svg.select(".line-h").datum(hue.shades).attr("d", lineH);
+    }
+
+    if (curveSettings.showS && lineS) {
+      svg.select(".line-s").datum(hue.shades).attr("d", lineS);
+    }
+
+    if (curveSettings.showV && lineV) {
+      svg.select(".line-v").datum(hue.shades).attr("d", lineV);
+    }
+
+    // Update circle positions and styles for each channel
+    const updatePoints = (
+      channel: "h" | "s" | "v",
+      scale: d3.ScaleLinear<number, number>,
+      color: string
+    ) => {
+      if (!curveSettings[`show${channel.toUpperCase() as "H" | "S" | "V"}`])
+        return;
+
+      svg
+        .selectAll(`.point-${channel}`)
+        .data(hue.shades)
+        .attr("cx", (d) => xScale(d.value))
+        .attr("cy", (d) => scale(d.hsv[channel]))
+        .attr("r", (d) => {
+          const selectedKey =
+            `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
+          return d[selectedKey] ? 8 : 5;
+        })
+        .attr("fill", (d) => {
+          const selectedKey =
+            `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
+          return d[selectedKey]
+            ? color
+            : (theme.vars || theme).palette.background.default;
+        });
+    };
+
+    updatePoints("h", yScaleHue, (theme.vars || theme).palette.error.main);
+    updatePoints("s", yScale, (theme.vars || theme).palette.success.main);
+    updatePoints("v", yScale, (theme.vars || theme).palette.primary.main);
+  }, [
+    hue.shades,
     xScale,
     yScale,
     yScaleHue,
     lineH,
     lineS,
     lineV,
-    margin,
-    width,
-    height,
-    dimensions.width,
-    dimensions.height,
-    onUpdate,
-    handleDrag,
-    handleDragEnd,
+    curveSettings,
     theme,
   ]);
+
+  // Initialize chart when structure changes
+  useEffect(() => {
+    initializeChart();
+  }, [initializeChart]);
+
+  // Update chart when data changes
+  useEffect(() => {
+    updateChart();
+  }, [updateChart]);
 
   return (
     <Box>
