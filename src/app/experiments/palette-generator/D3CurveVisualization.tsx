@@ -28,14 +28,6 @@ interface ShadeDefinition {
   generationMode?: "functional" | "functional-saturated" | "expressive"; // Mode used when generating this shade
 }
 
-interface HueSet {
-  id: string;
-  name: string; // Display name
-  muiName: string; // MUI palette key (primary, secondary, etc.)
-  shades: ShadeDefinition[];
-  extrapolationMode: "functional" | "functional-saturated" | "expressive";
-}
-
 interface CurveSettings {
   showH: boolean;
   showS: boolean;
@@ -44,8 +36,8 @@ interface CurveSettings {
 }
 
 interface CurveVisualizationProps {
-  hue: HueSet;
-  onUpdate: (updates: Partial<HueSet>) => void;
+  shades: ShadeDefinition[];
+  onUpdate: (updates: { shades: ShadeDefinition[] }) => void;
 }
 
 // Utility functions
@@ -102,7 +94,7 @@ const rgbToHex = (r: number, g: number, b: number): string => {
   return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 };
 
-function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
+function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
   const theme = useTheme();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -174,6 +166,21 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   const width = dimensions.width - margin.left - margin.right;
   const height = dimensions.height - margin.top - margin.bottom;
 
+  // Memoize length separately to prevent unnecessary recalculations
+  const shadesLength = useMemo(() => shades.length, [shades.length]);
+
+  // Create a stable key based on actual shade data (not the parent hue object)
+  // Only recalculate when the stringified data actually changes
+  const shadesDataString = shades
+    .map(
+      (s: ShadeDefinition) =>
+        `${s.id}-${s.color}-${s.locked}-${s.hsv.h.toFixed(2)}-${s.hsv.s.toFixed(
+          2
+        )}-${s.hsv.v.toFixed(2)}`
+    )
+    .join("|");
+  const shadesKey = useMemo(() => shadesDataString, [shadesDataString]);
+
   // Performance optimization: Create drag behaviors once on mount, reuse across renders
   useEffect(() => {
     // Only create if they don't exist
@@ -201,13 +208,14 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     }
   }, []); // Empty dependency array - only run once
 
-  // Scales
+  // Scales - INDEX-BASED for even spacing regardless of shade values
   const xScale = useMemo(() => {
+    const padding = 0.5; // Half a bar width of padding on each side
     return d3
       .scaleLinear()
-      .domain([50, 900]) // Use actual shade values instead of indices
+      .domain([-padding, Math.max(0, shadesLength - 1) + padding]) // Add padding to prevent bar overflow
       .range([0, width]);
-  }, [width]);
+  }, [width, shadesLength]);
 
   const yScale = useMemo(() => {
     return d3.scaleLinear().domain([0, 100]).range([height, 0]);
@@ -221,7 +229,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   const lineH = useMemo(() => {
     return d3
       .line<ShadeDefinition>()
-      .x((d) => xScale(d.value)) // Use shade.value instead of index
+      .x((d, i) => xScale(i)) // Use index for even spacing
       .y((d) => yScaleHue(d.hsv.h))
       .curve(d3.curveCardinal.tension(0.1)); // More exaggerated curves (lower tension)
   }, [xScale, yScaleHue]);
@@ -229,7 +237,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   const lineS = useMemo(() => {
     return d3
       .line<ShadeDefinition>()
-      .x((d) => xScale(d.value)) // Use shade.value instead of index
+      .x((d, i) => xScale(i)) // Use index for even spacing
       .y((d) => yScale(d.hsv.s))
       .curve(d3.curveCardinal.tension(0.1)); // More exaggerated curves (lower tension)
   }, [xScale, yScale]);
@@ -237,7 +245,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   const lineV = useMemo(() => {
     return d3
       .line<ShadeDefinition>()
-      .x((d) => xScale(d.value)) // Use shade.value instead of index
+      .x((d, i) => xScale(i)) // Use index for even spacing
       .y((d) => yScale(d.hsv.v))
       .curve(d3.curveCardinal.tension(0.1)); // More exaggerated curves (lower tension)
   }, [xScale, yScale]);
@@ -252,7 +260,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     ) => {
       if (!curveSettings.smoothMode) return null;
 
-      const newShades = [...hue.shades];
+      const newShades = [...shades];
       const sigma = 0.8;
       const maxDistance = 2;
 
@@ -319,7 +327,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
 
       return newShades;
     },
-    [curveSettings.smoothMode, hue.shades]
+    [curveSettings.smoothMode, shades]
   );
 
   // Handle drag events with requestAnimationFrame for smooth performance
@@ -400,9 +408,10 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
           newValue = Math.max(0, Math.min(100, yScale.invert(y)));
         }
 
-        const newShades = [...hue.shades];
+        const newShades = [...shades];
         const shade = newShades[dragStateRef.current.pointIndex];
 
+        // Don't allow dragging locked shades (they are fixed)
         if (shade.locked) return;
 
         const newHsv = { ...shade.hsv };
@@ -465,7 +474,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     [
       yScale,
       yScaleHue,
-      hue.shades,
+      shades,
       applyGaussianFalloff,
       throttledColorUpdate,
       lineH,
@@ -542,6 +551,20 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       .attr("x", 0)
       .attr("y", 0);
 
+    // Add colored background bars for each shade (BEFORE grid/curves/points)
+    const barWidth = width / Math.max(1, shades.length);
+    g.selectAll(".shade-bar")
+      .data(shades)
+      .enter()
+      .append("rect")
+      .attr("class", "shade-bar")
+      .attr("x", (d, i) => xScale(i) - barWidth / 2)
+      .attr("y", 0)
+      .attr("width", barWidth)
+      .attr("height", height)
+      .attr("fill", (d) => d.color)
+      .attr("opacity", 1); // Fully opaque
+
     // Add grid
     const xGrid = g
       .append("g")
@@ -550,7 +573,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       .call(
         d3
           .axisBottom(xScale)
-          .tickValues([50, 100, 200, 300, 400, 500, 600, 700, 800, 900])
+          .tickValues(shades.map((_, i) => i)) // Use indices for tick positions
           .tickSize(-height)
           .tickFormat(() => "")
       );
@@ -579,7 +602,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       .style("stroke-width", 0.5);
     yGrid.selectAll("path").style("stroke", "none");
 
-    // Add axes
+    // Add axes with custom formatting for shade values
     const xAxis = g
       .append("g")
       .attr("class", "x-axis")
@@ -587,8 +610,11 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       .call(
         d3
           .axisBottom(xScale)
-          .tickValues([50, 100, 200, 300, 400, 500, 600, 700, 800, 900])
-          .tickFormat((d) => d.toString())
+          .tickValues(shades.map((_, i) => i)) // Use indices for tick positions
+          .tickFormat((d) => {
+            const index = d as number;
+            return shades[index]?.value.toString() || "";
+          })
       );
 
     xAxis
@@ -646,12 +672,13 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       // Update drag behavior handlers (attached once to circles)
       dragBehavior
         .on("start", function (event, d) {
-          const index = hue.shades.indexOf(d);
+          const index = shades.indexOf(d);
           const selectedKey =
             `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
           const isSelected = d[selectedKey] as boolean;
 
-          if (!isSelected || d.locked) return;
+          // Only allow dragging if NOT locked and channel is selected
+          if (d.locked || !isSelected) return;
 
           document.body.style.cursor = "ns-resize";
           document.body.style.userSelect = "none";
@@ -675,7 +702,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
 
       // Create circles with class names and attach drag
       g.selectAll(`.point-${channel}`)
-        .data(hue.shades)
+        .data(shades)
         .enter()
         .append("circle")
         .attr("class", `point-${channel}`)
@@ -684,13 +711,22 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
         .attr("stroke-width", 2)
         .style("cursor", "pointer")
         .on("click", function (event, d) {
-          const index = hue.shades.indexOf(d);
-          const selectedKey = `selectedFor${channel.toUpperCase()}`;
-          const newShades = [...hue.shades];
+          const index = shades.indexOf(d);
+          const newShades = [...shades];
+
+          // Toggle the locked state
+          const newLockedState = !newShades[index].locked;
+
           newShades[index] = {
             ...newShades[index],
-            [selectedKey]: !d[selectedKey as keyof ShadeDefinition],
+            locked: newLockedState,
+            // When we lock/unlock, also set all channels to be selected (visible/active)
+            // This just controls whether the point appears on this channel's curve
+            selectedForH: true,
+            selectedForS: true,
+            selectedForV: true,
           };
+
           onUpdate({ shades: newShades });
         })
         .call(dragBehavior); // Attach drag behavior ONCE
@@ -699,6 +735,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     createPoints("h", (theme.vars || theme).palette.error.main);
     createPoints("s", (theme.vars || theme).palette.success.main);
     createPoints("v", (theme.vars || theme).palette.primary.main);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dimensions.width,
     dimensions.height,
@@ -712,7 +749,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     handleDrag,
     handleDragEnd,
     onUpdate,
-    hue.shades, // Needed for initial data binding
+    shadesLength, // Only reinitialize if number of shades changes, not on data updates
   ]);
 
   // UPDATE PHASE: Only update attributes of existing elements (runs at 60fps during drag)
@@ -721,17 +758,26 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
 
     const svg = d3.select(svgRef.current);
 
+    // Update colored background bars
+    const barWidth = width / Math.max(1, shades.length);
+    svg
+      .selectAll(".shade-bar")
+      .data(shades)
+      .attr("x", (d, i) => xScale(i) - barWidth / 2)
+      .attr("width", barWidth)
+      .attr("fill", (d) => d.color);
+
     // Update path data for each visible channel
     if (curveSettings.showH && lineH) {
-      svg.select(".line-h").datum(hue.shades).attr("d", lineH);
+      svg.select(".line-h").datum(shades).attr("d", lineH);
     }
 
     if (curveSettings.showS && lineS) {
-      svg.select(".line-s").datum(hue.shades).attr("d", lineS);
+      svg.select(".line-s").datum(shades).attr("d", lineS);
     }
 
     if (curveSettings.showV && lineV) {
-      svg.select(".line-v").datum(hue.shades).attr("d", lineV);
+      svg.select(".line-v").datum(shades).attr("d", lineV);
     }
 
     // Update circle positions and styles for each channel
@@ -745,28 +791,27 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
 
       svg
         .selectAll(`.point-${channel}`)
-        .data(hue.shades)
-        .attr("cx", (d) => xScale(d.value))
+        .data(shades)
+        .attr("cx", (d, i) => xScale(i)) // Use index for position
         .attr("cy", (d) => scale(d.hsv[channel]))
-        .attr("r", (d) => {
-          const selectedKey =
-            `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
-          return d[selectedKey] ? 8 : 5;
-        })
+        .attr("r", 7) // Same size for both states
         .attr("fill", (d) => {
-          const selectedKey =
-            `selectedFor${channel.toUpperCase()}` as keyof ShadeDefinition;
-          return d[selectedKey]
-            ? color
-            : (theme.vars || theme).palette.background.default;
-        });
+          // Locked = filled with color, Unlocked = white fill
+          return d.locked ? color : "#ffffff";
+        })
+        .attr("stroke", (d) => {
+          // Locked = white outline, Unlocked = colored outline
+          return d.locked ? "#ffffff" : color;
+        })
+        .attr("stroke-width", 2);
     };
 
     updatePoints("h", yScaleHue, (theme.vars || theme).palette.error.main);
     updatePoints("s", yScale, (theme.vars || theme).palette.success.main);
     updatePoints("v", yScale, (theme.vars || theme).palette.primary.main);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    hue.shades,
+    shadesKey, // Only update when actual shade data changes, not when mode changes
     xScale,
     yScale,
     yScaleHue,
@@ -775,6 +820,7 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
     lineV,
     curveSettings,
     theme,
+    width,
   ]);
 
   // Initialize chart when structure changes
@@ -835,8 +881,10 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
       </Stack>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Click points to select/deselect them for dragging. Drag selected points
-        vertically to adjust values.
+        Click points to lock/unlock shades. Locked shades (filled points) are
+        protected from dragging and interpolation. Unlocked shades (outline
+        points) can be dragged to adjust values and will be overwritten by
+        &ldquo;Generate Missing Shades&rdquo;.
         {curveSettings.smoothMode &&
           " Gaussian falloff applies smooth changes to adjacent points during dragging."}
       </Typography>
@@ -869,4 +917,23 @@ function D3CurveVisualization({ hue, onUpdate }: CurveVisualizationProps) {
   );
 }
 
-export default D3CurveVisualization;
+export default React.memo(D3CurveVisualization, (prevProps, nextProps) => {
+  // Only re-render if the shades data actually changed
+  const prevKey = prevProps.shades
+    .map(
+      (s: ShadeDefinition) =>
+        `${s.id}-${s.color}-${s.locked}-${s.hsv.h.toFixed(2)}-${s.hsv.s.toFixed(
+          2
+        )}-${s.hsv.v.toFixed(2)}`
+    )
+    .join("|");
+  const nextKey = nextProps.shades
+    .map(
+      (s: ShadeDefinition) =>
+        `${s.id}-${s.color}-${s.locked}-${s.hsv.h.toFixed(2)}-${s.hsv.s.toFixed(
+          2
+        )}-${s.hsv.v.toFixed(2)}`
+    )
+    .join("|");
+  return prevKey === nextKey;
+});

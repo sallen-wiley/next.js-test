@@ -4,7 +4,6 @@ import React, { useState, useMemo } from "react";
 import D3CurveVisualization from "./D3CurveVisualization";
 import {
   Box,
-  Paper,
   Typography,
   Button,
   TextField,
@@ -485,65 +484,63 @@ function PaletteGenerator() {
         color: "text.primary",
       }}
     >
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Paper elevation={2} sx={{ p: 3 }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ mb: 4 }}
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 4 }}
+        >
+          <Box>
+            <Typography variant="h3" component="h1" gutterBottom>
+              HSV Palette Generator
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Generate harmonious color palettes using HSV interpolation (like
+              Palettte App)
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={exportPalette}
+            size="large"
           >
-            <Box>
-              <Typography variant="h3" component="h1" gutterBottom>
-                HSV Palette Generator
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Generate harmonious color palettes using HSV interpolation (like
-                Palettte App)
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<DownloadIcon />}
-              onClick={exportPalette}
-              size="large"
-            >
-              Export JSON
-            </Button>
-          </Stack>
+            Export JSON
+          </Button>
+        </Stack>
 
-          <Stack direction="row" spacing={2} sx={{ mb: 3, flexWrap: "wrap" }}>
-            {hues.map((hue) => (
-              <Button
-                key={hue.id}
-                variant={activeHueId === hue.id ? "contained" : "outlined"}
-                onClick={() => setActiveHueId(hue.id)}
-                size="small"
-                color="primary"
-              >
-                {hue.name}
-              </Button>
-            ))}
+        <Stack direction="row" spacing={2} sx={{ mb: 4, flexWrap: "wrap" }}>
+          {hues.map((hue) => (
             <Button
-              variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={addHue}
+              key={hue.id}
+              variant={activeHueId === hue.id ? "contained" : "outlined"}
+              onClick={() => setActiveHueId(hue.id)}
               size="small"
-              sx={{ borderStyle: "dashed" }}
+              color="primary"
             >
-              Add Hue
+              {hue.name}
             </Button>
-          </Stack>
+          ))}
+          <Button
+            variant="outlined"
+            startIcon={<AddIcon />}
+            onClick={addHue}
+            size="small"
+            sx={{ borderStyle: "dashed" }}
+          >
+            Add Hue
+          </Button>
+        </Stack>
 
-          {activeHue && (
-            <HueEditor
-              hue={activeHue}
-              onUpdate={(updates) => updateHue(activeHue.id, updates)}
-              onRemove={() => removeHue(activeHue.id)}
-              canRemove={hues.length > 1}
-            />
-          )}
-        </Paper>
+        {activeHue && (
+          <HueEditor
+            hue={activeHue}
+            onUpdate={(updates) => updateHue(activeHue.id, updates)}
+            onRemove={() => removeHue(activeHue.id)}
+            canRemove={hues.length > 1}
+          />
+        )}
       </Container>
     </Box>
   );
@@ -659,7 +656,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
   };
 
   return (
-    <Paper elevation={1} sx={{ p: 3, mt: 2 }}>
+    <Box sx={{ mb: 4 }}>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -744,11 +741,11 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         </FormHelperText>
       </FormControl>
 
-      <ShadeGrid shades={hue.shades} hue={hue} onShadeUpdate={updateShade} />
-
-      <Box sx={{ mt: 2 }}>
-        <D3CurveVisualization hue={hue} onUpdate={onUpdate} />
+      <Box sx={{ mb: 4 }}>
+        <D3CurveVisualization shades={hue.shades} onUpdate={onUpdate} />
       </Box>
+
+      <ShadeGrid shades={hue.shades} hue={hue} onShadeUpdate={updateShade} />
 
       {/* Anchor Warning Dialog */}
       <Dialog
@@ -776,7 +773,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 }
 
@@ -1031,7 +1028,16 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
               <LockOpenIcon fontSize="small" />
             )
           }
-          onClick={() => onUpdate({ locked: !shade.locked })}
+          onClick={() => {
+            const newLockedState = !shade.locked;
+            onUpdate({
+              locked: newLockedState,
+              // Keep all channels selected/visible
+              selectedForH: true,
+              selectedForS: true,
+              selectedForV: true,
+            });
+          }}
         >
           {shade.locked ? "Locked" : "Unlocked"}
         </Button>
