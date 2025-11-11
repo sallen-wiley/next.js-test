@@ -36,6 +36,9 @@ import LockOpenIcon from "@mui/icons-material/LockOpen";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
+import ColorizeIcon from "@mui/icons-material/Colorize";
+import InputAdornment from "@mui/material/InputAdornment";
+import IconButton from "@mui/material/IconButton";
 
 // TypeScript interfaces
 interface HSV {
@@ -714,7 +717,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         sx={{ mb: 3, flexWrap: "wrap", gap: 2 }}
       >
         <Stack
-          direction="row"
+          direction={{ xs: "column", md: "row" }}
           spacing={2}
           alignItems="center"
           sx={{ flexWrap: "wrap" }}
@@ -772,6 +775,9 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
                 | "expressive",
             })
           }
+          sx={{
+            flexDirection: { xs: "column", md: "row" },
+          }}
         >
           <FormControlLabel
             value="functional"
@@ -859,6 +865,8 @@ function ShadeGrid({ shades, hue, onShadeUpdate }: ShadeGridProps) {
 }
 
 function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
+  const colorInputRef = React.useRef<HTMLInputElement>(null);
+
   const contrastWhite = useMemo(
     () => calculateContrast(shade.color, "#ffffff"),
     [shade.color]
@@ -1011,6 +1019,23 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
           }}
           size="small"
           fullWidth
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="Pick color"
+                    onClick={() => colorInputRef.current?.click()}
+                    edge="end"
+                    size="small"
+                    sx={{ color: textColor }}
+                  >
+                    <ColorizeIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
           sx={{
             mb: 1,
             "& .MuiInputBase-input": {
@@ -1020,15 +1045,34 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
             },
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
-                borderColor: `${textColor}40`, // Semi-transparent border using text color
+                borderColor: textColor, // Border matches contrast text color
+                opacity: 0.8,
               },
               "&:hover fieldset": {
-                borderColor: `${textColor}60`, // Slightly more opaque on hover
+                borderColor: textColor,
+                opacity: 0.9,
               },
               "&.Mui-focused fieldset": {
-                borderColor: textColor, // Full opacity when focused
+                borderColor: textColor,
+                opacity: 1,
               },
             },
+          }}
+        />
+
+        {/* Hidden native color picker input */}
+        <Box
+          component="input"
+          type="color"
+          value={shade.color}
+          onChange={(e) => handleColorChange(e.target.value)}
+          ref={colorInputRef}
+          sx={{
+            position: "absolute",
+            opacity: 0,
+            width: 0,
+            height: 0,
+            pointerEvents: "none",
           }}
         />
 
