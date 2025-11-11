@@ -24,6 +24,11 @@ import {
   Radio,
   FormHelperText,
   Tooltip,
+  Tabs,
+  Tab,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import LockIcon from "@mui/icons-material/Lock";
@@ -393,21 +398,62 @@ const MUI_SHADE_VALUES = [
   50, 100, 200, 300, 400, 500, 600, 700, 800, 900,
 ] as const;
 
+// Default color palette values
+const DEFAULT_PALETTE_COLORS: Record<number, string> = {
+  50: "#f5fafa",
+  100: "#dfeef0",
+  200: "#c3dfe2",
+  300: "#a6ced1",
+  400: "#87b9be",
+  500: "#68a3a8",
+  600: "#45848a",
+  700: "#245e64",
+  800: "#0d383d",
+  900: "#02181a",
+};
+
+// Standard MUI palette keys
+const MUI_PALETTE_KEYS = [
+  "red",
+  "pink",
+  "purple",
+  "deepPurple",
+  "indigo",
+  "blue",
+  "lightBlue",
+  "cyan",
+  "teal",
+  "green",
+  "lightGreen",
+  "lime",
+  "yellow",
+  "amber",
+  "orange",
+  "deepOrange",
+  "brown",
+  "grey",
+  "blueGrey",
+] as const;
+
 const DEFAULT_HUE: HueSet = {
   id: "1",
   name: "primary",
   muiName: "primary",
   extrapolationMode: "functional",
-  shades: MUI_SHADE_VALUES.map((val) => ({
-    id: `shade-${val}`,
-    value: val,
-    color: "#808080",
-    locked: false,
-    hsv: { h: 0, s: 0, v: 50 },
-    selectedForH: true,
-    selectedForS: true,
-    selectedForV: true,
-  })),
+  shades: MUI_SHADE_VALUES.map((val) => {
+    const color = DEFAULT_PALETTE_COLORS[val] || "#808080";
+    const hsv = hexToHsv(color);
+    return {
+      id: `shade-${val}`,
+      value: val,
+      color,
+      locked: false,
+      hsv,
+      selectedForH: true,
+      selectedForS: true,
+      selectedForV: true,
+    };
+  }),
 };
 
 function PaletteGenerator() {
@@ -500,38 +546,42 @@ function PaletteGenerator() {
               Palettte App)
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            onClick={exportPalette}
-            size="large"
-          >
-            Export JSON
-          </Button>
         </Stack>
 
-        <Stack direction="row" spacing={2} sx={{ mb: 4, flexWrap: "wrap" }}>
-          {hues.map((hue) => (
-            <Button
-              key={hue.id}
-              variant={activeHueId === hue.id ? "contained" : "outlined"}
-              onClick={() => setActiveHueId(hue.id)}
-              size="small"
-              color="primary"
-            >
-              {hue.name}
-            </Button>
-          ))}
-          <Button
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={addHue}
-            size="small"
-            sx={{ borderStyle: "dashed" }}
+        <Box sx={{ mb: 4, borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={activeHueId}
+            onChange={(event, newValue) => {
+              if (newValue === "add-hue") {
+                addHue();
+              } else if (newValue === "export") {
+                exportPalette();
+              } else {
+                setActiveHueId(newValue);
+              }
+            }}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            aria-label="hue selection tabs"
           >
-            Add Hue
-          </Button>
-        </Stack>
+            {hues.map((hue) => (
+              <Tab key={hue.id} label={hue.name} value={hue.id} />
+            ))}
+            <Tab
+              icon={<AddIcon />}
+              iconPosition="start"
+              label="Add Hue"
+              value="add-hue"
+            />
+            <Tab
+              icon={<DownloadIcon />}
+              iconPosition="start"
+              label="Export JSON"
+              value="export"
+            />
+          </Tabs>
+        </Box>
 
         {activeHue && (
           <HueEditor
@@ -670,25 +720,30 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
           sx={{ flexWrap: "wrap" }}
         >
           <TextField
+            label="Hue Name"
             value={hue.name}
             onChange={(e) => onUpdate({ name: e.target.value })}
             placeholder="Hue name"
             size="small"
             variant="outlined"
           />
-          <TextField
-            value={hue.muiName}
-            onChange={(e) => onUpdate({ muiName: e.target.value })}
-            placeholder="MUI name (primary, secondary, etc.)"
-            size="small"
-            variant="outlined"
-            sx={{ minWidth: 250 }}
-          />
+          <FormControl size="small" sx={{ minWidth: 250 }}>
+            <InputLabel id="mui-palette-key-label">MUI Palette Key</InputLabel>
+            <Select
+              labelId="mui-palette-key-label"
+              label="MUI Palette Key"
+              value={hue.muiName}
+              onChange={(e) => onUpdate({ muiName: e.target.value })}
+            >
+              {MUI_PALETTE_KEYS.map((key) => (
+                <MenuItem key={key} value={key}>
+                  {key}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Stack>
         <Stack direction="row" spacing={2}>
-          <Button variant="contained" color="success" onClick={generateShades}>
-            Generate Missing Shades
-          </Button>
           {canRemove && (
             <Button
               variant="contained"
@@ -739,6 +794,14 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
           Functional (Rich Darks): Saturated darks (S=100) for rich UI elements.
           Brand Expressive: Maintains color saturation curve for illustrations.
         </FormHelperText>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={generateShades}
+          sx={{ mt: 2, alignSelf: "flex-start" }}
+        >
+          Generate Missing Shades
+        </Button>
       </FormControl>
 
       <Box sx={{ mb: 4 }}>

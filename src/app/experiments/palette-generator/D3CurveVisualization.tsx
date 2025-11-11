@@ -691,7 +691,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       g.append("path")
         .attr("class", "line-v")
         .attr("fill", "none")
-        .attr("stroke", (theme.vars || theme).palette.primary.main)
+        .attr("stroke", (theme.vars || theme).palette.warning.main)
         .attr("stroke-width", 2);
     }
 
@@ -774,7 +774,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
     createPoints("h", (theme.vars || theme).palette.error.main);
     createPoints("s", (theme.vars || theme).palette.success.main);
-    createPoints("v", (theme.vars || theme).palette.primary.main);
+    createPoints("v", (theme.vars || theme).palette.warning.main);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dimensions.width,
@@ -848,7 +848,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
     updatePoints("h", yScaleHue, (theme.vars || theme).palette.error.main);
     updatePoints("s", yScale, (theme.vars || theme).palette.success.main);
-    updatePoints("v", yScale, (theme.vars || theme).palette.primary.main);
+    updatePoints("v", yScale, (theme.vars || theme).palette.warning.main);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     shadesKey, // Only update when actual shade data changes, not when mode changes
@@ -874,7 +874,16 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
   }, [updateChart]);
 
   return (
-    <Box>
+    <Box
+      sx={{
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1,
+        bgcolor: "background.paper",
+        boxShadow: 1,
+        p: 2,
+      }}
+    >
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <Button
           variant={curveSettings.showH ? "contained" : "outlined"}
@@ -898,7 +907,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         </Button>
         <Button
           variant={curveSettings.showV ? "contained" : "outlined"}
-          color="primary"
+          color="warning"
           size="small"
           onClick={() =>
             setCurveSettings((prev) => ({ ...prev, showV: !prev.showV }))
@@ -939,9 +948,8 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           borderRadius: 1,
           bgcolor: "background.paper",
           overflow: "hidden",
-          boxShadow: 1,
-          mb: 0, // Remove any bottom margin
-          touchAction: "manipulation", // Allow basic touch interactions
+          mb: 0,
+          touchAction: "manipulation",
         }}
       >
         <svg
