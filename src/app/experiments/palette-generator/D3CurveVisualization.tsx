@@ -607,7 +607,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       .attr("y", 0);
 
     // Add colored background bars for each shade (BEFORE grid/curves/points)
-    const barWidth = width / Math.max(1, shades.length);
+    const barWidth = Math.ceil(width / Math.max(1, shades.length)) + 1; // Round up and add 1px overlap
     g.selectAll(".shade-bar")
       .data(shades)
       .enter()
@@ -820,7 +820,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     const svg = d3.select(svgRef.current);
 
     // Update colored background bars
-    const barWidth = width / Math.max(1, shades.length);
+    const barWidth = Math.ceil(width / Math.max(1, shades.length)) + 1; // Round up and add 1px overlap
     svg
       .selectAll(".shade-bar")
       .data(shades)
