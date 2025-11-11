@@ -720,7 +720,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         <Stack
           direction={{ xs: "column", md: "row" }}
           spacing={2}
-          alignItems="center"
+          alignItems="start"
           sx={{ flexWrap: "wrap" }}
         >
           <TextField
