@@ -543,23 +543,6 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     document.body.style.userSelect = "";
   }, [onUpdate]);
 
-  // Handle resize
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setDimensions({
-          width: Math.max(400, rect.width),
-          height: 300,
-        });
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
-
   // Global cleanup: ensure drag state is cleared on any mouseup/touchend
   useEffect(() => {
     const handleGlobalEnd = () => {
