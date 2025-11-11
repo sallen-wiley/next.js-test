@@ -751,7 +751,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
               startIcon={<DeleteIcon />}
               onClick={onRemove}
             >
-              Remove
+              Delete Hue
             </Button>
           )}
         </Stack>

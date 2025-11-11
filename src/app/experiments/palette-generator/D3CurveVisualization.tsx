@@ -933,9 +933,8 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         Click points to lock/unlock shades. Locked shades (filled points) are
         protected from dragging and interpolation. Unlocked shades (outline
         points) can be dragged to adjust values and will be overwritten by
-        &ldquo;Generate Missing Shades&rdquo;.
-        {curveSettings.smoothMode &&
-          " Gaussian falloff applies smooth changes to adjacent points during dragging."}
+        &ldquo;Generate Missing Shades&rdquo;. Gaussian falloff applies smooth
+        changes to adjacent points during dragging.
       </Typography>
 
       <Box

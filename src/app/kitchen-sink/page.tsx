@@ -53,6 +53,8 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Tabs,
+  Tab,
   CircularProgress,
   LinearProgress,
   Table,
@@ -114,6 +116,7 @@ export default function Home() {
   const [listExpanded, setListExpanded] = React.useState(false);
   const [bottomNavValue, setBottomNavValue] = React.useState(0);
   const [activeStep, setActiveStep] = React.useState(0);
+  const [tabValue, setTabValue] = React.useState(0);
   const [toggleValue, setToggleValue] = React.useState<string[]>(["bold"]);
   const [speedDialOpen, setSpeedDialOpen] = React.useState(false);
   const [backdropOpen, setBackdropOpen] = React.useState(false);
@@ -774,6 +777,35 @@ export default function Home() {
                       Stepper & Bottom Navigation
                     </Typography>
                     <Stack spacing={3}>
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Tabs
+                        </Typography>
+                        <Tabs
+                          value={tabValue}
+                          onChange={(event, newValue) => setTabValue(newValue)}
+                        >
+                          <Tab label="Overview" />
+                          <Tab label="Details" />
+                          <Tab label="Settings" />
+                          <Tab label="Add New" />
+                        </Tabs>
+                        <Box sx={{ p: 2 }}>
+                          {tabValue === 0 && (
+                            <Typography>Overview content</Typography>
+                          )}
+                          {tabValue === 1 && (
+                            <Typography>Details content</Typography>
+                          )}
+                          {tabValue === 2 && (
+                            <Typography>Settings content</Typography>
+                          )}
+                          {tabValue === 3 && (
+                            <Typography>Add New content</Typography>
+                          )}
+                        </Box>
+                      </Box>
+
                       <Box>
                         <Typography variant="subtitle2" gutterBottom>
                           Horizontal Stepper
