@@ -29,6 +29,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Paper,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import LockIcon from "@mui/icons-material/Lock";
@@ -811,7 +812,9 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
       </FormControl>
 
       <Box sx={{ mb: 4 }}>
-        <D3CurveVisualization shades={hue.shades} onUpdate={onUpdate} />
+        <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
+          <D3CurveVisualization shades={hue.shades} onUpdate={onUpdate} />
+        </Paper>
       </Box>
 
       <ShadeGrid shades={hue.shades} hue={hue} onShadeUpdate={updateShade} />

@@ -159,12 +159,33 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
   // Chart dimensions - make responsive
   const margin = useMemo(
-    () => ({ top: 20, right: 30, bottom: 20, left: 50 }),
+    () => ({ top: 20, right: 0, bottom: 20, left: 20 }),
     []
   );
   const [dimensions, setDimensions] = useState({ width: 800, height: 300 });
   const width = dimensions.width - margin.left - margin.right;
   const height = dimensions.height - margin.top - margin.bottom;
+
+  // Add ResizeObserver to make chart responsive
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width } = entry.contentRect;
+        setDimensions((prev) => ({
+          ...prev,
+          width: Math.max(250, width), // Minimum width of 250px
+        }));
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   // Memoize length separately to prevent unnecessary recalculations
   const shadesLength = useMemo(() => shades.length, [shades.length]);
@@ -563,12 +584,12 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove(); // ONLY clear on initialization
 
-    // Add full SVG background
+    // Add full SVG background (transparent)
     svg
       .append("rect")
       .attr("width", dimensions.width)
       .attr("height", dimensions.height)
-      .attr("fill", (theme.vars || theme).palette.background.paper)
+      .attr("fill", "rgba(255,255,255,0)") // transparent
       .attr("x", 0)
       .attr("y", 0);
 
@@ -577,11 +598,11 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       .append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Add chart area background (for the plotting area)
+    // Add chart area background (transparent)
     g.append("rect")
       .attr("width", width)
       .attr("height", height)
-      .attr("fill", (theme.vars || theme).palette.background.paper)
+      .attr("fill", "rgba(255,255,255,0)") // transparent
       .attr("x", 0)
       .attr("y", 0);
 
@@ -874,16 +895,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
   }, [updateChart]);
 
   return (
-    <Box
-      sx={{
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 1,
-        bgcolor: "background.paper",
-        boxShadow: 1,
-        p: 2,
-      }}
-    >
+    <Box>
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <Button
           variant={curveSettings.showH ? "contained" : "outlined"}
@@ -942,23 +954,11 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         sx={{
           width: "100%",
           height: 320,
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 1,
-          bgcolor: "background.paper",
           overflow: "hidden",
-          mb: 0,
           touchAction: "manipulation",
         }}
       >
-        <svg
-          ref={svgRef}
-          width={dimensions.width}
-          height={dimensions.height}
-          style={{
-            background: theme.palette.background.paper,
-          }}
-        />
+        <svg ref={svgRef} width={dimensions.width} height={dimensions.height} />
       </Box>
     </Box>
   );
