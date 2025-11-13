@@ -888,24 +888,26 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
           Functional (Rich Darks): Saturated darks (S=100) for rich UI elements.
           Brand Expressive: Maintains color saturation curve for illustrations.
         </FormHelperText>
-        <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={generateShades}
-            sx={{ alignSelf: "flex-start" }}
-          >
-            Generate Missing Shades
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<SettingsIcon />}
-            onClick={() => setConfigDialogOpen(true)}
-            sx={{ alignSelf: "flex-start" }}
-          >
-            Configure Shades
-          </Button>
-        </Stack>
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Grid size="auto">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={generateShades}
+            >
+              Generate Missing Shades
+            </Button>
+          </Grid>
+          <Grid size="auto">
+            <Button
+              variant="outlined"
+              startIcon={<SettingsIcon />}
+              onClick={() => setConfigDialogOpen(true)}
+            >
+              Configure Shades
+            </Button>
+          </Grid>
+        </Grid>
       </FormControl>
 
       <Box sx={{ mb: 4 }}>
@@ -1310,7 +1312,7 @@ function ShadeConfigurationDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="body">
       <DialogTitle>Configure Shades</DialogTitle>
       <DialogContent>
         <TextField
@@ -1318,17 +1320,17 @@ function ShadeConfigurationDialog({
           type="number"
           value={count}
           onChange={(e) => handleCountChange(Number(e.target.value))}
-          inputProps={{ min: 1, max: 20 }}
+          slotProps={{ htmlInput: { min: 1, max: 20 } }}
           fullWidth
           sx={{ mb: 3, mt: 1 }}
           helperText="Choose between 1 and 20 shades"
         />
 
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+        <Typography variant="subtitle2" sx={{ mb: 2 }}>
           Shade Labels (from lightest to darkest)
         </Typography>
 
-        <Stack spacing={1} sx={{ maxHeight: 400, overflowY: "auto" }}>
+        <Stack spacing={2}>
           {configs.map((config, index) => (
             <TextField
               key={config.id}
@@ -1337,13 +1339,6 @@ function ShadeConfigurationDialog({
               onChange={(e) => handleLabelChange(index, e.target.value)}
               size="small"
               fullWidth
-              helperText={
-                index === 0
-                  ? "Lightest shade"
-                  : index === configs.length - 1
-                  ? "Darkest shade"
-                  : ""
-              }
             />
           ))}
         </Stack>

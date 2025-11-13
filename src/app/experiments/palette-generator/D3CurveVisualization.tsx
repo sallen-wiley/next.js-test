@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
 import * as d3 from "d3";
 
 // Types
@@ -879,50 +879,58 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
   return (
     <Box>
-      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-        <Button
-          variant={curveSettings.showH ? "contained" : "outlined"}
-          color="error"
-          size="small"
-          onClick={() =>
-            setCurveSettings((prev) => ({ ...prev, showH: !prev.showH }))
-          }
-        >
-          Hue (H)
-        </Button>
-        <Button
-          variant={curveSettings.showS ? "contained" : "outlined"}
-          color="success"
-          size="small"
-          onClick={() =>
-            setCurveSettings((prev) => ({ ...prev, showS: !prev.showS }))
-          }
-        >
-          Saturation (S)
-        </Button>
-        <Button
-          variant={curveSettings.showV ? "contained" : "outlined"}
-          color="warning"
-          size="small"
-          onClick={() =>
-            setCurveSettings((prev) => ({ ...prev, showV: !prev.showV }))
-          }
-        >
-          Value (V)
-        </Button>
-        <Button
-          variant={curveSettings.smoothMode ? "contained" : "outlined"}
-          size="small"
-          onClick={() =>
-            setCurveSettings((prev) => ({
-              ...prev,
-              smoothMode: !prev.smoothMode,
-            }))
-          }
-        >
-          Gaussian Falloff
-        </Button>
-      </Stack>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid size="auto">
+          <Button
+            variant={curveSettings.showH ? "contained" : "outlined"}
+            color="error"
+            size="small"
+            onClick={() =>
+              setCurveSettings((prev) => ({ ...prev, showH: !prev.showH }))
+            }
+          >
+            Hue (H)
+          </Button>
+        </Grid>
+        <Grid size="auto">
+          <Button
+            variant={curveSettings.showS ? "contained" : "outlined"}
+            color="success"
+            size="small"
+            onClick={() =>
+              setCurveSettings((prev) => ({ ...prev, showS: !prev.showS }))
+            }
+          >
+            Saturation (S)
+          </Button>
+        </Grid>
+        <Grid size="auto">
+          <Button
+            variant={curveSettings.showV ? "contained" : "outlined"}
+            color="warning"
+            size="small"
+            onClick={() =>
+              setCurveSettings((prev) => ({ ...prev, showV: !prev.showV }))
+            }
+          >
+            Value (V)
+          </Button>
+        </Grid>
+        <Grid size="auto">
+          <Button
+            variant={curveSettings.smoothMode ? "contained" : "outlined"}
+            size="small"
+            onClick={() =>
+              setCurveSettings((prev) => ({
+                ...prev,
+                smoothMode: !prev.smoothMode,
+              }))
+            }
+          >
+            Gaussian Falloff
+          </Button>
+        </Grid>
+      </Grid>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Click points to lock/unlock shades. Locked shades (filled points) are
