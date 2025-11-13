@@ -263,7 +263,9 @@ export const FabThemeSwitcher: React.FC = () => {
               <ListItemText
                 primary={meta.label}
                 secondary={meta.description}
-                primaryTypographyProps={{ fontWeight: isSelected ? 600 : 400 }}
+                slotProps={{
+                  primary: { fontWeight: isSelected ? 600 : 400 },
+                }}
               />
               {isSelected && <Check sx={{ color: "primary.main", ml: 1 }} />}
             </MenuItem>
@@ -304,7 +306,9 @@ export const FabThemeSwitcher: React.FC = () => {
               <ListItemText
                 primary={meta.label}
                 secondary={meta.description}
-                primaryTypographyProps={{ fontWeight: isSelected ? 600 : 400 }}
+                slotProps={{
+                  primary: { fontWeight: isSelected ? 600 : 400 },
+                }}
               />
               {isSelected && <Check sx={{ color: "primary.main", ml: 1 }} />}
             </MenuItem>
@@ -361,7 +365,9 @@ export const FabThemeSwitcher: React.FC = () => {
               <ListItemText
                 primary={meta.label}
                 secondary={meta.description}
-                primaryTypographyProps={{ fontWeight: isSelected ? 600 : 400 }}
+                slotProps={{
+                  primary: { fontWeight: isSelected ? 600 : 400 },
+                }}
               />
               {isSelected && <Check sx={{ color: "primary.main", ml: 1 }} />}
             </MenuItem>
@@ -408,8 +414,10 @@ export const FabThemeSwitcher: React.FC = () => {
             <ListItemText
               primary="Logout"
               secondary={authContext.user.email}
-              primaryTypographyProps={{ fontWeight: 500 }}
-              secondaryTypographyProps={{ fontSize: "0.7rem" }}
+              slotProps={{
+                primary: { fontWeight: 500 },
+                secondary: { fontSize: "0.7rem" },
+              }}
             />
           </MenuItem>
         )}
