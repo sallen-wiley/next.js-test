@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import D3CurveVisualization from "./D3CurveVisualization";
+import { getColorName } from "./ColorNameMapper";
 import {
   Box,
   Typography,
@@ -730,6 +731,11 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
             placeholder="Hue name"
             size="small"
             variant="outlined"
+            helperText={`Suggested: ${getColorName({
+              h: hue.shades.find((s) => s.value === 500)?.hsv.h ?? 0,
+              s: hue.shades.find((s) => s.value === 500)?.hsv.s ?? 0,
+              v: hue.shades.find((s) => s.value === 500)?.hsv.v ?? 0,
+            })}`}
           />
           <FormControl size="small" sx={{ minWidth: 250 }}>
             <InputLabel id="mui-palette-key-label">MUI Palette Key</InputLabel>
@@ -745,6 +751,9 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
                 </MenuItem>
               ))}
             </Select>
+            <FormHelperText>
+              Optional. Select closest MUI palette key
+            </FormHelperText>
           </FormControl>
         </Stack>
         <Stack direction="row" spacing={2}>
