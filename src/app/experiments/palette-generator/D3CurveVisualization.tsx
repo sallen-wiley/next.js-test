@@ -17,7 +17,7 @@ interface HSV {
 
 interface ShadeDefinition {
   id: string;
-  value: number; // MUI shade value: 50, 100, 200, ..., 900
+  label: string; // Display label: "50", "Lightest", etc.
   color: string; // hex format: #RRGGBB
   locked: boolean;
   hsv: HSV;
@@ -651,7 +651,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           .tickValues(shades.map((_, i) => i)) // Use indices for tick positions
           .tickFormat((d) => {
             const index = d as number;
-            return shades[index]?.value.toString() || "";
+            return shades[index]?.label || "";
           })
       );
 

@@ -39,6 +39,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
 import ColorizeIcon from "@mui/icons-material/Colorize";
+import SettingsIcon from "@mui/icons-material/Settings";
 import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 
@@ -55,9 +56,14 @@ interface RGB {
   b: number; // 0-255
 }
 
+interface ShadeConfiguration {
+  id: string; // "1", "2", "3"... (sequential IDs)
+  label: string; // "50", "100" or "Lightest", "Base" etc. (user editable)
+}
+
 interface ShadeDefinition {
   id: string;
-  value: number; // MUI shade value: 50, 100, 200, ..., 900
+  label: string; // Display label: "50", "Lightest", etc.
   color: string; // hex format: #RRGGBB
   locked: boolean;
   hsv: HSV;
@@ -74,6 +80,7 @@ interface HueSet {
   muiName: string; // MUI palette key (primary, secondary, etc.)
   shades: ShadeDefinition[];
   extrapolationMode: "functional" | "functional-saturated" | "expressive";
+  shadeConfig: ShadeConfiguration[]; // Shade count and labels configuration
 }
 
 interface InterpolationPoint {
@@ -299,16 +306,13 @@ const extrapolateWithAnchors = (
   points: InterpolationPoint[],
   targetIndices: number[],
   channel: "h" | "s" | "v",
-  shadeValues: number[],
+  shadeCount: number[],
   mode: "functional" | "functional-saturated" | "expressive"
 ): number[] => {
-  const minShade = shadeValues[0]; // 50
-  const maxShade = shadeValues[shadeValues.length - 1]; // 900
-  const range = maxShade - minShade; // 850
-
-  // Calculate virtual indices for pure white (shade 0) and pure black (shade 1000)
-  const whiteIndex = (-minShade / range) * (shadeValues.length - 1);
-  const blackIndex = ((1000 - minShade) / range) * (shadeValues.length - 1);
+  // Calculate virtual indices for pure white and pure black anchors
+  // These are positioned just outside the actual shade range
+  const whiteIndex = -0.5; // Just before first shade (lighter than lightest)
+  const blackIndex = shadeCount.length - 0.5; // Just after last shade (darker than darkest)
 
   const extendedPoints = [...points];
   const minLockedIndex = points[0].x;
@@ -320,7 +324,7 @@ const extrapolateWithAnchors = (
     if (minLockedIndex > 0) {
       extendedPoints.unshift({ x: whiteIndex, y: points[0].y });
     }
-    if (maxLockedIndex < shadeValues.length - 1) {
+    if (maxLockedIndex < shadeCount.length - 1) {
       extendedPoints.push({ x: blackIndex, y: points[points.length - 1].y });
     }
   } else if (channel === "s") {
@@ -328,7 +332,7 @@ const extrapolateWithAnchors = (
     if (minLockedIndex > 0) {
       extendedPoints.unshift({ x: whiteIndex, y: 0 }); // White anchor (light end)
     }
-    if (maxLockedIndex < shadeValues.length - 1) {
+    if (maxLockedIndex < shadeCount.length - 1) {
       let darkS = 0; // Default to natural black
 
       if (mode === "functional") {
@@ -343,12 +347,22 @@ const extrapolateWithAnchors = (
       extendedPoints.push({ x: blackIndex, y: darkS });
     }
   } else if (channel === "v") {
-    // Value: white is full brightness, black has no brightness
+    // Value: white is full brightness, dark end depends on mode
     if (minLockedIndex > 0) {
       extendedPoints.unshift({ x: whiteIndex, y: 100 }); // White anchor (light end)
     }
-    if (maxLockedIndex < shadeValues.length - 1) {
-      extendedPoints.push({ x: blackIndex, y: 0 }); // Black anchor (dark end)
+    if (maxLockedIndex < shadeCount.length - 1) {
+      let darkV = 0; // Default to pure black
+
+      if (mode === "functional" || mode === "functional-saturated") {
+        darkV = 0; // Natural black (V=0) for UI elements
+      } else if (mode === "expressive") {
+        // In expressive mode, maintain last brightness level for smoother curves
+        // This prevents aggressive black trending
+        darkV = points[points.length - 1].y;
+      }
+
+      extendedPoints.push({ x: blackIndex, y: darkV });
     }
   }
 
@@ -359,7 +373,7 @@ const extrapolateWithFallback = (
   points: InterpolationPoint[],
   targetIndices: number[],
   channel: "h" | "s" | "v",
-  shadeValues: number[],
+  shadeCount: number[],
   mode: "functional" | "functional-saturated" | "expressive"
 ): { values: number[]; anchorUsed: boolean } => {
   // Special handling for hue (always constant for monochromatic palettes)
@@ -375,7 +389,7 @@ const extrapolateWithFallback = (
       points,
       targetIndices,
       channel,
-      shadeValues,
+      shadeCount,
       mode
     );
     return { values: anchored, anchorUsed: true };
@@ -399,9 +413,18 @@ const extrapolateWithFallback = (
   return { values: targetIndices.map(() => 50), anchorUsed: false };
 };
 
-const MUI_SHADE_VALUES = [
-  50, 100, 200, 300, 400, 500, 600, 700, 800, 900,
-] as const;
+const DEFAULT_SHADE_CONFIG: ShadeConfiguration[] = [
+  { id: "1", label: "50" },
+  { id: "2", label: "100" },
+  { id: "3", label: "200" },
+  { id: "4", label: "300" },
+  { id: "5", label: "400" },
+  { id: "6", label: "500" },
+  { id: "7", label: "600" },
+  { id: "8", label: "700" },
+  { id: "9", label: "800" },
+  { id: "10", label: "900" },
+];
 
 // Default color palette values
 const DEFAULT_PALETTE_COLORS: Record<number, string> = {
@@ -445,12 +468,13 @@ const DEFAULT_HUE: HueSet = {
   name: "primary",
   muiName: "primary",
   extrapolationMode: "functional",
-  shades: MUI_SHADE_VALUES.map((val) => {
-    const color = DEFAULT_PALETTE_COLORS[val] || "#808080";
+  shadeConfig: DEFAULT_SHADE_CONFIG,
+  shades: DEFAULT_SHADE_CONFIG.map((config) => {
+    const color = DEFAULT_PALETTE_COLORS[Number(config.label)] || "#808080";
     const hsv = hexToHsv(color);
     return {
-      id: `shade-${val}`,
-      value: val,
+      id: `shade-${config.id}`,
+      label: config.label,
       color,
       locked: false,
       hsv,
@@ -461,22 +485,51 @@ const DEFAULT_HUE: HueSet = {
   }),
 };
 
+// Migration function for old palette format
+const migrateHueSet = (hue: HueSet): HueSet => {
+  // If already has shadeConfig, no migration needed
+  if (hue.shadeConfig) {
+    return hue;
+  }
+
+  // Migrate from old format (shades with .value) to new format (shadeConfig)
+  const shadeConfig = hue.shades.map((shade, index) => ({
+    id: String(index + 1),
+    // @ts-expect-error - old format might have .value property
+    label: String(shade.value || (index + 1) * 100),
+  }));
+
+  return {
+    ...hue,
+    shadeConfig,
+    shades: hue.shades.map((shade, index) => ({
+      ...shade,
+      // @ts-expect-error - old format might have .value property
+      label: String(shade.value || (index + 1) * 100),
+    })),
+  };
+};
+
 function PaletteGenerator() {
-  const [hues, setHues] = useState<HueSet[]>([DEFAULT_HUE]);
+  const [hues, setHues] = useState<HueSet[]>(() => {
+    const initialHues = [DEFAULT_HUE];
+    return initialHues.map(migrateHueSet);
+  });
   const [activeHueId, setActiveHueId] = useState<string>("1");
 
   const activeHue = hues.find((h) => h.id === activeHueId);
 
   const addHue = () => {
     const newId = String(Date.now());
+    const migratedDefaultHue = migrateHueSet(DEFAULT_HUE);
     const newHue = {
-      ...DEFAULT_HUE,
+      ...migratedDefaultHue,
       id: newId,
       name: `hue-${hues.length + 1}`,
       muiName: "",
-      shades: DEFAULT_HUE.shades.map((s) => ({
+      shades: migratedDefaultHue.shades.map((s) => ({
         ...s,
-        id: `${newId}-${s.value}`,
+        id: `${newId}-${s.id}`,
       })),
     };
     setHues([...hues, newHue]);
@@ -496,14 +549,14 @@ function PaletteGenerator() {
   };
 
   const exportPalette = () => {
-    const muiTheme: { palette: Record<string, Record<number, string>> } = {
+    const muiTheme: { palette: Record<string, Record<string, string>> } = {
       palette: {},
     };
 
     hues.forEach((hue) => {
-      const colorSet: Record<number, string> = {};
+      const colorSet: Record<string, string> = {};
       hue.shades.forEach((shade) => {
-        colorSet[shade.value] = shade.color;
+        colorSet[shade.label] = shade.color;
       });
       muiTheme.palette[hue.muiName || hue.name] = colorSet;
     });
@@ -603,11 +656,37 @@ function PaletteGenerator() {
 
 function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
   const [anchorDialogOpen, setAnchorDialogOpen] = useState(false);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
   const updateShade = (index: number, updates: Partial<ShadeDefinition>) => {
     const newShades = [...hue.shades];
     newShades[index] = { ...newShades[index], ...updates };
     onUpdate({ shades: newShades });
+  };
+
+  const handleConfigChange = (newConfig: ShadeConfiguration[]) => {
+    // Create new shades array matching new config length
+    const newShades = newConfig.map((config, newIndex) => {
+      // Try to find corresponding old shade by proportional index
+      const oldIndex = Math.round(
+        (newIndex / Math.max(1, newConfig.length - 1)) *
+          Math.max(1, hue.shades.length - 1)
+      );
+      const oldShade = hue.shades[oldIndex];
+
+      return {
+        id: `shade-${config.id}`,
+        label: config.label,
+        color: oldShade?.color || "#808080",
+        locked: false, // Unlock everything when restructuring
+        hsv: oldShade?.hsv || hexToHsv("#808080"),
+        selectedForH: true,
+        selectedForS: true,
+        selectedForV: true,
+      };
+    });
+
+    onUpdate({ shadeConfig: newConfig, shades: newShades });
   };
 
   const generateShades = () => {
@@ -618,7 +697,6 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
     if (lockedShades.length === 0) return;
 
     const allIndices = hue.shades.map((_: ShadeDefinition, i: number) => i);
-    const shadeValues = MUI_SHADE_VALUES.slice(); // [50, 100, 200, ..., 900]
 
     // HUE: Only use saturated colors (ignore achromatic shades)
     const hPoints = lockedShades
@@ -653,17 +731,17 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
 
     const hResult =
       hPoints.length > 0
-        ? extrapolateWithFallback(hPoints, allIndices, "h", shadeValues, mode)
+        ? extrapolateWithFallback(hPoints, allIndices, "h", allIndices, mode)
         : { values: allIndices.map(() => defaultHue), anchorUsed: false };
 
     const sResult =
       sPoints.length > 0
-        ? extrapolateWithFallback(sPoints, allIndices, "s", shadeValues, mode)
+        ? extrapolateWithFallback(sPoints, allIndices, "s", allIndices, mode)
         : { values: allIndices.map(() => 50), anchorUsed: false };
 
     const vResult =
       vPoints.length > 0
-        ? extrapolateWithFallback(vPoints, allIndices, "v", shadeValues, mode)
+        ? extrapolateWithFallback(vPoints, allIndices, "v", allIndices, mode)
         : { values: allIndices.map(() => 50), anchorUsed: false };
 
     // Check if any channel used anchors
@@ -731,11 +809,11 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
             placeholder="Hue name"
             size="small"
             variant="outlined"
-            helperText={`Suggested: ${getColorName({
-              h: hue.shades.find((s) => s.value === 500)?.hsv.h ?? 0,
-              s: hue.shades.find((s) => s.value === 500)?.hsv.s ?? 0,
-              v: hue.shades.find((s) => s.value === 500)?.hsv.v ?? 0,
-            })}`}
+            helperText={`Suggested: ${(() => {
+              const medianIndex = Math.floor(hue.shades.length / 2);
+              const medianShade = hue.shades[medianIndex];
+              return getColorName(medianShade.hsv);
+            })()}`}
           />
           <FormControl size="small" sx={{ minWidth: 250 }}>
             <InputLabel id="mui-palette-key-label">MUI Palette Key</InputLabel>
@@ -810,14 +888,24 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
           Functional (Rich Darks): Saturated darks (S=100) for rich UI elements.
           Brand Expressive: Maintains color saturation curve for illustrations.
         </FormHelperText>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={generateShades}
-          sx={{ mt: 2, alignSelf: "flex-start" }}
-        >
-          Generate Missing Shades
-        </Button>
+        <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={generateShades}
+            sx={{ alignSelf: "flex-start" }}
+          >
+            Generate Missing Shades
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<SettingsIcon />}
+            onClick={() => setConfigDialogOpen(true)}
+            sx={{ alignSelf: "flex-start" }}
+          >
+            Configure Shades
+          </Button>
+        </Stack>
       </FormControl>
 
       <Box sx={{ mb: 4 }}>
@@ -854,6 +942,14 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Shade Configuration Dialog */}
+      <ShadeConfigurationDialog
+        open={configDialogOpen}
+        onClose={() => setConfigDialogOpen(false)}
+        currentConfig={hue.shadeConfig}
+        onSave={handleConfigChange}
+      />
     </Box>
   );
 }
@@ -1011,7 +1107,7 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
             mb: 1,
           }}
         >
-          {shade.value}
+          {shade.label}
         </Typography>
 
         <TextField
@@ -1162,6 +1258,103 @@ function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+interface ShadeConfigurationDialogProps {
+  open: boolean;
+  onClose: () => void;
+  currentConfig: ShadeConfiguration[];
+  onSave: (newConfig: ShadeConfiguration[]) => void;
+}
+
+function ShadeConfigurationDialog({
+  open,
+  onClose,
+  currentConfig,
+  onSave,
+}: ShadeConfigurationDialogProps) {
+  const [count, setCount] = useState(currentConfig.length);
+  const [configs, setConfigs] = useState(currentConfig);
+
+  // Update configs array when count changes
+  const handleCountChange = (newCount: number) => {
+    if (newCount < 1 || newCount > 20) return;
+
+    if (newCount > configs.length) {
+      // Add new configs with smart defaults
+      const newConfigs = [...configs];
+      for (let i = configs.length; i < newCount; i++) {
+        newConfigs.push({
+          id: String(i + 1),
+          label: String((i + 1) * 100), // Smart default: 100, 200, 300, etc.
+        });
+      }
+      setConfigs(newConfigs);
+    } else {
+      // Remove from end
+      setConfigs(configs.slice(0, newCount));
+    }
+    setCount(newCount);
+  };
+
+  const handleLabelChange = (index: number, newLabel: string) => {
+    const newConfigs = [...configs];
+    newConfigs[index] = { ...newConfigs[index], label: newLabel };
+    setConfigs(newConfigs);
+  };
+
+  const handleSave = () => {
+    onSave(configs);
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Configure Shades</DialogTitle>
+      <DialogContent>
+        <TextField
+          label="Number of Shades"
+          type="number"
+          value={count}
+          onChange={(e) => handleCountChange(Number(e.target.value))}
+          inputProps={{ min: 1, max: 20 }}
+          fullWidth
+          sx={{ mb: 3, mt: 1 }}
+          helperText="Choose between 1 and 20 shades"
+        />
+
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+          Shade Labels (from lightest to darkest)
+        </Typography>
+
+        <Stack spacing={1} sx={{ maxHeight: 400, overflowY: "auto" }}>
+          {configs.map((config, index) => (
+            <TextField
+              key={config.id}
+              label={`Shade ${index + 1}`}
+              value={config.label}
+              onChange={(e) => handleLabelChange(index, e.target.value)}
+              size="small"
+              fullWidth
+              helperText={
+                index === 0
+                  ? "Lightest shade"
+                  : index === configs.length - 1
+                  ? "Darkest shade"
+                  : ""
+              }
+            />
+          ))}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained">
+          Save Configuration
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 
