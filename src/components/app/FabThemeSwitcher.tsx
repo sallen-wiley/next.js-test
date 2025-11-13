@@ -18,10 +18,12 @@ import LightMode from "@mui/icons-material/LightMode";
 import DarkMode from "@mui/icons-material/DarkMode";
 import SettingsBrightness from "@mui/icons-material/SettingsBrightness";
 import Check from "@mui/icons-material/Check";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { useThemeContext, ThemeName, ColorMode } from "@/contexts/ThemeContext";
 import { useColorScheme } from "@mui/material/styles";
 import { useLogoContext } from "@/contexts/LogoContext";
 import type { TenantType } from "@/components/product/PrimaryLogo";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 // Theme metadata for better UX
 const themeMetadata: Record<
@@ -123,10 +125,21 @@ const tenantMetadata: Record<
   },
 };
 
+// Safe hook wrapper that doesn't throw
+function useSafeAuth() {
+  try {
+    return useAuth();
+  } catch {
+    return null;
+  }
+}
+
+// Main component
 export const FabThemeSwitcher: React.FC = () => {
   const { currentTheme, setTheme, availableThemes } = useThemeContext();
   const { mode, setMode, systemMode } = useColorScheme();
   const { currentTenant, setTenant, availableTenants } = useLogoContext();
+  const authContext = useSafeAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -148,6 +161,13 @@ export const FabThemeSwitcher: React.FC = () => {
 
   const handleTenantChange = (tenant: TenantType) => {
     setTenant(tenant);
+  };
+
+  const handleLogout = async () => {
+    handleClose();
+    if (authContext?.signOut) {
+      await authContext.signOut();
+    }
   };
 
   const getCurrentModeDescription = () => {
@@ -370,6 +390,29 @@ export const FabThemeSwitcher: React.FC = () => {
             </Typography>
           )}
         </Box>
+
+        {/* Logout Option (only if user is logged in) */}
+        {authContext?.user && <Divider sx={{ my: 1 }} />}
+        {authContext?.user && (
+          <MenuItem
+            onClick={handleLogout}
+            sx={{
+              mx: 1,
+              borderRadius: 1,
+              color: "error.main",
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              <LogoutIcon color="error" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Logout"
+              secondary={authContext.user.email}
+              primaryTypographyProps={{ fontWeight: 500 }}
+              secondaryTypographyProps={{ fontSize: "0.7rem" }}
+            />
+          </MenuItem>
+        )}
       </Menu>
     </>
   );
