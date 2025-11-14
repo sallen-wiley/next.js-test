@@ -90,7 +90,8 @@
     "[typescript]": { "editor.formatOnSave": true },
     "[json]": { "editor.formatOnSave": true },
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
-    }
+      "source.fixAll.eslint": "explicit"
+    },
+    "window.title": "📓 storybook"
   }
 }
