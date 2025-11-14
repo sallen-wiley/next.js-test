@@ -1,7 +1,7 @@
 {
   "folders": [
     {
-    "path": "./"
+      "path": "./"
     }
   ],
   "tasks": {
@@ -34,16 +34,49 @@
         "label": "Echo Test",
         "type": "shell",
         "command": "echo Hello World"
+      },
+      {
+        "label": "Commit to Repo",
+        "type": "shell",
+        "command": "git add -A && echo 'Enter commit message:' && read msg && git commit -m \"$msg\" && git pull && git push",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
       }
     ]
   },
   "extensions": {
-    "recommendations": []
+    "recommendations": [
+      "ms-vscode.vscode-storybook",
+      "PKief.material-icon-theme",
+      "naumovs.color-highlight",
+      "dsznajder.es7-react-js-snippets",
+      "figma.figma-vscode-extension",
+      "github.copilot",
+      "github.copilot-chat",
+      "esbenp.prettier-vscode"
+    ]
   },
   "settings": {
+    "editor.formatOnSave": true,
+    "files.associations": {
+      "*.stories.tsx": "typescriptreact"
+    },
+    "emmet.includeLanguages": {
+      "javascript": "javascriptreact",
+      "typescript": "typescriptreact",
+      "scss": "css"
+    },
+    "typescript.preferences.includePackageJsonAutoImports": "off",
+    "typescript.suggest.autoImports": true,
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
     "terminal.integrated.defaultProfile.osx": "zsh",
     "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.splitCwd": "workspaceRoot",
     "todo-tree.filtering.excludeGlobs": [
       "**/docs/**",
       "**/internal/**",
@@ -51,5 +84,13 @@
     ],
     "search.exclude": {
       "**/docs/**": true
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[javascript]": { "editor.formatOnSave": true },
+    "[typescript]": { "editor.formatOnSave": true },
+    "[json]": { "editor.formatOnSave": true },
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
     }
-      "tasks": [
+  }
+}
