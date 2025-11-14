@@ -34,6 +34,10 @@ src/
 └── fonts/                 # Font assets
 ```
 
+## VS Code Workspace Personalization
+
+For a personalized development environment in VS Code, refer to `project.code-workspace` in the project root. This file contains recommended tasks, settings, and extension suggestions tailored for Storybook, Material-UI, and Next.js workflows. You can further customize your workspace by editing this file to match your preferences.
+
 ## Getting Started
 
 1. Install dependencies:
