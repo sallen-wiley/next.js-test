@@ -2,6 +2,10 @@
 
 This is a comprehensive demonstration project showcasing Material-UI v7 with custom theming, design system integration, and Figma Code Connect workflow.
 
+## Project Documentation
+
+**Always refer to `README.md` for instructions on how to operate the project.** The README contains essential setup steps, project structure, and operational guidance. If instructions change or are expanded during development, suggest the user edit the README for clarity and future reference.
+
 ## Architecture Overview
 
 ### Multi-Theme System
