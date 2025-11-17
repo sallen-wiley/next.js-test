@@ -537,15 +537,19 @@ function PaletteGenerator() {
   };
 
   const removeHue = (id: string) => {
-    const filtered = hues.filter((h) => h.id !== id);
-    setHues(filtered);
-    if (activeHueId === id && filtered.length > 0) {
-      setActiveHueId(filtered[0].id);
-    }
+    setHues((currentHues) => {
+      const filtered = currentHues.filter((h) => h.id !== id);
+      if (activeHueId === id && filtered.length > 0) {
+        setActiveHueId(filtered[0].id);
+      }
+      return filtered;
+    });
   };
 
   const updateHue = (id: string, updates: Partial<HueSet>) => {
-    setHues(hues.map((h) => (h.id === id ? { ...h, ...updates } : h)));
+    setHues((currentHues) =>
+      currentHues.map((h) => (h.id === id ? { ...h, ...updates } : h))
+    );
   };
 
   const exportPalette = () => {
@@ -657,6 +661,22 @@ function PaletteGenerator() {
 function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
   const [anchorDialogOpen, setAnchorDialogOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+
+  // Track local hue name to prevent resets during graph updates
+  const [localName, setLocalName] = useState(hue.name);
+  const [localMuiName, setLocalMuiName] = useState(hue.muiName);
+
+  // Sync local state when hue prop changes from external updates (tab switch, etc.)
+  // But NOT when just shades change (to preserve user input during dragging)
+  const prevHueIdRef = React.useRef(hue.id);
+  React.useEffect(() => {
+    if (prevHueIdRef.current !== hue.id) {
+      // Different hue selected - sync everything
+      setLocalName(hue.name);
+      setLocalMuiName(hue.muiName);
+      prevHueIdRef.current = hue.id;
+    }
+  }, [hue.id, hue.name, hue.muiName]);
 
   const updateShade = (index: number, updates: Partial<ShadeDefinition>) => {
     const newShades = [...hue.shades];
@@ -804,8 +824,11 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         >
           <TextField
             label="Hue Name"
-            value={hue.name}
-            onChange={(e) => onUpdate({ name: e.target.value })}
+            value={localName}
+            onChange={(e) => {
+              setLocalName(e.target.value);
+              onUpdate({ name: e.target.value });
+            }}
             placeholder="Hue name"
             size="small"
             variant="outlined"
@@ -820,8 +843,11 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
             <Select
               labelId="mui-palette-key-label"
               label="MUI Palette Key"
-              value={hue.muiName}
-              onChange={(e) => onUpdate({ muiName: e.target.value })}
+              value={localMuiName}
+              onChange={(e) => {
+                setLocalMuiName(e.target.value);
+                onUpdate({ muiName: e.target.value });
+              }}
             >
               {MUI_PALETTE_KEYS.map((key) => (
                 <MenuItem key={key} value={key}>
@@ -1278,6 +1304,14 @@ function ShadeConfigurationDialog({
 }: ShadeConfigurationDialogProps) {
   const [count, setCount] = useState(currentConfig.length);
   const [configs, setConfigs] = useState(currentConfig);
+
+  // Reset local state when dialog opens or currentConfig changes
+  React.useEffect(() => {
+    if (open) {
+      setCount(currentConfig.length);
+      setConfigs(currentConfig);
+    }
+  }, [open, currentConfig]);
 
   // Update configs array when count changes
   const handleCountChange = (newCount: number) => {

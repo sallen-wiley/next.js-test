@@ -192,12 +192,13 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
   // Create a stable key based on actual shade data (not the parent hue object)
   // Only recalculate when the stringified data actually changes
+  // Include label so chart re-initializes when shade labels change
   const shadesDataString = shades
     .map(
       (s: ShadeDefinition) =>
-        `${s.id}-${s.color}-${s.locked}-${s.hsv.h.toFixed(2)}-${s.hsv.s.toFixed(
+        `${s.id}-${s.label}-${s.color}-${s.locked}-${s.hsv.h.toFixed(
           2
-        )}-${s.hsv.v.toFixed(2)}`
+        )}-${s.hsv.s.toFixed(2)}-${s.hsv.v.toFixed(2)}`
     )
     .join("|");
   const shadesKey = useMemo(() => shadesDataString, [shadesDataString]);
@@ -793,7 +794,8 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     handleDrag,
     handleDragEnd,
     onUpdate,
-    shadesLength, // Only reinitialize if number of shades changes, not on data updates
+    shadesLength, // Reinitialize if number of shades changes
+    shadesKey, // Reinitialize if shade data (including labels) changes
   ]);
 
   // UPDATE PHASE: Only update attributes of existing elements (runs at 60fps during drag)
@@ -960,17 +962,17 @@ export default React.memo(D3CurveVisualization, (prevProps, nextProps) => {
   const prevKey = prevProps.shades
     .map(
       (s: ShadeDefinition) =>
-        `${s.id}-${s.color}-${s.locked}-${s.hsv.h.toFixed(2)}-${s.hsv.s.toFixed(
+        `${s.id}-${s.label}-${s.color}-${s.locked}-${s.hsv.h.toFixed(
           2
-        )}-${s.hsv.v.toFixed(2)}`
+        )}-${s.hsv.s.toFixed(2)}-${s.hsv.v.toFixed(2)}`
     )
     .join("|");
   const nextKey = nextProps.shades
     .map(
       (s: ShadeDefinition) =>
-        `${s.id}-${s.color}-${s.locked}-${s.hsv.h.toFixed(2)}-${s.hsv.s.toFixed(
+        `${s.id}-${s.label}-${s.color}-${s.locked}-${s.hsv.h.toFixed(
           2
-        )}-${s.hsv.v.toFixed(2)}`
+        )}-${s.hsv.s.toFixed(2)}-${s.hsv.v.toFixed(2)}`
     )
     .join("|");
   return prevKey === nextKey;
