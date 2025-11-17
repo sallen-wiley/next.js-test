@@ -46,6 +46,18 @@
           "focus": false,
           "panel": "shared"
         }
+      },
+      {
+        "label": "Update with Repo",
+        "type": "shell",
+        "command": "git fetch --all && git pull --rebase",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
       }
     ]
   },
