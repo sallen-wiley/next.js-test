@@ -234,12 +234,6 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     return d3.scaleLinear().domain([0, 360]).range([height, 0]);
   }, [height]);
 
-  // Ref to access current shades without closure capture
-  const shadesRef = useRef(shades);
-  useEffect(() => {
-    shadesRef.current = shades;
-  }, [shades]);
-
   // Line generators - using smooth curves by default for better visual appeal
   const lineH = useMemo(() => {
     return d3
@@ -275,9 +269,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     ) => {
       if (!curveSettings.smoothMode) return null;
 
-      // Use ref to get current shades without capturing in closure
-      const currentShades = shadesRef.current;
-      const newShades = [...currentShades];
+      const newShades = [...shades];
       const sigma = 0.8;
       const maxDistance = 2;
 
@@ -361,7 +353,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
       return newShades;
     },
-    [curveSettings.smoothMode]
+    [curveSettings.smoothMode, shades]
   );
 
   // Handle drag events with requestAnimationFrame for smooth performance
