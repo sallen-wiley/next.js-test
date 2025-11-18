@@ -33,6 +33,7 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
+  Link,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import LockIcon from "@mui/icons-material/Lock";
@@ -93,20 +94,20 @@ interface InterpolationPoint {
 // Component prop interfaces
 interface HueEditorProps {
   hue: HueSet;
-  onUpdate: (updates: Partial<HueSet>) => void;
+  onUpdate: (
+    updates: Partial<HueSet> | ((current: HueSet) => Partial<HueSet>)
+  ) => void;
   onRemove: () => void;
   canRemove: boolean;
 }
 
 interface ShadeGridProps {
   shades: ShadeDefinition[];
-  hue: HueSet; // NEW: For passing to ShadeCard
-  onShadeUpdate: (index: number, updates: Partial<ShadeDefinition>) => void;
+  onShadeUpdate: (shadeId: string, updates: Partial<ShadeDefinition>) => void;
 }
 
 interface ShadeCardProps {
   shade: ShadeDefinition;
-  hue: HueSet; // NEW: For hue context and mode information
   onUpdate: (updates: Partial<ShadeDefinition>) => void;
 }
 
@@ -205,18 +206,6 @@ const rgbToHex = (r: number, g: number, b: number): string => {
 const hexToHsv = (hex: string): HSV => {
   const rgb = hexToRgb(hex);
   return rgbToHsv(rgb.r, rgb.g, rgb.b);
-};
-
-// Helper function to ensure HSV and color (hex) are always in sync
-// This is the canonical way to derive hex from HSV
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const syncColorFromHsv = (
-  shade: ShadeDefinition,
-  newHsv: HSV
-): ShadeDefinition => {
-  const rgb = hsvToRgb(newHsv.h, newHsv.s, newHsv.v);
-  const color = rgbToHex(rgb.r, rgb.g, rgb.b);
-  return { ...shade, hsv: newHsv, color };
 };
 
 const calculateContrast = (hex1: string, hex2: string): number => {
@@ -563,9 +552,17 @@ function PaletteGenerator() {
     });
   };
 
-  const updateHue = (id: string, updates: Partial<HueSet>) => {
+  const updateHue = (
+    id: string,
+    updates: Partial<HueSet> | ((current: HueSet) => Partial<HueSet>)
+  ) => {
     setHues((currentHues) =>
-      currentHues.map((h) => (h.id === id ? { ...h, ...updates } : h))
+      currentHues.map((h) => {
+        if (h.id !== id) return h;
+        const actualUpdates =
+          typeof updates === "function" ? updates(h) : updates;
+        return { ...h, ...actualUpdates };
+      })
     );
   };
 
@@ -729,11 +726,17 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
     [medianShade?.color] // Use color as dependency since it's always synced from HSV
   );
 
-  const updateShade = (index: number, updates: Partial<ShadeDefinition>) => {
-    const newShades = [...hue.shades];
-    newShades[index] = { ...newShades[index], ...updates };
-    onUpdate({ shades: newShades });
-  };
+  const updateShade = React.useCallback(
+    (shadeId: string, updates: Partial<ShadeDefinition>) => {
+      // Use functional update to get current state and avoid stale closures
+      onUpdate((currentHue) => ({
+        shades: currentHue.shades.map((shade) =>
+          shade.id === shadeId ? { ...shade, ...updates } : shade
+        ),
+      }));
+    },
+    [onUpdate]
+  );
 
   const handleConfigChange = (newConfig: ShadeConfiguration[]) => {
     // Create new shades array matching new config length
@@ -746,7 +749,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
       const oldShade = hue.shades[oldIndex];
 
       return {
-        id: `shade-${config.id}`,
+        id: `${hue.id}-shade-${config.id}`,
         label: config.label,
         color: oldShade?.color || "#808080",
         locked: false, // Unlock everything when restructuring
@@ -883,7 +886,22 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
             placeholder="Hue name"
             size="small"
             variant="outlined"
-            helperText={`Suggested: ${suggestedColorName}`}
+            helperText={
+              <>
+                Suggested: {suggestedColorName} |{" "}
+                <Link
+                  component="button"
+                  // variant="body2"
+                  onClick={() => {
+                    setLocalName(suggestedColorName);
+                    onUpdate({ name: suggestedColorName });
+                  }}
+                  sx={{ verticalAlign: "baseline" }}
+                >
+                  use this
+                </Link>
+              </>
+            }
           />
           <FormControl size="small" sx={{ minWidth: 250 }}>
             <InputLabel id="mui-palette-key-label">MUI Palette Key</InputLabel>
@@ -989,7 +1007,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         </Paper>
       </Box>
 
-      <ShadeGrid shades={hue.shades} hue={hue} onShadeUpdate={updateShade} />
+      <ShadeGrid shades={hue.shades} onShadeUpdate={updateShade} />
 
       {/* Anchor Warning Dialog */}
       <Dialog
@@ -1029,27 +1047,54 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
   );
 }
 
-function ShadeGrid({ shades, hue, onShadeUpdate }: ShadeGridProps) {
+function ShadeGrid({ shades, onShadeUpdate }: ShadeGridProps) {
   return (
     <Grid container spacing={2}>
-      {shades.map((shade: ShadeDefinition, index: number) => (
+      {shades.map((shade: ShadeDefinition) => (
         <Grid key={shade.id} size={{ xs: 12, sm: 6, md: 4, lg: 3, xl: 2.4 }}>
-          <ShadeCard
-            shade={shade}
-            hue={hue}
-            onUpdate={(updates: Partial<ShadeDefinition>) =>
-              onShadeUpdate(index, updates)
-            }
-          />
+          <ShadeCardWrapper shade={shade} onShadeUpdate={onShadeUpdate} />
         </Grid>
       ))}
     </Grid>
   );
 }
 
+// Wrapper component to memoize the onUpdate callback per shade
+const ShadeCardWrapper = React.memo(
+  function ShadeCardWrapper({
+    shade,
+    onShadeUpdate,
+  }: {
+    shade: ShadeDefinition;
+    onShadeUpdate: (shadeId: string, updates: Partial<ShadeDefinition>) => void;
+  }) {
+    const handleUpdate = React.useCallback(
+      (updates: Partial<ShadeDefinition>) => {
+        onShadeUpdate(shade.id, updates);
+      },
+      [shade.id, onShadeUpdate]
+    );
+
+    return <ShadeCard shade={shade} onUpdate={handleUpdate} />;
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if shade actually changed
+    return (
+      prevProps.shade === nextProps.shade &&
+      prevProps.onShadeUpdate === nextProps.onShadeUpdate
+    );
+  }
+);
+
 const ShadeCard = React.memo(
-  function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
+  function ShadeCard({ shade, onUpdate }: ShadeCardProps) {
     const colorInputRef = React.useRef<HTMLInputElement>(null);
+    const [hexInput, setHexInput] = React.useState(shade.color);
+
+    // Sync local hex input with shade.color when shade changes externally
+    React.useEffect(() => {
+      setHexInput(shade.color);
+    }, [shade.color]);
 
     const contrastWhite = useMemo(
       () => calculateContrast(shade.color, "#ffffff"),
@@ -1073,30 +1118,30 @@ const ShadeCard = React.memo(
 
     const handleColorChange = React.useCallback(
       (newColor: string) => {
-        if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
-          // Get context hue from other saturated shades in the palette
-          const saturatedShades = hue.shades.filter((s) => s.hsv.s > 1);
-          const contextHue =
-            saturatedShades.length > 0 ? saturatedShades[0].hsv.h : shade.hsv.h;
+        // Normalize to uppercase for consistency
+        const normalizedColor = newColor.toUpperCase();
+        if (/^#[0-9A-F]{6}$/.test(normalizedColor)) {
+          const hsv = hexToHsv(normalizedColor);
 
-          const hsv = hexToHsv(newColor);
-
-          // If the new color is achromatic, use context hue
+          // If the new color is achromatic, preserve the current shade's hue
+          // This prevents the hue from being set to 0 and affecting interpolation
           if (hsv.s < 1) {
-            hsv.h = contextHue;
+            hsv.h = shade.hsv.h;
           }
 
           // Clear extrapolationMethod when user manually edits
           onUpdate({
-            color: newColor,
+            color: normalizedColor,
             hsv,
             extrapolationMethod: undefined,
             generationMode: undefined,
           });
         }
       },
-      [hue.shades, shade.hsv.h, onUpdate]
+      [shade.hsv.h, onUpdate]
     );
+
+    // Note: shade.hsv.h is a primitive value, safe to use in dependencies
 
     return (
       <Card
@@ -1195,18 +1240,24 @@ const ShadeCard = React.memo(
           </Typography>
 
           <TextField
-            value={shade.color}
+            value={hexInput}
             onChange={(e) => {
-              const newColor = e.target.value;
-              // Allow any input that starts with # and contains only valid hex characters
-              if (/^#[0-9A-Fa-f]*$/.test(newColor) || newColor === "#") {
-                // Only update HSV if we have a complete valid hex color
-                if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
+              const newColor = e.target.value.toUpperCase();
+
+              // Allow typing only valid hex characters
+              if (/^#[0-9A-F]{0,6}$/.test(newColor) || newColor === "") {
+                setHexInput(newColor);
+
+                // Only update parent state if we have a complete valid hex color
+                if (/^#[0-9A-F]{6}$/.test(newColor)) {
                   handleColorChange(newColor);
-                } else {
-                  // Update just the color display for partial input
-                  onUpdate({ color: newColor, hsv: shade.hsv });
                 }
+              }
+            }}
+            onBlur={() => {
+              // On blur, reset to valid color if input is invalid
+              if (!/^#[0-9A-F]{6}$/.test(hexInput)) {
+                setHexInput(shade.color);
               }
             }}
             size="small"
@@ -1355,7 +1406,10 @@ const ShadeCard = React.memo(
       prev.label === next.label &&
       prev.locked === next.locked &&
       prev.extrapolationMethod === next.extrapolationMethod &&
-      prev.generationMode === next.generationMode
+      prev.generationMode === next.generationMode &&
+      prev.hsv.h === next.hsv.h &&
+      prev.hsv.s === next.hsv.s &&
+      prev.hsv.v === next.hsv.v
     );
   }
 );
