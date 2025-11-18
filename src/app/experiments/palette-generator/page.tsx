@@ -1302,20 +1302,27 @@ function ShadeConfigurationDialog({
   currentConfig,
   onSave,
 }: ShadeConfigurationDialogProps) {
-  const [count, setCount] = useState(currentConfig.length);
+  const [countInput, setCountInput] = useState(String(currentConfig.length));
   const [configs, setConfigs] = useState(currentConfig);
 
   // Reset local state when dialog opens or currentConfig changes
   React.useEffect(() => {
     if (open) {
-      setCount(currentConfig.length);
+      setCountInput(String(currentConfig.length));
       setConfigs(currentConfig);
     }
   }, [open, currentConfig]);
 
   // Update configs array when count changes
-  const handleCountChange = (newCount: number) => {
-    if (newCount < 1 || newCount > 20) return;
+  const handleCountChange = (inputValue: string) => {
+    // Always update the input display
+    setCountInput(inputValue);
+
+    // Parse and validate
+    const newCount = parseInt(inputValue, 10);
+
+    // Only update configs if we have a valid number in range
+    if (isNaN(newCount) || newCount < 1 || newCount > 20) return;
 
     if (newCount > configs.length) {
       // Add new configs with smart defaults
@@ -1331,7 +1338,6 @@ function ShadeConfigurationDialog({
       // Remove from end
       setConfigs(configs.slice(0, newCount));
     }
-    setCount(newCount);
   };
 
   const handleLabelChange = (index: number, newLabel: string) => {
@@ -1346,18 +1352,37 @@ function ShadeConfigurationDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth scroll="body">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      scroll="paper"
+    >
       <DialogTitle>Configure Shades</DialogTitle>
       <DialogContent>
         <TextField
           label="Number of Shades"
           type="number"
-          value={count}
-          onChange={(e) => handleCountChange(Number(e.target.value))}
+          value={countInput}
+          onChange={(e) => handleCountChange(e.target.value)}
+          onBlur={() => {
+            // On blur, ensure we have a valid value
+            const num = parseInt(countInput, 10);
+            if (isNaN(num) || num < 1) {
+              setCountInput("1");
+            } else if (num > 20) {
+              setCountInput("20");
+            }
+          }}
           slotProps={{ htmlInput: { min: 1, max: 20 } }}
           fullWidth
           sx={{ mb: 3, mt: 1 }}
           helperText="Choose between 1 and 20 shades"
+          error={(() => {
+            const num = parseInt(countInput, 10);
+            return isNaN(num) || num < 1 || num > 20;
+          })()}
         />
 
         <Typography variant="subtitle2" sx={{ mb: 2 }}>
@@ -1379,7 +1404,14 @@ function ShadeConfigurationDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained">
+        <Button
+          onClick={handleSave}
+          variant="contained"
+          disabled={(() => {
+            const num = parseInt(countInput, 10);
+            return isNaN(num) || num < 1 || num > 20;
+          })()}
+        >
           Save Configuration
         </Button>
       </DialogActions>
