@@ -31,6 +31,8 @@ import {
   MenuItem,
   InputLabel,
   Paper,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import LockIcon from "@mui/icons-material/Lock";
@@ -517,6 +519,9 @@ function PaletteGenerator() {
   });
   const [activeHueId, setActiveHueId] = useState<string>("1");
 
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
+
   const activeHue = hues.find((h) => h.id === activeHueId);
 
   const addHue = () => {
@@ -610,39 +615,64 @@ function PaletteGenerator() {
           </Box>
         </Stack>
 
-        <Box sx={{ mb: 4, borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={activeHueId}
-            onChange={(event, newValue) => {
-              if (newValue === "add-hue") {
-                addHue();
-              } else if (newValue === "export") {
-                exportPalette();
-              } else {
-                setActiveHueId(newValue);
-              }
-            }}
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            aria-label="hue selection tabs"
-          >
-            {hues.map((hue) => (
-              <Tab key={hue.id} label={hue.name} value={hue.id} />
-            ))}
-            <Tab
-              icon={<AddIcon />}
-              iconPosition="start"
-              label="Add Hue"
-              value="add-hue"
-            />
-            <Tab
-              icon={<DownloadIcon />}
-              iconPosition="start"
-              label="Export JSON"
-              value="export"
-            />
-          </Tabs>
+        <Box
+          sx={{
+            mb: 4,
+            borderBottom: 1,
+            borderColor: "divider",
+            display: "flex",
+            alignItems: "flex-end",
+          }}
+        >
+          <Box sx={{ flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
+            <Tabs
+              value={activeHueId}
+              onChange={(event, newValue) => {
+                if (newValue === "add-hue") {
+                  addHue();
+                } else {
+                  setActiveHueId(newValue);
+                }
+              }}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              aria-label="hue selection tabs"
+              sx={{
+                "& .MuiTabs-scrollButtons.Mui-disabled": {
+                  opacity: 0.3,
+                },
+              }}
+            >
+              {hues.map((hue) => (
+                <Tab key={hue.id} label={hue.name} value={hue.id} />
+              ))}
+              <Tab
+                icon={<AddIcon />}
+                iconPosition={isDesktop ? "start" : undefined}
+                label={isDesktop ? "Add Hue" : undefined}
+                value="add-hue"
+                aria-label="Add Hue"
+                sx={{
+                  minWidth: { xs: 48, sm: 90 },
+                }}
+              />
+            </Tabs>
+          </Box>
+          <Box sx={{ flexShrink: 0 }}>
+            <Tabs value={false} aria-label="actions">
+              <Tab
+                icon={<DownloadIcon />}
+                iconPosition={isDesktop ? "start" : undefined}
+                label={isDesktop ? "Export JSON" : undefined}
+                onClick={exportPalette}
+                aria-label="Export JSON"
+                sx={{
+                  minWidth: { xs: 48, sm: 90 },
+                }}
+              />
+            </Tabs>
+          </Box>
         </Box>
 
         {activeHue && (
