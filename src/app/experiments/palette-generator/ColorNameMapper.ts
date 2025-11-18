@@ -297,10 +297,23 @@ function calculateDeltaE(lab1: LAB, lab2: LAB): number {
  * Maps an HSV color to the closest HTML/CSS color name using LAB color space.
  * Returns both the name and the Delta E distance.
  */
+// Simple cache with size limit to avoid expensive LAB conversions
+const colorNameCache = new Map<string, { name: string; distance: number }>();
+const MAX_CACHE_SIZE = 500;
+
 export function getClosestColorName(hsv: HSV): {
   name: string;
   distance: number;
 } {
+  // Create cache key with 1 decimal precision (balance between hits and uniqueness)
+  const key = `${hsv.h.toFixed(1)}-${hsv.s.toFixed(1)}-${hsv.v.toFixed(1)}`;
+
+  // Return cached result if available
+  const cached = colorNameCache.get(key);
+  if (cached) {
+    return cached;
+  }
+
   // Convert HSV to RGB first, then to LAB
   const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
   const inputLab = rgbToLab(rgb.r, rgb.g, rgb.b);
@@ -316,10 +329,22 @@ export function getClosestColorName(hsv: HSV): {
     }
   }
 
-  return {
+  const result = {
     name: closestColor.name,
     distance: minDistance,
   };
+
+  // Store result with simple size-based eviction
+  if (colorNameCache.size >= MAX_CACHE_SIZE) {
+    // Remove first (oldest) entry
+    const firstKey = colorNameCache.keys().next().value;
+    if (firstKey) {
+      colorNameCache.delete(firstKey);
+    }
+  }
+  colorNameCache.set(key, result);
+
+  return result;
 }
 
 /**

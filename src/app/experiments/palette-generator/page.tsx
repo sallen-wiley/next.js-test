@@ -207,6 +207,18 @@ const hexToHsv = (hex: string): HSV => {
   return rgbToHsv(rgb.r, rgb.g, rgb.b);
 };
 
+// Helper function to ensure HSV and color (hex) are always in sync
+// This is the canonical way to derive hex from HSV
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const syncColorFromHsv = (
+  shade: ShadeDefinition,
+  newHsv: HSV
+): ShadeDefinition => {
+  const rgb = hsvToRgb(newHsv.h, newHsv.s, newHsv.v);
+  const color = rgbToHex(rgb.r, rgb.g, rgb.b);
+  return { ...shade, hsv: newHsv, color };
+};
+
 const calculateContrast = (hex1: string, hex2: string): number => {
   const getLuminance = (hex: string): number => {
     const rgb = [
@@ -708,6 +720,15 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
     }
   }, [hue.id, hue.name, hue.muiName]);
 
+  // Memoize color name suggestion to prevent expensive recalculation on every render
+  const medianIndex = Math.floor(hue.shades.length / 2);
+  const medianShade = hue.shades[medianIndex];
+  const suggestedColorName = useMemo(
+    () => getColorName(medianShade?.hsv || { h: 0, s: 0, v: 50 }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [medianShade?.color] // Use color as dependency since it's always synced from HSV
+  );
+
   const updateShade = (index: number, updates: Partial<ShadeDefinition>) => {
     const newShades = [...hue.shades];
     newShades[index] = { ...newShades[index], ...updates };
@@ -862,11 +883,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
             placeholder="Hue name"
             size="small"
             variant="outlined"
-            helperText={`Suggested: ${(() => {
-              const medianIndex = Math.floor(hue.shades.length / 2);
-              const medianShade = hue.shades[medianIndex];
-              return getColorName(medianShade.hsv);
-            })()}`}
+            helperText={`Suggested: ${suggestedColorName}`}
           />
           <FormControl size="small" sx={{ minWidth: 250 }}>
             <InputLabel id="mui-palette-key-label">MUI Palette Key</InputLabel>
@@ -1030,294 +1047,318 @@ function ShadeGrid({ shades, hue, onShadeUpdate }: ShadeGridProps) {
   );
 }
 
-function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
-  const colorInputRef = React.useRef<HTMLInputElement>(null);
+const ShadeCard = React.memo(
+  function ShadeCard({ shade, hue, onUpdate }: ShadeCardProps) {
+    const colorInputRef = React.useRef<HTMLInputElement>(null);
 
-  const contrastWhite = useMemo(
-    () => calculateContrast(shade.color, "#ffffff"),
-    [shade.color]
-  );
-  const contrastBlack = useMemo(
-    () => calculateContrast(shade.color, "#000000"),
-    [shade.color]
-  );
+    const contrastWhite = useMemo(
+      () => calculateContrast(shade.color, "#ffffff"),
+      [shade.color]
+    );
+    const contrastBlack = useMemo(
+      () => calculateContrast(shade.color, "#000000"),
+      [shade.color]
+    );
 
-  const passesAA = contrastWhite >= 4.5 || contrastBlack >= 4.5;
-  const passesAAA = contrastWhite >= 7 || contrastBlack >= 7;
+    const { passesAA, passesAAA, textColor, isAchromatic } = useMemo(() => {
+      const cWhite = contrastWhite;
+      const cBlack = contrastBlack;
+      return {
+        passesAA: cWhite >= 4.5 || cBlack >= 4.5,
+        passesAAA: cWhite >= 7 || cBlack >= 7,
+        textColor: cWhite > cBlack ? "#fff" : "#000",
+        isAchromatic: shade.hsv.s < 1,
+      };
+    }, [contrastWhite, contrastBlack, shade.hsv.s]);
 
-  const textColor = contrastWhite > contrastBlack ? "#fff" : "#000";
-  const isAchromatic = shade.hsv.s < 1;
+    const handleColorChange = React.useCallback(
+      (newColor: string) => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
+          // Get context hue from other saturated shades in the palette
+          const saturatedShades = hue.shades.filter((s) => s.hsv.s > 1);
+          const contextHue =
+            saturatedShades.length > 0 ? saturatedShades[0].hsv.h : shade.hsv.h;
 
-  const handleColorChange = (newColor: string) => {
-    if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
-      // Get context hue from other saturated shades in the palette
-      const saturatedShades = hue.shades.filter((s) => s.hsv.s > 1);
-      const contextHue =
-        saturatedShades.length > 0 ? saturatedShades[0].hsv.h : shade.hsv.h;
+          const hsv = hexToHsv(newColor);
 
-      const hsv = hexToHsv(newColor);
+          // If the new color is achromatic, use context hue
+          if (hsv.s < 1) {
+            hsv.h = contextHue;
+          }
 
-      // If the new color is achromatic, use context hue
-      if (hsv.s < 1) {
-        hsv.h = contextHue;
-      }
+          // Clear extrapolationMethod when user manually edits
+          onUpdate({
+            color: newColor,
+            hsv,
+            extrapolationMethod: undefined,
+            generationMode: undefined,
+          });
+        }
+      },
+      [hue.shades, shade.hsv.h, onUpdate]
+    );
 
-      // Clear extrapolationMethod when user manually edits
-      onUpdate({
-        color: newColor,
-        hsv,
-        extrapolationMethod: undefined,
-        generationMode: undefined,
-      });
-    }
-  };
-
-  return (
-    <Card
-      sx={{
-        bgcolor: shade.color,
-        minHeight: 200,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        border: 2,
-        borderColor: shade.locked ? "primary.main" : "divider",
-        position: "relative", // For absolute positioning of badge
-      }}
-    >
-      {/* Top Right Chip Container */}
-      <Box
+    return (
+      <Card
         sx={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          zIndex: 1,
+          bgcolor: shade.color,
+          minHeight: 200,
           display: "flex",
-          flexDirection: "row",
-          gap: 0.5,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-          justifyContent: "flex-end",
-          maxWidth: "calc(100% - 16px)", // Prevent overflow beyond card bounds
+          flexDirection: "column",
+          justifyContent: "space-between",
+          border: 2,
+          borderColor: shade.locked ? "primary.main" : "divider",
+          position: "relative", // For absolute positioning of badge
         }}
       >
-        {/* Extrapolation Method Badge */}
-        {!shade.locked && shade.extrapolationMethod && (
-          <Tooltip
-            title={
-              shade.extrapolationMethod === "interpolated"
-                ? "Generated by interpolating between locked shades"
-                : shade.extrapolationMethod === "linear"
-                ? "Generated by extending the color curve linearly"
-                : shade.extrapolationMethod === "adjusted"
-                ? shade.generationMode === "functional"
-                  ? "Generated using UI-optimized curves (trending toward white/black)"
-                  : "Generated using adjusted curves to prevent invalid colors"
-                : ""
-            }
-            placement="top"
-          >
-            <Chip
-              label={
-                shade.extrapolationMethod === "interpolated"
-                  ? "Interpolated"
-                  : shade.extrapolationMethod === "linear"
-                  ? "Extrapolated"
-                  : shade.extrapolationMethod === "adjusted"
-                  ? shade.generationMode === "functional"
-                    ? "UI Mode"
-                    : "Adjusted"
-                  : ""
-              }
-              size="small"
-              color={
-                shade.extrapolationMethod === "adjusted" &&
-                shade.generationMode === "expressive"
-                  ? "warning" // Yellow warning in expressive mode (indicates fallback)
-                  : "info" // Blue info badge otherwise
-              }
-            />
-          </Tooltip>
-        )}
-
-        {/* Achromatic Indicator Badge */}
-        {isAchromatic && (
-          <Tooltip
-            title="This color has very low saturation (S < 1) and is considered achromatic (neutral). Its hue won't affect interpolation between other colors."
-            placement="top"
-          >
-            <Chip
-              label="Achromatic"
-              size="small"
-              variant="filled"
-              color="neutral"
-            />
-          </Tooltip>
-        )}
-      </Box>
-
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography
-          variant="h5"
-          component="div"
-          sx={{
-            color: textColor,
-            mb: 1,
-          }}
-        >
-          {shade.label}
-        </Typography>
-
-        <TextField
-          value={shade.color}
-          onChange={(e) => {
-            const newColor = e.target.value;
-            // Allow any input that starts with # and contains only valid hex characters
-            if (/^#[0-9A-Fa-f]*$/.test(newColor) || newColor === "#") {
-              // Only update HSV if we have a complete valid hex color
-              if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
-                handleColorChange(newColor);
-              } else {
-                // Update just the color display for partial input
-                onUpdate({ color: newColor, hsv: shade.hsv });
-              }
-            }
-          }}
-          size="small"
-          fullWidth
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="Pick color"
-                    onClick={() => colorInputRef.current?.click()}
-                    edge="end"
-                    size="small"
-                    sx={{ color: textColor }}
-                  >
-                    <ColorizeIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{
-            mb: 1,
-            "& .MuiInputBase-input": {
-              fontFamily: "monospace",
-              fontSize: "0.75rem",
-              color: textColor, // Use calculated text color for proper contrast
-            },
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: textColor, // Border matches contrast text color
-                opacity: 0.8,
-              },
-              "&:hover fieldset": {
-                borderColor: textColor,
-                opacity: 0.9,
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: textColor,
-                opacity: 1,
-              },
-            },
-          }}
-        />
-
-        {/* Hidden native color picker input */}
+        {/* Top Right Chip Container */}
         <Box
-          component="input"
-          type="color"
-          value={shade.color}
-          onChange={(e) => handleColorChange(e.target.value)}
-          ref={colorInputRef}
           sx={{
             position: "absolute",
-            opacity: 0,
-            width: 0,
-            height: 0,
-            pointerEvents: "none",
-          }}
-        />
-
-        <Typography
-          variant="caption"
-          sx={{
-            color: textColor,
-            opacity: 0.7,
-            fontFamily: "monospace",
-            display: "block",
+            top: 8,
+            right: 8,
+            zIndex: 1,
+            display: "flex",
+            flexDirection: "row",
+            gap: 0.5,
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
+            maxWidth: "calc(100% - 16px)", // Prevent overflow beyond card bounds
           }}
         >
-          H:{Math.round(shade.hsv.h)} S:{Math.round(shade.hsv.s)} V:
-          {Math.round(shade.hsv.v)}
-        </Typography>
-      </CardContent>
+          {/* Extrapolation Method Badge */}
+          {!shade.locked && shade.extrapolationMethod && (
+            <Tooltip
+              title={
+                shade.extrapolationMethod === "interpolated"
+                  ? "Generated by interpolating between locked shades"
+                  : shade.extrapolationMethod === "linear"
+                  ? "Generated by extending the color curve linearly"
+                  : shade.extrapolationMethod === "adjusted"
+                  ? shade.generationMode === "functional"
+                    ? "Generated using UI-optimized curves (trending toward white/black)"
+                    : "Generated using adjusted curves to prevent invalid colors"
+                  : ""
+              }
+              placement="top"
+            >
+              <Chip
+                label={
+                  shade.extrapolationMethod === "interpolated"
+                    ? "Interpolated"
+                    : shade.extrapolationMethod === "linear"
+                    ? "Extrapolated"
+                    : shade.extrapolationMethod === "adjusted"
+                    ? shade.generationMode === "functional"
+                      ? "UI Mode"
+                      : "Adjusted"
+                    : ""
+                }
+                size="small"
+                color={
+                  shade.extrapolationMethod === "adjusted" &&
+                  shade.generationMode === "expressive"
+                    ? "warning" // Yellow warning in expressive mode (indicates fallback)
+                    : "info" // Blue info badge otherwise
+                }
+              />
+            </Tooltip>
+          )}
 
-      <CardContent sx={{ pt: 0 }}>
-        <Box sx={{ mb: 1 }}>
-          <Typography
-            variant="caption"
-            sx={{ color: textColor, opacity: 0.8, display: "block" }}
-          >
-            White: {contrastWhite.toFixed(2)}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: textColor, opacity: 0.8, display: "block" }}
-          >
-            Black: {contrastBlack.toFixed(2)}
-          </Typography>
-          <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
-            {passesAAA && (
-              <Tooltip title="Meets WCAG AAA standard (7:1 contrast ratio) - excellent for all text">
-                <Chip label="AAA" size="small" color="success" />
-              </Tooltip>
-            )}
-            {passesAA && (
-              <Tooltip title="Meets WCAG AA standard (4.5:1 contrast ratio) - good for normal text">
-                <Chip label="AA" size="small" color="primary" />
-              </Tooltip>
-            )}
-            {!passesAA && (
-              <Tooltip title="Fails WCAG standards - insufficient contrast for text accessibility">
-                <Chip label="Fails" size="small" color="error" />
-              </Tooltip>
-            )}
-          </Stack>
+          {/* Achromatic Indicator Badge */}
+          {isAchromatic && (
+            <Tooltip
+              title="This color has very low saturation (S < 1) and is considered achromatic (neutral). Its hue won't affect interpolation between other colors."
+              placement="top"
+            >
+              <Chip
+                label="Achromatic"
+                size="small"
+                variant="filled"
+                color="neutral"
+              />
+            </Tooltip>
+          )}
         </Box>
 
-        <Button
-          fullWidth
-          variant="contained"
-          size="small"
-          color={shade.locked ? "primary" : "secondary"}
-          startIcon={
-            shade.locked ? (
-              <LockIcon fontSize="small" />
-            ) : (
-              <LockOpenIcon fontSize="small" />
-            )
-          }
-          onClick={() => {
-            const newLockedState = !shade.locked;
-            onUpdate({
-              locked: newLockedState,
-              // Keep all channels selected/visible
-              selectedForH: true,
-              selectedForS: true,
-              selectedForV: true,
-            });
-          }}
-        >
-          {shade.locked ? "Locked" : "Unlocked"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h5"
+            component="div"
+            sx={{
+              color: textColor,
+              mb: 1,
+            }}
+          >
+            {shade.label}
+          </Typography>
+
+          <TextField
+            value={shade.color}
+            onChange={(e) => {
+              const newColor = e.target.value;
+              // Allow any input that starts with # and contains only valid hex characters
+              if (/^#[0-9A-Fa-f]*$/.test(newColor) || newColor === "#") {
+                // Only update HSV if we have a complete valid hex color
+                if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
+                  handleColorChange(newColor);
+                } else {
+                  // Update just the color display for partial input
+                  onUpdate({ color: newColor, hsv: shade.hsv });
+                }
+              }
+            }}
+            size="small"
+            fullWidth
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="Pick color"
+                      onClick={() => colorInputRef.current?.click()}
+                      edge="end"
+                      size="small"
+                      sx={{ color: textColor }}
+                    >
+                      <ColorizeIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{
+              mb: 1,
+              "& .MuiInputBase-input": {
+                fontFamily: "monospace",
+                fontSize: "0.75rem",
+                color: textColor, // Use calculated text color for proper contrast
+              },
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: textColor, // Border matches contrast text color
+                  opacity: 0.8,
+                },
+                "&:hover fieldset": {
+                  borderColor: textColor,
+                  opacity: 0.9,
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: textColor,
+                  opacity: 1,
+                },
+              },
+            }}
+          />
+
+          {/* Hidden native color picker input */}
+          <Box
+            component="input"
+            type="color"
+            value={shade.color}
+            onChange={(e) => handleColorChange(e.target.value)}
+            ref={colorInputRef}
+            sx={{
+              position: "absolute",
+              opacity: 0,
+              width: 0,
+              height: 0,
+              pointerEvents: "none",
+            }}
+          />
+
+          <Typography
+            variant="caption"
+            sx={{
+              color: textColor,
+              opacity: 0.7,
+              fontFamily: "monospace",
+              display: "block",
+            }}
+          >
+            H:{Math.round(shade.hsv.h)} S:{Math.round(shade.hsv.s)} V:
+            {Math.round(shade.hsv.v)}
+          </Typography>
+        </CardContent>
+
+        <CardContent sx={{ pt: 0 }}>
+          <Box sx={{ mb: 1 }}>
+            <Typography
+              variant="caption"
+              sx={{ color: textColor, opacity: 0.8, display: "block" }}
+            >
+              White: {contrastWhite.toFixed(2)}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: textColor, opacity: 0.8, display: "block" }}
+            >
+              Black: {contrastBlack.toFixed(2)}
+            </Typography>
+            <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
+              {passesAAA && (
+                <Tooltip title="Meets WCAG AAA standard (7:1 contrast ratio) - excellent for all text">
+                  <Chip label="AAA" size="small" color="success" />
+                </Tooltip>
+              )}
+              {passesAA && (
+                <Tooltip title="Meets WCAG AA standard (4.5:1 contrast ratio) - good for normal text">
+                  <Chip label="AA" size="small" color="primary" />
+                </Tooltip>
+              )}
+              {!passesAA && (
+                <Tooltip title="Fails WCAG standards - insufficient contrast for text accessibility">
+                  <Chip label="Fails" size="small" color="error" />
+                </Tooltip>
+              )}
+            </Stack>
+          </Box>
+
+          <Button
+            fullWidth
+            variant="contained"
+            size="small"
+            color={shade.locked ? "primary" : "secondary"}
+            startIcon={
+              shade.locked ? (
+                <LockIcon fontSize="small" />
+              ) : (
+                <LockOpenIcon fontSize="small" />
+              )
+            }
+            onClick={() => {
+              const newLockedState = !shade.locked;
+              onUpdate({
+                locked: newLockedState,
+                // Keep all channels selected/visible
+                selectedForH: true,
+                selectedForS: true,
+                selectedForV: true,
+              });
+            }}
+          >
+            {shade.locked ? "Locked" : "Unlocked"}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if shade data actually changed
+    const prev = prevProps.shade;
+    const next = nextProps.shade;
+
+    return (
+      prev.id === next.id &&
+      prev.color === next.color &&
+      prev.label === next.label &&
+      prev.locked === next.locked &&
+      prev.extrapolationMethod === next.extrapolationMethod &&
+      prev.generationMode === next.generationMode
+    );
+  }
+);
 
 interface ShadeConfigurationDialogProps {
   open: boolean;

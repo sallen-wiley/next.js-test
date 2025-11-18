@@ -190,19 +190,6 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
   // Memoize length separately to prevent unnecessary recalculations
   const shadesLength = useMemo(() => shades.length, [shades.length]);
 
-  // Create a stable key based on actual shade data (not the parent hue object)
-  // Only recalculate when the stringified data actually changes
-  // Include label so chart re-initializes when shade labels change
-  const shadesDataString = shades
-    .map(
-      (s: ShadeDefinition) =>
-        `${s.id}-${s.label}-${s.color}-${s.locked}-${s.hsv.h.toFixed(
-          2
-        )}-${s.hsv.s.toFixed(2)}-${s.hsv.v.toFixed(2)}`
-    )
-    .join("|");
-  const shadesKey = useMemo(() => shadesDataString, [shadesDataString]);
-
   // Performance optimization: Create drag behaviors once on mount, reuse across renders
   useEffect(() => {
     // Only create if they don't exist
@@ -247,6 +234,12 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     return d3.scaleLinear().domain([0, 360]).range([height, 0]);
   }, [height]);
 
+  // Ref to access current shades without closure capture
+  const shadesRef = useRef(shades);
+  useEffect(() => {
+    shadesRef.current = shades;
+  }, [shades]);
+
   // Line generators - using smooth curves by default for better visual appeal
   const lineH = useMemo(() => {
     return d3
@@ -282,7 +275,9 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     ) => {
       if (!curveSettings.smoothMode) return null;
 
-      const newShades = [...shades];
+      // Use ref to get current shades without capturing in closure
+      const currentShades = shadesRef.current;
+      const newShades = [...currentShades];
       const sigma = 0.8;
       const maxDistance = 2;
 
@@ -366,7 +361,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
       return newShades;
     },
-    [curveSettings.smoothMode, shades]
+    [curveSettings.smoothMode]
   );
 
   // Handle drag events with requestAnimationFrame for smooth performance
@@ -442,9 +437,25 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
         let newValue: number;
         if (dragStateRef.current.channel === "h") {
-          newValue = Math.max(0, Math.min(360, yScaleHue.invert(y)));
+          const inverted = yScaleHue.invert(y);
+          // Validate inverted value before clamping
+          if (!Number.isFinite(inverted)) {
+            console.warn(
+              "Invalid hue value from scale inversion, skipping frame"
+            );
+            return;
+          }
+          newValue = Math.max(0, Math.min(360, inverted));
         } else {
-          newValue = Math.max(0, Math.min(100, yScale.invert(y)));
+          const inverted = yScale.invert(y);
+          // Validate inverted value before clamping
+          if (!Number.isFinite(inverted)) {
+            console.warn(
+              "Invalid S/V value from scale inversion, skipping frame"
+            );
+            return;
+          }
+          newValue = Math.max(0, Math.min(100, inverted));
         }
 
         const newShades = [...shades];
@@ -780,6 +791,10 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     createPoints("h", (theme.vars || theme).palette.error.main);
     createPoints("s", (theme.vars || theme).palette.success.main);
     createPoints("v", (theme.vars || theme).palette.warning.main);
+
+    // After initializing DOM structure, update with current data
+    // This ensures the chart is properly rendered even when triggered by shade changes
+    updateChart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dimensions.width,
@@ -795,7 +810,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     handleDragEnd,
     onUpdate,
     shadesLength, // Reinitialize if number of shades changes
-    shadesKey, // Reinitialize if shade data (including labels) changes
+    // Note: shadesKey removed - only reinit when structure changes, not when values change
   ]);
 
   // UPDATE PHASE: Only update attributes of existing elements (runs at 60fps during drag)
@@ -855,9 +870,8 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     updatePoints("h", yScaleHue, (theme.vars || theme).palette.error.main);
     updatePoints("s", yScale, (theme.vars || theme).palette.success.main);
     updatePoints("v", yScale, (theme.vars || theme).palette.warning.main);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    shadesKey, // Only update when actual shade data changes, not when mode changes
+    shades, // Use shades directly to prevent stale closure
     xScale,
     yScale,
     yScaleHue,
@@ -874,7 +888,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     initializeChart();
   }, [initializeChart]);
 
-  // Update chart when data changes
+  // Update chart when data changes (but initializeChart also calls this)
   useEffect(() => {
     updateChart();
   }, [updateChart]);
@@ -957,23 +971,4 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
   );
 }
 
-export default React.memo(D3CurveVisualization, (prevProps, nextProps) => {
-  // Only re-render if the shades data actually changed
-  const prevKey = prevProps.shades
-    .map(
-      (s: ShadeDefinition) =>
-        `${s.id}-${s.label}-${s.color}-${s.locked}-${s.hsv.h.toFixed(
-          2
-        )}-${s.hsv.s.toFixed(2)}-${s.hsv.v.toFixed(2)}`
-    )
-    .join("|");
-  const nextKey = nextProps.shades
-    .map(
-      (s: ShadeDefinition) =>
-        `${s.id}-${s.label}-${s.color}-${s.locked}-${s.hsv.h.toFixed(
-          2
-        )}-${s.hsv.s.toFixed(2)}-${s.hsv.v.toFixed(2)}`
-    )
-    .join("|");
-  return prevKey === nextKey;
-});
+export default React.memo(D3CurveVisualization);
