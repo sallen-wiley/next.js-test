@@ -618,8 +618,7 @@ function PaletteGenerator() {
               HSV Palette Generator
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Generate harmonious color palettes using HSV interpolation (like
-              Palettte App)
+              Generate harmonious color palettes using HSV interpolation.
             </Typography>
           </Box>
         </Stack>
