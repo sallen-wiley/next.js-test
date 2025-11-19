@@ -49,6 +49,10 @@ storybook-static
 localStorage.json*
 
 # GitHub folder - ignore all files except those with "-live" in the name and copilot-instructions.md
-.github/**/*.*
-!.github/chatmodes/*[Dd]esign/.*
+.github/scripts/**
+.github/chatmodes/**
+!.github/chatmodes/*Design*
+!.github/chatmodes/*AI*
+.github/prompts/**
+!.github/prompts/*
 !.github/copilot-instructions.md
