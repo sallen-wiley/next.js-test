@@ -95,138 +95,184 @@ export default function SupabaseAuth() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{ py: 8 }}>
-      <Paper sx={{ p: 4 }}>
-        <Stack spacing={3} alignItems="center">
-          <LockIcon color="primary" sx={{ fontSize: 48 }} />
-          <Typography variant="h4" component="h1" textAlign="center">
-            Reviewer System
-          </Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            Please sign in to access the manuscript reviewer system
-          </Typography>
+    <>
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: (theme) =>
+            `linear-gradient(135deg, ${
+              (theme.vars || theme).palette.primary.main
+            } 0%, ${(theme.vars || theme).palette.secondary.main} 100%)`,
+          zIndex: -2,
+        }}
+      />
+      <Box
+        sx={[
+          {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(255, 255, 255, 0.85)",
+            zIndex: -1,
+          },
+          (theme) =>
+            theme.applyStyles("dark", {
+              backgroundColor: "rgba(0, 0, 0, 0.85)",
+            }),
+        ]}
+      />
+      <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Paper sx={{ p: 4 }}>
+          <Stack spacing={3} alignItems="center">
+            <LockIcon color="primary" sx={{ fontSize: 48 }} />
+            <Typography variant="h4" component="h1" textAlign="center">
+              Publishing Platforms UX
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+            >
+              Please sign in to access the Publishing Platforms UX Test Ground
+            </Typography>
 
-          <Box sx={{ width: "100%" }}>
-            <Tabs value={tab} onChange={handleTabChange} variant="fullWidth">
-              <Tab label="Sign In" />
-              <Tab label="Sign Up" />
-              <Tab label="Forgot Password" />
-            </Tabs>
+            <Box sx={{ width: "100%" }}>
+              <Tabs value={tab} onChange={handleTabChange} variant="fullWidth">
+                <Tab label="Sign In" />
+                <Tab label="Sign Up" />
+                <Tab label="Forgot Password" />
+              </Tabs>
 
-            {error && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {error}
-              </Alert>
-            )}
+              {error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {error}
+                </Alert>
+              )}
 
-            {success && (
-              <Alert severity="success" sx={{ mt: 2 }}>
-                {success}
-              </Alert>
-            )}
+              {success && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  {success}
+                </Alert>
+              )}
 
-            <TabPanel value={tab} index={0}>
-              <Box component="form" onSubmit={handleSubmit}>
-                <Stack spacing={3}>
-                  <TextField
-                    type="email"
-                    label="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    fullWidth
-                    autoFocus
-                  />
-                  <TextField
-                    type="password"
-                    label="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    fullWidth
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Signing In..." : "Sign In"}
-                  </Button>
-                </Stack>
-              </Box>
-            </TabPanel>
+              <TabPanel value={tab} index={0}>
+                <Box component="form" onSubmit={handleSubmit}>
+                  <Stack spacing={3}>
+                    <TextField
+                      type="email"
+                      label="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      fullWidth
+                      autoFocus
+                    />
+                    <TextField
+                      type="password"
+                      label="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      fullWidth
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      size="large"
+                      fullWidth
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing In..." : "Sign In"}
+                    </Button>
+                  </Stack>
+                </Box>
+              </TabPanel>
 
-            <TabPanel value={tab} index={1}>
-              <Box component="form" onSubmit={handleSubmit}>
-                <Stack spacing={3}>
-                  <TextField
-                    type="email"
-                    label="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    fullWidth
-                    autoFocus
-                  />
-                  <TextField
-                    type="password"
-                    label="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    fullWidth
-                    helperText="Minimum 6 characters"
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Creating Account..." : "Create Account"}
-                  </Button>
-                </Stack>
-              </Box>
-            </TabPanel>
+              <TabPanel value={tab} index={1}>
+                <Box component="form" onSubmit={handleSubmit}>
+                  <Stack spacing={3}>
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      If you are using a Wiley email, our email screening
+                      service will spend your account confirmation token link.
+                    </Alert>
+                    <TextField
+                      type="email"
+                      label="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      fullWidth
+                      autoFocus
+                    />
+                    <TextField
+                      type="password"
+                      label="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      fullWidth
+                      helperText="Minimum 6 characters"
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      size="large"
+                      fullWidth
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Creating Account..." : "Create Account"}
+                    </Button>
+                  </Stack>
+                </Box>
+              </TabPanel>
 
-            <TabPanel value={tab} index={2}>
-              <Box component="form" onSubmit={handleSubmit}>
-                <Stack spacing={3}>
-                  <Typography variant="body2" color="text.secondary">
-                    Enter your email address and we&apos;ll send you a link to
-                    reset your password.
-                  </Typography>
-                  <TextField
-                    type="email"
-                    label="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    fullWidth
-                    autoFocus
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    fullWidth
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Sending..." : "Send Reset Link"}
-                  </Button>
-                </Stack>
-              </Box>
-            </TabPanel>
-          </Box>
+              <TabPanel value={tab} index={2}>
+                <Box component="form" onSubmit={handleSubmit}>
+                  <Stack spacing={3}>
+                    <Typography variant="body2" color="text.secondary">
+                      Enter your email address and we&apos;ll send you a link to
+                      reset your password.
+                    </Typography>
+                    <Alert severity="info" sx={{ mt: 2 }}>
+                      If you are using a Wiley email, our email screening
+                      service will spend your password reset token link. Please
+                      contact Stuart Allen via Teams for support.
+                    </Alert>
+                    <TextField
+                      type="email"
+                      label="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      fullWidth
+                      autoFocus
+                    />
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      size="large"
+                      fullWidth
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Sending..." : "Send Reset Link"}
+                    </Button>
+                  </Stack>
+                </Box>
+              </TabPanel>
+            </Box>
 
-          <Typography variant="caption" color="text.secondary">
-            Contact your administrator if you need access
-          </Typography>
-        </Stack>
-      </Paper>
-    </Container>
+            <Typography variant="caption" color="text.secondary">
+              Contact your administrator if you need access
+            </Typography>
+          </Stack>
+        </Paper>
+      </Container>
+    </>
   );
 }

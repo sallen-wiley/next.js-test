@@ -35,8 +35,8 @@ export default function RootLayout({
 
         <InitColorSchemeScript attribute="data" />
         <AppRouterCacheProvider>
-          <ThemeProvider defaultTheme="wiley">
-            <LogoProvider defaultTenant="wiley">
+          <ThemeProvider defaultTheme="wiley2025">
+            <LogoProvider defaultTenant="wiley2025">
               <CssBaseline />
               <AuthWrapper>
                 {children}

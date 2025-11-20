@@ -45,6 +45,7 @@ import ColorizeIcon from "@mui/icons-material/Colorize";
 import SettingsIcon from "@mui/icons-material/Settings";
 import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
+import AppHeader from "@/components/app/AppHeader";
 
 // TypeScript interfaces
 interface HSV {
@@ -599,100 +600,103 @@ function PaletteGenerator() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "background.default",
-        color: "text.primary",
-      }}
-    >
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 4 }}
-        >
-          <Box>
-            <Typography variant="h3" component="h1" gutterBottom>
-              HSV Palette Generator
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Generate harmonious color palettes using HSV interpolation.
-            </Typography>
-          </Box>
-        </Stack>
+    <>
+      <AppHeader />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "background.default",
+          color: "text.primary",
+        }}
+      >
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ mb: 4 }}
+          >
+            <Box>
+              <Typography variant="h3" component="h1" gutterBottom>
+                HSV Palette Generator
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Generate harmonious color palettes using HSV interpolation.
+              </Typography>
+            </Box>
+          </Stack>
 
-        <Box
-          sx={{
-            mb: 4,
-            borderBottom: 1,
-            borderColor: "divider",
-            display: "flex",
-            alignItems: "flex-end",
-          }}
-        >
-          <Box sx={{ flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
-            <Tabs
-              value={activeHueId}
-              onChange={(event, newValue) => {
-                if (newValue === "add-hue") {
-                  addHue();
-                } else {
-                  setActiveHueId(newValue);
-                }
-              }}
-              variant="scrollable"
-              scrollButtons="auto"
-              allowScrollButtonsMobile
-              aria-label="hue selection tabs"
-              sx={{
-                "& .MuiTabs-scrollButtons.Mui-disabled": {
-                  opacity: 0.3,
-                },
-              }}
-            >
-              {hues.map((hue) => (
-                <Tab key={hue.id} label={hue.name} value={hue.id} />
-              ))}
-              <Tab
-                icon={<AddIcon />}
-                iconPosition={isDesktop ? "start" : undefined}
-                label={isDesktop ? "Add Hue" : undefined}
-                value="add-hue"
-                aria-label="Add Hue"
-                sx={{
-                  minWidth: { xs: 48, sm: 90 },
+          <Box
+            sx={{
+              mb: 4,
+              borderBottom: 1,
+              borderColor: "divider",
+              display: "flex",
+              alignItems: "flex-end",
+            }}
+          >
+            <Box sx={{ flexGrow: 1, minWidth: 0, overflow: "hidden" }}>
+              <Tabs
+                value={activeHueId}
+                onChange={(event, newValue) => {
+                  if (newValue === "add-hue") {
+                    addHue();
+                  } else {
+                    setActiveHueId(newValue);
+                  }
                 }}
-              />
-            </Tabs>
-          </Box>
-          <Box sx={{ flexShrink: 0 }}>
-            <Tabs value={false} aria-label="actions">
-              <Tab
-                icon={<DownloadIcon />}
-                iconPosition={isDesktop ? "start" : undefined}
-                label={isDesktop ? "Export JSON" : undefined}
-                onClick={exportPalette}
-                aria-label="Export JSON"
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+                aria-label="hue selection tabs"
                 sx={{
-                  minWidth: { xs: 48, sm: 90 },
+                  "& .MuiTabs-scrollButtons.Mui-disabled": {
+                    opacity: 0.3,
+                  },
                 }}
-              />
-            </Tabs>
+              >
+                {hues.map((hue) => (
+                  <Tab key={hue.id} label={hue.name} value={hue.id} />
+                ))}
+                <Tab
+                  icon={<AddIcon />}
+                  iconPosition={isDesktop ? "start" : undefined}
+                  label={isDesktop ? "Add Hue" : undefined}
+                  value="add-hue"
+                  aria-label="Add Hue"
+                  sx={{
+                    minWidth: { xs: 48, sm: 90 },
+                  }}
+                />
+              </Tabs>
+            </Box>
+            <Box sx={{ flexShrink: 0 }}>
+              <Tabs value={false} aria-label="actions">
+                <Tab
+                  icon={<DownloadIcon />}
+                  iconPosition={isDesktop ? "start" : undefined}
+                  label={isDesktop ? "Export JSON" : undefined}
+                  onClick={exportPalette}
+                  aria-label="Export JSON"
+                  sx={{
+                    minWidth: { xs: 48, sm: 90 },
+                  }}
+                />
+              </Tabs>
+            </Box>
           </Box>
-        </Box>
 
-        {activeHue && (
-          <HueEditor
-            hue={activeHue}
-            onUpdate={(updates) => updateHue(activeHue.id, updates)}
-            onRemove={() => removeHue(activeHue.id)}
-            canRemove={hues.length > 1}
-          />
-        )}
-      </Container>
-    </Box>
+          {activeHue && (
+            <HueEditor
+              hue={activeHue}
+              onUpdate={(updates) => updateHue(activeHue.id, updates)}
+              onRemove={() => removeHue(activeHue.id)}
+              canRemove={hues.length > 1}
+            />
+          )}
+        </Container>
+      </Box>
+    </>
   );
 }
 
