@@ -1,5 +1,8 @@
-import React from "react";
-import { TextField, Typography, Box } from "@mui/material";
+import React, { useState } from "react";
+import { TextField, Typography, Box, Popover } from "@mui/material";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 export default {
   title: "Inventory/Fields",
@@ -58,9 +61,93 @@ const fieldAssumptions = (
   </Box>
 );
 
-export const SimpleField = () => (
-  <Box>
-    <TextField fullWidth label="Input Field" variant="outlined" />
-    {fieldAssumptions}
-  </Box>
-);
+export const SimpleField = () => {
+  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handlePopoverOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+    setOpen(true);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+    setOpen(false);
+  };
+
+  return (
+    <Box>
+      {fieldAssumptions}
+      <br />
+      <IconButton
+        aria-label="info"
+        onMouseEnter={handlePopoverOpen}
+        onMouseLeave={handlePopoverClose}
+        style={{
+          color: "#1976d2",
+          background: "#f5f5f5",
+          borderRadius: 8,
+          marginBottom: 8,
+          width: 40,
+          height: 40,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+        }}>
+        <InfoOutlinedIcon style={{ fontSize: 28 }} />
+      </IconButton>
+      <Popover
+        id="info-icon-popover"
+        open={open}
+        anchorEl={anchorEl}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={handlePopoverClose}
+        disableRestoreFocus>
+        <div style={{ padding: 16, minWidth: 180 }}>
+          Informações adicionais aqui.
+        </div>
+      </Popover>
+      <TextField fullWidth label="Input Field" variant="outlined" />
+    </Box>
+  );
+};
+
+export const InfoIconPopover = () => {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+
+  return (
+    <div style={{ padding: 40 }}>
+      <IconButton
+        aria-label="info"
+        onMouseEnter={handlePopoverOpen}
+        onMouseLeave={handlePopoverClose}
+        style={{ color: "#1976d2", background: "#f5f5f5", borderRadius: 8 }}>
+        <InfoOutlinedIcon />
+      </IconButton>
+      <Popover
+        id="info-icon-popover"
+        open={open}
+        anchorEl={anchorEl}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={handlePopoverClose}
+        disableRestoreFocus>
+        <div style={{ padding: 16, minWidth: 180 }}>
+          Informações adicionais aqui.
+        </div>
+      </Popover>
+    </div>
+  );
+};
