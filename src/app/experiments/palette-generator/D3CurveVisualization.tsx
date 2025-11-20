@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, Tooltip, Typography, useTheme } from "@mui/material";
 import * as d3 from "d3";
 
 // Types
@@ -925,18 +925,20 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           </Button>
         </Grid>
         <Grid size="auto">
-          <Button
-            variant={curveSettings.smoothMode ? "contained" : "outlined"}
-            size="small"
-            onClick={() =>
-              setCurveSettings((prev) => ({
-                ...prev,
-                smoothMode: !prev.smoothMode,
-              }))
-            }
-          >
-            Gaussian Falloff
-          </Button>
+          <Tooltip title="Applies smooth curve adjustments to adjacent points when dragging">
+            <Button
+              variant={curveSettings.smoothMode ? "contained" : "outlined"}
+              size="small"
+              onClick={() =>
+                setCurveSettings((prev) => ({
+                  ...prev,
+                  smoothMode: !prev.smoothMode,
+                }))
+              }
+            >
+              Gaussian Falloff
+            </Button>
+          </Tooltip>
         </Grid>
       </Grid>
 
