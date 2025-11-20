@@ -699,6 +699,7 @@ function PaletteGenerator() {
 function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
   const [anchorDialogOpen, setAnchorDialogOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Track local hue name to prevent resets during graph updates
   const [localName, setLocalName] = useState(hue.name);
@@ -930,7 +931,7 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
               variant="contained"
               color="error"
               startIcon={<DeleteIcon />}
-              onClick={onRemove}
+              onClick={() => setDeleteDialogOpen(true)}
             >
               Delete Hue
             </Button>
@@ -1042,6 +1043,38 @@ function HueEditor({ hue, onUpdate, onRemove, canRemove }: HueEditorProps) {
         currentConfig={hue.shadeConfig}
         onSave={handleConfigChange}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">
+          Delete Hue &quot;{hue.name}&quot;?
+        </DialogTitle>
+        <DialogContent>
+          <Typography id="delete-dialog-description">
+            Are you sure you want to delete this hue? This action cannot be
+            undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              onRemove();
+            }}
+            color="error"
+            variant="contained"
+            autoFocus
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
