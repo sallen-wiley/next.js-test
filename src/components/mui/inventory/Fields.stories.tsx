@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { TextField, Typography, Box, Popover } from "@mui/material";
-import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
@@ -63,9 +62,9 @@ const fieldAssumptions = (
 
 export const SimpleField = () => {
   const [open, setOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const handlePopoverOpen = (event) => {
+  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
     setOpen(true);
   };
@@ -94,7 +93,8 @@ export const SimpleField = () => {
           alignItems: "center",
           justifyContent: "center",
           boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-        }}>
+        }}
+      >
         <InfoOutlinedIcon style={{ fontSize: 28 }} />
       </IconButton>
       <Popover
@@ -104,7 +104,8 @@ export const SimpleField = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         transformOrigin={{ vertical: "top", horizontal: "center" }}
         onClose={handlePopoverClose}
-        disableRestoreFocus>
+        disableRestoreFocus
+      >
         <div style={{ padding: 16, minWidth: 180 }}>
           Informações adicionais aqui.
         </div>
@@ -133,7 +134,8 @@ export const InfoIconPopover = () => {
         aria-label="info"
         onMouseEnter={handlePopoverOpen}
         onMouseLeave={handlePopoverClose}
-        style={{ color: "#1976d2", background: "#f5f5f5", borderRadius: 8 }}>
+        style={{ color: "#1976d2", background: "#f5f5f5", borderRadius: 8 }}
+      >
         <InfoOutlinedIcon />
       </IconButton>
       <Popover
@@ -143,7 +145,8 @@ export const InfoIconPopover = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         transformOrigin={{ vertical: "top", horizontal: "center" }}
         onClose={handlePopoverClose}
-        disableRestoreFocus>
+        disableRestoreFocus
+      >
         <div style={{ padding: 16, minWidth: 180 }}>
           Informações adicionais aqui.
         </div>
