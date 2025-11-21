@@ -97,20 +97,6 @@ export default function SupabaseAuth() {
   return (
     <>
       <Box
-        sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: (theme) =>
-            `linear-gradient(135deg, ${
-              (theme.vars || theme).palette.primary.main
-            } 0%, ${(theme.vars || theme).palette.secondary.main} 100%)`,
-          zIndex: -2,
-        }}
-      />
-      <Box
         sx={[
           {
             position: "fixed",
@@ -118,12 +104,36 @@ export default function SupabaseAuth() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(255, 255, 255, 0.85)",
+            minHeight: ["100vh", "100dvh"],
+            background: (theme) =>
+              `linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.75),
+          rgba(255, 255, 255, 0.75)
+        ),
+        linear-gradient(
+          135deg,
+          ${(theme.vars || theme).palette.primary.main} 0%,
+          ${(theme.vars || theme).palette.secondary.main} 100%
+        )`,
             zIndex: -1,
+            // Hide on mobile/tablet (including iOS Safari)
+            "@media (max-width: 1024px)": {
+              display: "none",
+            },
           },
           (theme) =>
             theme.applyStyles("dark", {
-              backgroundColor: "rgba(0, 0, 0, 0.85)",
+              background: `linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.75),
+          rgba(0, 0, 0, 0.75)
+        ),
+        linear-gradient(
+          135deg,
+          ${(theme.vars || theme).palette.primary.main} 0%,
+          ${(theme.vars || theme).palette.secondary.main} 100%
+        )`,
             }),
         ]}
       />
