@@ -7,7 +7,10 @@
       "command": "npm run storybook",
       "group": "build",
       "isBackground": true,
-      "problemMatcher": []
+      "problemMatcher": [],
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
     },
     {
       "label": "Start Next.js Dev Server",
@@ -23,6 +26,18 @@
       "command": "npm run lint",
       "group": "test",
       "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "label": "Commit changes",
+      "type": "shell",
+      "command": "git add -A && echo 'Enter commit message:' && read msg && git commit -m \"$msg\" && git pull && git push",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
     },
     {
       "label": "Echo Test",

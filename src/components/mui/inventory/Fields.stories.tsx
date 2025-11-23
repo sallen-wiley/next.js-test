@@ -1,10 +1,75 @@
 import React, { useState } from "react";
-import { TextField, Typography, Box, Popover } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
+import { TextField, Typography, Box, Popover, IconButton } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LockIcon from "@mui/icons-material/Lock";
+import EditIcon from "@mui/icons-material/Edit";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import RegexIcon from "@mui/icons-material/Rule";
+import MinimizeIcon from "@mui/icons-material/Minimize";
 
 export default {
   title: "Inventory/Fields",
+};
+
+type BadgeProps = {
+  icon: React.ReactNode;
+  label: string;
+  info: string;
+  align?: "left" | "right";
+};
+
+const Badge: React.FC<BadgeProps> = ({
+  icon,
+  label,
+  info,
+  align = "right",
+}) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        ...(align === "right" && { marginLeft: "auto" }),
+      }}>
+      <IconButton
+        aria-label={label}
+        onMouseEnter={handlePopoverOpen}
+        onMouseLeave={handlePopoverClose}
+        sx={{
+          color: "#1976d2",
+          background: "#f5f5f5",
+          borderRadius: 8,
+          margin: "0 4px",
+          width: 40,
+          height: 40,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+        {icon}
+      </IconButton>
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
+        onClose={handlePopoverClose}
+        disableRestoreFocus>
+        <Box sx={{ padding: 2, maxWidth: 200 }}>{info}</Box>
+      </Popover>
+    </Box>
+  );
 };
 
 const fieldAssumptions = (
@@ -93,8 +158,7 @@ export const SimpleField = () => {
           alignItems: "center",
           justifyContent: "center",
           boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-        }}
-      >
+        }}>
         <InfoOutlinedIcon style={{ fontSize: 28 }} />
       </IconButton>
       <Popover
@@ -104,8 +168,7 @@ export const SimpleField = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         transformOrigin={{ vertical: "top", horizontal: "center" }}
         onClose={handlePopoverClose}
-        disableRestoreFocus
-      >
+        disableRestoreFocus>
         <div style={{ padding: 16, minWidth: 180 }}>
           Informações adicionais aqui.
         </div>
@@ -134,8 +197,7 @@ export const InfoIconPopover = () => {
         aria-label="info"
         onMouseEnter={handlePopoverOpen}
         onMouseLeave={handlePopoverClose}
-        style={{ color: "#1976d2", background: "#f5f5f5", borderRadius: 8 }}
-      >
+        style={{ color: "#1976d2", background: "#f5f5f5", borderRadius: 8 }}>
         <InfoOutlinedIcon />
       </IconButton>
       <Popover
@@ -145,12 +207,73 @@ export const InfoIconPopover = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         transformOrigin={{ vertical: "top", horizontal: "center" }}
         onClose={handlePopoverClose}
-        disableRestoreFocus
-      >
+        disableRestoreFocus>
         <div style={{ padding: 16, minWidth: 180 }}>
           Informações adicionais aqui.
         </div>
       </Popover>
     </div>
+  );
+};
+
+export const FieldWithBadges = () => {
+  return (
+    <Box sx={{ maxWidth: 600, margin: "0 auto" }}>
+      <Box sx={{ display: "flex", alignItems: "center", marginBottom: 1 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Field Title
+        </Typography>
+        <Badge
+          icon={<InfoOutlinedIcon />}
+          label="Info"
+          info="This field contains additional information."
+          align="left"
+        />
+        <Badge
+          icon={<EditIcon />}
+          label="Edited"
+          info="This field was edited by another user."
+        />
+        <Badge
+          icon={<LockIcon />}
+          label="Locked"
+          info="This field is locked and cannot be edited."
+        />
+        <Badge
+          icon={<SmartToyIcon />}
+          label="AI"
+          info="This field contains AI-suggested content."
+        />
+        <Badge
+          icon={<RegexIcon />}
+          label="Regex"
+          info="This field must match a specific pattern."
+        />
+        <Badge
+          icon={<MinimizeIcon />}
+          label="MinMax"
+          info="This field has a minimum and maximum limit."
+        />
+      </Box>
+      <TextField fullWidth label="Input Field" variant="outlined" />
+    </Box>
+  );
+};
+
+export const FieldWithLockedBadge = () => {
+  return (
+    <Box sx={{ maxWidth: 600, margin: "0 auto" }}>
+      <Box sx={{ display: "flex", alignItems: "center", marginBottom: 1 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          Field Title
+        </Typography>
+        <Badge
+          icon={<LockIcon />}
+          label="Locked"
+          info="This field is locked and cannot be edited."
+        />
+      </Box>
+      <TextField fullWidth label="Input Field" variant="outlined" disabled />
+    </Box>
   );
 };
