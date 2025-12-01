@@ -5,7 +5,14 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Box, Button, Grid, Tooltip, Typography, useTheme } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid,
+  Tooltip,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import * as d3 from "d3";
 
 // Types
@@ -77,7 +84,8 @@ const hsvToRgb = (
     r = x;
     g = 0;
     b = c;
-  } else if (h >= 300 && h < 360) {
+  } else {
+    // h >= 300 (including h=360, which equals 0° on the color wheel)
     r = c;
     g = 0;
     b = x;
