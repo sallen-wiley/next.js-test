@@ -1,6 +1,9 @@
 "use client";
 import AppHeader from "@/components/app/AppHeader";
 import { Container, Typography, Paper, Link, Grid, Box } from "@mui/material";
+import PaletteIcon from "@mui/icons-material/Palette";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 
 interface ClickableCardProps {
   href: string;
@@ -32,6 +35,50 @@ function ClickableCard({ href, title, description }: ClickableCardProps) {
             {description}
           </Typography>
         )}
+      </Paper>
+    </Link>
+  );
+}
+
+interface FeaturedCardProps {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function FeaturedCard({ href, icon, title, description }: FeaturedCardProps) {
+  return (
+    <Link href={href} sx={{ textDecoration: "none" }}>
+      <Paper
+        elevation={2}
+        sx={{
+          p: 4,
+          height: "100%",
+          cursor: "pointer",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            boxShadow: (theme) => theme.shadows[6],
+            transform: "translateY(-6px)",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 2,
+            color: (theme) => (theme.vars || theme).palette.primary.main,
+          }}
+        >
+          {icon}
+        </Box>
+        <Typography variant="h6" component="h3" gutterBottom>
+          {title}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {description}
+        </Typography>
       </Paper>
     </Link>
   );
@@ -91,21 +138,48 @@ export default function Home() {
     <>
       <AppHeader />
       <Hero />
-      <Container maxWidth="lg">
-        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ my: 4 }}>
+
+      {/* Featured Section */}
+      <Container maxWidth="lg" sx={{ mb: 6 }}>
+        <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
+          Featured Tools
+        </Typography>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ClickableCard
-              href="/onboarding-demos"
-              title="Onboarding Workflow Demos"
+            <FeaturedCard
+              href="/experiments/palette-generator"
+              icon={<PaletteIcon sx={{ fontSize: 40 }} />}
+              title="HSV Palette Generator"
+              description="Generate harmonious color palettes using HSV interpolation for your design system"
             />
           </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <FeaturedCard
+              href="/kitchen-sink"
+              icon={<DashboardIcon sx={{ fontSize: 40 }} />}
+              title="Kitchen Sink"
+              description="Explore the complete MUI component library with all themes and variants"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <FeaturedCard
+              href="/onboarding-demos"
+              icon={<PersonAddIcon sx={{ fontSize: 40 }} />}
+              title="Onboarding Workflows"
+              description="Experience user onboarding flows and workflow demonstrations"
+            />
+          </Grid>
+        </Grid>
+      </Container>
 
+      {/* All Demos Section */}
+      <Container maxWidth="lg">
+        <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
+          All Demos
+        </Typography>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: 4 }}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ClickableCard href="/woaa" title="WOAA" />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ClickableCard href="/kitchen-sink" title="Kitchen sink" />
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -124,14 +198,6 @@ export default function Home() {
               href="/write-demo"
               title="Write Operations Demo"
               description="Test creating articles with mock and real data"
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ClickableCard
-              href="/experiments/palette-generator"
-              title="HSV Palette Generator"
-              description="Generate harmonious color palettes using HSV interpolation"
             />
           </Grid>
 
