@@ -6,6 +6,21 @@ This is a comprehensive demonstration project showcasing Material-UI v7 with cus
 
 **Always refer to `README.md` for instructions on how to operate the project.** The README contains essential setup steps, project structure, and operational guidance. If instructions change or are expanded during development, suggest the user edit the README for clarity and future reference.
 
+## Repository Configuration
+
+This project uses a dual-remote setup:
+
+- **wiley** remote → `wiley/pp-ux-tooling` (Wiley organization repository)
+- **origin** remote → `sallen-wiley/next.js-test` (personal development fork)
+
+Changes must be pushed to each repository separately:
+
+```bash
+# Push to each remote separately
+git push origin main
+git push wiley main
+```
+
 ## Architecture Overview
 
 ### Multi-Theme System

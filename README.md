@@ -2,10 +2,32 @@
 
 This is a comprehensive [Next.js](https://nextjs.org) project showcasing Material-UI (MUI) components, theming, and design system implementations. The project includes multiple demo pages, Storybook integration, and custom theme switching capabilities.
 
+## Repository Information
+
+This project is maintained in two repositories:
+
+- **Organization Repository**: [`wiley/pp-ux-tooling`](https://github.com/wiley/pp-ux-tooling) - Primary Wiley organization repository
+- **Development Fork**: [`sallen-wiley/next.js-test`](https://github.com/sallen-wiley/next.js-test) - Personal development fork
+
+Changes must be pushed to each repository separately:
+
+### Git Configuration
+
+```bash
+# View configured remotes
+git remote -v
+
+# Push to each repository separately
+git push origin main    # Personal fork
+git push wiley main     # Organization repo
+```
+
 ## Features
 
 - **Material-UI v7**: Latest version with emotion styling
-- **Multiple Themes**: Default, Sage, Tech, and Wiley themes with dynamic switching
+- **Multiple Themes**: 6 custom themes (Default, Sage, Tech, Wiley, Wiley2025, Phenom) with dynamic switching
+- **Light/Dark Mode**: Full color mode support across all themes
+- **Supabase Integration**: Authentication, RBAC, and database features
 - **Custom Components**: Reusable UI components with theme-aware styling
 - **Storybook Integration**: Component documentation and testing
 - **Typography Demo**: Comprehensive font and typography showcase
@@ -17,21 +39,30 @@ This is a comprehensive [Next.js](https://nextjs.org) project showcasing Materia
 ```
 src/
 ├── app/                    # Next.js App Router pages
+│   ├── admin/              # Admin tools and dashboards
+│   ├── auth/               # Authentication pages
+│   ├── data-demo/          # Real data demonstrations
 │   ├── experiments/        # Experimental features
 │   ├── kitchen-sink/       # Component showcase
-│   ├── onboarding-demos/   # Demo pages
-│   ├── typography-demo/    # Typography examples
+│   ├── onboarding-demos/   # User onboarding flows
+│   ├── reviewer-dashboard/ # Reviewer invitation system
+│   ├── write-demo/         # Write operations demo
 │   └── woaa/              # Custom demo page
 ├── components/            # Reusable components
-│   ├── app/               # App-level components
-│   ├── examples/          # Example implementations
-│   ├── kitchen-sink/      # Kitchen sink components
+│   ├── app/               # App-level components (headers, FAB)
+│   ├── auth/              # Authentication components
 │   ├── mui/               # MUI component wrappers
-│   ├── product/           # Product-specific components
-│   └── tokens/            # Design tokens
-├── contexts/              # React contexts for theme/state
-├── themes/                # Custom MUI themes
-└── fonts/                 # Font assets
+│   ├── product/           # Product-specific components (logos)
+│   └── tokens/            # Design token stories
+├── contexts/              # React contexts (theme, logo, header)
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utilities (Supabase client, RBAC)
+├── services/              # Data services
+├── themes/                # Custom MUI themes (6 themes)
+├── types/                 # TypeScript type definitions
+└── utils/                 # Helper utilities
+database/                  # Supabase SQL schemas and migrations
+docs/                      # Comprehensive documentation
 ```
 
 ## VS Code Workspace Personalization
@@ -76,22 +107,26 @@ Open [http://localhost:6006](http://localhost:6006) to view the Storybook interf
 
 - **Next.js 15.3.2** - React framework with App Router
 - **React 19** - Latest React with concurrent features
-- **Material-UI v7** - React component library
-- **Emotion** - CSS-in-JS styling
-- **TypeScript** - Type-safe development
-- **Storybook** - Component development and documentation
+- **Material-UI v7.1** - React component library with custom theming
+- **Emotion** - CSS-in-JS styling engine
+- **TypeScript** - Type-safe development with strict mode
+- **Supabase** - Authentication, RBAC, and PostgreSQL database
+- **Storybook 9** - Component development and documentation
 - **Chromatic** - Visual testing and review
 - **Figma Code Connect** - Design-to-code integration
+- **D3.js** - Data visualization for palette tools
 
 ## Theme System
 
 The project includes a sophisticated theming system with:
 
-- **Dynamic theme switching** via FloatingActionButton
-- **Multiple brand themes**: Default, Sage, Tech, Wiley
-- **Custom color palettes** and typography scales
-- **Logo switching** coordinated with themes
-- **Consistent design tokens** across components
+- **Dynamic theme switching** via FloatingActionButton (FAB)
+- **6 Brand Themes**: Default, Sage, Tech, Wiley, Wiley2025, Phenom
+- **Light/Dark/System Mode**: Full color mode support for all themes
+- **Custom color palettes** with extended neutral, black, and white variants
+- **Custom typography scales** per theme with web font integration
+- **Logo switching** coordinated with theme selection
+- **Consistent design tokens** exposed via Storybook stories
 
 ## Development Workflow
 
@@ -102,12 +137,16 @@ The project includes a sophisticated theming system with:
 
 ## Demo Pages
 
-- `/` - Main landing page with theme showcase
-- `/kitchen-sink` - Complete component library
-- `/typography-demo` - Font and typography examples
-- `/experiments` - Experimental features and patterns
-- `/onboarding-demos` - User onboarding examples
-- `/woaa` - Custom demo implementation
+- `/` - Main landing page with featured tools and demo links
+- `/kitchen-sink` - Complete MUI component library showcase
+- `/experiments/palette-generator` - HSV color palette generator
+- `/onboarding-demos` - User onboarding workflow examples
+- `/woaa` - WOAA demo implementation
+- `/reviewer-dashboard` - Reviewer invitation management system
+- `/data-demo` - Real Supabase data demonstrations
+- `/write-demo` - Create operations with mock and real data
+- `/admin` - Administrative tools and role management
+- `/debug` - System diagnostics and connection testing
 
 ## Learn More
 
@@ -116,6 +155,7 @@ The project includes a sophisticated theming system with:
 - **[Setup Guide](SETUP_GUIDE.md)** - Complete setup and development workflow
 - **[Documentation Hub](docs/README.md)** - Comprehensive documentation index
 - **[Authentication Guide](docs/setup/authentication-guide.md)** - Authentication & RBAC system
+- **[Database Setup](docs/setup/database-setup.md)** - Supabase configuration and schema
 - **[Theme Development](docs/development/theme-guide.md)** - Theme creation and customization
 - **[Storybook Guide](docs/development/storybook-guide.md)** - Component development workflow
 
@@ -145,10 +185,15 @@ This project can be deployed to any platform that supports Node.js:
 
 ## Contributing
 
-1. Create a feature branch from `main`
-2. Make your changes
-3. Test with Storybook and run the development server
-4. Submit a pull request with a clear description
+1. Create a feature branch from `main` (avoid branches when possible due to deployment constraints)
+2. Make your changes and test thoroughly
+3. Test with Storybook (`npm run storybook`) and the development server (`npm run dev`)
+4. Commit your changes with clear, descriptive commit messages
+5. Push to both repositories separately:
+   ```bash
+   git push origin main
+   git push wiley main
+   ```
 
 ## License
 
