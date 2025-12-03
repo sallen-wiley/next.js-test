@@ -45,7 +45,7 @@ import ColorizeIcon from "@mui/icons-material/Colorize";
 import SettingsIcon from "@mui/icons-material/Settings";
 import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
-import AppHeader from "@/components/app/AppHeader";
+import { useHeaderConfig } from "@/contexts/HeaderContext";
 
 // TypeScript interfaces
 interface HSV {
@@ -599,9 +599,14 @@ function PaletteGenerator() {
     URL.revokeObjectURL(url);
   };
 
+  // Configure header for palette generator
+  useHeaderConfig({
+    logoAffix: "Palette Generator",
+    containerProps: { maxWidth: "xl" },
+  });
+
   return (
     <>
-      <AppHeader />
       <Box
         sx={{
           minHeight: "100vh",

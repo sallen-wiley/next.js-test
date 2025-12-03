@@ -1,5 +1,4 @@
 "use client";
-import AppHeader from "@/components/app/AppHeader";
 import { Container, Typography, Paper, Link, Grid, Box } from "@mui/material";
 import PaletteIcon from "@mui/icons-material/Palette";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -136,7 +135,6 @@ function Hero() {
 export default function Home() {
   return (
     <>
-      <AppHeader />
       <Hero />
 
       {/* Featured Section */}

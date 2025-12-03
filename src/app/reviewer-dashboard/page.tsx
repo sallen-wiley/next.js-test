@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import AppHeader from "@/components/app/AppHeader";
+import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useUserProfile } from "@/hooks/useRoles";
 
@@ -441,9 +441,14 @@ export default function ReviewerInvitationDashboard() {
     }
   };
 
+  // Configure header for reviewer dashboard
+  useHeaderConfig({
+    logoAffix: "Review Dashboard",
+    containerProps: { maxWidth: false },
+  });
+
   return (
     <>
-      <AppHeader title="Review" />
       <Container maxWidth="xl" sx={{ py: 4 }}>
         {/* Header */}
         <Grid container spacing={3} sx={{ mb: 4 }}>

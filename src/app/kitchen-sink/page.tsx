@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import Box from "@mui/material/Box";
-import AppHeader from "@/components/app/AppHeader";
+import { useHeaderConfig } from "@/contexts/HeaderContext";
 import {
   Container,
   Typography,
@@ -159,9 +159,14 @@ export default function Home() {
     { icon: <ShareIcon />, name: "Share" },
   ];
 
+  // Configure header for kitchen sink
+  useHeaderConfig({
+    logoAffix: "Component Library",
+    containerProps: { maxWidth: "lg" },
+  });
+
   return (
     <>
-      <AppHeader />
       <Box sx={{ flexGrow: 1, position: "relative" }}>
         <Container maxWidth="lg">
           <Grid container spacing={4} sx={{ my: 4 }}>

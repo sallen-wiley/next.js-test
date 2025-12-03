@@ -2,13 +2,20 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface HeaderConfig {
+  /** Hide the global header completely (opt-out) */
+  hideHeader?: boolean;
+  /** Text to display next to the logo */
   logoAffix?: string;
+  /** Whether the header should be fixed to the top */
   fixed?: boolean;
+  /** Container configuration for the header */
   containerProps?: {
     maxWidth?: false | "xs" | "sm" | "md" | "lg" | "xl";
     fixed?: boolean;
   };
+  /** Custom content to display in the right slot (replaces default auth actions) */
   rightSlot?: ReactNode;
+  /** Callback for menu button click (mobile drawer trigger) */
   onMenuClick?: () => void;
 }
 
@@ -67,6 +74,7 @@ export function useHeaderConfig(config: HeaderConfig) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     updateConfig,
+    config.hideHeader,
     config.logoAffix,
     config.fixed,
     config.containerProps?.maxWidth,

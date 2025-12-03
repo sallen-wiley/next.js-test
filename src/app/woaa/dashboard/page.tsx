@@ -9,7 +9,6 @@ export default function Home() {
   useHeaderConfig({
     logoAffix: "Open Access Dashboard",
     containerProps: { maxWidth: false },
-    // No rightSlot needed for dashboard
   });
 
   return (

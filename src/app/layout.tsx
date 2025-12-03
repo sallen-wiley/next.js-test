@@ -6,7 +6,9 @@ import CssBaseline from "@mui/material/CssBaseline";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LogoProvider } from "@/contexts/LogoContext";
+import { HeaderProvider } from "@/contexts/HeaderContext";
 import FabThemeSwitcher from "@/components/app/FabThemeSwitcher";
+import GlobalHeaderWrapper from "@/components/app/GlobalHeaderWrapper";
 import AuthWrapper from "@/components/auth/AuthWrapper";
 
 export const metadata = {
@@ -39,8 +41,11 @@ export default function RootLayout({
             <LogoProvider defaultTenant="wiley2025">
               <CssBaseline />
               <AuthWrapper>
-                {children}
-                <FabThemeSwitcher />
+                <HeaderProvider>
+                  <GlobalHeaderWrapper />
+                  {children}
+                  <FabThemeSwitcher />
+                </HeaderProvider>
               </AuthWrapper>
             </LogoProvider>
           </ThemeProvider>

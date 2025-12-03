@@ -11,7 +11,6 @@ import {
   Link,
   Stack,
   Grid,
-  Button,
   useTheme,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -92,12 +91,8 @@ export default function Home() {
 
   // Configure header for this specific page
   useHeaderConfig({
+    logoAffix: "Wiley Open Access Accounts",
     containerProps: { maxWidth: "xl" },
-    rightSlot: (
-      <Button variant="contained" color="primary" href="/login">
-        Log In
-      </Button>
-    ),
   });
 
   return (
