@@ -97,7 +97,80 @@ const { currentTenant, setTenant } = useLogoContext();
 
 // Color mode (light/dark/system)
 const { mode, setMode, systemMode } = useColorScheme();
-````
+
+// Global header configuration
+const { config, updateConfig } = useHeader();
+```
+
+#### Global Header System
+
+The application uses a unified global header system managed through `HeaderContext`:
+
+**Setup:**
+- Header is rendered in root layout (`src/app/layout.tsx`) via `GlobalHeaderWrapper`
+- All pages show the header by default with authentication actions
+- Pages configure the header using `useHeaderConfig()` hook
+
+**Configuration Options:**
+
+```tsx
+import { useHeaderConfig } from "@/contexts/HeaderContext";
+
+useHeaderConfig({
+  // Hide header completely (opt-out)
+  hideHeader?: boolean,  // Default: false
+  
+  // Text displayed next to logo
+  logoAffix?: string,  // Default: "Publishing Platforms UX"
+  
+  // Fixed positioning at top of viewport
+  fixed?: boolean,  // Default: false
+  
+  // Container width settings
+  containerProps?: {
+    maxWidth?: false | "xs" | "sm" | "md" | "lg" | "xl",  // Default: false (full width)
+    fixed?: boolean
+  },
+  
+  // Custom right-side content (replaces default auth actions)
+  rightSlot?: ReactNode,  // Default: <HeaderAuthActions /> (Sign In/Out)
+  
+  // Menu button callback (for mobile drawer)
+  onMenuClick?: () => void
+});
+```
+
+**Common Usage Patterns:**
+
+```tsx
+// Full-width header for dashboards
+useHeaderConfig({
+  logoAffix: "Review Dashboard",
+  containerProps: { maxWidth: false }
+});
+
+// Constrained header for content pages
+useHeaderConfig({
+  logoAffix: "Component Library",
+  containerProps: { maxWidth: "lg" }
+});
+
+// Opt-out for custom header implementation
+useHeaderConfig({ hideHeader: true });
+
+// Custom CTA section (overrides default auth)
+useHeaderConfig({
+  logoAffix: "My Page",
+  rightSlot: <CustomActions />
+});
+```
+
+**Important Notes:**
+- **Never** render `<AppHeader />` or `<GlobalHeader />` directly in pages
+- **Always** use `useHeaderConfig()` hook to configure the global header
+- The header automatically integrates with authentication (Sign In/Sign Out)
+- Logo swapping via FAB theme switcher works automatically
+- Opt-out is required for pages with custom header implementations (e.g., notifications experiment)`
 
 ## Essential Commands
 
