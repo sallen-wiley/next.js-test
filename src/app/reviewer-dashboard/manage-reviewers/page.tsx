@@ -11,6 +11,13 @@ import {
   getManuscriptReviewers,
   getManuscriptInvitations,
   getAllReviewers,
+  getReviewersWithStatus,
+  updateInvitationStatus,
+  revokeInvitation,
+  moveInQueue,
+  removeFromQueue,
+  getQueueControlState,
+  toggleQueueActive,
 } from "@/services/dataService";
 import type {
   Manuscript,
@@ -18,6 +25,8 @@ import type {
   PotentialReviewer,
   PotentialReviewerWithMatch,
   ReviewInvitation,
+  ReviewerWithStatus,
+  QueueControlState,
 } from "@/lib/supabase";
 
 // LogRocket type declaration
@@ -67,7 +76,14 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Switch,
+  FormControlLabel,
+  Menu,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from "@mui/material";
+import { DataGrid, GridColDef, GridRowsProp } from "@mui/x-data-grid";
 
 // Icons
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -80,6 +96,17 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import PendingIcon from "@mui/icons-material/Pending";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import StarIcon from "@mui/icons-material/Star";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import BlockIcon from "@mui/icons-material/Block";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 
 // Mock data removed - using real database queries
 
@@ -241,6 +268,27 @@ export default function ReviewerInvitationDashboard() {
     fetchAllReviewersData();
   }, [browseMode]);
 
+  // Fetch reviewers with status for unified queue/invitations view
+  React.useEffect(() => {
+    async function fetchReviewersWithStatusData() {
+      if (!manuscriptId) return;
+
+      try {
+        const [statusData, queueControlData] = await Promise.all([
+          getReviewersWithStatus(manuscriptId),
+          getQueueControlState(manuscriptId),
+        ]);
+        setReviewersWithStatus(statusData);
+        setQueueControl(queueControlData);
+      } catch (error) {
+        console.error("Error fetching reviewers with status:", error);
+        showSnackbar("Failed to load reviewer status data", "error");
+      }
+    }
+
+    fetchReviewersWithStatusData();
+  }, [manuscriptId]);
+
   const [tabValue, setTabValue] = React.useState(0);
   const [sortBy, setSortBy] = React.useState<string>("match_score");
   const [filterAvailability, setFilterAvailability] = React.useState<string[]>([
@@ -251,6 +299,12 @@ export default function ReviewerInvitationDashboard() {
   const [selectedReviewers, setSelectedReviewers] = React.useState<string[]>(
     []
   );
+
+  // New state for unified queue/invitations view
+  const [reviewersWithStatus, setReviewersWithStatus] = React.useState<ReviewerWithStatus[]>([]);
+  const [queueControl, setQueueControl] = React.useState<QueueControlState | null>(null);
+  const [actionMenuAnchor, setActionMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const [selectedReviewerForAction, setSelectedReviewerForAction] = React.useState<ReviewerWithStatus | null>(null);
 
   // State for interactive features
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -385,6 +439,119 @@ export default function ReviewerInvitationDashboard() {
         setTimeout(() => setTabValue(1), 1000);
       }
     );
+  };
+
+  // New handlers for unified queue/invitations tab
+  const refreshReviewersWithStatus = async () => {
+    if (!manuscriptId) return;
+    try {
+      const statusData = await getReviewersWithStatus(manuscriptId);
+      setReviewersWithStatus(statusData);
+    } catch (error) {
+      console.error("Error refreshing reviewer status:", error);
+    }
+  };
+
+  const handleActionMenuOpen = (event: React.MouseEvent<HTMLElement>, reviewer: ReviewerWithStatus) => {
+    setActionMenuAnchor(event.currentTarget);
+    setSelectedReviewerForAction(reviewer);
+  };
+
+  const handleActionMenuClose = () => {
+    setActionMenuAnchor(null);
+    setSelectedReviewerForAction(null);
+  };
+
+  const handleMoveUp = async () => {
+    if (!selectedReviewerForAction?.queue_id) return;
+    
+    try {
+      await moveInQueue(selectedReviewerForAction.queue_id, "up");
+      await refreshReviewersWithStatus();
+      showSnackbar("Reviewer moved up in queue", "success");
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to move reviewer", "error");
+    }
+    handleActionMenuClose();
+  };
+
+  const handleMoveDown = async () => {
+    if (!selectedReviewerForAction?.queue_id) return;
+    
+    try {
+      await moveInQueue(selectedReviewerForAction.queue_id, "down");
+      await refreshReviewersWithStatus();
+      showSnackbar("Reviewer moved down in queue", "success");
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to move reviewer", "error");
+    }
+    handleActionMenuClose();
+  };
+
+  const handleRevokeInvitation = () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    showConfirmDialog(
+      "Revoke Invitation",
+      `Revoke invitation to ${selectedReviewerForAction.name}? This will mark the invitation as expired.`,
+      async () => {
+        try {
+          await revokeInvitation(selectedReviewerForAction.invitation_id!, false);
+          await refreshReviewersWithStatus();
+          showSnackbar("Invitation revoked", "success");
+        } catch (error) {
+          showSnackbar("Failed to revoke invitation", "error");
+        }
+      }
+    );
+    handleActionMenuClose();
+  };
+
+  const handleRemoveFromQueue = () => {
+    if (!selectedReviewerForAction?.queue_id) return;
+
+    showConfirmDialog(
+      "Remove from Queue",
+      `Remove ${selectedReviewerForAction.name} from the invitation queue?`,
+      async () => {
+        try {
+          await removeFromQueue(selectedReviewerForAction.queue_id!);
+          await refreshReviewersWithStatus();
+          showSnackbar("Removed from queue", "success");
+        } catch (error) {
+          showSnackbar("Failed to remove from queue", "error");
+        }
+      }
+    );
+    handleActionMenuClose();
+  };
+
+  const handleViewProfile = () => {
+    // Placeholder for future implementation
+    showSnackbar("Profile view coming soon", "info");
+    handleActionMenuClose();
+  };
+
+  const handleReadReport = () => {
+    // Placeholder for future implementation
+    showSnackbar("Report viewer coming soon", "info");
+    handleActionMenuClose();
+  };
+
+  const handleToggleQueue = async () => {
+    if (!manuscriptId || !queueControl) return;
+
+    const newState = !queueControl.queue_active;
+    try {
+      await toggleQueueActive(manuscriptId, newState);
+      setQueueControl({ ...queueControl, queue_active: newState });
+      showSnackbar(
+        `Queue ${newState ? "activated" : "paused"}`,
+        newState ? "success" : "info"
+      );
+    } catch (error) {
+      showSnackbar("Failed to toggle queue state", "error");
+    }
   };
 
   const handleAddToQueue = (reviewerId: string) => {
@@ -774,20 +941,10 @@ export default function ReviewerInvitationDashboard() {
               />
               <Tab
                 label={
-                  <Badge badgeContent={invitations.length} color="secondary">
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <MailOutlineIcon fontSize="small" />
-                      Sent Invitations
-                    </Box>
-                  </Badge>
-                }
-              />
-              <Tab
-                label={
-                  <Badge badgeContent={simulatedQueue.length} color="warning">
+                  <Badge badgeContent={reviewersWithStatus.filter(r => r.invitation_status).length} color="secondary">
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <QueueIcon fontSize="small" />
-                      Invitation Queue
+                      Queue & Invitations
                     </Box>
                   </Badge>
                 }
