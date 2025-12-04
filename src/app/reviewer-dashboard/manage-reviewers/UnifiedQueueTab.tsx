@@ -1,99 +1,52 @@
-// Temporary component file - will be integrated into page.tsx
-// This contains the new unified Queue & Invitations tab content
-import * as React from "react";
+import React from "react";
 import {
   Grid,
   Paper,
-  Typography,
   Box,
-  Chip,
-  Avatar,
-  IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  Switch,
+  Typography,
   FormControlLabel,
-  TableContainer,
+  Switch,
+  Chip,
   Table,
+  TableBody,
+  TableCell,
+  TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
-  Tooltip,
+  Avatar,
+  IconButton,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridRowsProp } from "@mui/x-data-grid";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import BlockIcon from "@mui/icons-material/Block";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
-import PendingIcon from "@mui/icons-material/Pending";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
-import ScheduleIcon from "@mui/icons-material/Schedule";
+import QueueIcon from "@mui/icons-material/Queue";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
-import QueueIcon from "@mui/icons-material/Queue";
-
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import PendingIcon from "@mui/icons-material/Pending";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import CancelIcon from "@mui/icons-material/Cancel";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { ReviewerWithStatus, QueueControlState } from "@/lib/supabase";
 
 interface QueueInvitationsTabProps {
   reviewersWithStatus: ReviewerWithStatus[];
   queueControl: QueueControlState | null;
-  onActionMenuOpen: (event: React.MouseEvent<HTMLElement>, reviewer: ReviewerWithStatus) => void;
   onToggleQueue: () => void;
+  onActionMenuOpen: (event: React.MouseEvent<HTMLElement>, reviewer: ReviewerWithStatus) => void;
 }
-
-// Helper function to get status icon and color
-const getStatusDisplay = (status: ReviewerWithStatus["invitation_status"]) => {
-  switch (status) {
-    case "queued":
-      return { icon: <HourglassEmptyIcon />, color: "warning", label: "Queued" };
-    case "pending":
-      return { icon: <PendingIcon />, color: "info", label: "Pending" };
-    case "accepted":
-      return { icon: <CheckCircleIcon />, color: "success", label: "Accepted" };
-    case "declined":
-      return { icon: <CancelIcon />, color: "error", label: "Declined" };
-    case "report_submitted":
-      return { icon: <AssignmentTurnedInIcon />, color: "success", label: "Report Submitted" };
-    case "completed":
-      return { icon: <CheckCircleIcon />, color: "default", label: "Completed" };
-    case "expired":
-      return { icon: <ScheduleIcon />, color: "default", label: "Expired" };
-    case "overdue":
-      return { icon: <ScheduleIcon />, color: "error", label: "Overdue" };
-    default:
-      return { icon: null, color: "default" as const, label: "Unknown" };
-  }
-};
 
 export default function QueueInvitationsTab({
   reviewersWithStatus,
   queueControl,
-  onActionMenuOpen,
   onToggleQueue,
+  onActionMenuOpen,
 }: QueueInvitationsTabProps) {
-  // Group reviewers by status
-  const groupedReviewers = React.useMemo(() => {
-    return {
-      queued: reviewersWithStatus.filter(r => r.invitation_status === "queued").sort((a, b) => (a.queue_position || 0) - (b.queue_position || 0)),
-      pending: reviewersWithStatus.filter(r => r.invitation_status === "pending"),
-      accepted: reviewersWithStatus.filter(r => r.invitation_status === "accepted"),
-      declined: reviewersWithStatus.filter(r => r.invitation_status === "declined"),
-      report_submitted: reviewersWithStatus.filter(r => r.invitation_status === "report_submitted"),
-      completed: reviewersWithStatus.filter(r => r.invitation_status === "completed"),
-      expired: reviewersWithStatus.filter(r => r.invitation_status === "expired"),
-      overdue: reviewersWithStatus.filter(r => r.invitation_status === "overdue"),
-    };
-  }, [reviewersWithStatus]);
+  const queuedReviewers = reviewersWithStatus.filter(r => r.invitation_status === "queued");
+  const pendingReviewers = reviewersWithStatus.filter(r => r.invitation_status === "pending");
+  const acceptedReviewers = reviewersWithStatus.filter(r => r.invitation_status === "accepted");
+  const reportSubmittedReviewers = reviewersWithStatus.filter(r => r.invitation_status === "report_submitted");
+  const declinedReviewers = reviewersWithStatus.filter(r => r.invitation_status === "declined");
+
+  const hasAnyReviewers = reviewersWithStatus.filter(r => r.invitation_status).length > 0;
 
   return (
     <Grid container spacing={3}>
@@ -130,13 +83,13 @@ export default function QueueInvitationsTab({
         </Paper>
       </Grid>
 
-      {/* QUEUED REVIEWERS - Draggable */}
-      {groupedReviewers.queued.length > 0 && (
+      {/* QUEUED REVIEWERS */}
+      {queuedReviewers.length > 0 && (
         <Grid size={12}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <HourglassEmptyIcon color="warning" />
-              Queued Reviewers ({groupedReviewers.queued.length})
+              Queued Reviewers ({queuedReviewers.length})
             </Typography>
             <TableContainer>
               <Table size="small">
@@ -151,45 +104,47 @@ export default function QueueInvitationsTab({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {groupedReviewers.queued.map((reviewer) => (
-                    <TableRow key={reviewer.id} hover>
-                      <TableCell>
-                        <Chip
-                          label={reviewer.queue_position}
-                          color="primary"
-                          size="small"
-                          sx={{ fontWeight: "bold" }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Avatar sx={{ width: 32, height: 32, fontSize: "0.875rem" }}>
-                            {reviewer.name.split(" ").map(n => n[0]).join("")}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body2" fontWeight={500}>{reviewer.name}</Typography>
-                            <Typography variant="caption" color="text.secondary">{reviewer.affiliation}</Typography>
+                  {queuedReviewers
+                    .sort((a, b) => (a.queue_position || 0) - (b.queue_position || 0))
+                    .map((reviewer) => (
+                      <TableRow key={reviewer.id} hover>
+                        <TableCell>
+                          <Chip
+                            label={reviewer.queue_position}
+                            color="primary"
+                            size="small"
+                            sx={{ fontWeight: "bold" }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Avatar sx={{ width: 32, height: 32, fontSize: "0.875rem" }}>
+                              {reviewer.name.split(" ").map(n => n[0]).join("")}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" fontWeight={500}>{reviewer.name}</Typography>
+                              <Typography variant="caption" color="text.secondary">{reviewer.affiliation}</Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={`${reviewer.match_score}%`} size="small" color="primary" variant="outlined" />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
-                          {reviewer.scheduled_send_date ? new Date(reviewer.scheduled_send_date).toLocaleDateString() : "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={reviewer.priority || "normal"} size="small" variant="outlined" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <IconButton size="small" onClick={(e) => onActionMenuOpen(e, reviewer)}>
-                          <MoreVertIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip label={`${reviewer.match_score}%`} size="small" color="primary" variant="outlined" />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption">
+                            {reviewer.scheduled_send_date ? new Date(reviewer.scheduled_send_date).toLocaleDateString() : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Chip label={reviewer.priority || "normal"} size="small" variant="outlined" />
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton size="small" onClick={(e) => onActionMenuOpen(e, reviewer)}>
+                            <MoreVertIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -198,12 +153,12 @@ export default function QueueInvitationsTab({
       )}
 
       {/* PENDING INVITATIONS */}
-      {groupedReviewers.pending.length > 0 && (
+      {pendingReviewers.length > 0 && (
         <Grid size={12}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <PendingIcon color="info" />
-              Pending Response ({groupedReviewers.pending.length})
+              Pending Response ({pendingReviewers.length})
             </Typography>
             <TableContainer>
               <Table size="small">
@@ -216,7 +171,7 @@ export default function QueueInvitationsTab({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {groupedReviewers.pending.map((reviewer) => (
+                  {pendingReviewers.map((reviewer) => (
                     <TableRow key={reviewer.id} hover>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -252,12 +207,12 @@ export default function QueueInvitationsTab({
       )}
 
       {/* ACCEPTED - REVIEWING */}
-      {groupedReviewers.accepted.length > 0 && (
+      {acceptedReviewers.length > 0 && (
         <Grid size={12}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <CheckCircleIcon color="success" />
-              Accepted - Reviewing ({groupedReviewers.accepted.length})
+              Accepted - Reviewing ({acceptedReviewers.length})
             </Typography>
             <TableContainer>
               <Table size="small">
@@ -270,7 +225,7 @@ export default function QueueInvitationsTab({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {groupedReviewers.accepted.map((reviewer) => (
+                  {acceptedReviewers.map((reviewer) => (
                     <TableRow key={reviewer.id} hover>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -308,12 +263,12 @@ export default function QueueInvitationsTab({
       )}
 
       {/* REPORT SUBMITTED */}
-      {groupedReviewers.report_submitted.length > 0 && (
+      {reportSubmittedReviewers.length > 0 && (
         <Grid size={12}>
           <Paper sx={{ p: 2, bgcolor: "success.50" }}>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <AssignmentTurnedInIcon color="success" />
-              Report Submitted ({groupedReviewers.report_submitted.length})
+              Report Submitted ({reportSubmittedReviewers.length})
             </Typography>
             <TableContainer>
               <Table size="small">
@@ -325,7 +280,7 @@ export default function QueueInvitationsTab({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {groupedReviewers.report_submitted.map((reviewer) => (
+                  {reportSubmittedReviewers.map((reviewer) => (
                     <TableRow key={reviewer.id} hover>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -358,12 +313,12 @@ export default function QueueInvitationsTab({
       )}
 
       {/* DECLINED */}
-      {groupedReviewers.declined.length > 0 && (
+      {declinedReviewers.length > 0 && (
         <Grid size={12}>
           <Paper sx={{ p: 2, bgcolor: "grey.50" }}>
             <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <CancelIcon color="error" />
-              Declined ({groupedReviewers.declined.length})
+              Declined ({declinedReviewers.length})
             </Typography>
             <TableContainer>
               <Table size="small">
@@ -375,7 +330,7 @@ export default function QueueInvitationsTab({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {groupedReviewers.declined.map((reviewer) => (
+                  {declinedReviewers.map((reviewer) => (
                     <TableRow key={reviewer.id} hover sx={{ opacity: 0.6 }}>
                       <TableCell>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -408,7 +363,7 @@ export default function QueueInvitationsTab({
       )}
 
       {/* Empty State */}
-      {reviewersWithStatus.filter(r => r.invitation_status).length === 0 && (
+      {!hasAnyReviewers && (
         <Grid size={12}>
           <Paper sx={{ p: 4, textAlign: "center" }}>
             <QueueIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />

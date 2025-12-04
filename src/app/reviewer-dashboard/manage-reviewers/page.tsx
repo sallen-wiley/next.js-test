@@ -12,13 +12,14 @@ import {
   getManuscriptInvitations,
   getAllReviewers,
   getReviewersWithStatus,
-  updateInvitationStatus,
   revokeInvitation,
   moveInQueue,
   removeFromQueue,
   getQueueControlState,
   toggleQueueActive,
 } from "@/services/dataService";
+import UnifiedQueueTab from "./UnifiedQueueTab";
+import ReviewerActionMenu from "./ReviewerActionMenu";
 import type {
   Manuscript,
   InvitationQueue,
@@ -76,14 +77,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Switch,
-  FormControlLabel,
-  Menu,
-  ListItemIcon,
-  ListItemText,
-  Divider,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridRowsProp } from "@mui/x-data-grid";
 
 // Icons
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -96,17 +90,6 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import PendingIcon from "@mui/icons-material/Pending";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import StarIcon from "@mui/icons-material/Star";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import BlockIcon from "@mui/icons-material/Block";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 
 // Mock data removed - using real database queries
 
@@ -1379,242 +1362,28 @@ export default function ReviewerInvitationDashboard() {
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          {/* Sent Invitations Tab */}
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Typography variant="h6" gutterBottom>
-                Invitation Status Overview
-              </Typography>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Reviewer</TableCell>
-                      <TableCell align="center">Status</TableCell>
-                      <TableCell align="center">Invited Date</TableCell>
-                      <TableCell align="center">Response Date</TableCell>
-                      <TableCell align="center">Due Date</TableCell>
-                      <TableCell align="center">Round</TableCell>
-                      <TableCell align="center">Reminders</TableCell>
-                      <TableCell>Notes</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {invitations.map((invitation) => {
-                      const reviewer = potentialReviewers.find(
-                        (r) => r.id === invitation.reviewer_id
-                      );
-                      return (
-                        <TableRow key={invitation.id} hover>
-                          <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                              }}
-                            >
-                              <Avatar sx={{ bgcolor: "primary.main" }}>
-                                {reviewer?.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </Avatar>
-                              <Box>
-                                <Typography variant="subtitle2">
-                                  {reviewer?.name}
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  {reviewer?.affiliation}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={invitation.status}
-                              color={
-                                getInvitationStatusColor(invitation.status) as
-                                  | "success"
-                                  | "warning"
-                                  | "error"
-                                  | "info"
-                                  | "default"
-                              }
-                              icon={getStatusIcon(invitation.status)}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            {new Date(
-                              invitation.invited_date
-                            ).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell align="center">
-                            {invitation.response_date
-                              ? new Date(
-                                  invitation.response_date
-                                ).toLocaleDateString()
-                              : "-"}
-                          </TableCell>
-                          <TableCell align="center">
-                            {new Date(invitation.due_date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={`Round ${invitation.invitation_round}`}
-                              size="small"
-                              variant="outlined"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Badge
-                              badgeContent={invitation.reminder_count}
-                              color="warning"
-                            >
-                              <MailOutlineIcon />
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {invitation.notes || "-"}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-          </Grid>
+          {/* Queue & Invitations Tab - Unified View */}
+          <UnifiedQueueTab
+            reviewersWithStatus={reviewersWithStatus}
+            queueControl={queueControl}
+            onToggleQueue={handleToggleQueue}
+            onActionMenuOpen={handleActionMenuOpen}
+          />
         </TabPanel>
 
-        <TabPanel value={tabValue} index={2}>
-          {/* Invitation Queue Tab */}
-          <Grid container spacing={3}>
-            <Grid size={12}>
-              <Typography variant="h6" gutterBottom>
-                Scheduled Invitation Queue
-              </Typography>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center">Queue Position</TableCell>
-                      <TableCell>Reviewer</TableCell>
-                      <TableCell align="center">Match Score</TableCell>
-                      <TableCell align="center">Scheduled Send Date</TableCell>
-                      <TableCell align="center">Priority</TableCell>
-                      <TableCell align="center">Created Date</TableCell>
-                      <TableCell>Notes</TableCell>
-                      <TableCell align="center">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {simulatedQueue.map((queueItem) => {
-                      const reviewer = potentialReviewers.find(
-                        (r) => r.id === queueItem.reviewer_id
-                      );
-                      return (
-                        <TableRow key={queueItem.id} hover>
-                          <TableCell align="center">
-                            <Chip
-                              label={queueItem.queue_position}
-                              color="primary"
-                              sx={{ fontWeight: "bold" }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                              }}
-                            >
-                              <Avatar sx={{ bgcolor: "secondary.main" }}>
-                                {reviewer?.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </Avatar>
-                              <Box>
-                                <Typography variant="subtitle2">
-                                  {reviewer?.name}
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  {reviewer?.affiliation}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" color="primary">
-                              {reviewer?.match_score}%
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            {new Date(
-                              queueItem.scheduled_send_date
-                            ).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={queueItem.priority}
-                              color={
-                                queueItem.priority === "high"
-                                  ? "error"
-                                  : queueItem.priority === "normal"
-                                  ? "info"
-                                  : "default"
-                              }
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            {new Date(
-                              queueItem.created_date
-                            ).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">
-                              {queueItem.notes || "-"}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              justifyContent="center"
-                            >
-                              <Tooltip title="Send now">
-                                <IconButton size="small" color="primary">
-                                  <MailOutlineIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Remove from queue">
-                                <IconButton size="small" color="error">
-                                  <CancelIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </Stack>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-          </Grid>
-        </TabPanel>
+        {/* Reviewer Action Menu */}
+        <ReviewerActionMenu
+          anchorEl={actionMenuAnchor}
+          open={Boolean(actionMenuAnchor)}
+          onClose={handleActionMenuClose}
+          selectedReviewer={selectedReviewerForAction}
+          onMoveUp={handleMoveUp}
+          onMoveDown={handleMoveDown}
+          onRemoveFromQueue={handleRemoveFromQueue}
+          onRevokeInvitation={handleRevokeInvitation}
+          onReadReport={handleReadReport}
+          onViewProfile={handleViewProfile}
+        />
 
         {/* Summary Cards */}
         <Grid container spacing={3} sx={{ mt: 2 }}>
