@@ -43,7 +43,6 @@ const HeaderAuthActions: React.FC = () => {
         <>
           {isAdmin && (
             <Button
-              variant="outlined"
               startIcon={<AdminPanelSettingsIcon />}
               onClick={handleAdminPanel}
               color="secondary"
@@ -52,7 +51,6 @@ const HeaderAuthActions: React.FC = () => {
             </Button>
           )}
           <Button
-            variant="outlined"
             startIcon={<LogoutIcon />}
             onClick={handleSignOut}
             color="primary"
