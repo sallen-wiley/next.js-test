@@ -13,10 +13,13 @@ import {
   getAllReviewers,
   getReviewersWithStatus,
   revokeInvitation,
+  removeInvitation,
+  updateInvitationStatus,
   moveInQueue,
   removeFromQueue,
   getQueueControlState,
   toggleQueueActive,
+  sendInvitation,
 } from "@/services/dataService";
 import UnifiedQueueTab from "./UnifiedQueueTab";
 import ReviewerActionMenu from "./ReviewerActionMenu";
@@ -85,10 +88,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import QueueIcon from "@mui/icons-material/Queue";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import PendingIcon from "@mui/icons-material/Pending";
-import ScheduleIcon from "@mui/icons-material/Schedule";
 import StarIcon from "@mui/icons-material/Star";
 
 // Mock data removed - using real database queries
@@ -284,10 +284,15 @@ export default function ReviewerInvitationDashboard() {
   );
 
   // New state for unified queue/invitations view
-  const [reviewersWithStatus, setReviewersWithStatus] = React.useState<ReviewerWithStatus[]>([]);
-  const [queueControl, setQueueControl] = React.useState<QueueControlState | null>(null);
-  const [actionMenuAnchor, setActionMenuAnchor] = React.useState<null | HTMLElement>(null);
-  const [selectedReviewerForAction, setSelectedReviewerForAction] = React.useState<ReviewerWithStatus | null>(null);
+  const [reviewersWithStatus, setReviewersWithStatus] = React.useState<
+    ReviewerWithStatus[]
+  >([]);
+  const [queueControl, setQueueControl] =
+    React.useState<QueueControlState | null>(null);
+  const [actionMenuAnchor, setActionMenuAnchor] =
+    React.useState<null | HTMLElement>(null);
+  const [selectedReviewerForAction, setSelectedReviewerForAction] =
+    React.useState<ReviewerWithStatus | null>(null);
 
   // State for interactive features
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -312,7 +317,20 @@ export default function ReviewerInvitationDashboard() {
 
   // Filter and sort reviewers
   const filteredReviewers = React.useMemo(() => {
+    // Create a Set of reviewer IDs that are already invited or queued
+    // Only exclude reviewers who have an actual invitation_status
+    const invitedOrQueuedIds = new Set(
+      reviewersWithStatus
+        .filter((r) => r.invitation_status !== null)
+        .map((r) => r.id)
+    );
+
     const filtered = potentialReviewers.filter((reviewer) => {
+      // Exclude reviewers who are already invited or queued
+      if (invitedOrQueuedIds.has(reviewer.id)) {
+        return false;
+      }
+
       // Filter by availability
       if (
         filterAvailability.length > 0 &&
@@ -362,6 +380,7 @@ export default function ReviewerInvitationDashboard() {
     return filtered;
   }, [
     potentialReviewers,
+    reviewersWithStatus,
     sortBy,
     filterAvailability,
     minMatchScore,
@@ -407,19 +426,34 @@ export default function ReviewerInvitationDashboard() {
     });
   };
 
-  const handleInviteReviewer = (reviewerId: string) => {
+  const handleInviteReviewer = async (reviewerId: string) => {
     const reviewer = potentialReviewers.find((r) => r.id === reviewerId);
-    if (!reviewer) return;
+    if (!reviewer || !manuscriptId) return;
 
     showConfirmDialog(
       "Send Invitation",
       `Send review invitation to ${reviewer.name} (${reviewer.affiliation})?`,
-      () => {
-        setSelectedReviewers((prev) => prev.filter((id) => id !== reviewerId));
-        showSnackbar(`Invitation sent to ${reviewer.name}`, "success");
+      async () => {
+        try {
+          // Send the invitation to the database
+          await sendInvitation(manuscriptId, reviewerId);
 
-        // Switch to invitations tab to show the result
-        setTimeout(() => setTabValue(1), 1000);
+          // Remove from selected reviewers
+          setSelectedReviewers((prev) =>
+            prev.filter((id) => id !== reviewerId)
+          );
+
+          // Refresh the reviewers with status to show the new invitation
+          await refreshReviewersWithStatus();
+
+          showSnackbar(`Invitation sent to ${reviewer.name}`, "success");
+
+          // Switch to invitations tab to show the result
+          setTimeout(() => setTabValue(1), 1000);
+        } catch (error) {
+          console.error("Error sending invitation:", error);
+          showSnackbar("Failed to send invitation", "error");
+        }
       }
     );
   };
@@ -435,7 +469,10 @@ export default function ReviewerInvitationDashboard() {
     }
   };
 
-  const handleActionMenuOpen = (event: React.MouseEvent<HTMLElement>, reviewer: ReviewerWithStatus) => {
+  const handleActionMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    reviewer: ReviewerWithStatus
+  ) => {
     setActionMenuAnchor(event.currentTarget);
     setSelectedReviewerForAction(reviewer);
   };
@@ -447,26 +484,32 @@ export default function ReviewerInvitationDashboard() {
 
   const handleMoveUp = async () => {
     if (!selectedReviewerForAction?.queue_id) return;
-    
+
     try {
       await moveInQueue(selectedReviewerForAction.queue_id, "up");
       await refreshReviewersWithStatus();
       showSnackbar("Reviewer moved up in queue", "success");
-    } catch (error: any) {
-      showSnackbar(error.message || "Failed to move reviewer", "error");
+    } catch (error: unknown) {
+      showSnackbar(
+        error instanceof Error ? error.message : "Failed to move reviewer",
+        "error"
+      );
     }
     handleActionMenuClose();
   };
 
   const handleMoveDown = async () => {
     if (!selectedReviewerForAction?.queue_id) return;
-    
+
     try {
       await moveInQueue(selectedReviewerForAction.queue_id, "down");
       await refreshReviewersWithStatus();
       showSnackbar("Reviewer moved down in queue", "success");
-    } catch (error: any) {
-      showSnackbar(error.message || "Failed to move reviewer", "error");
+    } catch (error: unknown) {
+      showSnackbar(
+        error instanceof Error ? error.message : "Failed to move reviewer",
+        "error"
+      );
     }
     handleActionMenuClose();
   };
@@ -479,10 +522,13 @@ export default function ReviewerInvitationDashboard() {
       `Revoke invitation to ${selectedReviewerForAction.name}? This will mark the invitation as expired.`,
       async () => {
         try {
-          await revokeInvitation(selectedReviewerForAction.invitation_id!, false);
+          await revokeInvitation(
+            selectedReviewerForAction.invitation_id!,
+            false
+          );
           await refreshReviewersWithStatus();
           showSnackbar("Invitation revoked", "success");
-        } catch (error) {
+        } catch {
           showSnackbar("Failed to revoke invitation", "error");
         }
       }
@@ -501,8 +547,105 @@ export default function ReviewerInvitationDashboard() {
           await removeFromQueue(selectedReviewerForAction.queue_id!);
           await refreshReviewersWithStatus();
           showSnackbar("Removed from queue", "success");
-        } catch (error) {
+        } catch {
           showSnackbar("Failed to remove from queue", "error");
+        }
+      }
+    );
+    handleActionMenuClose();
+  };
+
+  const handleInviteFromQueue = () => {
+    if (!selectedReviewerForAction?.queue_id || !manuscriptId) return;
+
+    showConfirmDialog(
+      "Send Invitation",
+      `Send invitation to ${selectedReviewerForAction.name} immediately? They will be removed from the queue.`,
+      async () => {
+        try {
+          // First remove from queue
+          await removeFromQueue(selectedReviewerForAction.queue_id!);
+
+          // Then send invitation
+          await sendInvitation(manuscriptId, selectedReviewerForAction.id);
+
+          // Refresh the data
+          await refreshReviewersWithStatus();
+          showSnackbar(
+            `Invitation sent to ${selectedReviewerForAction.name}`,
+            "success"
+          );
+        } catch {
+          showSnackbar("Failed to send invitation", "error");
+        }
+      }
+    );
+    handleActionMenuClose();
+  };
+
+  const handleRemoveInvitation = () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    showConfirmDialog(
+      "Remove Invitation",
+      `Remove invitation for ${selectedReviewerForAction.name}? This will reset them back to the potential reviewers list.`,
+      async () => {
+        try {
+          await removeInvitation(selectedReviewerForAction.invitation_id!);
+          await refreshReviewersWithStatus();
+          showSnackbar("Invitation removed", "success");
+        } catch {
+          showSnackbar("Failed to remove invitation", "error");
+        }
+      }
+    );
+    handleActionMenuClose();
+  };
+
+  const handleForceAccept = () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    showConfirmDialog(
+      "Force Accept Invitation",
+      `Manually mark ${selectedReviewerForAction.name}'s invitation as accepted? This will set their status to "accepted" and assign a review due date.`,
+      async () => {
+        try {
+          await updateInvitationStatus(
+            selectedReviewerForAction.invitation_id!,
+            "accepted"
+          );
+          await refreshReviewersWithStatus();
+          showSnackbar(
+            `${selectedReviewerForAction.name} marked as accepted`,
+            "success"
+          );
+        } catch {
+          showSnackbar("Failed to update invitation status", "error");
+        }
+      }
+    );
+    handleActionMenuClose();
+  };
+
+  const handleForceDecline = () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    showConfirmDialog(
+      "Force Decline Invitation",
+      `Manually mark ${selectedReviewerForAction.name}'s invitation as declined?`,
+      async () => {
+        try {
+          await updateInvitationStatus(
+            selectedReviewerForAction.invitation_id!,
+            "declined"
+          );
+          await refreshReviewersWithStatus();
+          showSnackbar(
+            `${selectedReviewerForAction.name} marked as declined`,
+            "success"
+          );
+        } catch {
+          showSnackbar("Failed to update invitation status", "error");
         }
       }
     );
@@ -532,7 +675,7 @@ export default function ReviewerInvitationDashboard() {
         `Queue ${newState ? "activated" : "paused"}`,
         newState ? "success" : "info"
       );
-    } catch (error) {
+    } catch {
       showSnackbar("Failed to toggle queue state", "error");
     }
   };
@@ -554,6 +697,9 @@ export default function ReviewerInvitationDashboard() {
           );
 
           if (newQueueItem) {
+            // Refresh the reviewers with status data
+            await refreshReviewersWithStatus();
+
             // Update local state
             setSimulatedQueue((prev) => [...prev, newQueueItem]);
             setSelectedReviewers((prev) =>
@@ -565,7 +711,7 @@ export default function ReviewerInvitationDashboard() {
             );
 
             // Switch to queue tab to show the result
-            setTimeout(() => setTabValue(2), 1000);
+            setTimeout(() => setTabValue(1), 1000);
           }
         } catch (error) {
           console.error("Error adding to queue:", error);
@@ -640,7 +786,7 @@ export default function ReviewerInvitationDashboard() {
           setSelectedReviewers([]);
 
           showSnackbar(`Added ${newItems.length} reviewers to queue`, "info");
-          setTimeout(() => setTabValue(2), 1000);
+          setTimeout(() => setTabValue(1), 1000);
         } catch (error) {
           console.error("Error batch adding to queue:", error);
           showSnackbar("Failed to add reviewers to queue", "error");
@@ -661,41 +807,6 @@ export default function ReviewerInvitationDashboard() {
         return "info";
       default:
         return "default";
-    }
-  };
-
-  const getInvitationStatusColor = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return "success";
-      case "declined":
-        return "error";
-      case "pending":
-        return "warning";
-      case "expired":
-        return "error";
-      case "completed":
-        return "info";
-      case "overdue":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return <CheckCircleIcon fontSize="small" />;
-      case "declined":
-        return <CancelIcon fontSize="small" />;
-      case "pending":
-        return <PendingIcon fontSize="small" />;
-      case "expired":
-      case "overdue":
-        return <ScheduleIcon fontSize="small" />;
-      default:
-        return <MailOutlineIcon fontSize="small" />;
     }
   };
 
@@ -924,7 +1035,13 @@ export default function ReviewerInvitationDashboard() {
               />
               <Tab
                 label={
-                  <Badge badgeContent={reviewersWithStatus.filter(r => r.invitation_status).length} color="secondary">
+                  <Badge
+                    badgeContent={
+                      reviewersWithStatus.filter((r) => r.invitation_status)
+                        .length
+                    }
+                    color="secondary"
+                  >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <QueueIcon fontSize="small" />
                       Queue & Invitations
@@ -1380,7 +1497,11 @@ export default function ReviewerInvitationDashboard() {
           onMoveUp={handleMoveUp}
           onMoveDown={handleMoveDown}
           onRemoveFromQueue={handleRemoveFromQueue}
+          onInviteFromQueue={handleInviteFromQueue}
           onRevokeInvitation={handleRevokeInvitation}
+          onRemoveInvitation={handleRemoveInvitation}
+          onForceAccept={handleForceAccept}
+          onForceDecline={handleForceDecline}
           onReadReport={handleReadReport}
           onViewProfile={handleViewProfile}
         />
@@ -1489,6 +1610,7 @@ export default function ReviewerInvitationDashboard() {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={() => setSnackbarOpen(false)}

@@ -14,8 +14,12 @@ import {
 import SettingsIcon from "@mui/icons-material/Settings";
 import PeopleIcon from "@mui/icons-material/People";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import ArticleIcon from "@mui/icons-material/Article";
+import PsychologyIcon from "@mui/icons-material/Psychology";
 import AdminUserManager from "@/components/auth/AdminUserManager";
 import RoleManager from "@/components/auth/RoleManager";
+import ManuscriptUserManager from "@/components/auth/ManuscriptUserManager";
+import ReviewerMatchManager from "@/components/auth/ReviewerMatchManager";
 import { useRoleAccess } from "@/hooks/useRoles";
 
 export default function AdminPage() {
@@ -123,11 +127,23 @@ export default function AdminPage() {
                 label="Role Management"
                 iconPosition="start"
               />
+              <Tab
+                icon={<ArticleIcon />}
+                label="Manuscript Assignments"
+                iconPosition="start"
+              />
+              <Tab
+                icon={<PsychologyIcon />}
+                label="Reviewer Matches"
+                iconPosition="start"
+              />
             </Tabs>
           </Paper>
 
           {activeTab === 0 && <AdminUserManager />}
           {activeTab === 1 && <RoleManager />}
+          {activeTab === 2 && <ManuscriptUserManager />}
+          {activeTab === 3 && <ReviewerMatchManager />}
         </Box>
       )}
     </Container>

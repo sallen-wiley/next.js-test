@@ -51,12 +51,12 @@ export interface ReviewInvitation {
   invited_date: string;
   due_date: string;
   status:
-    | "pending"          // Invitation sent, awaiting response
-    | "accepted"         // Reviewer accepted, working on review
-    | "declined"         // Reviewer declined invitation
-    | "expired"          // Invitation expired without response
-    | "completed"        // Review process fully completed
-    | "overdue"          // Review is past due date
+    | "pending" // Invitation sent, awaiting response
+    | "accepted" // Reviewer accepted, working on review
+    | "declined" // Reviewer declined invitation
+    | "expired" // Invitation expired without response
+    | "completed" // Review process fully completed
+    | "overdue" // Review is past due date
     | "report_submitted"; // Reviewer submitted their report
   response_date?: string;
   queue_position?: number; // null if sent immediately, number if queued
@@ -117,23 +117,23 @@ export interface PotentialReviewerWithMatch extends PotentialReviewer {
 export interface ReviewerWithStatus extends PotentialReviewer {
   // Current status in the workflow (null if not yet queued or invited)
   invitation_status:
-    | "queued"           // In queue, not yet sent
-    | "pending"          // Invitation sent, awaiting response
-    | "accepted"         // Reviewer accepted, working on review
-    | "declined"         // Reviewer declined invitation
+    | "queued" // In queue, not yet sent
+    | "pending" // Invitation sent, awaiting response
+    | "accepted" // Reviewer accepted, working on review
+    | "declined" // Reviewer declined invitation
     | "report_submitted" // Reviewer submitted their report
-    | "completed"        // Review process fully completed
-    | "expired"          // Invitation expired
-    | "overdue"          // Review is overdue
-    | null;              // Not yet in workflow
-  
+    | "completed" // Review process fully completed
+    | "expired" // Invitation expired
+    | "overdue" // Review is overdue
+    | null; // Not yet in workflow
+
   // Additional fields from queue or invitation
-  queue_position?: number;      // Position in queue (if queued)
-  invitation_id?: string;       // ID of invitation record (if invited)
-  queue_id?: string;            // ID of queue record (if queued)
-  invited_date?: string;        // Date invitation was sent
-  response_date?: string;       // Date reviewer responded
-  due_date?: string;            // Review due date (if accepted)
+  queue_position?: number; // Position in queue (if queued)
+  invitation_id?: string; // ID of invitation record (if invited)
+  queue_id?: string; // ID of queue record (if queued)
+  invited_date?: string; // Date invitation was sent
+  response_date?: string; // Date reviewer responded
+  due_date?: string; // Review due date (if accepted)
   priority?: "high" | "normal" | "low"; // Queue priority (if queued)
   scheduled_send_date?: string; // When queued item will be sent
 }
@@ -141,7 +141,7 @@ export interface ReviewerWithStatus extends PotentialReviewer {
 // Queue control state for a manuscript
 export interface QueueControlState {
   manuscript_id: string;
-  queue_active: boolean;         // Whether auto-send is enabled
-  last_sent_date?: string;       // Last time a queued invitation was sent
-  next_scheduled_send?: string;  // Next scheduled send from queue
+  queue_active: boolean; // Whether auto-send is enabled
+  last_sent_date?: string; // Last time a queued invitation was sent
+  next_scheduled_send?: string; // Next scheduled send from queue
 }
