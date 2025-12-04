@@ -119,22 +119,22 @@ import { useHeaderConfig } from "@/contexts/HeaderContext";
 useHeaderConfig({
   // Hide header completely (opt-out)
   hideHeader?: boolean,  // Default: false
-  
+
   // Text displayed next to logo
   logoAffix?: string,  // Default: "Publishing Platforms UX"
-  
+
   // Fixed positioning at top of viewport
   fixed?: boolean,  // Default: false
-  
+
   // Container width settings
   containerProps?: {
     maxWidth?: false | "xs" | "sm" | "md" | "lg" | "xl",  // Default: false (full width)
     fixed?: boolean
   },
-  
+
   // Custom right-side content (replaces default auth actions)
   rightSlot?: ReactNode,  // Default: <HeaderAuthActions /> (Sign In/Out)
-  
+
   // Menu button callback (for mobile drawer)
   onMenuClick?: () => void
 });
@@ -290,25 +290,139 @@ figma.connect(Component, "figma-url", {
 
 ## Database Information (Supabase)
 
+### Schema Reference
+
+**Complete schema documentation:** See `reference/database-schema-export.md` for full table structures, column types, and constraints.
+
 ### Schema Access Pattern:
 
 - **Dynamic Schema Inspection**: When working with database functions, inspect current schema using Supabase client queries rather than assuming structure
-- **TypeScript Types**: Reference existing types in `src/types/roles.ts` for user roles and permissions
+- **TypeScript Types**: All database types defined in `src/lib/supabase.ts` - use these for type safety
 - **Authentication**: Supabase Auth with RLS policies - check permissions before operations
 - **Data Service Patterns**: Follow patterns in `src/services/dataService.ts` for data operations
 
-### Key Tables (inspect structure dynamically):
+### Core Tables
 
-- `user_profiles` - RBAC and user management
-- `manuscripts` - Main content with array fields (authors, keywords)
-- `potential_reviewers` - Reviewer database with metrics
-- `review_invitations` & `invitation_queue` - Invitation workflow system
+#### manuscripts
+- **Purpose**: Manuscript submissions with metadata
+- **Key Fields**: id (uuid), title, authors (array), journal, submission_date, abstract, keywords (array), subject_area, status, editor_id
+- **Status Values**: 'submitted', 'under_review', 'revision_required', 'accepted', 'rejected'
+- **RLS**: Public read, admin/designer write
 
-### Development Approach:
+#### potential_reviewers
+- **Purpose**: Reviewer database with expertise and metrics
+- **Key Fields**: id (uuid), name, email, affiliation, expertise_areas (array), availability_status, response_rate, quality_score, current_review_load
+- **Availability Values**: 'available', 'busy', 'unavailable', 'sabbatical'
+- **RLS**: Public read, admin/designer write
 
-- Always check table structure with sample queries when building functions
-- Use existing TypeScript interfaces where available
-- Respect RLS policies in data operations
+#### reviewer_manuscript_matches
+- **Purpose**: AI-generated match scores linking reviewers to manuscripts
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), match_score (numeric), calculated_at
+- **Constraint**: Unique (manuscript_id, reviewer_id)
+- **Usage**: Powers "Suggested Reviewers" tab - join with potential_reviewers to get reviewer details
+
+#### review_invitations
+- **Purpose**: Sent reviewer invitations with status tracking
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), invited_date, due_date, status, response_date, invitation_round
+- **Status Values**: 'pending', 'accepted', 'declined', 'expired', 'completed', 'overdue'
+- **RLS**: Authenticated users can SELECT/INSERT/UPDATE/DELETE
+
+#### invitation_queue
+- **Purpose**: Queued reviewer invitations waiting to be sent
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), queue_position (int), scheduled_send_date, priority
+- **Priority Values**: 'high', 'normal', 'low'
+- **RLS**: Authenticated users can SELECT/INSERT/UPDATE/DELETE
+- **Data Service**: Use `getManuscriptQueue()` - returns `InvitationQueueItem[]` with joined reviewer details
+
+#### user_manuscripts
+- **Purpose**: Junction table linking users to manuscripts they manage
+- **Key Fields**: id (uuid), user_id (uuid FK), manuscript_id (uuid FK), assigned_date, role, is_active
+- **Role Values**: 'editor', 'author', 'collaborator', 'reviewer'
+- **RLS**: Users see own assignments, admins/editors see all
+- **Usage**: Dashboard shows manuscripts where user_id = auth.uid()
+
+#### user_profiles
+- **Purpose**: User authentication and RBAC
+- **Key Fields**: id (uuid), email, full_name, role, department, permissions (array), is_active
+- **Role Values**: 'admin', 'editor', 'designer', 'product_manager', 'reviewer', 'guest'
+- **RLS**: All authenticated users can read, users can update own profile, admins can update any
+
+### TypeScript Type Patterns
+
+```typescript
+// Import types from central location
+import type {
+  Manuscript,
+  PotentialReviewer,
+  PotentialReviewerWithMatch,  // Includes match_score
+  ReviewInvitation,
+  InvitationQueue,
+  InvitationQueueItem,  // Includes reviewer_name, reviewer_affiliation (joined)
+  ManuscriptWithUserRole,  // Includes user_role, assigned_date (joined)
+} from "@/lib/supabase";
+
+// Service function returns typed data
+export async function getManuscriptReviewers(
+  manuscriptId: string
+): Promise<PotentialReviewerWithMatch[]> {
+  // Joins reviewer_manuscript_matches + potential_reviewers
+}
+
+export async function getManuscriptQueue(
+  manuscriptId: string
+): Promise<InvitationQueueItem[]> {
+  // Joins invitation_queue + potential_reviewers
+}
+```
+
+### Reviewer Dashboard Workflow
+
+The reviewer dashboard implements a two-page workflow:
+
+#### 1. Article Details Page (`/reviewer-dashboard/`)
+- **Purpose**: Shows manuscript metadata and review status overview
+- **Data Sources**:
+  - `getUserManuscripts(userId)` - Fetches user's assigned manuscripts via `user_manuscripts` junction
+  - `getManuscriptInvitations(manuscriptId)` - Fetches sent invitations
+  - `getManuscriptQueue(manuscriptId)` - Fetches queued invitations with reviewer names
+- **UI Features**:
+  - Displays article metadata (title, authors, journal, abstract, keywords)
+  - Shows collapsible "Reviewers" accordion with invitation status metrics
+  - **Conditionally displays queue** - Shows queued reviewers when queue.length > 0
+  - "Manage Reviewers" CTA navigates to management interface
+  - Back button to reviewer dashboard listing
+
+#### 2. Manage Reviewers Page (`/reviewer-dashboard/manage-reviewers/`)
+- **Purpose**: Multi-tab interface for managing reviewer invitations
+- **Tabs**:
+  - **Potential Reviewers**: Two-mode system
+    - **Suggested Mode (default)**: Shows reviewers from `reviewer_manuscript_matches` with match scores
+    - **Browse All Mode**: Shows entire `potential_reviewers` table (toggle button switches modes)
+    - Filter/sort by availability, match score, search term
+  - **Invitations**: View/manage sent invitations from `review_invitations`
+  - **Queue**: View/manage queued invitations with drag-and-drop reordering
+- **Data Sources**:
+  - `getManuscriptReviewers(manuscriptId)` - Suggested reviewers with match scores
+  - `getAllReviewers()` - Full reviewer database for browse mode
+  - `getManuscriptInvitations(manuscriptId)` - Sent invitations
+  - `getManuscriptQueue(manuscriptId)` - Queue with reviewer names
+  - `addToQueue(manuscriptId, reviewerId, priority)` - Add reviewer to queue
+  - `removeFromQueue(queueItemId)` - Remove from queue
+  - `updateQueuePositions(updates[])` - Reorder queue after drag-and-drop
+- **Key Features**:
+  - Dynamic manuscript card (fetched via `getManuscriptById`)
+  - Lazy-loading of full reviewer database when switching to Browse All mode
+  - Real-time queue updates with reviewer names displayed
+
+### Development Best Practices
+
+- **Always use TypeScript types** from `src/lib/supabase.ts`
+- **Follow service layer patterns** in `src/services/dataService.ts`
+- **Join tables for display data** - Don't just return FKs, join to get names/details
+- **Respect RLS policies** - Test data access with different user roles
+- **Use descriptive type names** - `PotentialReviewerWithMatch`, `InvitationQueueItem` (not just base types)
+- **Handle empty states** - Check array lengths before mapping/displaying
+- **Error handling** - Service functions log detailed errors with {message, details, hint, code}
 
 ## Critical Implementation Details
 
@@ -380,3 +494,4 @@ To ensure guidance is always current across all development resources:
 > "Index all development resources in `.github/`, summarize their purpose and ideal use case, and recommend the best tools for my current workflow based on recent conversation."
 
 > "List all available chatmodes, prompts, and scripts. Filter to show only public ('-live') resources."
+````

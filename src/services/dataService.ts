@@ -1,9 +1,14 @@
 // Mock data service for reviewer invitation system
 import {
+  supabase,
   Manuscript,
   PotentialReviewer,
   ReviewInvitation,
   InvitationQueue,
+  InvitationQueueItem,
+  UserManuscript,
+  ManuscriptWithUserRole,
+  PotentialReviewerWithMatch,
 } from "@/lib/supabase";
 
 // Legacy article data for backward compatibility
@@ -463,3 +468,536 @@ export class ReviewerDataService {
 }
 
 export const reviewerDataService = new ReviewerDataService();
+
+// ============================================================================
+// User Manuscript Assignment Functions
+// ============================================================================
+
+/**
+ * Fetch manuscripts assigned to a specific user
+ * @param userId - The user's UUID from auth
+ * @param activeOnly - Return only active assignments
+ */
+export async function getUserManuscripts(
+  userId: string,
+  activeOnly: boolean = true
+): Promise<ManuscriptWithUserRole[]> {
+  const query = supabase
+    .from("user_manuscripts")
+    .select(
+      `
+      role,
+      assigned_date,
+      manuscripts (*)
+    `
+    )
+    .eq("user_id", userId);
+
+  if (activeOnly) {
+    query.eq("is_active", true);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching user manuscripts:", error);
+    throw error;
+  }
+
+  // Transform the nested structure to flat ManuscriptWithUserRole
+  return (data || []).map((item: any) => ({
+    ...item.manuscripts,
+    user_role: item.role,
+    assigned_date: item.assigned_date,
+  }));
+}
+
+/**
+ * Fetch potential reviewers for a specific manuscript with match scores
+ * @param manuscriptId - The manuscript UUID
+ */
+export async function getManuscriptReviewers(
+  manuscriptId: string
+): Promise<PotentialReviewerWithMatch[]> {
+  const { data, error } = await supabase
+    .from("reviewer_manuscript_matches")
+    .select(
+      `
+      match_score,
+      potential_reviewers (*)
+    `
+    )
+    .eq("manuscript_id", manuscriptId)
+    .order("match_score", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching manuscript reviewers:", error);
+    throw error;
+  }
+
+  // Transform the nested structure to include match_score at top level
+  return (data || []).map((item: any) => ({
+    ...item.potential_reviewers,
+    match_score: item.match_score,
+  }));
+}
+
+/**
+ * Fetch all potential reviewers (for browsing/searching entire database)
+ * Returns reviewers without match scores
+ */
+export async function getAllReviewers(): Promise<PotentialReviewer[]> {
+  const { data, error } = await supabase
+    .from("potential_reviewers")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching all reviewers:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch review invitations for a specific manuscript
+ * @param manuscriptId - The manuscript UUID
+ */
+export async function getManuscriptInvitations(
+  manuscriptId: string
+): Promise<ReviewInvitation[]> {
+  const { data, error } = await supabase
+    .from("review_invitations")
+    .select("*")
+    .eq("manuscript_id", manuscriptId)
+    .order("invited_date", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching manuscript invitations:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch a single manuscript by ID
+ * @param manuscriptId - The manuscript UUID
+ */
+export async function getManuscriptById(
+  manuscriptId: string
+): Promise<Manuscript | null> {
+  const { data, error } = await supabase
+    .from("manuscripts")
+    .select("*")
+    .eq("id", manuscriptId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching manuscript by ID:", error);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * Fetch invitation queue for a specific manuscript
+ * @param manuscriptId - The manuscript UUID
+ */
+export async function getManuscriptQueue(
+  manuscriptId: string
+): Promise<InvitationQueueItem[]> {
+  const { data, error } = await supabase
+    .from("invitation_queue")
+    .select(
+      `
+      *,
+      potential_reviewers!reviewer_id (
+        name,
+        affiliation
+      )
+    `
+    )
+    .eq("manuscript_id", manuscriptId)
+    .order("queue_position", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching manuscript queue:", error);
+    throw error;
+  }
+
+  // Transform the nested data structure
+  const queueItems: InvitationQueueItem[] = (data || []).map((item: any) => ({
+    id: item.id,
+    manuscript_id: item.manuscript_id,
+    reviewer_id: item.reviewer_id,
+    queue_position: item.queue_position,
+    created_date: item.created_date,
+    scheduled_send_date: item.scheduled_send_date,
+    priority: item.priority,
+    notes: item.notes,
+    reviewer_name: item.potential_reviewers?.name || "Unknown Reviewer",
+    reviewer_affiliation: item.potential_reviewers?.affiliation,
+  }));
+
+  return queueItems;
+}
+
+/**
+ * Add a reviewer to the invitation queue
+ * @param manuscriptId - The manuscript UUID
+ * @param reviewerId - The reviewer UUID
+ * @param priority - Queue priority level
+ */
+export async function addToQueue(
+  manuscriptId: string,
+  reviewerId: string,
+  priority: "high" | "normal" | "low" = "normal"
+): Promise<InvitationQueue | null> {
+  // Get current max position for this manuscript
+  const { data: existingQueue } = await supabase
+    .from("invitation_queue")
+    .select("queue_position")
+    .eq("manuscript_id", manuscriptId)
+    .order("queue_position", { ascending: false })
+    .limit(1);
+
+  const nextPosition =
+    existingQueue && existingQueue.length > 0
+      ? existingQueue[0].queue_position + 1
+      : 1;
+
+  // Calculate scheduled send date (weekly intervals)
+  const scheduledDate = new Date();
+  scheduledDate.setDate(scheduledDate.getDate() + nextPosition * 7);
+
+  const { data, error } = await supabase
+    .from("invitation_queue")
+    .insert({
+      manuscript_id: manuscriptId,
+      reviewer_id: reviewerId,
+      queue_position: nextPosition,
+      scheduled_send_date: scheduledDate.toISOString(),
+      priority,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding to queue:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      fullError: error,
+    });
+    throw new Error(
+      `Failed to add to queue: ${error.message || JSON.stringify(error)}`
+    );
+  }
+
+  return data;
+}
+
+/**
+ * Remove a reviewer from the invitation queue
+ * @param queueItemId - The queue item UUID
+ */
+export async function removeFromQueue(queueItemId: string): Promise<void> {
+  const { error } = await supabase
+    .from("invitation_queue")
+    .delete()
+    .eq("id", queueItemId);
+
+  if (error) {
+    console.error("Error removing from queue:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update queue positions (for drag-and-drop reordering)
+ * @param updates - Array of {id, newPosition} objects
+ */
+export async function updateQueuePositions(
+  updates: Array<{ id: string; queue_position: number }>
+): Promise<void> {
+  // Update each item's position
+  const promises = updates.map(({ id, queue_position }) =>
+    supabase.from("invitation_queue").update({ queue_position }).eq("id", id)
+  );
+
+  const results = await Promise.all(promises);
+
+  const errors = results.filter((r) => r.error);
+  if (errors.length > 0) {
+    console.error("Error updating queue positions:", errors);
+    throw new Error("Failed to update queue positions");
+  }
+}
+
+/**
+ * Get reviewers with their current status in the invitation workflow
+ * Combines data from invitation_queue, review_invitations, and potential_reviewers
+ * @param manuscriptId - The manuscript UUID
+ */
+export async function getReviewersWithStatus(
+  manuscriptId: string
+): Promise<import("@/lib/supabase").ReviewerWithStatus[]> {
+  // Get all potential reviewers with match scores
+  const { data: matchedReviewers, error: matchError } = await supabase
+    .from("reviewer_manuscript_matches")
+    .select(
+      `
+      match_score,
+      potential_reviewers (*)
+    `
+    )
+    .eq("manuscript_id", manuscriptId);
+
+  if (matchError) {
+    console.error("Error fetching matched reviewers:", matchError);
+    throw matchError;
+  }
+
+  // Get queue items for this manuscript
+  const { data: queueItems, error: queueError } = await supabase
+    .from("invitation_queue")
+    .select("*")
+    .eq("manuscript_id", manuscriptId)
+    .eq("sent", false);
+
+  if (queueError) {
+    console.error("Error fetching queue:", queueError);
+    throw queueError;
+  }
+
+  // Get invitations for this manuscript
+  const { data: invitations, error: invitationError } = await supabase
+    .from("review_invitations")
+    .select("*")
+    .eq("manuscript_id", manuscriptId);
+
+  if (invitationError) {
+    console.error("Error fetching invitations:", invitationError);
+    throw invitationError;
+  }
+
+  // Build lookup maps
+  const queueMap = new Map(
+    (queueItems || []).map((q) => [q.reviewer_id, q])
+  );
+  const invitationMap = new Map(
+    (invitations || []).map((i) => [i.reviewer_id, i])
+  );
+
+  // Combine data
+  const reviewersWithStatus = (matchedReviewers || []).map((item: any) => {
+    const reviewer = item.potential_reviewers;
+    const queueItem = queueMap.get(reviewer.id);
+    const invitation = invitationMap.get(reviewer.id);
+
+    // Determine status
+    let invitation_status: any = null;
+    let additionalFields: any = {};
+
+    if (queueItem) {
+      invitation_status = "queued";
+      additionalFields = {
+        queue_position: queueItem.queue_position,
+        queue_id: queueItem.id,
+        priority: queueItem.priority,
+        scheduled_send_date: queueItem.scheduled_send_date,
+      };
+    } else if (invitation) {
+      invitation_status = invitation.status;
+      additionalFields = {
+        invitation_id: invitation.id,
+        invited_date: invitation.invited_date,
+        response_date: invitation.response_date,
+        due_date: invitation.due_date,
+      };
+    }
+
+    return {
+      ...reviewer,
+      match_score: item.match_score,
+      invitation_status,
+      ...additionalFields,
+    };
+  });
+
+  return reviewersWithStatus;
+}
+
+/**
+ * Update the status of a review invitation
+ * @param invitationId - The invitation UUID
+ * @param status - The new status
+ */
+export async function updateInvitationStatus(
+  invitationId: string,
+  status: import("@/lib/supabase").ReviewInvitation["status"]
+): Promise<void> {
+  const { error } = await supabase
+    .from("review_invitations")
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", invitationId);
+
+  if (error) {
+    console.error("Error updating invitation status:", error);
+    throw error;
+  }
+}
+
+/**
+ * Revoke a pending invitation
+ * Marks the invitation as expired and optionally adds it back to queue
+ * @param invitationId - The invitation UUID
+ * @param addBackToQueue - Whether to add reviewer back to queue
+ */
+export async function revokeInvitation(
+  invitationId: string,
+  addBackToQueue: boolean = false
+): Promise<void> {
+  // Get the invitation details first
+  const { data: invitation, error: fetchError } = await supabase
+    .from("review_invitations")
+    .select("*")
+    .eq("id", invitationId)
+    .single();
+
+  if (fetchError || !invitation) {
+    console.error("Error fetching invitation:", fetchError);
+    throw fetchError || new Error("Invitation not found");
+  }
+
+  // Update status to expired
+  const { error: updateError } = await supabase
+    .from("review_invitations")
+    .update({
+      status: "expired",
+      updated_at: new Date().toISOString(),
+      notes: (invitation.notes || "") + " [Revoked by editor]",
+    })
+    .eq("id", invitationId);
+
+  if (updateError) {
+    console.error("Error revoking invitation:", updateError);
+    throw updateError;
+  }
+
+  // Optionally add back to queue
+  if (addBackToQueue) {
+    await addToQueue(
+      invitation.manuscript_id,
+      invitation.reviewer_id,
+      "normal"
+    );
+  }
+}
+
+/**
+ * Move a queued reviewer up or down in the queue
+ * @param queueItemId - The queue item UUID
+ * @param direction - 'up' or 'down'
+ */
+export async function moveInQueue(
+  queueItemId: string,
+  direction: "up" | "down"
+): Promise<void> {
+  // Get the current item
+  const { data: currentItem, error: fetchError } = await supabase
+    .from("invitation_queue")
+    .select("*")
+    .eq("id", queueItemId)
+    .single();
+
+  if (fetchError || !currentItem) {
+    console.error("Error fetching queue item:", fetchError);
+    throw fetchError || new Error("Queue item not found");
+  }
+
+  const currentPosition = currentItem.queue_position;
+  const newPosition = direction === "up" ? currentPosition - 1 : currentPosition + 1;
+
+  // Can't move beyond bounds
+  if (newPosition < 1) {
+    throw new Error("Cannot move higher - already at top of queue");
+  }
+
+  // Get the item at the target position
+  const { data: targetItem, error: targetError } = await supabase
+    .from("invitation_queue")
+    .select("*")
+    .eq("manuscript_id", currentItem.manuscript_id)
+    .eq("queue_position", newPosition)
+    .single();
+
+  if (targetError && targetError.code !== "PGRST116") {
+    // PGRST116 = no rows returned
+    console.error("Error fetching target item:", targetError);
+    throw targetError;
+  }
+
+  if (!targetItem) {
+    throw new Error(
+      `Cannot move ${direction} - no item at position ${newPosition}`
+    );
+  }
+
+  // Swap positions
+  await updateQueuePositions([
+    { id: currentItem.id, queue_position: newPosition },
+    { id: targetItem.id, queue_position: currentPosition },
+  ]);
+}
+
+/**
+ * Get or create queue control state for a manuscript
+ * Note: This is a demo function - queue_active is not yet in database
+ * @param manuscriptId - The manuscript UUID
+ */
+export async function getQueueControlState(
+  manuscriptId: string
+): Promise<import("@/lib/supabase").QueueControlState> {
+  // TODO: When queue_active is added to manuscripts table, fetch from there
+  // For now, return demo data based on queue existence
+
+  const { data: queueItems } = await supabase
+    .from("invitation_queue")
+    .select("scheduled_send_date")
+    .eq("manuscript_id", manuscriptId)
+    .order("scheduled_send_date", { ascending: true })
+    .limit(1);
+
+  return {
+    manuscript_id: manuscriptId,
+    queue_active: false, // Demo: always false for now
+    next_scheduled_send: queueItems?.[0]?.scheduled_send_date,
+  };
+}
+
+/**
+ * Toggle queue active state for a manuscript
+ * Note: This is a demo function - queue_active is not yet in database
+ * @param manuscriptId - The manuscript UUID
+ * @param active - Whether queue should be active
+ */
+export async function toggleQueueActive(
+  manuscriptId: string,
+  active: boolean
+): Promise<void> {
+  // TODO: When queue_active is added to manuscripts table, update it here
+  console.log(`Demo: Queue for manuscript ${manuscriptId} set to ${active ? "active" : "paused"}`);
+  
+  // For now, this is just a demo function
+  // In production, this would:
+  // 1. Update manuscripts.queue_active = active
+  // 2. Trigger/pause automated queue processing
+}

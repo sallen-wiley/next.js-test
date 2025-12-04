@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS review_invitations (
     reviewer_id UUID REFERENCES potential_reviewers(id) ON DELETE CASCADE,
     invited_date TIMESTAMPTZ DEFAULT NOW(),
     due_date TIMESTAMPTZ NOT NULL,
-    status TEXT CHECK (status IN ('pending', 'accepted', 'declined', 'expired', 'completed', 'overdue')) DEFAULT 'pending',
+    status TEXT CHECK (status IN ('pending', 'accepted', 'declined', 'expired', 'completed', 'overdue', 'report_submitted')) DEFAULT 'pending',
     response_date TIMESTAMPTZ,
     queue_position INTEGER, -- null if sent immediately, number if queued
     invitation_round INTEGER DEFAULT 1, -- 1st choice, 2nd choice, etc.
