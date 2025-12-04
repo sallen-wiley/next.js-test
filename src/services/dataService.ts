@@ -11,6 +11,25 @@ import {
   PotentialReviewerWithMatch,
 } from "@/lib/supabase";
 
+/**
+ * Helper function to check if a user has admin role
+ * @param userId - The user UUID
+ * @returns true if user is admin, false otherwise
+ */
+async function isUserAdmin(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (error || !data) {
+    return false;
+  }
+
+  return data.role === "admin";
+}
+
 // Legacy article data for backward compatibility
 export const mockArticles = [
   {
@@ -482,6 +501,75 @@ export async function getUserManuscripts(
   userId: string,
   activeOnly: boolean = true
 ): Promise<ManuscriptWithUserRole[]> {
+  // Check if user is admin - admins see ALL manuscripts
+  const isAdmin = await isUserAdmin(userId);
+
+  if (isAdmin) {
+    // For admins: Fetch ALL manuscripts AND their explicit assignments
+    // This allows admins to see everything, but with their assigned role when applicable
+
+    // 1. Get all manuscripts
+    const { data: allManuscripts, error: manuscriptsError } = await supabase
+      .from("manuscripts")
+      .select("*")
+      .order("submission_date", { ascending: false });
+
+    if (manuscriptsError) {
+      console.error("Error fetching manuscripts for admin:", manuscriptsError);
+      throw manuscriptsError;
+    }
+
+    // 2. Get admin's explicit assignments
+    const assignmentQuery = supabase
+      .from("user_manuscripts")
+      .select("manuscript_id, role, assigned_date")
+      .eq("user_id", userId);
+
+    if (activeOnly) {
+      assignmentQuery.eq("is_active", true);
+    }
+
+    const { data: assignments, error: assignmentsError } =
+      await assignmentQuery;
+
+    if (assignmentsError) {
+      console.error("Error fetching admin assignments:", assignmentsError);
+      // Don't throw - continue with implicit access only
+    }
+
+    // 3. Create a map of explicit assignments
+    const assignmentMap = new Map(
+      (assignments || []).map((a) => [
+        a.manuscript_id,
+        { role: a.role, assigned_date: a.assigned_date },
+      ])
+    );
+
+    // 4. Merge: Use explicit role if exists, otherwise implicit 'admin' role
+    return (allManuscripts || []).map((manuscript) => {
+      const explicitAssignment = assignmentMap.get(manuscript.id);
+
+      if (explicitAssignment) {
+        // Admin has explicit assignment - use that role (e.g., "editor", "reviewer")
+        return {
+          ...manuscript,
+          user_role: explicitAssignment.role,
+          assigned_date: explicitAssignment.assigned_date,
+          is_active: true,
+        };
+      } else {
+        // No explicit assignment - use implicit admin access
+        return {
+          ...manuscript,
+          user_role: "admin" as const,
+          assigned_date: new Date().toISOString(),
+          is_active: true,
+        };
+      }
+    });
+  }
+
+  // Non-admin: Fetch only assigned manuscripts from user_manuscripts
   const query = supabase
     .from("user_manuscripts")
     .select(
@@ -586,7 +674,8 @@ export async function getManuscriptInvitations(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getManuscriptById(
-  manuscriptId: string
+  manuscriptId: string,
+  userId?: string
 ): Promise<Manuscript | null> {
   const { data, error } = await supabase
     .from("manuscripts")
@@ -598,6 +687,10 @@ export async function getManuscriptById(
     console.error("Error fetching manuscript by ID:", error);
     return null;
   }
+
+  // Note: Access control checking removed - admins have implicit access to all manuscripts
+  // If needed, implement explicit access check here for non-admin users
+  // For now, returning manuscript if it exists (auth/access checked at route level)
 
   return data;
 }
@@ -1242,8 +1335,13 @@ export async function addReviewerMatch(
       details: error.details,
       hint: error.hint,
       code: error.code,
+      fullError: error,
     });
-    throw error;
+    throw new Error(
+      error.message ||
+        error.hint ||
+        `Failed to add reviewer match: ${JSON.stringify(error)}`
+    );
   }
 
   return data;
@@ -1504,6 +1602,244 @@ export async function updateUserManuscriptRole(
 
   if (error) {
     console.error("Error updating user manuscript role:", error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// Reviewer Management Functions
+// ============================================================================
+
+/**
+ * Add a new reviewer to the potential_reviewers table
+ * @param reviewer - The reviewer data (without id, created_at, updated_at)
+ * @returns The created reviewer
+ */
+export async function addReviewer(
+  reviewer: Omit<PotentialReviewer, "id" | "match_score">
+): Promise<PotentialReviewer> {
+  // Check if reviewer with this email already exists
+  const { data: existing } = await supabase
+    .from("potential_reviewers")
+    .select("id, email")
+    .eq("email", reviewer.email)
+    .single();
+
+  if (existing) {
+    throw new Error(`Reviewer with email ${reviewer.email} already exists`);
+  }
+
+  const { data, error } = await supabase
+    .from("potential_reviewers")
+    .insert({
+      name: reviewer.name,
+      email: reviewer.email,
+      affiliation: reviewer.affiliation,
+      department: reviewer.department,
+      expertise_areas: reviewer.expertise_areas,
+      current_review_load: reviewer.current_review_load ?? 0,
+      max_review_capacity: reviewer.max_review_capacity ?? 3,
+      average_review_time_days: reviewer.average_review_time_days ?? 21,
+      recent_publications: reviewer.recent_publications ?? 0,
+      h_index: reviewer.h_index,
+      last_review_completed: reviewer.last_review_completed,
+      availability_status: reviewer.availability_status ?? "available",
+      response_rate: reviewer.response_rate ?? 0,
+      quality_score: reviewer.quality_score ?? 0,
+      conflicts_of_interest: reviewer.conflicts_of_interest ?? [],
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error adding reviewer:", error);
+    throw error;
+  }
+
+  return { ...data, match_score: 0 };
+}
+
+/**
+ * Update an existing reviewer
+ * @param reviewerId - The reviewer's UUID
+ * @param updates - Fields to update
+ */
+export async function updateReviewer(
+  reviewerId: string,
+  updates: Partial<Omit<PotentialReviewer, "id" | "match_score">>
+): Promise<void> {
+  // If email is being updated, check for duplicates
+  if (updates.email) {
+    const { data: existing } = await supabase
+      .from("potential_reviewers")
+      .select("id")
+      .eq("email", updates.email)
+      .neq("id", reviewerId)
+      .single();
+
+    if (existing) {
+      throw new Error(
+        `Another reviewer with email ${updates.email} already exists`
+      );
+    }
+  }
+
+  const { error } = await supabase
+    .from("potential_reviewers")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", reviewerId);
+
+  if (error) {
+    console.error("Error updating reviewer:", error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a reviewer from the database
+ * Note: This will fail if the reviewer has associated records (matches, invitations, etc.)
+ * @param reviewerId - The reviewer's UUID
+ */
+export async function deleteReviewer(reviewerId: string): Promise<void> {
+  const { error } = await supabase
+    .from("potential_reviewers")
+    .delete()
+    .eq("id", reviewerId);
+
+  if (error) {
+    console.error("Error deleting reviewer:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+
+    // Provide user-friendly error message for foreign key constraint
+    if (error.code === "23503") {
+      throw new Error(
+        "Cannot delete reviewer: they have existing matches or invitations. Remove those first."
+      );
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Create a new manuscript
+ * @param manuscript - Manuscript data (without id)
+ */
+export async function createManuscript(
+  manuscript: Omit<Manuscript, "id">
+): Promise<Manuscript> {
+  const { data, error } = await supabase
+    .from("manuscripts")
+    .insert(manuscript)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating manuscript:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+
+    if (error.code === "42501") {
+      throw new Error(
+        "Permission denied: You must be an admin or designer to create manuscripts."
+      );
+    }
+
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("No data returned after creating manuscript");
+  }
+
+  return data as Manuscript;
+}
+
+/**
+ * Update an existing manuscript
+ * @param id - Manuscript UUID
+ * @param updates - Partial manuscript data to update
+ */
+export async function updateManuscript(
+  id: string,
+  updates: Partial<Manuscript>
+): Promise<Manuscript> {
+  // Remove id from updates if present
+  const { id: _, ...updateData } = updates as Manuscript;
+
+  const { data, error } = await supabase
+    .from("manuscripts")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating manuscript:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+
+    if (error.code === "42501") {
+      throw new Error(
+        "Permission denied: You must be an admin or designer to update manuscripts."
+      );
+    }
+
+    throw error;
+  }
+  if (!data) {
+    throw new Error("No data returned after updating manuscript");
+  }
+
+  return data as Manuscript;
+}
+
+/**
+ * Delete a manuscript from the database
+ * Note: This will fail if the manuscript has associated records (matches, invitations, assignments, etc.)
+ * @param manuscriptId - The manuscript's UUID
+ */
+export async function deleteManuscript(manuscriptId: string): Promise<void> {
+  const { error } = await supabase
+    .from("manuscripts")
+    .delete()
+    .eq("id", manuscriptId);
+
+  if (error) {
+    console.error("Error deleting manuscript:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      fullError: error,
+    });
+
+    // Provide user-friendly error message for foreign key constraint
+    if (error.code === "23503") {
+      throw new Error(
+        "Cannot delete manuscript: it has existing matches, invitations, or assignments. Remove those first."
+      );
+    }
+
+    if (error.code === "42501") {
+      throw new Error(
+        "Permission denied: You must be an admin or designer to delete manuscripts."
+      );
+    }
+
     throw error;
   }
 }

@@ -188,18 +188,6 @@ export default function Home() {
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ClickableCard href="/data-demo" title="Real Data Demo" />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <ClickableCard
-              href="/write-demo"
-              title="Write Operations Demo"
-              description="Test creating articles with mock and real data"
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ClickableCard
               href="/experiments/notifications/admin"
               title="Notifications admin"

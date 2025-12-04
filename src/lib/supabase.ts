@@ -21,7 +21,7 @@ export interface Manuscript {
     | "revision_required"
     | "accepted"
     | "rejected";
-  editor_id: string;
+  editor_id?: string;
 }
 
 export interface PotentialReviewer {

@@ -197,59 +197,53 @@ export default function ReviewerInvitationDashboard() {
     []
   );
   const [invitations, setInvitations] = React.useState<ReviewInvitation[]>([]);
-  const [browseMode, setBrowseMode] = React.useState(false); // Toggle between suggested/all
 
-  // Combined reviewers list with match scores when available
+  // Combined reviewers list: merge suggested reviewers with match scores and all other reviewers
   const potentialReviewers = React.useMemo(() => {
-    if (browseMode) {
-      // In browse mode, show all reviewers (may not have match scores)
-      return allReviewers.map((reviewer) => ({
-        ...reviewer,
-        match_score: 0, // Default score for reviewers without matches
-      }));
-    } else {
-      // In suggested mode, show only matched reviewers
-      return suggestedReviewers;
-    }
-  }, [browseMode, allReviewers, suggestedReviewers]);
+    // Create a map of reviewer IDs from suggested reviewers (these have match scores)
+    const suggestedMap = new Map(
+      suggestedReviewers.map((reviewer) => [reviewer.id, reviewer])
+    );
 
-  // Fetch suggested reviewers and invitations when manuscript is loaded
+    // Start with suggested reviewers
+    const combined: PotentialReviewerWithMatch[] = [...suggestedReviewers];
+
+    // Add reviewers from allReviewers that aren't in the suggested list
+    allReviewers.forEach((reviewer) => {
+      if (!suggestedMap.has(reviewer.id)) {
+        combined.push({
+          ...reviewer,
+          match_score: 0, // Default score for reviewers without matches
+        });
+      }
+    });
+
+    return combined;
+  }, [allReviewers, suggestedReviewers]);
+
+  // Fetch suggested reviewers, invitations, and all reviewers when manuscript is loaded
   React.useEffect(() => {
-    async function fetchSuggestedReviewers() {
+    async function fetchReviewersData() {
       if (!manuscriptId) return;
 
       try {
-        const [reviewersData, invitationsData] = await Promise.all([
-          getManuscriptReviewers(manuscriptId),
-          getManuscriptInvitations(manuscriptId),
-        ]);
+        const [reviewersData, invitationsData, allReviewersData] =
+          await Promise.all([
+            getManuscriptReviewers(manuscriptId),
+            getManuscriptInvitations(manuscriptId),
+            getAllReviewers(), // Load all reviewers upfront for search functionality
+          ]);
         setSuggestedReviewers(reviewersData);
         setInvitations(invitationsData);
+        setAllReviewers(allReviewersData);
       } catch (error) {
-        console.error("Error fetching suggested reviewers:", error);
-        showSnackbar("Failed to load suggested reviewers", "error");
+        console.error("Error fetching reviewers:", error);
+        showSnackbar("Failed to load reviewers", "error");
       }
     }
 
-    fetchSuggestedReviewers();
+    fetchReviewersData();
   }, [manuscriptId]);
-
-  // Fetch all reviewers when browse mode is activated
-  React.useEffect(() => {
-    async function fetchAllReviewersData() {
-      if (!browseMode) return;
-
-      try {
-        const reviewersData = await getAllReviewers();
-        setAllReviewers(reviewersData);
-      } catch (error) {
-        console.error("Error fetching all reviewers:", error);
-        showSnackbar("Failed to load reviewer database", "error");
-      }
-    }
-
-    fetchAllReviewersData();
-  }, [browseMode]);
 
   // Fetch reviewers with status for unified queue/invitations view
   React.useEffect(() => {
@@ -339,8 +333,9 @@ export default function ReviewerInvitationDashboard() {
         return false;
       }
 
-      // Filter by minimum match score
-      if (reviewer.match_score < minMatchScore) {
+      // Filter by minimum match score only if there's no search term
+      // When searching, we want to include all reviewers regardless of match score
+      if (!searchTerm && reviewer.match_score < minMatchScore) {
         return false;
       }
 
@@ -392,7 +387,11 @@ export default function ReviewerInvitationDashboard() {
   };
 
   const handleBackToArticle = () => {
-    router.push("/reviewer-dashboard");
+    if (manuscriptId) {
+      router.push(`/reviewer-dashboard/${manuscriptId}`);
+    } else {
+      router.push("/reviewer-dashboard");
+    }
   };
 
   const handleReviewerSelect = (reviewerId: string) => {
@@ -1028,7 +1027,7 @@ export default function ReviewerInvitationDashboard() {
                   >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <PersonAddIcon fontSize="small" />
-                      {browseMode ? "All Reviewers" : "Suggested Reviewers"}
+                      Potential Reviewers
                     </Box>
                   </Badge>
                 }
@@ -1050,16 +1049,6 @@ export default function ReviewerInvitationDashboard() {
                 }
               />
             </Tabs>
-            <Box sx={{ pb: 1 }}>
-              <Button
-                size="small"
-                variant={browseMode ? "contained" : "outlined"}
-                onClick={() => setBrowseMode(!browseMode)}
-                sx={{ textTransform: "none" }}
-              >
-                {browseMode ? "Show Suggested Only" : "Browse All Reviewers"}
-              </Button>
-            </Box>
           </Box>
         </Paper>
 
@@ -1074,6 +1063,10 @@ export default function ReviewerInvitationDashboard() {
                   <FilterListIcon sx={{ mr: 1, verticalAlign: "middle" }} />
                   Search & Filter Reviewers
                 </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Showing suggested reviewers with match scores by default.
+                  Search to find any reviewer in the full database.
+                </Alert>
                 <Grid container spacing={2} alignItems="center">
                   <Grid size={{ xs: 12, md: 3 }}>
                     <TextField

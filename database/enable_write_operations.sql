@@ -1,10 +1,13 @@
 -- Enable role-based write operations for manuscripts table
 -- This script adds policies that restrict write operations to admin and designer roles only
 
--- Drop existing permissive policies if they exist
+-- Drop existing policies if they exist (both old and new names)
 DROP POLICY IF EXISTS "Enable insert for all users" ON manuscripts;
 DROP POLICY IF EXISTS "Enable update for all users" ON manuscripts;
 DROP POLICY IF EXISTS "Enable delete for all users" ON manuscripts;
+DROP POLICY IF EXISTS "Enable insert for admin and designer" ON manuscripts;
+DROP POLICY IF EXISTS "Enable update for admin and designer" ON manuscripts;
+DROP POLICY IF EXISTS "Enable delete for admin and designer" ON manuscripts;
 
 -- Create role-based write policies for manuscripts table
 CREATE POLICY "Enable insert for admin and designer" ON manuscripts
@@ -44,6 +47,9 @@ USING (
 DROP POLICY IF EXISTS "Enable insert for all users" ON potential_reviewers;
 DROP POLICY IF EXISTS "Enable update for all users" ON potential_reviewers;
 DROP POLICY IF EXISTS "Enable delete for all users" ON potential_reviewers;
+DROP POLICY IF EXISTS "Enable insert for admin and designer" ON potential_reviewers;
+DROP POLICY IF EXISTS "Enable update for admin and designer" ON potential_reviewers;
+DROP POLICY IF EXISTS "Enable delete for admin and designer" ON potential_reviewers;
 
 CREATE POLICY "Enable insert for admin and designer" ON potential_reviewers
 FOR INSERT 

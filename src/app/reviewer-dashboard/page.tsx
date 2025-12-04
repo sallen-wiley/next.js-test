@@ -3,16 +3,8 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
-import {
-  getUserManuscripts,
-  getManuscriptInvitations,
-  getManuscriptQueue,
-} from "@/services/dataService";
-import type {
-  ManuscriptWithUserRole,
-  ReviewInvitation,
-  InvitationQueueItem,
-} from "@/lib/supabase";
+import { getUserManuscripts } from "@/services/dataService";
+import type { ManuscriptWithUserRole } from "@/lib/supabase";
 
 import {
   Container,
@@ -21,55 +13,44 @@ import {
   Box,
   Chip,
   Button,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Stack,
   Alert,
   CircularProgress,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
 } from "@mui/material";
 
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ArticleIcon from "@mui/icons-material/Article";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
-export default function ArticleDetailsPage() {
+export default function ArticleListingPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [manuscript, setManuscript] =
-    React.useState<ManuscriptWithUserRole | null>(null);
-  const [invitations, setInvitations] = React.useState<ReviewInvitation[]>([]);
-  const [queue, setQueue] = React.useState<InvitationQueueItem[]>([]);
+  const [manuscripts, setManuscripts] = React.useState<
+    ManuscriptWithUserRole[]
+  >([]);
   const [loading, setLoading] = React.useState(true);
 
   // Configure header
   useHeaderConfig({
-    logoAffix: "Article Details",
+    logoAffix: "Reviewer Dashboard",
     containerProps: { maxWidth: "lg" },
   });
 
-  // Fetch user's first assigned manuscript
+  // Fetch all manuscripts assigned to user
   React.useEffect(() => {
     async function fetchData() {
       if (!user?.id) return;
 
       setLoading(true);
       try {
-        const manuscripts = await getUserManuscripts(user.id);
-        if (manuscripts.length > 0) {
-          const firstManuscript = manuscripts[0];
-          setManuscript(firstManuscript);
-
-          // Fetch invitations and queue for this manuscript
-          const [invites, queueItems] = await Promise.all([
-            getManuscriptInvitations(firstManuscript.id),
-            getManuscriptQueue(firstManuscript.id),
-          ]);
-          setInvitations(invites);
-          setQueue(queueItems);
-        }
+        const userManuscripts = await getUserManuscripts(user.id);
+        setManuscripts(userManuscripts);
       } catch (error) {
-        console.error("Error fetching manuscript:", error);
+        console.error("Error fetching manuscripts:", error);
       } finally {
         setLoading(false);
       }
@@ -78,12 +59,8 @@ export default function ArticleDetailsPage() {
     fetchData();
   }, [user]);
 
-  const handleManageReviewers = () => {
-    if (manuscript) {
-      router.push(
-        `/reviewer-dashboard/manage-reviewers?manuscriptId=${manuscript.id}`
-      );
-    }
+  const handleViewArticle = (manuscriptId: string) => {
+    router.push(`/reviewer-dashboard/${manuscriptId}`);
   };
 
   if (loading) {
@@ -101,9 +78,12 @@ export default function ArticleDetailsPage() {
     );
   }
 
-  if (!manuscript) {
+  if (manuscripts.length === 0) {
     return (
       <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Typography variant="h4" component="h1" fontWeight={600} sx={{ mb: 3 }}>
+          My Articles
+        </Typography>
         <Alert severity="info">
           No manuscripts assigned to you. Please contact an administrator.
         </Alert>
@@ -111,345 +91,166 @@ export default function ArticleDetailsPage() {
     );
   }
 
-  const invitedCount = invitations.filter(
-    (inv) => inv.status !== "declined"
-  ).length;
-  const hasInvitedReviewers = invitedCount > 0;
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Back Navigation */}
-      <Button
-        startIcon={<ArticleIcon />}
-        onClick={() => router.push("/reviewer-dashboard")}
-        sx={{ mb: 2 }}
-      >
-        BACK
-      </Button>
-
-      {/* Breadcrumb */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        DASHBOARD / ARTICLE DETAILS
-      </Typography>
-
-      {/* Article Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="flex-start"
-          sx={{ mb: 2 }}
-        >
-          <Box>
-            <Chip
-              label={`ID ${manuscript.id.split("-")[0]}`}
-              size="small"
-              sx={{ mr: 1 }}
-            />
-            <Chip
-              label="COMMISSIONED"
-              size="small"
-              sx={{ mr: 1 }}
-              color="primary"
-            />
-            <Chip label="TRANSFERRED" size="small" />
-          </Box>
-          <Box sx={{ ml: "auto" }}>
-            <Typography variant="caption" color="text.secondary">
-              Updated on{" "}
-              {new Date(manuscript.submission_date).toLocaleDateString(
-                "en-US",
-                {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                }
-              )}
-            </Typography>
-          </Box>
-        </Stack>
-
-        <Typography variant="h5" component="h1" fontWeight={600} sx={{ mb: 2 }}>
-          {manuscript.title}
+      {/* Page Header */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" fontWeight={600} sx={{ mb: 1 }}>
+          My Articles
         </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {manuscripts.length} manuscript{manuscripts.length !== 1 ? "s" : ""}{" "}
+          assigned to you
+        </Typography>
+      </Box>
 
-        {/* Authors */}
-        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 2 }}>
-          {manuscript.authors.map((author, index) => (
-            <Chip
-              key={index}
-              label={author}
-              size="small"
-              variant="outlined"
-              sx={{ mb: 1 }}
-            />
-          ))}
-        </Stack>
+      {/* Manuscript Grid */}
+      <Grid container spacing={3}>
+        {manuscripts.map((manuscript) => {
+          const daysOld = Math.floor(
+            (Date.now() - new Date(manuscript.submission_date).getTime()) /
+              (1000 * 60 * 60 * 24)
+          );
 
-        {/* Metadata Grid */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Article Type
-            </Typography>
-            <Typography variant="body1">Expression of Concern</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Section
-            </Typography>
-            <Typography variant="body1">{manuscript.subject_area}</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Journal
-            </Typography>
-            <Typography variant="body1">{manuscript.journal}</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Special Issue
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {manuscript.submission_date}
-            </Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Triage Editor
-            </Typography>
-            <Typography variant="body1">{manuscript.editor_id}</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Academic Editor
-            </Typography>
-            <Typography variant="body1">Sarah Prist</Typography>
-          </Box>
-          <Box sx={{ gridColumn: "span 2" }}>
-            <Typography variant="body2" color="text.secondary">
-              Submitted on
-            </Typography>
-            <Typography variant="body1">
-              {new Date(manuscript.submission_date).toLocaleDateString(
-                "en-US",
-                {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                }
-              )}{" "}
-              (
-              {Math.floor(
-                (Date.now() - new Date(manuscript.submission_date).getTime()) /
-                  (1000 * 60 * 60 * 24)
-              )}{" "}
-              days)
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Collapsible Sections */}
-        <Box sx={{ mt: 3 }}>
-          <Accordion defaultExpanded={false}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Abstract</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography variant="body2">{manuscript.abstract}</Typography>
-            </AccordionDetails>
-          </Accordion>
-
-          <Accordion defaultExpanded={false}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Author Declaration</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography variant="body2" color="text.secondary">
-                Author declarations will appear here.
-              </Typography>
-            </AccordionDetails>
-          </Accordion>
-
-          <Accordion defaultExpanded={false}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Files</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography variant="body2" color="text.secondary">
-                Manuscript files will appear here.
-              </Typography>
-            </AccordionDetails>
-          </Accordion>
-        </Box>
-      </Paper>
-
-      {/* Reviewers Section */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-        <Accordion defaultExpanded={true}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center" width="100%">
-              <Typography fontWeight={500}>Reviewers</Typography>
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Typography variant="body2" color="text.secondary">
-                  Reports: <strong>0</strong> Submitted
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>1</strong> Overdue
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>2</strong> Invalidated
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Invitations: <strong>0</strong> Queued
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Accepted
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Pending
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Declined
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Expired
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Revoked
-                </Typography>
-              </Box>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>
-            {!hasInvitedReviewers && queue.length === 0 ? (
-              <Box
+          return (
+            <Grid size={{ xs: 12, md: 6 }} key={manuscript.id}>
+              <Card
+                elevation={0}
                 sx={{
+                  height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  py: 6,
                   border: "1px solid",
                   borderColor: "divider",
-                  borderRadius: 1,
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    boxShadow: 2,
+                  },
                 }}
               >
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-                  No reviewers invited yet.
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="large"
-                  onClick={handleManageReviewers}
-                  sx={{ minWidth: 180 }}
-                >
-                  Manage Reviewers
-                </Button>
-              </Box>
-            ) : (
-              <Box>
-                {hasInvitedReviewers && (
-                  <Typography variant="body2" sx={{ mb: 2 }}>
-                    {invitedCount} reviewer{invitedCount !== 1 ? "s" : ""}{" "}
-                    invited
+                <CardContent sx={{ flexGrow: 1 }}>
+                  {/* Manuscript ID and Status Chips */}
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    flexWrap="wrap"
+                    sx={{ mb: 2 }}
+                  >
+                    <Chip
+                      label={`ID ${manuscript.id.split("-")[0]}`}
+                      size="small"
+                      variant="outlined"
+                    />
+                    <Chip
+                      label={manuscript.status.replace("_", " ").toUpperCase()}
+                      size="small"
+                      color={
+                        manuscript.status === "accepted"
+                          ? "success"
+                          : manuscript.status === "rejected"
+                          ? "error"
+                          : "primary"
+                      }
+                    />
+                    {manuscript.user_role && (
+                      <Chip
+                        label={manuscript.user_role.toUpperCase()}
+                        size="small"
+                        color="secondary"
+                      />
+                    )}
+                  </Stack>
+
+                  {/* Title */}
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    fontWeight={600}
+                    sx={{
+                      mb: 2,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                    }}
+                  >
+                    {manuscript.title}
                   </Typography>
-                )}
-                {queue.length > 0 && (
-                  <Box sx={{ mb: 2 }}>
+
+                  {/* Authors */}
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    flexWrap="wrap"
+                    sx={{ mb: 2 }}
+                  >
+                    {manuscript.authors.slice(0, 3).map((author, index) => (
+                      <Chip
+                        key={index}
+                        label={author}
+                        size="small"
+                        variant="outlined"
+                        sx={{ mb: 0.5 }}
+                      />
+                    ))}
+                    {manuscript.authors.length > 3 && (
+                      <Chip
+                        label={`+${manuscript.authors.length - 3} more`}
+                        size="small"
+                        variant="outlined"
+                        sx={{ mb: 0.5 }}
+                      />
+                    )}
+                  </Stack>
+
+                  {/* Metadata */}
+                  <Box sx={{ mt: 2 }}>
                     <Typography
-                      variant="subtitle2"
-                      fontWeight={600}
-                      sx={{ mb: 1 }}
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
                     >
-                      Queued Invitations ({queue.length})
+                      <strong>Journal:</strong> {manuscript.journal}
                     </Typography>
-                    <Stack spacing={1}>
-                      {queue.map((item) => (
-                        <Paper
-                          key={item.id}
-                          elevation={0}
-                          sx={{
-                            p: 2,
-                            border: "1px solid",
-                            borderColor: "divider",
-                            bgcolor: "background.default",
-                          }}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                          >
-                            <Typography variant="body2" fontWeight={500}>
-                              {item.reviewer_name}
-                            </Typography>
-                            <Chip
-                              label={`Priority: ${item.priority}`}
-                              size="small"
-                            />
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Scheduled:{" "}
-                              {new Date(
-                                item.scheduled_send_date
-                              ).toLocaleDateString()}
-                            </Typography>
-                          </Stack>
-                        </Paper>
-                      ))}
-                    </Stack>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      <strong>Subject:</strong> {manuscript.subject_area}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Submitted:</strong>{" "}
+                      {new Date(manuscript.submission_date).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        }
+                      )}{" "}
+                      ({daysOld} days ago)
+                    </Typography>
                   </Box>
-                )}
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={handleManageReviewers}
-                >
-                  Manage Reviewers
-                </Button>
-              </Box>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      </Paper>
+                </CardContent>
 
-      {/* Additional Sections */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-        <Accordion defaultExpanded={false}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={500}>Your Editorial Decision</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" color="text.secondary">
-              Editorial decision interface will appear here.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-      </Paper>
-
-      <Paper elevation={0} sx={{ p: 3, bgcolor: "background.paper" }}>
-        <Accordion defaultExpanded={false}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography fontWeight={500}>Activity Log</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" color="text.secondary">
-              Activity log will appear here.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-      </Paper>
+                <CardActions sx={{ p: 2, pt: 0 }}>
+                  <Button
+                    variant="contained"
+                    endIcon={<ChevronRightIcon />}
+                    onClick={() => handleViewArticle(manuscript.id)}
+                    fullWidth
+                  >
+                    View Article
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          );
+        })}
+      </Grid>
     </Container>
   );
 }

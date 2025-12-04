@@ -16,10 +16,14 @@ import PeopleIcon from "@mui/icons-material/People";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import ArticleIcon from "@mui/icons-material/Article";
 import PsychologyIcon from "@mui/icons-material/Psychology";
+import GroupsIcon from "@mui/icons-material/Groups";
+import DescriptionIcon from "@mui/icons-material/Description";
 import AdminUserManager from "@/components/auth/AdminUserManager";
 import RoleManager from "@/components/auth/RoleManager";
 import ManuscriptUserManager from "@/components/auth/ManuscriptUserManager";
 import ReviewerMatchManager from "@/components/auth/ReviewerMatchManager";
+import ReviewerManager from "@/components/auth/ReviewerManager";
+import ManuscriptManager from "@/components/auth/ManuscriptManager";
 import { useRoleAccess } from "@/hooks/useRoles";
 
 export default function AdminPage() {
@@ -115,7 +119,16 @@ export default function AdminPage() {
             <Tabs
               value={activeTab}
               onChange={(_, newValue) => setActiveTab(newValue)}
-              sx={{ borderBottom: 1, borderColor: "divider" }}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                borderBottom: 1,
+                borderColor: "divider",
+                "& .MuiTabs-scrollButtons.Mui-disabled": {
+                  opacity: 0.3,
+                },
+              }}
             >
               <Tab
                 icon={<PersonAddIcon />}
@@ -137,6 +150,16 @@ export default function AdminPage() {
                 label="Reviewer Matches"
                 iconPosition="start"
               />
+              <Tab
+                icon={<GroupsIcon />}
+                label="Reviewer Database"
+                iconPosition="start"
+              />
+              <Tab
+                icon={<DescriptionIcon />}
+                label="Manuscript Database"
+                iconPosition="start"
+              />
             </Tabs>
           </Paper>
 
@@ -144,6 +167,8 @@ export default function AdminPage() {
           {activeTab === 1 && <RoleManager />}
           {activeTab === 2 && <ManuscriptUserManager />}
           {activeTab === 3 && <ReviewerMatchManager />}
+          {activeTab === 4 && <ReviewerManager />}
+          {activeTab === 5 && <ManuscriptManager />}
         </Box>
       )}
     </Container>

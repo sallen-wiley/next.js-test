@@ -1,0 +1,29 @@
+-- Migration: Admin Role Implicit Access
+-- Description: This migration documents the decision to grant admins implicit access 
+-- to all manuscripts through application logic rather than explicit database records.
+--
+-- NO DATABASE CHANGES REQUIRED
+--
+-- Implementation Details:
+-- - Admins see all manuscripts without user_manuscripts junction records
+-- - Query-level filtering checks user_profiles.role = 'admin' before applying user_manuscripts joins
+-- - This prevents database bloat and provides automatic access to new manuscripts
+-- - Real manuscript assignments (editor, author, collaborator, reviewer) remain explicit
+--
+-- Benefits:
+-- 1. No need to create/maintain admin assignment records for every manuscript
+-- 2. New manuscripts are instantly visible to admins without intervention
+-- 3. Clear separation: app role (admin) vs manuscript role (editor/author/etc)
+-- 4. Audit trail preserved - only real assignments stored in user_manuscripts
+-- 5. Flexible UI - can show "Viewing as Admin" indicators
+--
+-- Modified Functions (application layer only):
+-- - getUserManuscripts() - Returns all manuscripts for admins
+-- - getManuscriptById() - No user check for admins
+-- 
+-- Date: 2025-12-04
+-- Author: System Architecture
+-- Status: IMPLEMENTED IN APPLICATION LAYER
+
+-- This file exists for documentation purposes only.
+-- No SQL execution required.
