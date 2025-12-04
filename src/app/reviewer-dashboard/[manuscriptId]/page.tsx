@@ -10,7 +10,7 @@ import {
 } from "@/services/dataService";
 import type {
   Manuscript,
-  ReviewInvitation,
+  ReviewInvitationWithReviewer,
   InvitationQueueItem,
 } from "@/lib/supabase";
 
@@ -27,10 +27,23 @@ import {
   Stack,
   Alert,
   CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ArticleIcon from "@mui/icons-material/Article";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import QueueIcon from "@mui/icons-material/Queue";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PendingIcon from "@mui/icons-material/Pending";
+import CancelIcon from "@mui/icons-material/Cancel";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 
 export default function ArticleDetailsPage({
   params,
@@ -45,15 +58,17 @@ export default function ArticleDetailsPage({
   const manuscriptId = unwrappedParams.manuscriptId;
 
   const [manuscript, setManuscript] = React.useState<Manuscript | null>(null);
-  const [invitations, setInvitations] = React.useState<ReviewInvitation[]>([]);
+  const [invitations, setInvitations] = React.useState<
+    ReviewInvitationWithReviewer[]
+  >([]);
   const [queue, setQueue] = React.useState<InvitationQueueItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
   // Configure header
   useHeaderConfig({
-    logoAffix: "Article Details",
-    containerProps: { maxWidth: "lg" },
+    logoAffix: "Review",
+    containerProps: { maxWidth: false },
   });
 
   // Fetch manuscript by ID from params
@@ -120,7 +135,7 @@ export default function ArticleDetailsPage({
       <Container maxWidth="lg" sx={{ py: 8 }}>
         <Alert severity="error">{error}</Alert>
         <Button
-          startIcon={<ArticleIcon />}
+          startIcon={<ArrowBackIcon />}
           onClick={() => router.push("/reviewer-dashboard")}
           sx={{ mt: 2 }}
         >
@@ -137,7 +152,7 @@ export default function ArticleDetailsPage({
           No manuscript found. Please contact an administrator.
         </Alert>
         <Button
-          startIcon={<ArticleIcon />}
+          startIcon={<ArrowBackIcon />}
           onClick={() => router.push("/reviewer-dashboard")}
           sx={{ mt: 2 }}
         >
@@ -147,25 +162,64 @@ export default function ArticleDetailsPage({
     );
   }
 
-  const invitedCount = invitations.filter(
-    (inv) => inv.status !== "declined"
-  ).length;
-  const hasInvitedReviewers = invitedCount > 0;
+  const hasInvitedReviewers = invitations.length > 0;
+
+  // Helper functions for invitation status display
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return "success";
+      case "pending":
+        return "warning";
+      case "declined":
+        return "error";
+      case "expired":
+        return "default";
+      case "completed":
+        return "info";
+      case "report_submitted":
+        return "success";
+      case "overdue":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return <CheckCircleIcon fontSize="small" />;
+      case "pending":
+        return <PendingIcon fontSize="small" />;
+      case "declined":
+        return <CancelIcon fontSize="small" />;
+      case "report_submitted":
+        return <AssignmentTurnedInIcon fontSize="small" />;
+      default:
+        return <MailOutlineIcon fontSize="small" />;
+    }
+  };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Back Navigation */}
-      <Button
-        startIcon={<ArticleIcon />}
-        onClick={() => router.push("/reviewer-dashboard")}
-        sx={{ mb: 2 }}
-      >
-        BACK
-      </Button>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Back Navigation and Breadcrumb */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => router.push("/reviewer-dashboard")}
+          size="small"
+        >
+          Back to Dashboard
+        </Button>
+        <Typography variant="body2" color="text.secondary">
+          DASHBOARD / ARTICLE DETAILS
+        </Typography>
+      </Box>
 
-      {/* Breadcrumb */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        DASHBOARD / ARTICLE DETAILS
+      {/* Page Title */}
+      <Typography variant="h4" component="h1" fontWeight={600} sx={{ mb: 3 }}>
+        Article Details
       </Typography>
 
       {/* Article Header */}
@@ -392,69 +446,231 @@ export default function ArticleDetailsPage({
                 </Button>
               </Box>
             ) : (
-              <Box>
+              <Stack spacing={3}>
+                {/* Sent Invitations Table */}
                 {hasInvitedReviewers && (
-                  <Typography variant="body2" sx={{ mb: 2 }}>
-                    {invitedCount} reviewer{invitedCount !== 1 ? "s" : ""}{" "}
-                    invited
-                  </Typography>
-                )}
-                {queue.length > 0 && (
-                  <Box sx={{ mb: 2 }}>
+                  <Box>
                     <Typography
-                      variant="subtitle2"
+                      variant="subtitle1"
                       fontWeight={600}
-                      sx={{ mb: 1 }}
+                      gutterBottom
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 2,
+                      }}
                     >
-                      Queued Invitations ({queue.length})
+                      <MailOutlineIcon color="primary" />
+                      Sent Invitations ({invitations.length})
                     </Typography>
-                    <Stack spacing={1}>
-                      {queue.map((item) => (
-                        <Paper
-                          key={item.id}
-                          elevation={0}
-                          sx={{
-                            p: 2,
-                            border: "1px solid",
-                            borderColor: "divider",
-                            bgcolor: "background.default",
-                          }}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                          >
-                            <Typography variant="body2" fontWeight={500}>
-                              {item.reviewer_name}
-                            </Typography>
-                            <Chip
-                              label={`Priority: ${item.priority}`}
-                              size="small"
-                            />
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Scheduled:{" "}
-                              {new Date(
-                                item.scheduled_send_date
-                              ).toLocaleDateString()}
-                            </Typography>
-                          </Stack>
-                        </Paper>
-                      ))}
-                    </Stack>
+                    <TableContainer
+                      component={Paper}
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                    >
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Reviewer</TableCell>
+                            <TableCell>Invited Date</TableCell>
+                            <TableCell align="center">Status</TableCell>
+                            <TableCell>Response Date</TableCell>
+                            <TableCell>Due Date</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {invitations.map((invitation) => (
+                            <TableRow key={invitation.id} hover>
+                              <TableCell>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 0.5,
+                                  }}
+                                >
+                                  <Typography variant="body2" fontWeight={500}>
+                                    {invitation.reviewer_name}
+                                  </Typography>
+                                  {invitation.reviewer_affiliation && (
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                    >
+                                      {invitation.reviewer_affiliation}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="caption">
+                                  {new Date(
+                                    invitation.invited_date
+                                  ).toLocaleDateString()}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Chip
+                                  icon={getStatusIcon(invitation.status)}
+                                  label={invitation.status}
+                                  color={
+                                    getStatusColor(invitation.status) as
+                                      | "success"
+                                      | "warning"
+                                      | "error"
+                                      | "info"
+                                      | "default"
+                                  }
+                                  size="small"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="caption">
+                                  {invitation.response_date
+                                    ? new Date(
+                                        invitation.response_date
+                                      ).toLocaleDateString()
+                                    : "—"}
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="caption">
+                                  {new Date(
+                                    invitation.due_date
+                                  ).toLocaleDateString()}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
                   </Box>
                 )}
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={handleManageReviewers}
-                >
-                  Manage Reviewers
-                </Button>
-              </Box>
+
+                {/* Queue Table */}
+                {queue.length > 0 && (
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={600}
+                      gutterBottom
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mb: 2,
+                      }}
+                    >
+                      <QueueIcon color="primary" />
+                      Invitation Queue ({queue.length})
+                    </Typography>
+                    <TableContainer
+                      component={Paper}
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                    >
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell width={80}>Position</TableCell>
+                            <TableCell>Reviewer</TableCell>
+                            <TableCell>Affiliation</TableCell>
+                            <TableCell>Scheduled Send</TableCell>
+                            <TableCell align="center">Priority</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {queue
+                            .sort((a, b) => a.queue_position - b.queue_position)
+                            .map((item) => (
+                              <TableRow key={item.id} hover>
+                                <TableCell>
+                                  <Chip
+                                    label={item.queue_position}
+                                    color="primary"
+                                    size="small"
+                                    sx={{ fontWeight: "bold" }}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Avatar
+                                      sx={{
+                                        width: 32,
+                                        height: 32,
+                                        fontSize: "0.875rem",
+                                      }}
+                                    >
+                                      {item.reviewer_name
+                                        ? item.reviewer_name
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")
+                                        : "?"}
+                                    </Avatar>
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={500}
+                                    >
+                                      {item.reviewer_name || "Unknown"}
+                                    </Typography>
+                                  </Box>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {item.reviewer_affiliation || "—"}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="caption">
+                                    {new Date(
+                                      item.scheduled_send_date
+                                    ).toLocaleDateString()}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Chip
+                                    label={item.priority}
+                                    color={
+                                      item.priority === "high"
+                                        ? "error"
+                                        : item.priority === "normal"
+                                        ? "default"
+                                        : "info"
+                                    }
+                                    size="small"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                )}
+
+                {/* Manage Reviewers Button */}
+                <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={handleManageReviewers}
+                  >
+                    Manage Reviewers
+                  </Button>
+                </Box>
+              </Stack>
             )}
           </AccordionDetails>
         </Accordion>

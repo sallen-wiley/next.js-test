@@ -25,7 +25,7 @@ import UnifiedQueueTab from "./UnifiedQueueTab";
 import ReviewerActionMenu from "./ReviewerActionMenu";
 import type {
   Manuscript,
-  InvitationQueue,
+  InvitationQueueItem,
   PotentialReviewer,
   PotentialReviewerWithMatch,
   ReviewInvitation,
@@ -305,9 +305,9 @@ export default function ReviewerInvitationDashboard() {
     message: "",
     onConfirm: () => {},
   });
-  const [simulatedQueue, setSimulatedQueue] = React.useState<InvitationQueue[]>(
-    []
-  );
+  const [simulatedQueue, setSimulatedQueue] = React.useState<
+    InvitationQueueItem[]
+  >([]);
 
   // Filter and sort reviewers
   const filteredReviewers = React.useMemo(() => {
@@ -775,11 +775,13 @@ export default function ReviewerInvitationDashboard() {
             addToQueue(manuscriptId, reviewerId, "normal")
           );
 
-          const results = await Promise.all(addPromises);
+          const results: (InvitationQueueItem | null)[] = await Promise.all(
+            addPromises
+          );
 
           // Update local state with new queue items
           const newItems = results.filter(
-            (item): item is InvitationQueue => item !== null
+            (item): item is InvitationQueueItem => item !== null
           );
           setSimulatedQueue((prev) => [...prev, ...newItems]);
           setSelectedReviewers([]);
@@ -811,7 +813,7 @@ export default function ReviewerInvitationDashboard() {
 
   // Configure header for reviewer dashboard
   useHeaderConfig({
-    logoAffix: "Review Dashboard",
+    logoAffix: "Review",
     containerProps: { maxWidth: false },
   });
 
@@ -821,19 +823,26 @@ export default function ReviewerInvitationDashboard() {
         {/* Header */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid size={12}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
               <Button
                 startIcon={<ArrowBackIcon />}
                 onClick={handleBackToArticle}
-                variant="outlined"
                 size="small"
               >
                 Back to Article Details
               </Button>
-              <Typography variant="h4" component="h1">
-                Manage Reviewers
+              <Typography variant="body2" color="text.secondary">
+                DASHBOARD / ARTICLE DETAILS / MANAGE REVIEWERS
               </Typography>
             </Box>
+            <Typography
+              variant="h4"
+              component="h1"
+              fontWeight={600}
+              sx={{ mb: 2 }}
+            >
+              Manage Reviewers
+            </Typography>
 
             {/* Manuscript Details Card - Dynamic Data */}
             {manuscript && (

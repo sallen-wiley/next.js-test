@@ -82,6 +82,11 @@ export interface InvitationQueueItem extends InvitationQueue {
   reviewer_affiliation?: string;
 }
 
+export interface ReviewInvitationWithReviewer extends ReviewInvitation {
+  reviewer_name: string;
+  reviewer_affiliation?: string;
+}
+
 export interface ReviewerMetrics {
   reviewer_id: string;
   total_invitations: number;

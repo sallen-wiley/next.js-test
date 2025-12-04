@@ -4,6 +4,7 @@ import {
   Manuscript,
   PotentialReviewer,
   ReviewInvitation,
+  ReviewInvitationWithReviewer,
   InvitationQueue,
   InvitationQueueItem,
   UserManuscript,
@@ -656,7 +657,8 @@ export async function getAllReviewers(): Promise<PotentialReviewer[]> {
  */
 export async function getManuscriptInvitations(
   manuscriptId: string
-): Promise<ReviewInvitation[]> {
+): Promise<ReviewInvitationWithReviewer[]> {
+  // Fetch invitations without join
   const { data, error } = await supabase
     .from("review_invitations")
     .select("*")
@@ -664,11 +666,53 @@ export async function getManuscriptInvitations(
     .order("invited_date", { ascending: false });
 
   if (error) {
-    console.error("Error fetching manuscript invitations:", error);
+    console.error("Error fetching manuscript invitations:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
     throw error;
   }
 
-  return data || [];
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // Get unique reviewer IDs
+  const reviewerIds = [...new Set(data.map((inv) => inv.reviewer_id))];
+
+  // Fetch reviewer details for all reviewer IDs
+  const { data: reviewers } = await supabase
+    .from("potential_reviewers")
+    .select("id, name, affiliation")
+    .in("id", reviewerIds);
+
+  // Create a map of reviewer data
+  const reviewerMap = new Map((reviewers || []).map((r) => [r.id, r]));
+
+  // Combine invitation data with reviewer details
+  const invitations: ReviewInvitationWithReviewer[] = data.map((item) => {
+    const reviewer = reviewerMap.get(item.reviewer_id);
+    return {
+      id: item.id,
+      manuscript_id: item.manuscript_id,
+      reviewer_id: item.reviewer_id,
+      invited_date: item.invited_date,
+      due_date: item.due_date,
+      status: item.status,
+      response_date: item.response_date,
+      queue_position: item.queue_position,
+      invitation_round: item.invitation_round,
+      notes: item.notes,
+      reminder_count: item.reminder_count,
+      estimated_completion_date: item.estimated_completion_date,
+      reviewer_name: reviewer?.name || "Unknown Reviewer",
+      reviewer_affiliation: reviewer?.affiliation,
+    };
+  });
+
+  return invitations;
 }
 
 /**
@@ -703,39 +747,55 @@ export async function getManuscriptById(
 export async function getManuscriptQueue(
   manuscriptId: string
 ): Promise<InvitationQueueItem[]> {
+  // Fetch queue items without join
   const { data, error } = await supabase
     .from("invitation_queue")
-    .select(
-      `
-      *,
-      potential_reviewers!reviewer_id (
-        name,
-        affiliation
-      )
-    `
-    )
+    .select("*")
     .eq("manuscript_id", manuscriptId)
     .order("queue_position", { ascending: true });
 
   if (error) {
-    console.error("Error fetching manuscript queue:", error);
+    console.error("Error fetching manuscript queue:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
     throw error;
   }
 
-  // Transform the nested data structure
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const queueItems: InvitationQueueItem[] = (data || []).map((item: any) => ({
-    id: item.id,
-    manuscript_id: item.manuscript_id,
-    reviewer_id: item.reviewer_id,
-    queue_position: item.queue_position,
-    created_date: item.created_date,
-    scheduled_send_date: item.scheduled_send_date,
-    priority: item.priority,
-    notes: item.notes,
-    reviewer_name: item.potential_reviewers?.name || "Unknown Reviewer",
-    reviewer_affiliation: item.potential_reviewers?.affiliation,
-  }));
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // Get unique reviewer IDs
+  const reviewerIds = [...new Set(data.map((item) => item.reviewer_id))];
+
+  // Fetch reviewer details for all reviewer IDs
+  const { data: reviewers } = await supabase
+    .from("potential_reviewers")
+    .select("id, name, affiliation")
+    .in("id", reviewerIds);
+
+  // Create a map of reviewer data
+  const reviewerMap = new Map((reviewers || []).map((r) => [r.id, r]));
+
+  // Combine queue data with reviewer details
+  const queueItems: InvitationQueueItem[] = data.map((item) => {
+    const reviewer = reviewerMap.get(item.reviewer_id);
+    return {
+      id: item.id,
+      manuscript_id: item.manuscript_id,
+      reviewer_id: item.reviewer_id,
+      queue_position: item.queue_position,
+      created_date: item.created_date,
+      scheduled_send_date: item.scheduled_send_date,
+      priority: item.priority,
+      notes: item.notes,
+      reviewer_name: reviewer?.name || "Unknown Reviewer",
+      reviewer_affiliation: reviewer?.affiliation,
+    };
+  });
 
   return queueItems;
 }
@@ -750,7 +810,7 @@ export async function addToQueue(
   manuscriptId: string,
   reviewerId: string,
   priority: "high" | "normal" | "low" = "normal"
-): Promise<InvitationQueue | null> {
+): Promise<InvitationQueueItem | null> {
   // Check if reviewer already has an invitation
   const { data: existingInvitation } = await supabase
     .from("review_invitations")
@@ -819,7 +879,23 @@ export async function addToQueue(
     );
   }
 
-  return data;
+  if (!data) {
+    return null;
+  }
+
+  // Fetch reviewer details
+  const { data: reviewer } = await supabase
+    .from("potential_reviewers")
+    .select("name, affiliation")
+    .eq("id", reviewerId)
+    .single();
+
+  // Return with reviewer details
+  return {
+    ...data,
+    reviewer_name: reviewer?.name || "Unknown Reviewer",
+    reviewer_affiliation: reviewer?.affiliation,
+  };
 }
 
 /**
@@ -923,16 +999,81 @@ export async function getReviewersWithStatus(
     throw invitationError;
   }
 
+  // Collect all unique reviewer IDs from queue and invitations
+  const reviewerIdsInWorkflow = new Set<string>();
+  (queueItems || []).forEach((q) => reviewerIdsInWorkflow.add(q.reviewer_id));
+  (invitations || []).forEach((i) => reviewerIdsInWorkflow.add(i.reviewer_id));
+
+  // Get reviewer IDs from matches
+  const matchedReviewerIds = new Set(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (matchedReviewers || []).map((m: any) => m.potential_reviewers.id)
+  );
+
+  // Find reviewer IDs that are in workflow but not in matches
+  const unmatchedReviewerIds = Array.from(reviewerIdsInWorkflow).filter(
+    (id) => !matchedReviewerIds.has(id)
+  );
+
+  // Fetch unmatched reviewers from potential_reviewers table
+  let unmatchedReviewers = [];
+  if (unmatchedReviewerIds.length > 0) {
+    const { data: additionalReviewers } = await supabase
+      .from("potential_reviewers")
+      .select("*")
+      .in("id", unmatchedReviewerIds);
+    unmatchedReviewers = additionalReviewers || [];
+  }
+
   // Build lookup maps
   const queueMap = new Map((queueItems || []).map((q) => [q.reviewer_id, q]));
   const invitationMap = new Map(
     (invitations || []).map((i) => [i.reviewer_id, i])
   );
 
-  // Combine data
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const reviewersWithStatus = (matchedReviewers || []).map((item: any) => {
-    const reviewer = item.potential_reviewers;
+  // Process matched reviewers
+  const matchedReviewersWithStatus = (matchedReviewers || []).map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (item: any) => {
+      const reviewer = item.potential_reviewers;
+      const queueItem = queueMap.get(reviewer.id);
+      const invitation = invitationMap.get(reviewer.id);
+
+      // Determine status
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let invitation_status: any = null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let additionalFields: any = {};
+
+      if (queueItem) {
+        invitation_status = "queued";
+        additionalFields = {
+          queue_position: queueItem.queue_position,
+          queue_id: queueItem.id,
+          priority: queueItem.priority,
+          scheduled_send_date: queueItem.scheduled_send_date,
+        };
+      } else if (invitation) {
+        invitation_status = invitation.status;
+        additionalFields = {
+          invitation_id: invitation.id,
+          invited_date: invitation.invited_date,
+          response_date: invitation.response_date,
+          due_date: invitation.due_date,
+        };
+      }
+
+      return {
+        ...reviewer,
+        match_score: item.match_score,
+        invitation_status,
+        ...additionalFields,
+      };
+    }
+  );
+
+  // Process unmatched reviewers (those in queue/invitations but not in matches)
+  const unmatchedReviewersWithStatus = unmatchedReviewers.map((reviewer) => {
     const queueItem = queueMap.get(reviewer.id);
     const invitation = invitationMap.get(reviewer.id);
 
@@ -962,13 +1103,14 @@ export async function getReviewersWithStatus(
 
     return {
       ...reviewer,
-      match_score: item.match_score,
+      match_score: 0, // No match score for unmatched reviewers
       invitation_status,
       ...additionalFields,
     };
   });
 
-  return reviewersWithStatus;
+  // Combine both sets
+  return [...matchedReviewersWithStatus, ...unmatchedReviewersWithStatus];
 }
 
 /**

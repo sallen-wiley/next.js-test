@@ -34,8 +34,8 @@ export default function ArticleListingPage() {
 
   // Configure header
   useHeaderConfig({
-    logoAffix: "Reviewer Dashboard",
-    containerProps: { maxWidth: "lg" },
+    logoAffix: "Review",
+    containerProps: { maxWidth: false },
   });
 
   // Fetch all manuscripts assigned to user
