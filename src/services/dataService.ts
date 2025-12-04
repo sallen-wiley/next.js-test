@@ -593,6 +593,7 @@ export async function getUserManuscripts(
   }
 
   // Transform the nested structure to flat ManuscriptWithUserRole
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((item: any) => ({
     ...item.manuscripts,
     user_role: item.role,
@@ -624,6 +625,7 @@ export async function getManuscriptReviewers(
   }
 
   // Transform the nested structure to include match_score at top level
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((item: any) => ({
     ...item.potential_reviewers,
     match_score: item.match_score,
@@ -674,8 +676,7 @@ export async function getManuscriptInvitations(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getManuscriptById(
-  manuscriptId: string,
-  userId?: string
+  manuscriptId: string
 ): Promise<Manuscript | null> {
   const { data, error } = await supabase
     .from("manuscripts")
@@ -722,6 +723,7 @@ export async function getManuscriptQueue(
   }
 
   // Transform the nested data structure
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const queueItems: InvitationQueueItem[] = (data || []).map((item: any) => ({
     id: item.id,
     manuscript_id: item.manuscript_id,
@@ -928,13 +930,16 @@ export async function getReviewersWithStatus(
   );
 
   // Combine data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reviewersWithStatus = (matchedReviewers || []).map((item: any) => {
     const reviewer = item.potential_reviewers;
     const queueItem = queueMap.get(reviewer.id);
     const invitation = invitationMap.get(reviewer.id);
 
     // Determine status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let invitation_status: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let additionalFields: any = {};
 
     if (queueItem) {
@@ -1220,6 +1225,7 @@ export async function sendInvitation(
  * Get all reviewer-manuscript matches with details
  * @returns All matches with reviewer and manuscript information
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getAllReviewerMatches(): Promise<any[]> {
   const { data, error } = await supabase
     .from("reviewer_manuscript_matches")
@@ -1260,6 +1266,7 @@ export async function getAllReviewerMatches(): Promise<any[]> {
  */
 export async function getMatchesForManuscript(
   manuscriptId: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any[]> {
   const { data, error } = await supabase
     .from("reviewer_manuscript_matches")
@@ -1298,6 +1305,7 @@ export async function addReviewerMatch(
   manuscriptId: string,
   reviewerId: string,
   matchScore: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   // Validate match score
   if (matchScore < 0 || matchScore > 100) {
@@ -1423,11 +1431,13 @@ export async function bulkAddReviewerMatches(
 // User Profile and Manuscript Assignment Functions
 // ============================================================================
 
+import type { UserProfile } from "@/types/roles";
+
 /**
  * Fetch all user profiles
  * @returns All user profiles from the database
  */
-export async function getAllUsers(): Promise<any[]> {
+export async function getAllUsers(): Promise<UserProfile[]> {
   const { data, error } = await supabase
     .from("user_profiles")
     .select("*")
@@ -1463,6 +1473,7 @@ export async function getAllManuscripts(): Promise<Manuscript[]> {
  * Get all user-manuscript assignments
  * @returns All user-manuscript assignments with user and manuscript details
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getAllUserManuscriptAssignments(): Promise<any[]> {
   const { data, error } = await supabase
     .from("user_manuscripts")
@@ -1775,7 +1786,8 @@ export async function updateManuscript(
   updates: Partial<Manuscript>
 ): Promise<Manuscript> {
   // Remove id from updates if present
-  const { id: _, ...updateData } = updates as Manuscript;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id: _unused, ...updateData } = updates as Manuscript;
 
   const { data, error } = await supabase
     .from("manuscripts")

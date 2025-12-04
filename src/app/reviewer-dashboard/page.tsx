@@ -9,7 +9,6 @@ import type { ManuscriptWithUserRole } from "@/lib/supabase";
 import {
   Container,
   Typography,
-  Paper,
   Box,
   Chip,
   Button,
@@ -22,7 +21,6 @@ import {
   CardActions,
 } from "@mui/material";
 
-import ArticleIcon from "@mui/icons-material/Article";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 export default function ArticleListingPage() {
