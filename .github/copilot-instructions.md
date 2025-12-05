@@ -86,6 +86,22 @@ sx={[
   }),
 ]}
 
+#### Per-Theme Prop Switching (runtime)
+
+- Use `useThemeContext().currentTheme` as the stable theme id; switch props at render time. Example: Admin CTA uses `secondary` normally and `error` + `outlined` when `phenom` is active.
+
+```tsx
+import { useThemeContext } from "@/contexts/ThemeContext";
+
+const { currentTheme } = useThemeContext();
+const color = currentTheme === "phenom" ? "error" : "secondary";
+const variant = currentTheme === "phenom" ? "outlined" : "text";
+
+return <Button color={color} variant={variant}>Admin</Button>;
+```
+
+- Prefer semantic variants when possible (e.g., define `color="headerAction"` in each theme). Fall back to simple switches like above when you need a one-off per-theme tweak.
+
 #### Context Usage
 
 ```tsx
