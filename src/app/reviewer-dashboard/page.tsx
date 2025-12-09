@@ -1,48 +1,51 @@
 "use client";
 import * as React from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getUserManuscripts } from "@/services/dataService";
 import type { ManuscriptWithUserRole } from "@/lib/supabase";
-
 import {
-  Container,
-  Typography,
-  Box,
-  Chip,
-  Button,
-  Stack,
   Alert,
+  Box,
   CircularProgress,
+  Container,
+  FormControl,
   Grid,
-  Card,
-  CardContent,
-  CardActions,
+  MenuItem,
+  Pagination,
+  Select,
+  Stack,
+  Typography,
 } from "@mui/material";
-
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { ArticleCard } from "./ArticleCard";
+import { FilterRail, type FilterOption, type SelectOption } from "./FilterRail";
 
 export default function ArticleListingPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [manuscripts, setManuscripts] = React.useState<
-    ManuscriptWithUserRole[]
-  >([]);
-  const [loading, setLoading] = React.useState(true);
+  const [manuscripts, setManuscripts] = useState<ManuscriptWithUserRole[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("latest");
+  const [page, setPage] = useState(1);
 
-  // Configure header
+  const [filters, setFilters] = useState({
+    journal: "all",
+    status: "all",
+    scope: "assigned",
+    priority: "action-required",
+  });
+
   useHeaderConfig({
     logoAffix: "Review",
     containerProps: { maxWidth: false },
   });
 
-  // Fetch all manuscripts assigned to user
   React.useEffect(() => {
     async function fetchData() {
       if (!user?.id) return;
-
       setLoading(true);
       try {
         const userManuscripts = await getUserManuscripts(user.id);
@@ -56,6 +59,66 @@ export default function ArticleListingPage() {
 
     fetchData();
   }, [user]);
+
+  const journalOptions: SelectOption[] = useMemo(() => {
+    const unique = Array.from(new Set(manuscripts.map((m) => m.journal)));
+    return [
+      { label: "All", value: "all" },
+      ...unique.map((j) => ({ label: j, value: j })),
+    ];
+  }, [manuscripts]);
+
+  const statusOptions: SelectOption[] = useMemo(() => {
+    const unique = Array.from(new Set(manuscripts.map((m) => m.status)));
+    return [
+      { label: "All", value: "all" },
+      ...unique.map((s) => ({ label: s.replace(/_/g, " "), value: s })),
+    ];
+  }, [manuscripts]);
+
+  const scopeOptions: FilterOption[] = useMemo(
+    () => [
+      {
+        label: "My assigned manuscripts",
+        value: "assigned",
+        count: manuscripts.length,
+      },
+      { label: "All manuscripts", value: "all", count: manuscripts.length },
+    ],
+    [manuscripts.length]
+  );
+
+  const priorityOptions: FilterOption[] = [
+    {
+      label: "Action required",
+      value: "action-required",
+      count: manuscripts.length,
+    },
+    { label: "In progress", value: "in-progress", count: 0 },
+    { label: "Finalized", value: "finalized", count: 0 },
+    { label: "All", value: "all", count: manuscripts.length },
+  ];
+
+  const filteredManuscripts = useMemo(() => {
+    return manuscripts.filter((m) => {
+      const journalMatch =
+        filters.journal === "all" || m.journal === filters.journal;
+      const statusMatch =
+        filters.status === "all" || m.status === filters.status;
+      return journalMatch && statusMatch;
+    });
+  }, [manuscripts, filters]);
+
+  const handleReset = () => {
+    setFilters({
+      journal: "all",
+      status: "all",
+      scope: "assigned",
+      priority: "action-required",
+    });
+    setSort("latest");
+    setPage(1);
+  };
 
   const handleViewArticle = (manuscriptId: string) => {
     router.push(`/reviewer-dashboard/${manuscriptId}`);
@@ -90,164 +153,113 @@ export default function ArticleListingPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Page Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" fontWeight={600} sx={{ mb: 1 }}>
-          My Articles
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {manuscripts.length} manuscript{manuscripts.length !== 1 ? "s" : ""}{" "}
-          assigned to you
-        </Typography>
-      </Box>
+    <Container maxWidth={false} sx={{ py: 3 }}>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 3, lg: 3 }}>
+          <FilterRail
+            journalOptions={journalOptions}
+            statusOptions={statusOptions}
+            scopeOptions={scopeOptions}
+            priorityOptions={priorityOptions}
+            selectedJournal={filters.journal}
+            selectedStatus={filters.status}
+            selectedScope={filters.scope}
+            selectedPriority={filters.priority}
+            onJournalChange={(value) =>
+              setFilters((prev) => ({ ...prev, journal: value }))
+            }
+            onStatusChange={(value) =>
+              setFilters((prev) => ({ ...prev, status: value }))
+            }
+            onScopeChange={(value) =>
+              setFilters((prev) => ({ ...prev, scope: value }))
+            }
+            onPriorityChange={(value) =>
+              setFilters((prev) => ({ ...prev, priority: value }))
+            }
+            onReset={handleReset}
+          />
+        </Grid>
 
-      {/* Manuscript Grid */}
-      <Grid container spacing={3}>
-        {manuscripts.map((manuscript) => {
-          const daysOld = Math.floor(
-            (Date.now() - new Date(manuscript.submission_date).getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
+        <Grid size={{ xs: 12, md: 9, lg: 9 }}>
+          <Stack spacing={2} sx={{ px: { xs: 0, md: 2 } }}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", md: "center" }}
+            >
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Action Required
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Showing manuscripts{" "}
+                  {filteredManuscripts.length > 0 ? "1" : "0"}-
+                  {filteredManuscripts.length} of {filteredManuscripts.length}
+                </Typography>
+              </Stack>
 
-          return (
-            <Grid size={{ xs: 12, md: 6 }} key={manuscript.id}>
-              <Card
-                elevation={0}
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    borderColor: "primary.main",
-                    boxShadow: 2,
-                  },
-                }}
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  {/* Manuscript ID and Status Chips */}
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    flexWrap="wrap"
-                    sx={{ mb: 2 }}
-                  >
-                    <Chip
-                      label={`ID ${manuscript.id.split("-")[0]}`}
-                      size="small"
-                      variant="outlined"
-                    />
-                    <Chip
-                      label={manuscript.status.replace("_", " ").toUpperCase()}
-                      size="small"
-                      color={
-                        manuscript.status === "accepted"
-                          ? "success"
-                          : manuscript.status === "rejected"
-                          ? "error"
-                          : "primary"
-                      }
-                    />
-                    {manuscript.user_role && (
-                      <Chip
-                        label={manuscript.user_role.toUpperCase()}
-                        size="small"
-                        color="secondary"
-                      />
-                    )}
-                  </Stack>
+              <FormControl size="small" sx={{ minWidth: 220 }}>
+                <Select
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value)}
+                >
+                  <MenuItem value="latest">
+                    Last updated (latest first)
+                  </MenuItem>
+                  <MenuItem value="oldest">
+                    Last updated (oldest first)
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
 
-                  {/* Title */}
-                  <Typography
-                    variant="h6"
-                    component="h2"
-                    fontWeight={600}
-                    sx={{
-                      mb: 2,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
+            <Stack spacing={2}>
+              {filteredManuscripts.map((manuscript) => {
+                const submittedDate = new Date(manuscript.submission_date);
+                const submittedFormatted =
+                  submittedDate.toLocaleDateString("en-GB");
+                const academicEditors =
+                  manuscript.assignedEditors?.map(
+                    (editor) => editor.full_name || editor.email
+                  ) || [];
+
+                return (
+                  <ArticleCard
+                    key={manuscript.id}
+                    id={manuscript.id.split("-")[0]}
+                    title={manuscript.title}
+                    author={manuscript.authors[0] ?? "Unknown"}
+                    badges={["AE", "AE"]}
+                    articleType={manuscript.subject_area || "Research Article"}
+                    academicEditors={academicEditors}
+                    journal={manuscript.journal}
+                    submittedOn={`${submittedFormatted}`}
+                    stateLabel="respond to invite"
+                    stateCode="V1"
+                    reviewerStats={{
+                      invited: 3,
+                      agreed: 1,
+                      declined: 2,
+                      submitted: 1,
                     }}
-                  >
-                    {manuscript.title}
-                  </Typography>
-
-                  {/* Authors */}
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    flexWrap="wrap"
-                    sx={{ mb: 2 }}
-                  >
-                    {manuscript.authors.slice(0, 3).map((author, index) => (
-                      <Chip
-                        key={index}
-                        label={author}
-                        size="small"
-                        variant="outlined"
-                        sx={{ mb: 0.5 }}
-                      />
-                    ))}
-                    {manuscript.authors.length > 3 && (
-                      <Chip
-                        label={`+${manuscript.authors.length - 3} more`}
-                        size="small"
-                        variant="outlined"
-                        sx={{ mb: 0.5 }}
-                      />
-                    )}
-                  </Stack>
-
-                  {/* Metadata */}
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.5 }}
-                    >
-                      <strong>Journal:</strong> {manuscript.journal}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.5 }}
-                    >
-                      <strong>Subject:</strong> {manuscript.subject_area}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Submitted:</strong>{" "}
-                      {new Date(manuscript.submission_date).toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )}{" "}
-                      ({daysOld} days ago)
-                    </Typography>
-                  </Box>
-                </CardContent>
-
-                <CardActions sx={{ p: 2, pt: 0 }}>
-                  <Button
-                    variant="contained"
-                    endIcon={<ChevronRightIcon />}
                     onClick={() => handleViewArticle(manuscript.id)}
-                    fullWidth
-                  >
-                    View Article
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
-          );
-        })}
+                  />
+                );
+              })}
+            </Stack>
+
+            <Box display="flex" justifyContent="flex-end" sx={{ pt: 1 }}>
+              <Pagination
+                count={Math.max(1, Math.ceil(filteredManuscripts.length / 10))}
+                page={page}
+                onChange={(_event, value) => setPage(value)}
+                size="small"
+              />
+            </Box>
+          </Stack>
+        </Grid>
       </Grid>
     </Container>
   );

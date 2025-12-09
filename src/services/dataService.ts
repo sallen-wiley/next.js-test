@@ -11,6 +11,7 @@ import {
   ManuscriptWithUserRole,
   PotentialReviewerWithMatch,
 } from "@/lib/supabase";
+import type { UserProfile } from "@/types/roles";
 
 /**
  * Helper function to check if a user has admin role
@@ -29,6 +30,65 @@ async function isUserAdmin(userId: string): Promise<boolean> {
   }
 
   return data.role === "admin";
+}
+
+/**
+ * Fetch active editor assignments for a set of manuscripts.
+ * Editors are users with role "editor" in user_manuscripts.
+ */
+async function getEditorsForManuscripts(
+  manuscriptIds: string[]
+): Promise<Map<string, UserProfile[]>> {
+  if (manuscriptIds.length === 0) return new Map();
+
+  const { data, error } = await supabase
+    .from("user_manuscripts")
+    .select(
+      `
+      manuscript_id,
+      user_profiles (*)
+    `
+    )
+    .eq("role", "editor")
+    .eq("is_active", true)
+    .in("manuscript_id", manuscriptIds);
+
+  if (error) {
+    console.error("Error fetching manuscript editors:", error);
+    throw error;
+  }
+
+  const map = new Map<string, UserProfile[]>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (data || []).forEach((row: any) => {
+    const existing = map.get(row.manuscript_id) || [];
+    if (row.user_profiles) {
+      existing.push(row.user_profiles as UserProfile);
+    }
+    map.set(row.manuscript_id, existing);
+  });
+
+  return map;
+}
+
+/**
+ * Attach editor assignments (users) to manuscripts as assignedEditors / assignedEditorIds.
+ */
+async function enrichManuscriptsWithEditors<T extends Manuscript>(
+  manuscripts: T[]
+): Promise<T[]> {
+  const editorMap = await getEditorsForManuscripts(
+    manuscripts.map((m) => m.id)
+  );
+
+  return manuscripts.map((manuscript) => {
+    const editors = editorMap.get(manuscript.id) || [];
+    return {
+      ...manuscript,
+      assignedEditors: editors,
+      assignedEditorIds: editors.map((e) => e.id),
+    };
+  });
 }
 
 // Legacy article data for backward compatibility
@@ -105,7 +165,8 @@ export const mockManuscript: Manuscript = {
   ],
   subject_area: "Computer Science - Computational Linguistics",
   status: "under_review",
-  editor_id: "editor-001",
+  assignedEditors: [],
+  assignedEditorIds: [],
 };
 
 export const mockPotentialReviewers: PotentialReviewer[] = [
@@ -547,7 +608,7 @@ export async function getUserManuscripts(
     );
 
     // 4. Merge: Use explicit role if exists, otherwise implicit 'admin' role
-    return (allManuscripts || []).map((manuscript) => {
+    const merged = (allManuscripts || []).map((manuscript) => {
       const explicitAssignment = assignmentMap.get(manuscript.id);
 
       if (explicitAssignment) {
@@ -568,6 +629,8 @@ export async function getUserManuscripts(
         };
       }
     });
+
+    return enrichManuscriptsWithEditors(merged);
   }
 
   // Non-admin: Fetch only assigned manuscripts from user_manuscripts
@@ -595,11 +658,13 @@ export async function getUserManuscripts(
 
   // Transform the nested structure to flat ManuscriptWithUserRole
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data || []).map((item: any) => ({
+  const mapped = (data || []).map((item: any) => ({
     ...item.manuscripts,
     user_role: item.role,
     assigned_date: item.assigned_date,
   }));
+
+  return enrichManuscriptsWithEditors(mapped);
 }
 
 /**
@@ -736,8 +801,10 @@ export async function getManuscriptById(
   // Note: Access control checking removed - admins have implicit access to all manuscripts
   // If needed, implement explicit access check here for non-admin users
   // For now, returning manuscript if it exists (auth/access checked at route level)
+  if (!data) return null;
 
-  return data;
+  const [enriched] = await enrichManuscriptsWithEditors([data]);
+  return enriched;
 }
 
 /**
@@ -1573,8 +1640,6 @@ export async function bulkAddReviewerMatches(
 // User Profile and Manuscript Assignment Functions
 // ============================================================================
 
-import type { UserProfile } from "@/types/roles";
-
 /**
  * Fetch all user profiles
  * @returns All user profiles from the database
@@ -1608,7 +1673,7 @@ export async function getAllManuscripts(): Promise<Manuscript[]> {
     throw error;
   }
 
-  return data || [];
+  return enrichManuscriptsWithEditors(data || []);
 }
 
 /**
@@ -1759,6 +1824,61 @@ export async function updateUserManuscriptRole(
   }
 }
 
+/**
+ * Synchronize editor assignments for a manuscript based on desired editor IDs.
+ * Adds missing editors (reactivating if previously inactive) and deactivates removed ones.
+ */
+export async function syncManuscriptEditors(
+  manuscriptId: string,
+  editorIds: string[]
+): Promise<UserProfile[]> {
+  const desiredEditors = Array.from(new Set(editorIds.filter(Boolean)));
+
+  const { data: existingEditors, error: fetchError } = await supabase
+    .from("user_manuscripts")
+    .select("id, user_id, is_active")
+    .eq("manuscript_id", manuscriptId)
+    .eq("role", "editor");
+
+  if (fetchError) {
+    console.error("Error fetching existing editor assignments:", fetchError);
+    throw fetchError;
+  }
+
+  const toDeactivate = (existingEditors || []).filter(
+    (row) => row.is_active && !desiredEditors.includes(row.user_id)
+  );
+
+  if (toDeactivate.length > 0) {
+    const { error: deactivateError } = await supabase
+      .from("user_manuscripts")
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .in(
+        "id",
+        toDeactivate.map((row) => row.id)
+      );
+
+    if (deactivateError) {
+      console.error("Error deactivating editor assignments:", deactivateError);
+      throw deactivateError;
+    }
+  }
+
+  const toAdd = desiredEditors.filter(
+    (editorId) =>
+      !(existingEditors || []).some(
+        (row) => row.user_id === editorId && row.is_active
+      )
+  );
+
+  for (const editorId of toAdd) {
+    await addUserToManuscript(editorId, manuscriptId, "editor");
+  }
+
+  const editorMap = await getEditorsForManuscripts([manuscriptId]);
+  return editorMap.get(manuscriptId) || [];
+}
+
 // ============================================================================
 // Reviewer Management Functions
 // ============================================================================
@@ -1886,11 +2006,18 @@ export async function deleteReviewer(reviewerId: string): Promise<void> {
  * @param manuscript - Manuscript data (without id)
  */
 export async function createManuscript(
-  manuscript: Omit<Manuscript, "id">
+  manuscript: Omit<
+    Manuscript,
+    "id" | "assignedEditors" | "assignedEditorIds"
+  > & {
+    editorIds?: string[];
+  }
 ): Promise<Manuscript> {
+  const { editorIds = [], ...insertData } = manuscript;
+
   const { data, error } = await supabase
     .from("manuscripts")
-    .insert(manuscript)
+    .insert(insertData)
     .select()
     .single();
 
@@ -1908,14 +2035,32 @@ export async function createManuscript(
       );
     }
 
-    throw error;
+    if (error.code === "23502" && error.message?.includes("editor_id")) {
+      throw new Error(
+        "Database still requires manuscripts.editor_id. Apply migration database/remove_editor_id_from_manuscripts.sql or make editor_id nullable."
+      );
+    }
+
+    throw new Error(
+      `Failed to create manuscript: ${
+        error.message || error.code || "Unknown error"
+      }`
+    );
   }
 
   if (!data) {
     throw new Error("No data returned after creating manuscript");
   }
 
-  return data as Manuscript;
+  const [enriched] = await enrichManuscriptsWithEditors([data as Manuscript]);
+
+  const assignedEditors = await syncManuscriptEditors(enriched.id, editorIds);
+
+  return {
+    ...enriched,
+    assignedEditors,
+    assignedEditorIds: assignedEditors.map((e) => e.id),
+  };
 }
 
 /**
@@ -1925,11 +2070,20 @@ export async function createManuscript(
  */
 export async function updateManuscript(
   id: string,
-  updates: Partial<Manuscript>
+  updates: Partial<
+    Omit<Manuscript, "assignedEditors" | "assignedEditorIds"> & {
+      editorIds?: string[];
+    }
+  >
 ): Promise<Manuscript> {
-  // Remove id from updates if present
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id: _unused, ...updateData } = updates as Manuscript;
+  // Strip non-column fields from updates
+  const {
+    id: _unused,
+    assignedEditors: _ae,
+    assignedEditorIds: _aeIds,
+    editorIds,
+    ...updateData
+  } = updates as Manuscript & { editorIds?: string[] };
 
   const { data, error } = await supabase
     .from("manuscripts")
@@ -1952,13 +2106,34 @@ export async function updateManuscript(
       );
     }
 
-    throw error;
+    if (error.code === "23502" && error.message?.includes("editor_id")) {
+      throw new Error(
+        "Database still requires manuscripts.editor_id. Apply migration database/remove_editor_id_from_manuscripts.sql or make editor_id nullable."
+      );
+    }
+
+    throw new Error(
+      `Failed to update manuscript: ${
+        error.message || error.code || "Unknown error"
+      }`
+    );
   }
   if (!data) {
     throw new Error("No data returned after updating manuscript");
   }
 
-  return data as Manuscript;
+  const [enriched] = await enrichManuscriptsWithEditors([data as Manuscript]);
+
+  if (editorIds !== undefined) {
+    const assignedEditors = await syncManuscriptEditors(id, editorIds);
+    return {
+      ...enriched,
+      assignedEditors,
+      assignedEditorIds: assignedEditors.map((e) => e.id),
+    };
+  }
+
+  return enriched;
 }
 
 /**

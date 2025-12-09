@@ -1,5 +1,6 @@
 // Supabase client configuration with SSR support
 import { createClient } from "@/utils/supabase/client";
+import type { UserProfile } from "@/types/roles";
 
 // Create the client - now uses SSR-compatible version
 export const supabase = createClient();
@@ -21,7 +22,10 @@ export interface Manuscript {
     | "revision_required"
     | "accepted"
     | "rejected";
-  editor_id?: string;
+  // Resolved academic editors (users assigned with role "editor")
+  assignedEditors?: UserProfile[];
+  // Convenience list of editor IDs when only identifiers are needed
+  assignedEditorIds?: string[];
 }
 
 export interface PotentialReviewer {

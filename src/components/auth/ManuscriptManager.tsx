@@ -55,7 +55,7 @@ interface FormData {
     | "revision_required"
     | "accepted"
     | "rejected";
-  editor_id?: string;
+  editorIds: string[];
 }
 
 const emptyFormData: FormData = {
@@ -68,8 +68,15 @@ const emptyFormData: FormData = {
   keywords: [],
   subject_area: "",
   status: "submitted",
-  editor_id: undefined,
+  editorIds: [],
 };
+
+function toDateInputValue(value: string): string {
+  // Ensure value is formatted as YYYY-MM-DD for date inputs
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toISOString().split("T")[0];
+}
 
 const statusOptions = [
   { value: "submitted", label: "Submitted" },
@@ -144,13 +151,13 @@ export default function ManuscriptManager() {
         title: manuscript.title,
         authors: manuscript.authors,
         journal: manuscript.journal,
-        submission_date: manuscript.submission_date,
+        submission_date: toDateInputValue(manuscript.submission_date),
         doi: manuscript.doi,
         abstract: manuscript.abstract,
         keywords: manuscript.keywords,
         subject_area: manuscript.subject_area,
         status: manuscript.status,
-        editor_id: manuscript.editor_id,
+        editorIds: manuscript.assignedEditorIds || [],
       });
     } else {
       setEditingManuscript(null);
@@ -270,13 +277,6 @@ export default function ManuscriptManager() {
       keywords: prev.keywords.filter((keyword) => keyword !== keywordToDelete),
     }));
   }
-
-  function getEditorName(editorId?: string): string {
-    if (!editorId) return "Unassigned";
-    const editor = users.find((u) => u.id === editorId);
-    return editor?.full_name || editor?.email || "Unknown";
-  }
-
   if (loading) {
     return (
       <Box sx={{ p: 3 }}>
@@ -371,7 +371,14 @@ export default function ManuscriptManager() {
                     />
                   </TableCell>
                   <TableCell>{manuscript.subject_area}</TableCell>
-                  <TableCell>{getEditorName(manuscript.editor_id)}</TableCell>
+                  <TableCell>
+                    {manuscript.assignedEditors &&
+                    manuscript.assignedEditors.length > 0
+                      ? manuscript.assignedEditors
+                          .map((editor) => editor.full_name || editor.email)
+                          .join(", ")
+                      : "Unassigned"}
+                  </TableCell>
                   <TableCell>
                     {new Date(manuscript.submission_date).toLocaleDateString()}
                   </TableCell>
@@ -539,14 +546,24 @@ export default function ManuscriptManager() {
               </FormControl>
 
               <Autocomplete
-                options={users}
+                multiple
+                options={users.filter((u) => u.role === "editor")}
                 getOptionLabel={(option) => option.full_name || option.email}
-                value={users.find((u) => u.id === formData.editor_id) || null}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    {option.full_name || option.email}
+                  </li>
+                )}
+                value={users.filter((u) => formData.editorIds.includes(u.id))}
                 onChange={(_, newValue) => {
-                  setFormData({ ...formData, editor_id: newValue?.id });
+                  setFormData({
+                    ...formData,
+                    editorIds: newValue.map((u) => u.id),
+                  });
                 }}
                 renderInput={(params) => (
-                  <TextField {...params} label="Editor (Optional)" />
+                  <TextField {...params} label="Academic Editors" />
                 )}
               />
 

@@ -313,15 +313,16 @@ export default function ArticleDetailsPage({
           </Box>
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Triage Editor
+              Academic Editors
             </Typography>
-            <Typography variant="body1">{manuscript.editor_id}</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Academic Editor
+            <Typography variant="body1">
+              {manuscript.assignedEditors &&
+              manuscript.assignedEditors.length > 0
+                ? manuscript.assignedEditors
+                    .map((editor) => editor.full_name || editor.email)
+                    .join(", ")
+                : "Unassigned"}
             </Typography>
-            <Typography variant="body1">Sarah Prist</Typography>
           </Box>
           <Box sx={{ gridColumn: "span 2" }}>
             <Typography variant="body2" color="text.secondary">

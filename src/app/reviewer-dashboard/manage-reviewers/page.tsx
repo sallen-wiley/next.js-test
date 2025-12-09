@@ -942,10 +942,20 @@ export default function ReviewerInvitationDashboard() {
                           sx={{ fontWeight: 700 }}
                           color="text.secondary"
                         >
-                          Editor ID:
+                          Academic Editors:
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {manuscript.editor_id}
+                          {manuscript.assignedEditors &&
+                          manuscript.assignedEditors.length > 0
+                            ? manuscript.assignedEditors
+                                .map(
+                                  (editor) =>
+                                    editor.full_name ||
+                                    editor.email ||
+                                    editor.id
+                                )
+                                .join(", ")
+                            : "Unassigned"}
                         </Typography>
                       </Box>
                     </Box>
@@ -1189,7 +1199,7 @@ export default function ReviewerInvitationDashboard() {
                               ? (theme) =>
                                   `4px solid ${
                                     theme.vars?.palette?.error?.main ||
-                                    "#d32f2f"
+                                    "#ccff00"
                                   }`
                               : "4px solid transparent",
                           "&:hover": {
@@ -1432,7 +1442,7 @@ export default function ReviewerInvitationDashboard() {
                                     "&.Mui-disabled": {
                                       color: (theme) =>
                                         theme.vars?.palette?.error?.main ||
-                                        "#d32f2f",
+                                        "#ccff00",
                                       opacity: 0.8,
                                     },
                                   }}
@@ -1460,7 +1470,7 @@ export default function ReviewerInvitationDashboard() {
                                     "&.Mui-disabled": {
                                       color: (theme) =>
                                         theme.vars?.palette?.error?.main ||
-                                        "#d32f2f",
+                                        "#ccff00",
                                       opacity: 0.8,
                                     },
                                   }}

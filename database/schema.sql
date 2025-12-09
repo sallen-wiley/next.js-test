@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS manuscripts (
     keywords TEXT[] DEFAULT '{}',
     subject_area TEXT,
     status TEXT CHECK (status IN ('submitted', 'under_review', 'revision_required', 'accepted', 'rejected')) DEFAULT 'submitted',
-    editor_id TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -157,8 +156,8 @@ CREATE TABLE IF NOT EXISTS reviewer_metrics (
 -- Insert sample data using proper UUIDs
 -- We'll let the database generate UUIDs and create sample data step by step
 
--- Insert sample manuscripts
-INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, keywords, subject_area, status, editor_id) VALUES
+-- Insert sample manuscripts (editor assignments handled via user_manuscripts)
+INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, keywords, subject_area, status) VALUES
 (
     'Deep Learning Approaches for Natural Language Processing in Scientific Literature',
     ARRAY['Dr. Sarah Chen', 'Prof. Michael Rodriguez', 'Dr. Jennifer Liu'],
@@ -167,8 +166,7 @@ INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, key
     'This paper presents novel deep learning approaches for extracting and analyzing scientific literature, focusing on transformer architectures and their applications in academic text processing.',
     ARRAY['deep learning', 'natural language processing', 'transformers', 'scientific literature', 'text mining'],
     'Computer Science - Computational Linguistics',
-    'under_review',
-    'editor-001'
+    'under_review'
 ),
 (
     'Machine Learning Applications in Climate Change Prediction',
@@ -178,8 +176,7 @@ INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, key
     'A comprehensive study on using machine learning algorithms to predict climate change patterns and their impact on global ecosystems.',
     ARRAY['machine learning', 'climate change', 'prediction models', 'environmental science'],
     'Environmental Science',
-    'submitted',
-    'editor-002'
+    'submitted'
 ),
 (
     'Quantum Computing Algorithms for Cryptographic Applications',
@@ -189,8 +186,7 @@ INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, key
     'Investigation of quantum computing algorithms and their potential applications in modern cryptographic systems and security protocols.',
     ARRAY['quantum computing', 'cryptography', 'algorithms', 'security'],
     'Computer Science - Quantum Computing',
-    'revision_required',
-    'editor-001'
+    'revision_required'
 ),
 (
     'Biomedical Engineering Innovations in Drug Delivery Systems',
@@ -200,8 +196,7 @@ INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, key
     'Novel approaches to targeted drug delivery using nanotechnology and biocompatible materials for enhanced therapeutic efficacy.',
     ARRAY['biomedical engineering', 'drug delivery', 'nanotechnology', 'therapeutics'],
     'Biomedical Engineering',
-    'accepted',
-    'editor-003'
+    'accepted'
 ),
 (
     'Artificial Intelligence in Medical Diagnosis: A Systematic Review',
@@ -211,8 +206,7 @@ INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, key
     'Systematic review of artificial intelligence applications in medical diagnosis, examining accuracy, reliability, and clinical implementation challenges.',
     ARRAY['artificial intelligence', 'medical diagnosis', 'systematic review', 'healthcare'],
     'Medical Informatics',
-    'under_review',
-    'editor-002'
+    'under_review'
 ),
 (
     'Sustainable Energy Storage Solutions for Smart Grid Systems',
@@ -222,8 +216,7 @@ INSERT INTO manuscripts (title, authors, journal, submission_date, abstract, key
     'Analysis of sustainable energy storage technologies and their integration into smart grid systems for improved energy efficiency.',
     ARRAY['sustainable energy', 'energy storage', 'smart grid', 'renewable technology'],
     'Engineering - Energy Systems',
-    'submitted',
-    'editor-003'
+    'submitted'
 );
 
 -- Insert sample potential reviewers
@@ -300,7 +293,7 @@ CREATE POLICY "Enable read access for all users" ON reviewer_metrics FOR SELECT 
 
 -- Create useful indexes
 CREATE INDEX idx_manuscripts_status ON manuscripts(status);
-CREATE INDEX idx_manuscripts_editor ON manuscripts(editor_id);
+
 CREATE INDEX idx_reviewers_availability ON potential_reviewers(availability_status);
 CREATE INDEX idx_reviewers_expertise ON potential_reviewers USING GIN(expertise_areas);
 CREATE INDEX idx_match_scores_manuscript ON reviewer_manuscript_matches(manuscript_id);

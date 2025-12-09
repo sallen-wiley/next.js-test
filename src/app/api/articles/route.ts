@@ -50,7 +50,6 @@ export async function POST(request: NextRequest) {
         keywords: body.keywords || [],
         subject_area: body.subject_area || "General",
         status: body.status || "submitted",
-        editor_id: user?.id || "system-generated", // Use the authenticated user's ID
       };
 
       const { data, error } = await supabase
@@ -62,7 +61,27 @@ export async function POST(request: NextRequest) {
         console.error("Supabase error:", error);
         return NextResponse.json({ error: error.message }, { status: 400 });
       }
-      return NextResponse.json(data[0]);
+
+      const created = data?.[0];
+
+      // Best-effort: assign the creating user as editor via user_manuscripts
+      if (created && user?.id) {
+        const { error: assignmentError } = await supabase
+          .from("user_manuscripts")
+          .insert({
+            user_id: user.id,
+            manuscript_id: created.id,
+            role: "editor",
+            assigned_date: new Date().toISOString(),
+            is_active: true,
+          });
+
+        if (assignmentError) {
+          console.error("Failed to assign creator as editor:", assignmentError);
+        }
+      }
+
+      return NextResponse.json(created);
     }
   } catch (error) {
     console.error("API Error:", error);
