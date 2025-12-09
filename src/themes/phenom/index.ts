@@ -42,8 +42,12 @@ declare module "@mui/material/styles" {
 
 // Note: Button size overrides are now declared in global types.ts
 
-// Theme using Open Sans for a modern, professional academic look
-// Using MUI's official theme composition pattern for theme-aware components
+// Theme using Nunito with adjusted vertical metrics
+// Nunito has inherently large vertical metrics that require compensation
+// See: https://github.com/googlefonts/nunito/issues/28
+
+// Line height multiplier to compensate for Nunito's large vertical metrics
+const LINE_HEIGHT_ADJUSTMENT = 1.1; // 10% increase for better alignment
 
 // Step 1: Create base theme with palette, typography, shape, etc.
 let theme = createTheme({
@@ -126,8 +130,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.title.hero.fontSize}px`,
       fontWeight: designTokens.font.title.hero.fontWeight,
       lineHeight:
-        designTokens.font.title.hero.lineHeight /
-        designTokens.font.title.hero.fontSize,
+        (designTokens.font.title.hero.lineHeight /
+          designTokens.font.title.hero.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.title.hero.letterSpacing}px`,
       textTransform:
         designTokens.font.title.hero.textCase === "uppercase"
@@ -144,8 +149,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.title.primary.fontSize}px`,
       fontWeight: designTokens.font.title.primary.fontWeight,
       lineHeight:
-        designTokens.font.title.primary.lineHeight /
-        designTokens.font.title.primary.fontSize,
+        (designTokens.font.title.primary.lineHeight /
+          designTokens.font.title.primary.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.title.primary.letterSpacing}px`,
       textTransform:
         designTokens.font.title.primary.textCase === "uppercase"
@@ -168,8 +174,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.title.small.fontSize}px`,
       fontWeight: designTokens.font.title.small.fontWeight,
       lineHeight:
-        designTokens.font.title.small.lineHeight /
-        designTokens.font.title.small.fontSize,
+        (designTokens.font.title.small.lineHeight /
+          designTokens.font.title.small.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.title.small.letterSpacing}px`,
       textTransform:
         designTokens.font.title.small.textCase === "uppercase"
@@ -180,8 +187,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.label.bold.fontSize}px`,
       fontWeight: designTokens.font.label.bold.fontWeight,
       lineHeight:
-        designTokens.font.label.bold.lineHeight /
-        designTokens.font.label.bold.fontSize,
+        (designTokens.font.label.bold.lineHeight /
+          designTokens.font.label.bold.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.label.bold.letterSpacing}px`,
       textTransform:
         designTokens.font.label.bold.textCase === "uppercase"
@@ -192,8 +200,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.label.regular.fontSize}px`,
       fontWeight: designTokens.font.label.regular.fontWeight,
       lineHeight:
-        designTokens.font.label.regular.lineHeight /
-        designTokens.font.label.regular.fontSize,
+        (designTokens.font.label.regular.lineHeight /
+          designTokens.font.label.regular.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.label.regular.letterSpacing}px`,
       textTransform:
         designTokens.font.label.regular.textCase === "uppercase"
@@ -204,8 +213,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.paragraph.primary.fontSize}px`,
       fontWeight: designTokens.font.paragraph.primary.fontWeight,
       lineHeight:
-        designTokens.font.paragraph.primary.lineHeight /
-        designTokens.font.paragraph.primary.fontSize,
+        (designTokens.font.paragraph.primary.lineHeight /
+          designTokens.font.paragraph.primary.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.paragraph.primary.letterSpacing}px`,
       textTransform:
         designTokens.font.paragraph.primary.textCase === "uppercase"
@@ -216,8 +226,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.paragraph.message.fontSize}px`,
       fontWeight: designTokens.font.paragraph.message.fontWeight,
       lineHeight:
-        designTokens.font.paragraph.message.lineHeight /
-        designTokens.font.paragraph.message.fontSize,
+        (designTokens.font.paragraph.message.lineHeight /
+          designTokens.font.paragraph.message.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.paragraph.message.letterSpacing}px`,
       textTransform:
         designTokens.font.paragraph.message.textCase === "uppercase"
@@ -228,8 +239,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.button.large.fontSize}px`,
       fontWeight: designTokens.font.button.large.fontWeight,
       lineHeight:
-        designTokens.font.button.large.lineHeight /
-        designTokens.font.button.large.fontSize,
+        (designTokens.font.button.large.lineHeight /
+          designTokens.font.button.large.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.button.large.letterSpacing}px`,
       textTransform:
         designTokens.font.button.large.textCase === "uppercase"
@@ -240,8 +252,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.indicator.small.fontSize}px`,
       fontWeight: designTokens.font.indicator.small.fontWeight,
       lineHeight:
-        designTokens.font.indicator.small.lineHeight /
-        designTokens.font.indicator.small.fontSize,
+        (designTokens.font.indicator.small.lineHeight /
+          designTokens.font.indicator.small.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.indicator.small.letterSpacing}px`,
       textTransform:
         designTokens.font.indicator.small.textCase === "uppercase"
@@ -252,8 +265,9 @@ let theme = createTheme({
       fontSize: `${designTokens.font.label.small.fontSize}px`,
       fontWeight: designTokens.font.label.small.fontWeight,
       lineHeight:
-        designTokens.font.label.small.lineHeight /
-        designTokens.font.label.small.fontSize,
+        (designTokens.font.label.small.lineHeight /
+          designTokens.font.label.small.fontSize) *
+        LINE_HEIGHT_ADJUSTMENT,
       letterSpacing: `${designTokens.font.label.small.letterSpacing}px`,
       textTransform:
         designTokens.font.label.small.textCase === "uppercase"
@@ -292,6 +306,10 @@ theme = createTheme(theme, {
           font-display: swap;
           font-weight: 100 900;
           src: url('/fonts/Nunito/Nunito-VariableFont_wght.ttf') format('truetype');
+          /* Adjust vertical metrics to improve alignment */
+          ascent-override: 95%;
+          descent-override: 25%;
+          line-gap-override: 0%;
         }
 
         @font-face {
@@ -300,6 +318,10 @@ theme = createTheme(theme, {
           font-display: swap;
           font-weight: 100 900;
           src: url('/fonts/Nunito/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
+          /* Adjust vertical metrics to improve alignment */
+          ascent-override: 95%;
+          descent-override: 25%;
+          line-gap-override: 0%;
         }
       `,
     },
