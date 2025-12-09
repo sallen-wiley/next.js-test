@@ -69,8 +69,8 @@ export function useHeaderConfig(config: HeaderConfig) {
   React.useEffect(() => {
     updateConfig(config);
 
-    // Cleanup on unmount - reset to defaults
-    return () => updateConfig({});
+    // No cleanup needed - let the next page set its own config
+    // This prevents race conditions where the old config persists
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     updateConfig,

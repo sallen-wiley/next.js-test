@@ -25,12 +25,19 @@ import ReviewerMatchManager from "@/components/auth/ReviewerMatchManager";
 import ReviewerManager from "@/components/auth/ReviewerManager";
 import ManuscriptManager from "@/components/auth/ManuscriptManager";
 import { useRoleAccess } from "@/hooks/useRoles";
+import { useHeaderConfig } from "@/contexts/HeaderContext";
 
 export default function AdminPage() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [authEnabled, setAuthEnabled] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const { hasPermission, profile } = useRoleAccess();
+
+  // Configure global header
+  useHeaderConfig({
+    logoAffix: "Admin",
+    containerProps: { maxWidth: false },
+  });
 
   useEffect(() => {
     // Check if auth is enabled in environment
