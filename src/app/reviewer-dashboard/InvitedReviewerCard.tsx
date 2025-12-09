@@ -47,11 +47,9 @@ type InvitedReviewerCardProps = {
 
 export function InvitedReviewerCard({
   reviewerName,
-  affiliation,
   status,
   invitedDate,
   responseDate,
-  dueDate,
   submittedDate,
   timeLeftToRespond,
   reportSubmissionDeadline,

@@ -38,8 +38,12 @@ export default function ReviewInvitationManager() {
   const [invitations, setInvitations] = useState<
     ReviewInvitationWithReviewer[]
   >([]);
-  const [manuscripts, setManuscripts] = useState<any[]>([]);
-  const [reviewers, setReviewers] = useState<any[]>([]);
+  const [manuscripts, setManuscripts] = useState<
+    Array<{ id: string; title: string }>
+  >([]);
+  const [reviewers, setReviewers] = useState<
+    Array<{ id: string; name: string; affiliation?: string }>
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,8 +110,8 @@ export default function ReviewInvitationManager() {
       setInvitations(enrichedInvitations);
       setManuscripts(manuscriptsData || []);
       setReviewers(reviewersData || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -195,8 +199,8 @@ export default function ReviewInvitationManager() {
 
       await fetchData();
       handleCloseDialog();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
@@ -211,8 +215,8 @@ export default function ReviewInvitationManager() {
 
       if (error) throw error;
       await fetchData();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
 
