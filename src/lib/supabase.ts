@@ -6,6 +6,15 @@ import type { UserProfile } from "@/types/roles";
 export const supabase = createClient();
 
 // Type definitions for reviewer invitation system
+
+// Special manuscript classifications/tags
+export type ManuscriptTag =
+  | "commissioned"
+  | "rescinded"
+  | "transparent peer review"
+  | "transferred"
+  | "apc edited";
+
 export interface Manuscript {
   id: string;
   title: string;
@@ -18,10 +27,23 @@ export interface Manuscript {
   subject_area: string;
   status:
     | "submitted"
+    | "pending_editor_assignment"
+    | "awaiting_reviewers"
     | "under_review"
+    | "reviews_in_progress"
+    | "reviews_complete"
     | "revision_required"
+    | "minor_revision"
+    | "major_revision"
+    | "conditionally_accepted"
     | "accepted"
-    | "rejected";
+    | "rejected"
+    | "desk_rejected"
+    | "withdrawn";
+  version?: number;
+  manuscript_tags?: ManuscriptTag[]; // Special classifications (commissioned, rescinded, etc.)
+  created_at?: string;
+  updated_at?: string;
   // Resolved academic editors (users assigned with role "editor")
   assignedEditors?: UserProfile[];
   // Convenience list of editor IDs when only identifiers are needed

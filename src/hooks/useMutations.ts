@@ -17,10 +17,19 @@ interface CreateArticleData {
   subject_area?: string;
   status?:
     | "submitted"
+    | "pending_editor_assignment"
+    | "awaiting_reviewers"
     | "under_review"
+    | "reviews_in_progress"
+    | "reviews_complete"
     | "revision_required"
+    | "minor_revision"
+    | "major_revision"
+    | "conditionally_accepted"
     | "accepted"
-    | "rejected";
+    | "rejected"
+    | "desk_rejected"
+    | "withdrawn";
 }
 
 // Type for updating articles
@@ -33,10 +42,19 @@ interface UpdateArticleData {
   subject_area?: string;
   status?:
     | "submitted"
+    | "pending_editor_assignment"
+    | "awaiting_reviewers"
     | "under_review"
+    | "reviews_in_progress"
+    | "reviews_complete"
     | "revision_required"
+    | "minor_revision"
+    | "major_revision"
+    | "conditionally_accepted"
     | "accepted"
-    | "rejected";
+    | "rejected"
+    | "desk_rejected"
+    | "withdrawn";
 }
 
 export function useCreateArticle() {

@@ -26,12 +26,19 @@ import {
   FormControl,
   InputLabel,
   Autocomplete,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { Manuscript } from "@/lib/supabase";
+import type { Manuscript, ManuscriptTag } from "@/lib/supabase";
 import type { UserProfile } from "@/types/roles";
+import {
+  getStatusOptions,
+  getStatusLabel,
+  getStatusColor,
+} from "@/utils/manuscriptStatus";
 import {
   getAllManuscripts,
   createManuscript,
@@ -49,12 +56,9 @@ interface FormData {
   abstract: string;
   keywords: string[];
   subject_area: string;
-  status:
-    | "submitted"
-    | "under_review"
-    | "revision_required"
-    | "accepted"
-    | "rejected";
+  status: Manuscript["status"];
+  version?: number;
+  manuscript_tags: ManuscriptTag[];
   editorIds: string[];
 }
 
@@ -68,6 +72,8 @@ const emptyFormData: FormData = {
   keywords: [],
   subject_area: "",
   status: "submitted",
+  version: 1,
+  manuscript_tags: [],
   editorIds: [],
 };
 
@@ -77,25 +83,6 @@ function toDateInputValue(value: string): string {
   if (Number.isNaN(date.getTime())) return value;
   return date.toISOString().split("T")[0];
 }
-
-const statusOptions = [
-  { value: "submitted", label: "Submitted" },
-  { value: "under_review", label: "Under Review" },
-  { value: "revision_required", label: "Revision Required" },
-  { value: "accepted", label: "Accepted" },
-  { value: "rejected", label: "Rejected" },
-] as const;
-
-const statusColors: Record<
-  string,
-  "default" | "primary" | "warning" | "success" | "error"
-> = {
-  submitted: "default",
-  under_review: "primary",
-  revision_required: "warning",
-  accepted: "success",
-  rejected: "error",
-};
 
 export default function ManuscriptManager() {
   const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
@@ -118,6 +105,15 @@ export default function ManuscriptManager() {
   // Input states for chip arrays
   const [authorInput, setAuthorInput] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
+
+  // Available manuscript tags
+  const allTags: ManuscriptTag[] = [
+    "commissioned",
+    "rescinded",
+    "transparent peer review",
+    "transferred",
+    "apc edited",
+  ];
 
   useEffect(() => {
     loadData();
@@ -157,6 +153,8 @@ export default function ManuscriptManager() {
         keywords: manuscript.keywords,
         subject_area: manuscript.subject_area,
         status: manuscript.status,
+        version: manuscript.version || 1,
+        manuscript_tags: manuscript.manuscript_tags || [],
         editorIds: manuscript.assignedEditorIds || [],
       });
     } else {
@@ -246,9 +244,15 @@ export default function ManuscriptManager() {
 
   function handleAddAuthor() {
     if (authorInput.trim()) {
+      // Split by comma and trim each author name
+      const newAuthors = authorInput
+        .split(",")
+        .map((author) => author.trim())
+        .filter((author) => author.length > 0);
+
       setFormData((prev) => ({
         ...prev,
-        authors: [...prev.authors, authorInput.trim()],
+        authors: [...prev.authors, ...newAuthors],
       }));
       setAuthorInput("");
     }
@@ -263,9 +267,15 @@ export default function ManuscriptManager() {
 
   function handleAddKeyword() {
     if (keywordInput.trim()) {
+      // Split by comma and trim each keyword
+      const newKeywords = keywordInput
+        .split(",")
+        .map((keyword) => keyword.trim())
+        .filter((keyword) => keyword.length > 0);
+
       setFormData((prev) => ({
         ...prev,
-        keywords: [...prev.keywords, keywordInput.trim()],
+        keywords: [...prev.keywords, ...newKeywords],
       }));
       setKeywordInput("");
     }
@@ -313,6 +323,7 @@ export default function ManuscriptManager() {
               <TableCell>Authors</TableCell>
               <TableCell>Journal</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Tags</TableCell>
               <TableCell>Subject Area</TableCell>
               <TableCell>Editor</TableCell>
               <TableCell>Submission Date</TableCell>
@@ -322,7 +333,7 @@ export default function ManuscriptManager() {
           <TableBody>
             {manuscripts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   <Typography color="text.secondary">
                     No manuscripts found
                   </Typography>
@@ -365,10 +376,37 @@ export default function ManuscriptManager() {
                   <TableCell>{manuscript.journal}</TableCell>
                   <TableCell>
                     <Chip
-                      label={manuscript.status.replace("_", " ").toUpperCase()}
-                      color={statusColors[manuscript.status]}
+                      label={getStatusLabel(manuscript.status)}
+                      color={getStatusColor(manuscript.status)}
                       size="small"
                     />
+                  </TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        maxWidth: 200,
+                      }}
+                    >
+                      {manuscript.manuscript_tags &&
+                      manuscript.manuscript_tags.length > 0 ? (
+                        manuscript.manuscript_tags.map((tag, idx) => (
+                          <Chip
+                            key={idx}
+                            label={tag}
+                            size="small"
+                            variant="outlined"
+                            sx={{ textTransform: "capitalize" }}
+                          />
+                        ))
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          None
+                        </Typography>
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell>{manuscript.subject_area}</TableCell>
                   <TableCell>
@@ -445,6 +483,7 @@ export default function ManuscriptManager() {
                     }}
                     fullWidth
                     size="small"
+                    helperText="Enter one or more authors separated by commas"
                   />
                   <Button onClick={handleAddAuthor} variant="outlined">
                     Add
@@ -508,6 +547,7 @@ export default function ManuscriptManager() {
                     }}
                     fullWidth
                     size="small"
+                    helperText="Enter one or more keywords separated by commas"
                   />
                   <Button onClick={handleAddKeyword} variant="outlined">
                     Add
@@ -533,17 +573,73 @@ export default function ManuscriptManager() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      status: e.target.value as FormData["status"],
+                      status: e.target.value,
                     })
                   }
                 >
-                  {statusOptions.map((option) => (
+                  {getStatusOptions().map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                       {option.label}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel>Manuscript Tags</InputLabel>
+                <Select
+                  multiple
+                  value={formData.manuscript_tags}
+                  label="Manuscript Tags"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({
+                      ...formData,
+                      manuscript_tags:
+                        typeof value === "string"
+                          ? (value.split(",") as ManuscriptTag[])
+                          : (value as ManuscriptTag[]),
+                    });
+                  }}
+                  renderValue={(selected) => {
+                    if (selected.length === 0) {
+                      return <em>None</em>;
+                    }
+                    return selected
+                      .map((tag) => tag.charAt(0).toUpperCase() + tag.slice(1))
+                      .join(", ");
+                  }}
+                >
+                  {allTags.map((tag) => (
+                    <MenuItem key={tag} value={tag}>
+                      <Checkbox
+                        checked={formData.manuscript_tags.indexOf(tag) > -1}
+                        size="small"
+                      />
+                      <ListItemText
+                        primary={tag.charAt(0).toUpperCase() + tag.slice(1)}
+                        sx={{ textTransform: "capitalize" }}
+                      />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Version"
+                type="number"
+                value={formData.version || 1}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    version: parseInt(e.target.value) || 1,
+                  })
+                }
+                required
+                fullWidth
+                inputProps={{ min: 1, step: 1 }}
+                helperText="Manuscript version number (e.g., 1 for initial submission, 2 for first revision)"
+              />
 
               <Autocomplete
                 multiple

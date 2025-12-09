@@ -3,9 +3,11 @@ import * as React from "react";
 import {
   Box,
   Button,
+  Checkbox,
   FormControl,
   FormControlLabel,
   FormLabel,
+  ListItemText,
   MenuItem,
   Paper,
   Radio,
@@ -16,6 +18,7 @@ import {
   useTheme,
 } from "@mui/material";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import type { ManuscriptTag } from "@/lib/supabase";
 
 export type FilterOption = {
   label: string;
@@ -37,10 +40,12 @@ type FilterRailProps = {
   selectedStatus: string;
   selectedScope: string;
   selectedPriority: string;
+  selectedTags: ManuscriptTag[];
   onJournalChange: (value: string) => void;
   onStatusChange: (value: string) => void;
   onScopeChange: (value: string) => void;
   onPriorityChange: (value: string) => void;
+  onTagsChange: (tags: ManuscriptTag[]) => void;
   onReset: () => void;
 };
 
@@ -53,13 +58,23 @@ export function FilterRail({
   selectedStatus,
   selectedScope,
   selectedPriority,
+  selectedTags,
   onJournalChange,
   onStatusChange,
   onScopeChange,
   onPriorityChange,
+  onTagsChange,
   onReset,
 }: FilterRailProps) {
   const theme = useTheme();
+
+  const allTags: ManuscriptTag[] = [
+    "commissioned",
+    "rescinded",
+    "transparent peer review",
+    "transferred",
+    "apc edited",
+  ];
 
   return (
     <Box
@@ -148,20 +163,27 @@ export function FilterRail({
                     justifyContent="space-between"
                     width="100%"
                   >
-                    <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ flex: 1 }}>
                       {option.label}
-                    </Typography>
+                    </Box>
                     {typeof option.count === "number" && (
-                      <Typography
-                        variant="caption"
-                        fontWeight={700}
-                        color="text.secondary"
+                      <Box
+                        component="span"
+                        sx={{ fontWeight: 700, flexShrink: 0 }}
                       >
                         {option.count}
-                      </Typography>
+                      </Box>
                     )}
                   </Stack>
                 }
+                slotProps={{
+                  typography: {
+                    sx: {
+                      display: "flex",
+                      width: "100%",
+                    },
+                  },
+                }}
                 sx={{ mx: 0, px: 2, py: 0.5 }}
               />
             ))}
@@ -196,20 +218,27 @@ export function FilterRail({
                     justifyContent="space-between"
                     width="100%"
                   >
-                    <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ flex: 1 }}>
                       {option.label}
-                    </Typography>
+                    </Box>
                     {typeof option.count === "number" && (
-                      <Typography
-                        variant="caption"
-                        fontWeight={700}
-                        color="text.secondary"
+                      <Box
+                        component="span"
+                        sx={{ fontWeight: 700, flexShrink: 0 }}
                       >
                         {option.count}
-                      </Typography>
+                      </Box>
                     )}
                   </Stack>
                 }
+                slotProps={{
+                  typography: {
+                    sx: {
+                      display: "flex",
+                      width: "100%",
+                    },
+                  },
+                }}
                 sx={{ mx: 0, px: 2, py: 0.5 }}
               />
             ))}
@@ -228,6 +257,49 @@ export function FilterRail({
             {statusOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth size="small">
+          <FormLabel sx={{ color: "text.secondary", fontWeight: 700, mb: 1 }}>
+            Manuscript Tags
+          </FormLabel>
+          <Select
+            multiple
+            value={selectedTags}
+            onChange={(event) => {
+              const value = event.target.value;
+              onTagsChange(
+                typeof value === "string"
+                  ? (value.split(",") as ManuscriptTag[])
+                  : (value as ManuscriptTag[])
+              );
+            }}
+            renderValue={(selected) => {
+              if (selected.length === 0) {
+                return <em>All tags</em>;
+              }
+              return selected
+                .map((tag) => tag.charAt(0).toUpperCase() + tag.slice(1))
+                .join(", ");
+            }}
+            displayEmpty
+          >
+            <MenuItem disabled value="">
+              <em>Select tags to filter</em>
+            </MenuItem>
+            {allTags.map((tag) => (
+              <MenuItem key={tag} value={tag}>
+                <Checkbox
+                  checked={selectedTags.indexOf(tag) > -1}
+                  size="small"
+                />
+                <ListItemText
+                  primary={tag.charAt(0).toUpperCase() + tag.slice(1)}
+                  sx={{ textTransform: "capitalize" }}
+                />
               </MenuItem>
             ))}
           </Select>

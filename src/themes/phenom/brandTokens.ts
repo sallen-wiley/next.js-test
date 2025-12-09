@@ -7,548 +7,606 @@ export const designTokens = {
     breadcrumb: {
       regular: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 16,
-        textCase: 'uppercase'
+        textCase: "uppercase",
       },
       hover: {
         fontSize: 14,
-        textDecoration: 'underline',
-        fontFamily: 'Nunito',
+        textDecoration: "underline",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 16,
-        textCase: 'uppercase'
+        textCase: "uppercase",
       },
       bold: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 16,
-        textCase: 'uppercase'
-      }
+        textCase: "uppercase",
+      },
     },
     title: {
       hero: {
         fontSize: 30,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 40,
-        textCase: 'none'
+        textCase: "none",
       },
       primary: {
         fontSize: 20,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 28,
-        textCase: 'none'
+        textCase: "none",
       },
       small: {
         fontSize: 16,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 24,
-        textCase: 'none'
+        textCase: "none",
       },
       smallUppercase: {
         fontSize: 16,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 600,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 24,
-        textCase: 'uppercase'
-      }
+        textCase: "uppercase",
+      },
     },
     button: {
       large: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'uppercase'
+        textCase: "uppercase",
       },
       small: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'capitalize'
+        textCase: "capitalize",
       },
       tertiaryNavigation: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'capitalize'
+        textCase: "capitalize",
       },
       tertiaryRegular: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 600,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'capitalize'
+        textCase: "capitalize",
       },
       link: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 600,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'none'
-      }
+        textCase: "none",
+      },
     },
     label: {
       small: {
         fontSize: 11,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 12,
-        textCase: 'uppercase'
+        textCase: "uppercase",
       },
       bold: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 16,
-        textCase: 'none'
+        textCase: "none",
       },
       regular: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 16,
-        textCase: 'none'
+        textCase: "none",
       },
       boldSidebar: {
         fontSize: 12,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 16,
-        textCase: 'capitalize'
-      }
+        textCase: "capitalize",
+      },
     },
     paragraph: {
       primary: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
         paragraphSpacing: 8,
-        textCase: 'none'
+        textCase: "none",
       },
       message: {
         fontSize: 12,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 16,
         paragraphSpacing: 6,
-        textCase: 'none'
+        textCase: "none",
       },
       placeholder: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'italic',
+        fontStyle: "italic",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'none'
+        textCase: "none",
       },
       bold: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
         paragraphSpacing: 8,
-        textCase: 'none'
+        textCase: "none",
       },
       superscript: {
         fontSize: 15,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'none'
-      }
+        textCase: "none",
+      },
     },
     indicator: {
       medium: {
         fontSize: 10,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 600,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: -0.6,
         lineHeight: 14,
-        textCase: 'uppercase'
+        textCase: "uppercase",
       },
       small: {
         fontSize: 9,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 600,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: -0.2,
         lineHeight: 12,
-        textCase: 'uppercase'
-      }
+        textCase: "uppercase",
+      },
     },
     tables: {
       title: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'none'
+        textCase: "none",
       },
       dataRegular: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'none'
+        textCase: "none",
       },
       dataBold: {
         fontSize: 14,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 700,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 20,
-        textCase: 'none'
+        textCase: "none",
       },
       dataSecondary: {
         fontSize: 12,
-        textDecoration: 'none',
-        fontFamily: 'Nunito',
+        textDecoration: "none",
+        fontFamily: "Nunito",
         fontWeight: 400,
-        fontStyle: 'normal',
+        fontStyle: "normal",
         letterSpacing: 0,
         lineHeight: 18,
-        textCase: 'none'
-      }
-    }
+        textCase: "none",
+      },
+    },
   },
 
   // EFFECT TOKENS (Shadows)
   effect: {
     modal: {
-      shadowType: 'dropShadow',
+      shadowType: "dropShadow",
       radius: 10,
-      color: '#242424cc',
+      color: "#242424cc",
       offsetX: 0,
       offsetY: 1,
-      spread: 0
+      spread: 0,
     },
     cardHover: {
-      shadowType: 'dropShadow',
+      shadowType: "dropShadow",
       radius: 6,
-      color: '#8d8d8d33',
+      color: "#8d8d8d33",
       offsetX: 3,
       offsetY: 3,
-      spread: 0
+      spread: 0,
     },
     backgroundCard: {
-      shadowType: 'dropShadow',
+      shadowType: "dropShadow",
       radius: 8,
-      color: '#3333331c',
+      color: "#3333331c",
       offsetX: 0,
       offsetY: 4,
-      spread: 0
+      spread: 0,
     },
     stickyHeader: {
-      shadowType: 'dropShadow',
+      shadowType: "dropShadow",
       radius: 16,
-      color: '#00000014',
+      color: "#00000014",
       offsetX: 0,
       offsetY: 6,
-      spread: 0
+      spread: 0,
     },
     stickyFooter: {
-      shadowType: 'dropShadow',
+      shadowType: "dropShadow",
       radius: 16,
-      color: '#00000014',
+      color: "#00000014",
       offsetX: 0,
       offsetY: -6,
-      spread: 0
-    }
+      spread: 0,
+    },
   },
 
   // COLOR PRIMITIVES
   colorPrimitives: {
     primary: {
       blue: {
-        5: '#F3F8F9',   // 5%
-        10: '#E7F1F3',  // 10%
-        20: '#CEE3E7',  // 20%
-        40: '#9DC7CF',  // 40%
-        60: '#6CABB8',  // 60%
-        80: '#3B8FA0',  // 80%
-        100: '#0A7388', // 100%
-        '100-8': '#0A738814',  // 8% opacity
-        '100-15': '#0A738826'  // 15% opacity
+        5: "#f3f8f9", // 5%
+        10: "#e7f1f3", // 10%
+        20: "#cee3e7", // 20%
+        40: "#9dc7cf", // 40%
+        60: "#6cabb8", // 60%
+        80: "#3b8fa0", // 80%
+        100: "#0A7388", // 100%
+        "100-8": "#0A738814", // 8% opacity
+        "100-15": "#0A738826", // 15% opacity
       },
       darkBlue: {
-        5: '#F2F6F7',   // 5%
-        10: '#E6EDEE',  // 10%
-        20: '#CDBDDD',  // 20%
-        40: '#9AB7BC',  // 40%
-        60: '#68929A',  // 60%
-        80: '#356E79',  // 80%
-        100: '#034A57'  // 100%
+        5: "#f2f6f7", // 5%
+        10: "#e6edee", // 10%
+        20: "#cddbdd", // 20%
+        40: "#9ab7bc", // 40%
+        60: "#68929a", // 60%
+        80: "#356e79", // 80%
+        100: "#034A57", // 100%
       },
       green: {
-        5: '#e7efee',
-        10: '#dce9e6',
-        20: '#c7dfd7',
-        40: '#9bcab5',
-        60: '#70b695',
-        80: '#44a174',
-        100: '#198c53'
+        5: "#f7faf5",
+        10: "#eef6ec",
+        20: "#ddecd8",
+        40: "#bbd9b1",
+        60: "#9ac68b",
+        80: "#78b364",
+        100: "#56A03D",
       },
       darkGreen: {
-        5: '#f3f7f5',
-        10: '#e7efeb',
-        20: '#cfded7',
-        40: '#a0beaf',
-        60: '#709d86',
-        80: '#417d5e',
-        100: '#115c36'
-      }
+        5: "#f5f7f4",
+        10: "#ebf0ea",
+        20: "#d6e0d5",
+        40: "#adc2aa",
+        60: "#84a380",
+        80: "#5b8555",
+        100: "#32662B",
+      },
     },
     secondary: {
       turquoise: {
-        5: '#f4fdfb',
-        10: '#e8fbf7',
-        20: '#d1f6ef',
-        40: '#a4edde',
-        60: '#76e4ce',
-        80: '#49dbbd',
-        100: '#1bd2ad'
+        5: "#f4fdfb",
+        10: "#e8fbf7",
+        20: "#d1f6ef",
+        40: "#a4edde",
+        60: "#76e4ce",
+        80: "#49dbbd",
+        100: "#1bd2ad",
       },
       brightBlue: {
-        5: '#f3f8fd',
-        10: '#e6f1fb',
-        20: '#cde4f6',
-        40: '#9bc8ed',
-        60: '#69ade5',
-        80: '#3791dc',
-        100: '#0576d3'
+        5: "#f3f8fd",
+        10: "#e6f1fb",
+        20: "#cde4f6",
+        40: "#9bc8ed",
+        60: "#69ade5",
+        80: "#3791dc",
+        100: "#0576d3",
       },
       skyBlue: {
-        5: '#f7fcfe',
-        10: '#eff9fc',
-        20: '#def3fa',
-        40: '#bde7f4',
-        60: '#9cdcef',
-        80: '#7bd0e9',
-        100: '#5ac4e4'
+        5: "#f7fcfe",
+        10: "#eff9fc",
+        20: "#def3fa",
+        40: "#bde7f4",
+        60: "#9cdcef",
+        80: "#7bd0e9",
+        100: "#5ac4e4",
       },
       yellow: {
-        5: '#fffcf7',
-        10: '#fffaef',
-        20: '#fff4de',
-        40: '#ffeabd',
-        60: '#ffdf9d',
-        80: '#ffd57c',
-        100: '#ffca5b'
+        5: "#fffcf7",
+        10: "#fffaef",
+        20: "#fff4de",
+        40: "#ffeabd",
+        60: "#ffdf9d",
+        80: "#ffd57c",
+        100: "#ffca5b",
       },
       orange: {
-        5: '#fff9f3',
-        10: '#fff3e7',
-        20: '#fee8cf',
-        40: '#fdd09f',
-        60: '#fcb96f',
-        80: '#fba13f',
-        100: '#fa8a0f'
+        5: "#fff9f3",
+        10: "#fff3e7",
+        20: "#fee8cf",
+        40: "#fdd09f",
+        60: "#fcb96f",
+        80: "#fba13f",
+        100: "#fa8a0f",
       },
       warmRed: {
-        5: '#fff7f6',
-        10: '#ffeeed',
-        20: '#ffddd a',
-        40: '#ffbbb5',
-        60: '#ff9991',
-        80: '#ff776c',
-        100: '#ff5547'
-      }
+        5: "#fff7f6",
+        10: "#ffeeed",
+        20: "#ffddd a",
+        40: "#ffbbb5",
+        60: "#ff9991",
+        80: "#ff776c",
+        100: "#ff5547",
+      },
     },
     system: {
       successGreen: {
-        5: '#f9fcf5',
-        10: '#f2f8ec',
-        20: '#e6f1d9',
-        40: '#cde3b3',
-        60: '#b3d68c',
-        80: '#9ac866',
-        100: '#81ba40'
+        5: "#f9fcf5",
+        10: "#f2f8ec",
+        20: "#e6f1d9",
+        40: "#cde3b3",
+        60: "#b3d68c",
+        80: "#9ac866",
+        100: "#81ba40",
       },
       successDarkGreen: {
-        5: '#f8fbf5',
-        10: '#f1f6eb',
-        20: '#e3edd8',
-        40: '#c7dcb0',
-        60: '#acca89',
-        80: '#90b961',
-        100: '#74a73a'
+        5: "#f8fbf5",
+        10: "#f1f6eb",
+        20: "#e3edd8",
+        40: "#c7dcb0",
+        60: "#acca89",
+        80: "#90b961",
+        100: "#74a73a",
       },
       errorRed: {
-        5: '#fdf2f4',
-        10: '#fae6e8',
-        20: '#f6ccd1',
-        40: '#ec9aa4',
-        60: '#e36776',
-        80: '#d93549',
-        100: '#d0021b'
+        5: "#fdf2f4",
+        10: "#fae6e8",
+        20: "#f6ccd1",
+        40: "#ec9aa4",
+        60: "#e36776",
+        80: "#d93549",
+        100: "#d0021b",
       },
       alertYellow: {
-        5: '#fffbf4',
-        10: '#fff8e9',
-        20: '#fef0d3',
-        40: '#fee2a7',
-        60: '#fdd37c',
-        80: '#fdc550',
-        100: '#fcb624'
+        5: "#fffbf4",
+        10: "#fff8e9",
+        20: "#fef0d3",
+        40: "#fee2a7",
+        60: "#fdd37c",
+        80: "#fdc550",
+        100: "#fcb624",
       },
       alertDarkYellow: {
-        5: '#fffaf3',
-        10: '#fef5e7',
-        20: '#feebcf',
-        40: '#fcd89f',
-        60: '#fbc470',
-        80: '#f9b140',
-        100: '#f89d10'
-      }
+        5: "#fffaf3",
+        10: "#fef5e7",
+        20: "#feebcf",
+        40: "#fcd89f",
+        60: "#fbc470",
+        80: "#f9b140",
+        100: "#f89d10",
+      },
     },
     neutral: {
-      white: '#ffffff',
-      grey10: '#fafafa',
-      grey20: '#f5f5f5',
-      grey30: '#e0e0e0',
-      grey40: '#bdbdbd',
-      'grey40-25': '#bdbdbd40',
-      'grey40-45': '#bdbdbd73',
-      grey50: '#919191',
-      grey60: '#686868',
-      grey70: '#4f4f4f',
-      grey80: '#333333',
-      grey90: '#1a1a1a'
+      white: "#ffffff",
+      grey10: "#fafafa",
+      grey20: "#f5f5f5",
+      grey30: "#e0e0e0",
+      grey40: "#bdbdbd",
+      "grey40-25": "#bdbdbd40",
+      "grey40-45": "#bdbdbd73",
+      grey50: "#919191",
+      grey60: "#686868",
+      grey70: "#4f4f4f",
+      grey80: "#333333",
+      grey90: "#1a1a1a",
     },
     tableRows: {
-      default: '#ffffff',
-      hover: '#f5f5f5'
+      default: "#ffffff",
+      hover: "#f5f5f5",
     },
     links: {
-      get default() { return designTokens.colorPrimitives.primary.blue[100]; },
-      get hover() { return designTokens.colorPrimitives.primary.darkBlue[100]; }
+      get default() {
+        return designTokens.colorPrimitives.primary.blue[100];
+      },
+      get hover() {
+        return designTokens.colorPrimitives.primary.darkBlue[100];
+      },
     },
     overlay: {
-      'white-80': '#ffffffcc',
-      'black-70': '#4f4f4fb3'
+      "white-80": "#ffffffcc",
+      "black-70": "#4f4f4fb3",
     },
     buttons: {
-  // Map button colors to the canonical color primitives from the palette
-  get primaryDefault() { return designTokens.colorPrimitives.system.successGreen[100]; },
-  get primaryHover() { return designTokens.colorPrimitives.system.successDarkGreen[100]; },
-  // pressed state uses a slightly darker success shade (fallback to an available primitive)
-  get primaryPressed() { return designTokens.colorPrimitives.system.successDarkGreen[80]; },
-  get secondaryDefault() { return designTokens.colorPrimitives.neutral.grey70; },
-  get secondaryHover() { return designTokens.colorPrimitives.neutral.grey80; },
-  get secondaryPressed() { return designTokens.colorPrimitives.neutral.grey90; },
-      get tertiaryBlueDefault() { return designTokens.colorPrimitives.primary.blue[100]; },
-      get tertiaryBlueHover() { return designTokens.colorPrimitives.primary.darkBlue[100]; },
-      get tertiaryBluePressed() { return designTokens.colorPrimitives.primary.darkBlue[100]; },
-      get tertiaryBlueHoverBg() { return designTokens.colorPrimitives.primary.blue['100-8']; },
-      get tertiaryBluePressedBg() { return designTokens.colorPrimitives.primary.blue['100-15']; },
-  // Tertiary grey button colors mapped to neutral palette
-  get tertiaryGreyDefault() { return designTokens.colorPrimitives.neutral.grey70; },
-  get tertiaryGreyHover() { return designTokens.colorPrimitives.neutral.grey80; },
-  get tertiaryGreyPressed() { return designTokens.colorPrimitives.neutral.grey80; },
-  // Use existing semi-transparent variants derived from grey40
-  get tertiaryGreyHoverBg() { return designTokens.colorPrimitives.neutral['grey40-25']; },
-  get tertiaryGreyPressedBg() { return designTokens.colorPrimitives.neutral['grey40-45']; },
-  get tertiaryDisabled() { return designTokens.colorPrimitives.neutral.grey50; },
+      // Map button colors to the canonical color primitives from the palette
+      get primaryDefault() {
+        return designTokens.colorPrimitives.system.successGreen[100];
+      },
+      get primaryHover() {
+        return designTokens.colorPrimitives.system.successDarkGreen[100];
+      },
+      // pressed state uses a slightly darker success shade (fallback to an available primitive)
+      get primaryPressed() {
+        return designTokens.colorPrimitives.system.successDarkGreen[80];
+      },
+      get secondaryDefault() {
+        return designTokens.colorPrimitives.neutral.grey70;
+      },
+      get secondaryHover() {
+        return designTokens.colorPrimitives.neutral.grey80;
+      },
+      get secondaryPressed() {
+        return designTokens.colorPrimitives.neutral.grey90;
+      },
+      get tertiaryBlueDefault() {
+        return designTokens.colorPrimitives.primary.blue[100];
+      },
+      get tertiaryBlueHover() {
+        return designTokens.colorPrimitives.primary.darkBlue[100];
+      },
+      get tertiaryBluePressed() {
+        return designTokens.colorPrimitives.primary.darkBlue[100];
+      },
+      get tertiaryBlueHoverBg() {
+        return designTokens.colorPrimitives.primary.blue["100-8"];
+      },
+      get tertiaryBluePressedBg() {
+        return designTokens.colorPrimitives.primary.blue["100-15"];
+      },
+      // Tertiary grey button colors mapped to neutral palette
+      get tertiaryGreyDefault() {
+        return designTokens.colorPrimitives.neutral.grey70;
+      },
+      get tertiaryGreyHover() {
+        return designTokens.colorPrimitives.neutral.grey80;
+      },
+      get tertiaryGreyPressed() {
+        return designTokens.colorPrimitives.neutral.grey80;
+      },
+      // Use existing semi-transparent variants derived from grey40
+      get tertiaryGreyHoverBg() {
+        return designTokens.colorPrimitives.neutral["grey40-25"];
+      },
+      get tertiaryGreyPressedBg() {
+        return designTokens.colorPrimitives.neutral["grey40-45"];
+      },
+      get tertiaryDisabled() {
+        return designTokens.colorPrimitives.neutral.grey50;
+      },
       // Icon button colors (reuse tertiary colors for consistency)
-      get iconPrimaryDefault() { return designTokens.colorPrimitives.primary.blue[100]; },
-      get iconPrimaryHoverBg() { return designTokens.colorPrimitives.primary.blue['100-8']; },
-      get iconPrimaryPressedBg() { return designTokens.colorPrimitives.primary.blue['100-15']; },
-  get iconSecondaryDefault() { return designTokens.colorPrimitives.neutral.grey70; },
-  get iconSecondaryHoverBg() { return designTokens.colorPrimitives.neutral['grey40-25']; },
-  get iconSecondaryPressedBg() { return designTokens.colorPrimitives.neutral['grey40-45']; },
-  get iconDisabled() { return designTokens.colorPrimitives.neutral.grey50; }
+      get iconPrimaryDefault() {
+        return designTokens.colorPrimitives.primary.blue[100];
+      },
+      get iconPrimaryHoverBg() {
+        return designTokens.colorPrimitives.primary.blue["100-8"];
+      },
+      get iconPrimaryPressedBg() {
+        return designTokens.colorPrimitives.primary.blue["100-15"];
+      },
+      get iconSecondaryDefault() {
+        return designTokens.colorPrimitives.neutral.grey70;
+      },
+      get iconSecondaryHoverBg() {
+        return designTokens.colorPrimitives.neutral["grey40-25"];
+      },
+      get iconSecondaryPressedBg() {
+        return designTokens.colorPrimitives.neutral["grey40-45"];
+      },
+      get iconDisabled() {
+        return designTokens.colorPrimitives.neutral.grey50;
+      },
     },
     inputs: {
-      get default() { return designTokens.colorPrimitives.primary.blue[100]; },
-      get hover() { return designTokens.colorPrimitives.primary.darkBlue[100]; },
-      get onDisabled() { return designTokens.colorPrimitives.primary.blue[40]; }
+      get default() {
+        return designTokens.colorPrimitives.primary.blue[100];
+      },
+      get hover() {
+        return designTokens.colorPrimitives.primary.darkBlue[100];
+      },
+      get onDisabled() {
+        return designTokens.colorPrimitives.primary.blue[40];
+      },
     },
     alerts: {
-      error: '#d0021b',
-      attention: '#fa8a0f',
-      success: '#74a73a'
-    }
+      error: "#d0021b",
+      attention: "#fa8a0f",
+      success: "#74a73a",
+    },
   },
 
   // PRIMITIVES
@@ -570,7 +628,7 @@ export const designTokens = {
       13: 52,
       14: 56,
       15: 60,
-      16: 64
+      16: 64,
     },
     radius: {
       zero: 0,
@@ -579,29 +637,30 @@ export const designTokens = {
       md: 6,
       lg: 8,
       xl: 10,
-      xxl: 12
+      xxl: 12,
     },
     lineHeight: {
       3: 12,
       4: 16,
-      '4-5': 18,
+      "4-5": 18,
       5: 20,
       6: 24,
       7: 28,
-      10: 40
+      10: 40,
     },
     textVariables: {
-      manuscriptTitle: 'A Key Major Guideline for Engineering Bioactive Multicomponent Nanofunctionalization for Biomedicine and Other Applications: Fundamental Models Confirmed by Both Direct and Indirect Evidence'
-    }
+      manuscriptTitle:
+        "A Key Major Guideline for Engineering Bioactive Multicomponent Nanofunctionalization for Biomedicine and Other Applications: Fundamental Models Confirmed by Both Direct and Indirect Evidence",
+    },
   },
 
   // FONTS
   fonts: {
     type: {
-      fontFamily: 'Open Sans',
-      number: 0
-    }
-  }
+      fontFamily: "Open Sans",
+      number: 0,
+    },
+  },
 };
 
 // CSS Custom Properties generated from design tokens
@@ -792,8 +851,8 @@ export const cssCustomProperties = `
     --color-primary-blue-60: ${designTokens.colorPrimitives.primary.blue[60]};
     --color-primary-blue-80: ${designTokens.colorPrimitives.primary.blue[80]};
     --color-primary-blue-100: ${designTokens.colorPrimitives.primary.blue[100]};
-    --color-primary-blue-100-8: ${designTokens.colorPrimitives.primary.blue['100-8']};
-    --color-primary-blue-100-15: ${designTokens.colorPrimitives.primary.blue['100-15']};
+    --color-primary-blue-100-8: ${designTokens.colorPrimitives.primary.blue["100-8"]};
+    --color-primary-blue-100-15: ${designTokens.colorPrimitives.primary.blue["100-15"]};
     
     --color-primary-dark-blue-5: ${designTokens.colorPrimitives.primary.darkBlue[5]};
     --color-primary-dark-blue-10: ${designTokens.colorPrimitives.primary.darkBlue[10]};
@@ -912,8 +971,8 @@ export const cssCustomProperties = `
     --color-neutral-grey-20: ${designTokens.colorPrimitives.neutral.grey20};
     --color-neutral-grey-30: ${designTokens.colorPrimitives.neutral.grey30};
     --color-neutral-grey-40: ${designTokens.colorPrimitives.neutral.grey40};
-    --color-neutral-grey-40-25: ${designTokens.colorPrimitives.neutral['grey40-25']};
-    --color-neutral-grey-40-45: ${designTokens.colorPrimitives.neutral['grey40-45']};
+    --color-neutral-grey-40-25: ${designTokens.colorPrimitives.neutral["grey40-25"]};
+    --color-neutral-grey-40-45: ${designTokens.colorPrimitives.neutral["grey40-45"]};
     --color-neutral-grey-50: ${designTokens.colorPrimitives.neutral.grey50};
     --color-neutral-grey-60: ${designTokens.colorPrimitives.neutral.grey60};
     --color-neutral-grey-70: ${designTokens.colorPrimitives.neutral.grey70};
@@ -926,8 +985,8 @@ export const cssCustomProperties = `
     --color-links-default: ${designTokens.colorPrimitives.links.default};
     --color-links-hover: ${designTokens.colorPrimitives.links.hover};
     
-    --color-overlay-white-80: ${designTokens.colorPrimitives.overlay['white-80']};
-    --color-overlay-black-70: ${designTokens.colorPrimitives.overlay['black-70']};
+    --color-overlay-white-80: ${designTokens.colorPrimitives.overlay["white-80"]};
+    --color-overlay-black-70: ${designTokens.colorPrimitives.overlay["black-70"]};
     
     --color-buttons-primary-default: ${designTokens.colorPrimitives.buttons.primaryDefault};
     --color-buttons-primary-hover: ${designTokens.colorPrimitives.buttons.primaryHover};
@@ -993,7 +1052,7 @@ export const cssCustomProperties = `
     /* Line Height Tokens */
     --line-height-3: ${designTokens.primitives.lineHeight[3]}px;
     --line-height-4: ${designTokens.primitives.lineHeight[4]}px;
-    --line-height-4-5: ${designTokens.primitives.lineHeight['4-5']}px;
+    --line-height-4-5: ${designTokens.primitives.lineHeight["4-5"]}px;
     --line-height-5: ${designTokens.primitives.lineHeight[5]}px;
     --line-height-6: ${designTokens.primitives.lineHeight[6]}px;
     --line-height-7: ${designTokens.primitives.lineHeight[7]}px;
@@ -1058,4 +1117,4 @@ export const cssCustomProperties = `
   }
 `;
 
-export default designTokens; 
+export default designTokens;

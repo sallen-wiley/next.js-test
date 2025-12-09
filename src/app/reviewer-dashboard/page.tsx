@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Container,
   FormControl,
+  FormLabel,
   Grid,
   MenuItem,
   Pagination,
@@ -21,6 +22,8 @@ import {
 } from "@mui/material";
 import { ArticleCard } from "./ArticleCard";
 import { FilterRail, type FilterOption, type SelectOption } from "./FilterRail";
+import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
+import type { ManuscriptTag } from "@/lib/supabase";
 
 export default function ArticleListingPage() {
   const router = useRouter();
@@ -36,6 +39,7 @@ export default function ArticleListingPage() {
     status: "all",
     scope: "assigned",
     priority: "action-required",
+    tags: [] as ManuscriptTag[],
   });
 
   useHeaderConfig({
@@ -59,6 +63,11 @@ export default function ArticleListingPage() {
 
     fetchData();
   }, [user]);
+
+  // Scroll to top when page changes
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   const journalOptions: SelectOption[] = useMemo(() => {
     const unique = Array.from(new Set(manuscripts.map((m) => m.journal)));
@@ -100,14 +109,30 @@ export default function ArticleListingPage() {
   ];
 
   const filteredManuscripts = useMemo(() => {
-    return manuscripts.filter((m) => {
+    const filtered = manuscripts.filter((m) => {
       const journalMatch =
         filters.journal === "all" || m.journal === filters.journal;
       const statusMatch =
         filters.status === "all" || m.status === filters.status;
-      return journalMatch && statusMatch;
+      const tagsMatch =
+        filters.tags.length === 0 ||
+        filters.tags.some((tag) => m.manuscript_tags?.includes(tag));
+      return journalMatch && statusMatch && tagsMatch;
     });
-  }, [manuscripts, filters]);
+
+    // Sort by updated_at timestamp (fallback to submission_date if updated_at is not available)
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.updated_at || a.submission_date).getTime();
+      const dateB = new Date(b.updated_at || b.submission_date).getTime();
+      return sort === "latest" ? dateB - dateA : dateA - dateB;
+    });
+  }, [manuscripts, filters, sort]);
+  const ITEMS_PER_PAGE = 10;
+  const paginatedManuscripts = useMemo(() => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredManuscripts.slice(startIndex, endIndex);
+  }, [filteredManuscripts, page]);
 
   const handleReset = () => {
     setFilters({
@@ -115,6 +140,7 @@ export default function ArticleListingPage() {
       status: "all",
       scope: "assigned",
       priority: "action-required",
+      tags: [],
     });
     setSort("latest");
     setPage(1);
@@ -165,6 +191,7 @@ export default function ArticleListingPage() {
             selectedStatus={filters.status}
             selectedScope={filters.scope}
             selectedPriority={filters.priority}
+            selectedTags={filters.tags}
             onJournalChange={(value) =>
               setFilters((prev) => ({ ...prev, journal: value }))
             }
@@ -177,6 +204,7 @@ export default function ArticleListingPage() {
             onPriorityChange={(value) =>
               setFilters((prev) => ({ ...prev, priority: value }))
             }
+            onTagsChange={(tags) => setFilters((prev) => ({ ...prev, tags }))}
             onReset={handleReset}
           />
         </Grid>
@@ -200,23 +228,39 @@ export default function ArticleListingPage() {
                 </Typography>
               </Stack>
 
-              <FormControl size="small" sx={{ minWidth: 220 }}>
-                <Select
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value)}
+              <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                sx={{ minWidth: 220 }}
+              >
+                <FormLabel
+                  sx={{
+                    color: "text.secondary",
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
                 >
-                  <MenuItem value="latest">
-                    Last updated (latest first)
-                  </MenuItem>
-                  <MenuItem value="oldest">
-                    Last updated (oldest first)
-                  </MenuItem>
-                </Select>
-              </FormControl>
+                  Sort by:
+                </FormLabel>
+                <FormControl size="small" fullWidth>
+                  <Select
+                    value={sort}
+                    onChange={(event) => setSort(event.target.value)}
+                  >
+                    <MenuItem value="latest">
+                      Last updated (latest first)
+                    </MenuItem>
+                    <MenuItem value="oldest">
+                      Last updated (oldest first)
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
             </Stack>
 
             <Stack spacing={2}>
-              {filteredManuscripts.map((manuscript) => {
+              {paginatedManuscripts.map((manuscript) => {
                 const submittedDate = new Date(manuscript.submission_date);
                 const submittedFormatted =
                   submittedDate.toLocaleDateString("en-GB");
@@ -236,8 +280,10 @@ export default function ArticleListingPage() {
                     academicEditors={academicEditors}
                     journal={manuscript.journal}
                     submittedOn={`${submittedFormatted}`}
-                    stateLabel="respond to invite"
-                    stateCode="V1"
+                    stateLabel={getStatusLabel(manuscript.status)}
+                    stateCode={`V${manuscript.version || 1}`}
+                    stateColor={getStatusColor(manuscript.status)}
+                    manuscriptTags={manuscript.manuscript_tags}
                     reviewerStats={{
                       invited: 3,
                       agreed: 1,
@@ -252,9 +298,14 @@ export default function ArticleListingPage() {
 
             <Box display="flex" justifyContent="flex-end" sx={{ pt: 1 }}>
               <Pagination
-                count={Math.max(1, Math.ceil(filteredManuscripts.length / 10))}
+                count={Math.max(
+                  1,
+                  Math.ceil(filteredManuscripts.length / ITEMS_PER_PAGE)
+                )}
                 page={page}
                 onChange={(_event, value) => setPage(value)}
+                variant="outlined"
+                shape="rounded"
                 size="small"
               />
             </Box>

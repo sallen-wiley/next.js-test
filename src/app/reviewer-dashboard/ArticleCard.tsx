@@ -10,6 +10,9 @@ import {
   useTheme,
 } from "@mui/material";
 
+import type { ChipProps } from "@mui/material";
+import type { ManuscriptTag } from "@/lib/supabase";
+
 export type ReviewerStats = {
   invited?: number;
   agreed?: number;
@@ -28,8 +31,9 @@ type ArticleCardProps = {
   submittedOn: string;
   stateLabel: string;
   stateCode: string;
-  stateColor?: string;
+  stateColor?: ChipProps["color"];
   reviewerStats?: ReviewerStats;
+  manuscriptTags?: ManuscriptTag[];
   onClick?: () => void;
 };
 
@@ -46,10 +50,10 @@ export function ArticleCard({
   stateCode,
   stateColor,
   reviewerStats = {},
+  manuscriptTags = [],
   onClick,
 }: ArticleCardProps) {
   const theme = useTheme();
-  const barColor = stateColor ?? theme.palette.warning.main;
   const academicEditorLabel =
     academicEditors.length > 0 ? academicEditors.join(", ") : "Unassigned";
 
@@ -77,7 +81,7 @@ export function ArticleCard({
       <Box
         sx={{
           width: 4,
-          bgcolor: barColor,
+          bgcolor: stateColor ? `${stateColor}.main` : "warning.main",
           borderTopLeftRadius: 6,
           borderBottomLeftRadius: 6,
         }}
@@ -104,35 +108,60 @@ export function ArticleCard({
               alignItems="flex-start"
               spacing={2}
             >
-              <Stack direction="row" spacing={1} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                flexWrap="wrap"
+              >
                 <Typography variant="body2" color="text.secondary">
-                  [ID] {id}
+                  ID {id}
                 </Typography>
+                {manuscriptTags?.map((tag) => (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      borderColor: "text.secondary",
+                      color: "text.secondary",
+                      height: 18,
+                      textTransform: "capitalize",
+                    }}
+                  />
+                ))}
+              </Stack>
+
+              <Stack direction="row" spacing={0}>
                 <Chip
-                  label="[Generic]"
+                  label={stateLabel}
+                  color={stateColor || "warning"}
                   size="small"
-                  variant="outlined"
                   sx={{
-                    borderColor: "text.secondary",
-                    color: "text.secondary",
-                    height: 18,
+                    textTransform: "uppercase",
+                    fontWeight: 700,
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                  }}
+                />
+                <Chip
+                  label={stateCode}
+                  color={stateColor || "warning"}
+                  variant="outlined"
+                  size="small"
+                  sx={{
+                    textTransform: "uppercase",
+                    fontWeight: 700,
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderLeft: 0,
                   }}
                 />
               </Stack>
-
-              <Chip
-                label={`${stateLabel} ${stateCode}`}
-                size="small"
-                sx={{
-                  bgcolor: barColor,
-                  color: theme.palette.getContrastText(barColor),
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                }}
-              />
             </Stack>
 
-            <Typography variant="h6" color="primary" fontWeight={700}>
+            <Typography variant="h6" color="secondary" fontWeight={700}>
               {title}
             </Typography>
 
@@ -175,7 +204,7 @@ export function ArticleCard({
                     fontWeight={700}
                     color="text.secondary"
                   >
-                    [Article Type:]
+                    Article Type:
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {articleType}
@@ -193,7 +222,7 @@ export function ArticleCard({
                     fontWeight={700}
                     color="text.secondary"
                   >
-                    [Academic Editor:]
+                    Academic Editor:
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {academicEditorLabel}
@@ -211,7 +240,7 @@ export function ArticleCard({
                     fontWeight={700}
                     color="text.secondary"
                   >
-                    [Reviewer Reports:]
+                    Reviewer Reports:
                   </Typography>
                   <Stack
                     direction="row"
@@ -243,7 +272,7 @@ export function ArticleCard({
         >
           <Stack direction="row" spacing={0.5} alignItems="center" flexGrow={1}>
             <Typography variant="body2" fontWeight={700} color="text.secondary">
-              [Journal:]
+              Journal:
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {journal}
@@ -251,7 +280,7 @@ export function ArticleCard({
           </Stack>
           <Stack direction="row" spacing={0.5} alignItems="center">
             <Typography variant="body2" fontWeight={700} color="text.secondary">
-              [Submitted on:]
+              Submitted on:
             </Typography>
             <Typography variant="body2" color="text.primary">
               {submittedOn}
