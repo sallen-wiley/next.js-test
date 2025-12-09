@@ -2078,9 +2078,9 @@ export async function updateManuscript(
 ): Promise<Manuscript> {
   // Strip non-column fields from updates
   const {
-    id: _unused,
-    assignedEditors: _ae,
-    assignedEditorIds: _aeIds,
+    id: _id, // eslint-disable-line @typescript-eslint/no-unused-vars
+    assignedEditors, // eslint-disable-line @typescript-eslint/no-unused-vars
+    assignedEditorIds, // eslint-disable-line @typescript-eslint/no-unused-vars
     editorIds,
     ...updateData
   } = updates as Manuscript & { editorIds?: string[] };
