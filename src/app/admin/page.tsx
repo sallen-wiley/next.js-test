@@ -18,12 +18,14 @@ import ArticleIcon from "@mui/icons-material/Article";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import GroupsIcon from "@mui/icons-material/Groups";
 import DescriptionIcon from "@mui/icons-material/Description";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import AdminUserManager from "@/components/auth/AdminUserManager";
 import RoleManager from "@/components/auth/RoleManager";
 import ManuscriptUserManager from "@/components/auth/ManuscriptUserManager";
 import ReviewerMatchManager from "@/components/auth/ReviewerMatchManager";
 import ReviewerManager from "@/components/auth/ReviewerManager";
 import ManuscriptManager from "@/components/auth/ManuscriptManager";
+import ReviewInvitationManager from "@/components/auth/ReviewInvitationManager";
 import { useRoleAccess } from "@/hooks/useRoles";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 
@@ -167,6 +169,11 @@ export default function AdminPage() {
                 label="Manuscript Database"
                 iconPosition="start"
               />
+              <Tab
+                icon={<MailOutlineIcon />}
+                label="Review Invitations"
+                iconPosition="start"
+              />
             </Tabs>
           </Paper>
 
@@ -176,6 +183,7 @@ export default function AdminPage() {
           {activeTab === 3 && <ReviewerMatchManager />}
           {activeTab === 4 && <ReviewerManager />}
           {activeTab === 5 && <ManuscriptManager />}
+          {activeTab === 6 && <ReviewInvitationManager />}
         </Box>
       )}
     </Container>

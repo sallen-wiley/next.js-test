@@ -23,6 +23,8 @@ import {
 } from "@/services/dataService";
 import UnifiedQueueTab from "./UnifiedQueueTab";
 import ReviewerActionMenu from "./ReviewerActionMenu";
+import { ArticleCard } from "../ArticleCard";
+import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 import type {
   Manuscript,
   InvitationQueueItem,
@@ -90,6 +92,8 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import StarIcon from "@mui/icons-material/Star";
+import SearchOffIcon from "@mui/icons-material/SearchOff";
+import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 
 // Mock data removed - using real database queries
 
@@ -266,7 +270,14 @@ export default function ReviewerInvitationDashboard() {
     fetchReviewersWithStatusData();
   }, [manuscriptId]);
 
-  const [tabValue, setTabValue] = React.useState(0);
+  // Initialize tab from URL parameter
+  const initialTab = React.useMemo(() => {
+    const tabParam = searchParams?.get("tab");
+    if (tabParam === "queue") return 1; // Invitations & Queue tab
+    return 0; // Default to Potential Reviewers tab
+  }, [searchParams]);
+
+  const [tabValue, setTabValue] = React.useState(initialTab);
   const [sortBy, setSortBy] = React.useState<string>("match_score");
   const [filterAvailability, setFilterAvailability] = React.useState<string[]>([
     "available",
@@ -846,176 +857,42 @@ export default function ReviewerInvitationDashboard() {
 
             {/* Manuscript Details Card - Dynamic Data */}
             {manuscript && (
-              <Card
-                sx={{
-                  mb: 3,
-                  display: "flex",
-                  borderRadius: 1.5,
-                  overflow: "hidden",
-                  borderLeft: "4px solid",
-                  borderLeftColor: "primary.main",
-                }}
-              >
-                <CardContent sx={{ flex: 1, p: 0, pb: "0 !important" }}>
-                  {/* Header Section */}
-                  <Box sx={{ p: 2, pb: 1 }}>
-                    {/* Top Row - Status */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mb: 2,
-                      }}
-                    >
-                      <Chip
-                        label={manuscript.status
-                          .toUpperCase()
-                          .replace("_", " ")}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                        sx={{
-                          height: 20,
-                          fontSize: "0.6875rem",
-                          fontWeight: 700,
-                          letterSpacing: "0.05em",
-                        }}
-                      />
-                    </Box>
-
-                    {/* Title */}
-                    <Typography
-                      variant="h6"
-                      color="secondary"
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "1rem",
-                        lineHeight: 1.5,
-                        mb: 2,
-                      }}
-                    >
-                      {manuscript.title}
-                    </Typography>
-
-                    {/* Authors Row */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <Typography variant="body2" color="text.primary">
-                        {manuscript.authors.join(", ")}
-                      </Typography>
-                    </Box>
-
-                    {/* Details Row */}
-                    <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                      {manuscript.subject_area && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{ fontWeight: 700 }}
-                            color="text.secondary"
-                          >
-                            Subject Area:
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {manuscript.subject_area}
-                          </Typography>
-                        </Box>
-                      )}
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 700 }}
-                          color="text.secondary"
-                        >
-                          Academic Editors:
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {manuscript.assignedEditors &&
-                          manuscript.assignedEditors.length > 0
-                            ? manuscript.assignedEditors
-                                .map(
-                                  (editor) =>
-                                    editor.full_name ||
-                                    editor.email ||
-                                    editor.id
-                                )
-                                .join(", ")
-                            : "Unassigned"}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  {/* Footer Section */}
-                  <Box
-                    sx={[
-                      {
-                        bgcolor: "background.default",
-                        p: 2,
-                        pt: 1.5,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        borderTop: "1px solid",
-                        borderTopColor: "divider",
-                      },
-                      (theme) =>
-                        theme.applyStyles("dark", {
-                          bgcolor: "action.hover",
-                        }),
-                    ]}
-                  >
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 700 }}
-                        color="text.secondary"
-                      >
-                        Journal:
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {manuscript.journal}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 700 }}
-                        color="text.secondary"
-                      >
-                        Submitted on:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 400, color: "text.primary" }}
-                      >
-                        {new Date(
-                          manuscript.submission_date
-                        ).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
+              <Box sx={{ mb: 3 }}>
+                <ArticleCard
+                  id={manuscript.id.split("-")[0]}
+                  title={manuscript.title}
+                  authors={manuscript.authors || []}
+                  badges={manuscript.manuscript_tags || []}
+                  articleType={manuscript.subject_area || "Research Article"}
+                  academicEditors={
+                    manuscript.assignedEditors?.map(
+                      (editor) => editor.full_name || editor.email
+                    ) || []
+                  }
+                  journal={manuscript.journal}
+                  submittedOn={new Date(
+                    manuscript.submission_date
+                  ).toLocaleDateString("en-GB")}
+                  stateLabel={getStatusLabel(manuscript.status)}
+                  stateCode={`V${manuscript.version || 1}`}
+                  stateColor={getStatusColor(manuscript.status)}
+                  manuscriptTags={manuscript.manuscript_tags}
+                  reviewerStats={{
+                    invited: invitations.length,
+                    agreed: invitations.filter(
+                      (inv) => inv.status === "accepted"
+                    ).length,
+                    declined: invitations.filter(
+                      (inv) => inv.status === "declined"
+                    ).length,
+                    submitted: invitations.filter(
+                      (inv) =>
+                        inv.status === "report_submitted" ||
+                        inv.status === "completed"
+                    ).length,
+                  }}
+                />
+              </Box>
             )}
           </Grid>
         </Grid>
@@ -1182,307 +1059,442 @@ export default function ReviewerInvitationDashboard() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredReviewers.map((reviewer) => (
-                      <TableRow
-                        key={reviewer.id}
-                        hover
-                        sx={{
-                          backgroundColor:
-                            reviewer.conflicts_of_interest.length > 0
-                              ? (theme) =>
-                                  theme.vars?.palette?.error?.main
-                                    ? `${theme.vars.palette.error.main}08`
-                                    : "rgba(211, 47, 47, 0.03)"
-                              : "inherit",
-                          borderLeft:
-                            reviewer.conflicts_of_interest.length > 0
-                              ? (theme) =>
-                                  `4px solid ${
-                                    theme.vars?.palette?.error?.main ||
-                                    "#ccff00"
-                                  }`
-                              : "4px solid transparent",
-                          "&:hover": {
+                    {filteredReviewers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={9}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              py: 8,
+                              px: 3,
+                            }}
+                          >
+                            {searchTerm ? (
+                              <>
+                                <SearchOffIcon
+                                  sx={{
+                                    fontSize: 64,
+                                    color: "text.secondary",
+                                    mb: 2,
+                                  }}
+                                />
+                                <Typography
+                                  variant="h6"
+                                  color="text.secondary"
+                                  gutterBottom
+                                >
+                                  No reviewers match your search
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ mb: 3, textAlign: "center" }}
+                                >
+                                  Try adjusting your search term or filters to
+                                  find more reviewers
+                                </Typography>
+                                <Button
+                                  variant="outlined"
+                                  onClick={() => {
+                                    setSearchTerm("");
+                                    setFilterAvailability(["available"]);
+                                    setMinMatchScore(70);
+                                  }}
+                                >
+                                  Clear Filters
+                                </Button>
+                              </>
+                            ) : potentialReviewers.length === 0 ? (
+                              <>
+                                <PersonSearchIcon
+                                  sx={{
+                                    fontSize: 64,
+                                    color: "text.secondary",
+                                    mb: 2,
+                                  }}
+                                />
+                                <Typography
+                                  variant="h6"
+                                  color="text.secondary"
+                                  gutterBottom
+                                >
+                                  No reviewers available
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{
+                                    mb: 3,
+                                    textAlign: "center",
+                                    maxWidth: 500,
+                                  }}
+                                >
+                                  There are no reviewer matches for this
+                                  manuscript yet. The system automatically
+                                  generates suggested reviewers based on
+                                  manuscript content. You can also search for
+                                  any reviewer in the database using the search
+                                  field above.
+                                </Typography>
+                                <Alert severity="info" sx={{ maxWidth: 600 }}>
+                                  <Typography variant="body2">
+                                    <strong>Tip:</strong> Use the search field
+                                    to find reviewers by name, affiliation, or
+                                    expertise area from the full reviewer
+                                    database.
+                                  </Typography>
+                                </Alert>
+                              </>
+                            ) : (
+                              <>
+                                <FilterListIcon
+                                  sx={{
+                                    fontSize: 64,
+                                    color: "text.secondary",
+                                    mb: 2,
+                                  }}
+                                />
+                                <Typography
+                                  variant="h6"
+                                  color="text.secondary"
+                                  gutterBottom
+                                >
+                                  No reviewers match your filters
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ mb: 3, textAlign: "center" }}
+                                >
+                                  Try adjusting availability, match score, or
+                                  other filter criteria
+                                </Typography>
+                                <Button
+                                  variant="outlined"
+                                  onClick={() => {
+                                    setFilterAvailability(["available"]);
+                                    setMinMatchScore(0);
+                                  }}
+                                >
+                                  Reset Filters
+                                </Button>
+                              </>
+                            )}
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredReviewers.map((reviewer) => (
+                        <TableRow
+                          key={reviewer.id}
+                          hover
+                          sx={{
                             backgroundColor:
                               reviewer.conflicts_of_interest.length > 0
                                 ? (theme) =>
                                     theme.vars?.palette?.error?.main
-                                      ? `${theme.vars.palette.error.main}12`
-                                      : "rgba(211, 47, 47, 0.06)"
-                                : (theme) =>
-                                    theme.vars?.palette?.action?.hover ||
-                                    "rgba(0, 0, 0, 0.04)",
-                          },
-                        }}
-                      >
-                        <TableCell padding="checkbox">
-                          <Box
-                            sx={{
-                              position: "relative",
-                              display: "inline-block",
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedReviewers.includes(reviewer.id)}
-                              onChange={() => handleReviewerSelect(reviewer.id)}
-                              disabled={
+                                      ? `${theme.vars.palette.error.main}08`
+                                      : "rgba(211, 47, 47, 0.03)"
+                                : "inherit",
+                            borderLeft:
+                              reviewer.conflicts_of_interest.length > 0
+                                ? (theme) =>
+                                    `4px solid ${
+                                      theme.vars?.palette?.error?.main ||
+                                      "#ccff00"
+                                    }`
+                                : "4px solid transparent",
+                            "&:hover": {
+                              backgroundColor:
                                 reviewer.conflicts_of_interest.length > 0
-                              }
-                              style={{
-                                opacity:
-                                  reviewer.conflicts_of_interest.length > 0
-                                    ? 0.5
-                                    : 1,
-                                cursor:
-                                  reviewer.conflicts_of_interest.length > 0
-                                    ? "not-allowed"
-                                    : "pointer",
+                                  ? (theme) =>
+                                      theme.vars?.palette?.error?.main
+                                        ? `${theme.vars.palette.error.main}12`
+                                        : "rgba(211, 47, 47, 0.06)"
+                                  : (theme) =>
+                                      theme.vars?.palette?.action?.hover ||
+                                      "rgba(0, 0, 0, 0.04)",
+                            },
+                          }}
+                        >
+                          <TableCell padding="checkbox">
+                            <Box
+                              sx={{
+                                position: "relative",
+                                display: "inline-block",
                               }}
-                            />
-                            {reviewer.conflicts_of_interest.length > 0 && (
-                              <CancelIcon
-                                sx={{
-                                  position: "absolute",
-                                  top: "-2px",
-                                  right: "-8px",
-                                  fontSize: 16,
-                                  color: "error.main",
-                                  pointerEvents: "none",
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedReviewers.includes(
+                                  reviewer.id
+                                )}
+                                onChange={() =>
+                                  handleReviewerSelect(reviewer.id)
+                                }
+                                disabled={
+                                  reviewer.conflicts_of_interest.length > 0
+                                }
+                                style={{
+                                  opacity:
+                                    reviewer.conflicts_of_interest.length > 0
+                                      ? 0.5
+                                      : 1,
+                                  cursor:
+                                    reviewer.conflicts_of_interest.length > 0
+                                      ? "not-allowed"
+                                      : "pointer",
                                 }}
                               />
-                            )}
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 2,
-                            }}
-                          >
-                            <Avatar sx={{ bgcolor: "primary.main" }}>
-                              {reviewer.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </Avatar>
-                            <Box>
-                              <Typography
-                                variant="subtitle2"
-                                sx={{
-                                  fontWeight: 600,
-                                  color:
-                                    reviewer.conflicts_of_interest.length > 0
-                                      ? "text.primary"
-                                      : "inherit",
-                                  opacity:
-                                    reviewer.conflicts_of_interest.length > 0
-                                      ? 0.8
-                                      : 1,
-                                }}
-                              >
-                                {reviewer.name}
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  color:
-                                    reviewer.conflicts_of_interest.length > 0
-                                      ? "text.secondary"
-                                      : "text.secondary",
-                                  opacity:
-                                    reviewer.conflicts_of_interest.length > 0
-                                      ? 0.7
-                                      : 1,
-                                }}
-                              >
-                                {reviewer.affiliation}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {reviewer.department}
-                              </Typography>
-                              <Box sx={{ mt: 0.5 }}>
-                                {reviewer.expertise_areas
-                                  .slice(0, 3)
-                                  .map((area, index) => (
-                                    <Chip
-                                      key={index}
-                                      label={area}
-                                      size="small"
-                                      variant="outlined"
-                                      sx={{
-                                        mr: 0.5,
-                                        mb: 0.5,
-                                        fontSize: "0.7rem",
-                                      }}
-                                    />
-                                  ))}
-                              </Box>
                               {reviewer.conflicts_of_interest.length > 0 && (
-                                <Chip
-                                  label={`Conflict: ${reviewer.conflicts_of_interest.join(
-                                    ", "
-                                  )}`}
-                                  color="error"
-                                  size="small"
-                                  icon={<CancelIcon />}
+                                <CancelIcon
                                   sx={{
-                                    mt: 1,
-                                    fontWeight: 600,
-                                    "& .MuiChip-label": {
-                                      fontWeight: 600,
-                                    },
+                                    position: "absolute",
+                                    top: "-2px",
+                                    right: "-8px",
+                                    fontSize: 16,
+                                    color: "error.main",
+                                    pointerEvents: "none",
                                   }}
                                 />
                               )}
                             </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <Typography variant="h6" color="primary">
-                              {reviewer.match_score}%
-                            </Typography>
-                            {reviewer.match_score >= 90 && (
-                              <StarIcon color="warning" fontSize="small" />
-                            )}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={reviewer.availability_status}
-                            color={
-                              getAvailabilityColor(
-                                reviewer.availability_status
-                              ) as
-                                | "success"
-                                | "warning"
-                                | "error"
-                                | "info"
-                                | "default"
-                            }
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box>
-                            <Typography variant="body2">
-                              {reviewer.current_review_load}/
-                              {reviewer.max_review_capacity}
-                            </Typography>
-                            <LinearProgress
-                              variant="determinate"
-                              value={
-                                (reviewer.current_review_load /
-                                  reviewer.max_review_capacity) *
-                                100
+                          </TableCell>
+                          <TableCell>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                              }}
+                            >
+                              <Avatar sx={{ bgcolor: "primary.main" }}>
+                                {reviewer.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </Avatar>
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{
+                                    fontWeight: 600,
+                                    color:
+                                      reviewer.conflicts_of_interest.length > 0
+                                        ? "text.primary"
+                                        : "inherit",
+                                    opacity:
+                                      reviewer.conflicts_of_interest.length > 0
+                                        ? 0.8
+                                        : 1,
+                                  }}
+                                >
+                                  {reviewer.name}
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color:
+                                      reviewer.conflicts_of_interest.length > 0
+                                        ? "text.secondary"
+                                        : "text.secondary",
+                                    opacity:
+                                      reviewer.conflicts_of_interest.length > 0
+                                        ? 0.7
+                                        : 1,
+                                  }}
+                                >
+                                  {reviewer.affiliation}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {reviewer.department}
+                                </Typography>
+                                <Box sx={{ mt: 0.5 }}>
+                                  {reviewer.expertise_areas
+                                    .slice(0, 3)
+                                    .map((area, index) => (
+                                      <Chip
+                                        key={index}
+                                        label={area}
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{
+                                          mr: 0.5,
+                                          mb: 0.5,
+                                          fontSize: "0.7rem",
+                                        }}
+                                      />
+                                    ))}
+                                </Box>
+                                {reviewer.conflicts_of_interest.length > 0 && (
+                                  <Chip
+                                    label={`Conflict: ${reviewer.conflicts_of_interest.join(
+                                      ", "
+                                    )}`}
+                                    color="error"
+                                    size="small"
+                                    icon={<CancelIcon />}
+                                    sx={{
+                                      mt: 1,
+                                      fontWeight: 600,
+                                      "& .MuiChip-label": {
+                                        fontWeight: 600,
+                                      },
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Typography variant="h6" color="primary">
+                                {reviewer.match_score}%
+                              </Typography>
+                              {reviewer.match_score >= 90 && (
+                                <StarIcon color="warning" fontSize="small" />
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              label={reviewer.availability_status}
+                              color={
+                                getAvailabilityColor(
+                                  reviewer.availability_status
+                                ) as
+                                  | "success"
+                                  | "warning"
+                                  | "error"
+                                  | "info"
+                                  | "default"
                               }
-                              sx={{ mt: 0.5, width: 40 }}
+                              size="small"
                             />
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Typography
-                            variant="body2"
-                            color={
-                              reviewer.response_rate >= 80
-                                ? "success.main"
-                                : "warning.main"
-                            }
-                          >
-                            {reviewer.response_rate}%
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Typography variant="body2" color="primary">
-                            {reviewer.quality_score}%
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Typography variant="body2">
-                            {reviewer.average_review_time_days} days
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            justifyContent="center"
-                          >
-                            <Tooltip
-                              title={
-                                reviewer.conflicts_of_interest.length > 0
-                                  ? "Cannot invite - Conflict of interest"
-                                  : "Invite immediately"
+                          </TableCell>
+                          <TableCell align="center">
+                            <Box>
+                              <Typography variant="body2">
+                                {reviewer.current_review_load}/
+                                {reviewer.max_review_capacity}
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={
+                                  (reviewer.current_review_load /
+                                    reviewer.max_review_capacity) *
+                                  100
+                                }
+                                sx={{ mt: 0.5, width: 40 }}
+                              />
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography
+                              variant="body2"
+                              color={
+                                reviewer.response_rate >= 80
+                                  ? "success.main"
+                                  : "warning.main"
                               }
                             >
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  color="primary"
-                                  disabled={
-                                    reviewer.conflicts_of_interest.length > 0
-                                  }
-                                  onClick={() =>
-                                    handleInviteReviewer(reviewer.id)
-                                  }
-                                  sx={{
-                                    "&.Mui-disabled": {
-                                      color: (theme) =>
-                                        theme.vars?.palette?.error?.main ||
-                                        "#ccff00",
-                                      opacity: 0.8,
-                                    },
-                                  }}
-                                >
-                                  <MailOutlineIcon />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                            <Tooltip
-                              title={
-                                reviewer.conflicts_of_interest.length > 0
-                                  ? "Cannot queue - Conflict of interest"
-                                  : "Add to queue"
-                              }
+                              {reviewer.response_rate}%
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" color="primary">
+                              {reviewer.quality_score}%
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2">
+                              {reviewer.average_review_time_days} days
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              justifyContent="center"
                             >
-                              <span>
-                                <IconButton
-                                  size="small"
-                                  color="secondary"
-                                  disabled={
-                                    reviewer.conflicts_of_interest.length > 0
-                                  }
-                                  onClick={() => handleAddToQueue(reviewer.id)}
-                                  sx={{
-                                    "&.Mui-disabled": {
-                                      color: (theme) =>
-                                        theme.vars?.palette?.error?.main ||
-                                        "#ccff00",
-                                      opacity: 0.8,
-                                    },
-                                  }}
-                                >
-                                  <QueueIcon />
-                                </IconButton>
-                              </span>
-                            </Tooltip>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              <Tooltip
+                                title={
+                                  reviewer.conflicts_of_interest.length > 0
+                                    ? "Cannot invite - Conflict of interest"
+                                    : "Invite immediately"
+                                }
+                              >
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    color="primary"
+                                    disabled={
+                                      reviewer.conflicts_of_interest.length > 0
+                                    }
+                                    onClick={() =>
+                                      handleInviteReviewer(reviewer.id)
+                                    }
+                                    sx={{
+                                      "&.Mui-disabled": {
+                                        color: (theme) =>
+                                          theme.vars?.palette?.error?.main ||
+                                          "#ccff00",
+                                        opacity: 0.8,
+                                      },
+                                    }}
+                                  >
+                                    <MailOutlineIcon />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                              <Tooltip
+                                title={
+                                  reviewer.conflicts_of_interest.length > 0
+                                    ? "Cannot queue - Conflict of interest"
+                                    : "Add to queue"
+                                }
+                              >
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    color="secondary"
+                                    disabled={
+                                      reviewer.conflicts_of_interest.length > 0
+                                    }
+                                    onClick={() =>
+                                      handleAddToQueue(reviewer.id)
+                                    }
+                                    sx={{
+                                      "&.Mui-disabled": {
+                                        color: (theme) =>
+                                          theme.vars?.palette?.error?.main ||
+                                          "#ccff00",
+                                        opacity: 0.8,
+                                      },
+                                    }}
+                                  >
+                                    <QueueIcon />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>

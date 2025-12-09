@@ -34,6 +34,9 @@ import {
   TableHead,
   TableRow,
   Avatar,
+  IconButton,
+  Select,
+  MenuItem,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -44,6 +47,15 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingIcon from "@mui/icons-material/Pending";
 import CancelIcon from "@mui/icons-material/Cancel";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
+
+import { ArticleCard } from "../ArticleCard";
+import { ArticleDetailsCard } from "../ArticleDetailsCard";
+import { InvitedReviewerCard } from "../InvitedReviewerCard";
+import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 
 export default function ArticleDetailsPage({
   params,
@@ -64,6 +76,13 @@ export default function ArticleDetailsPage({
   const [queue, setQueue] = React.useState<InvitationQueueItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Accordion expansion state
+  const [expandedAccordions, setExpandedAccordions] = React.useState({
+    reviewers: true,
+    decision: false,
+    activityLog: false,
+  });
 
   // Configure header
   useHeaderConfig({
@@ -162,10 +181,24 @@ export default function ArticleDetailsPage({
     );
   }
 
-  const hasInvitedReviewers = invitations.length > 0;
+  // Helper function to calculate reviewer stats from invitations
+  const getReviewerStats = () => {
+    const invited = invitations.length;
+    const agreed = invitations.filter(
+      (inv) => inv.status === "accepted"
+    ).length;
+    const declined = invitations.filter(
+      (inv) => inv.status === "declined"
+    ).length;
+    const submitted = invitations.filter(
+      (inv) => inv.status === "report_submitted" || inv.status === "completed"
+    ).length;
 
-  // Helper functions for invitation status display
-  const getStatusColor = (status: string) => {
+    return { invited, agreed, declined, submitted };
+  };
+
+  // Helper functions for invitation status display (for table)
+  const getInvitationStatusColor = (status: string) => {
     switch (status) {
       case "accepted":
         return "success";
@@ -201,508 +234,425 @@ export default function ArticleDetailsPage({
     }
   };
 
+  const hasInvitedReviewers = invitations.length > 0;
+  const reviewerStats = getReviewerStats();
+
+  // Format submission date for display
+  const submittedDate = new Date(manuscript.submission_date);
+  const submittedFormatted = submittedDate.toLocaleDateString("en-GB");
+
+  // Format updated date
+  const updatedDate = manuscript.updated_at
+    ? new Date(manuscript.updated_at)
+    : submittedDate;
+  const updatedFormatted = updatedDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  // Get academic editors from manuscript
+  const academicEditors =
+    manuscript.assignedEditors?.map(
+      (editor) => editor.full_name || editor.email
+    ) || [];
+
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Back Navigation and Breadcrumb */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => router.push("/reviewer-dashboard")}
-          size="small"
-        >
-          Back to Dashboard
-        </Button>
-        <Typography variant="body2" color="text.secondary">
-          DASHBOARD / ARTICLE DETAILS
-        </Typography>
+      {/* Navigation and Meta Bar */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 3,
+        }}
+      >
+        {/* Left: Back button and breadcrumb */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => router.push("/reviewer-dashboard")}
+            size="small"
+          >
+            Back
+          </Button>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
+          >
+            Dashboard / Article Details
+          </Typography>
+        </Box>
+
+        {/* Right: Meta actions */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <IconButton size="small" aria-label="view">
+            <VisibilityOutlinedIcon fontSize="small" />
+          </IconButton>
+          <IconButton size="small" aria-label="download">
+            <DownloadOutlinedIcon fontSize="small" />
+          </IconButton>
+          <Typography variant="body2" color="text.secondary">
+            Updated on {updatedFormatted}
+          </Typography>
+          <Select
+            value={manuscript.version || 1}
+            size="small"
+            sx={{ minWidth: 100 }}
+          >
+            <MenuItem value={manuscript.version || 1}>
+              Version {manuscript.version || 1}
+            </MenuItem>
+          </Select>
+        </Box>
       </Box>
 
-      {/* Page Title */}
-      <Typography variant="h4" component="h1" fontWeight={600} sx={{ mb: 3 }}>
-        Article Details
-      </Typography>
-
-      {/* Article Header */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="flex-start"
-          sx={{ mb: 2 }}
-        >
-          <Box>
-            <Chip
-              label={`ID ${manuscript.id.split("-")[0]}`}
-              size="small"
-              sx={{ mr: 1 }}
-            />
-            <Chip
-              label="COMMISSIONED"
-              size="small"
-              sx={{ mr: 1 }}
-              color="primary"
-            />
-            <Chip label="TRANSFERRED" size="small" />
-          </Box>
-          <Box sx={{ ml: "auto" }}>
-            <Typography variant="caption" color="text.secondary">
-              Updated on{" "}
-              {new Date(manuscript.submission_date).toLocaleDateString(
-                "en-US",
-                {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                }
-              )}
-            </Typography>
-          </Box>
-        </Stack>
-
-        <Typography variant="h5" component="h1" fontWeight={600} sx={{ mb: 2 }}>
-          {manuscript.title}
-        </Typography>
-
-        {/* Authors */}
-        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 2 }}>
-          {manuscript.authors.map((author, index) => (
-            <Chip
-              key={index}
-              label={author}
-              size="small"
-              variant="outlined"
-              sx={{ mb: 1 }}
-            />
-          ))}
-        </Stack>
-
-        {/* Metadata Grid */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 2,
-            mb: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Article Type
-            </Typography>
-            <Typography variant="body1">Expression of Concern</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Section
-            </Typography>
-            <Typography variant="body1">{manuscript.subject_area}</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Journal
-            </Typography>
-            <Typography variant="body1">{manuscript.journal}</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Special Issue
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              {manuscript.submission_date}
-            </Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">
-              Academic Editors
-            </Typography>
-            <Typography variant="body1">
-              {manuscript.assignedEditors &&
-              manuscript.assignedEditors.length > 0
-                ? manuscript.assignedEditors
-                    .map((editor) => editor.full_name || editor.email)
-                    .join(", ")
-                : "Unassigned"}
-            </Typography>
-          </Box>
-          <Box sx={{ gridColumn: "span 2" }}>
-            <Typography variant="body2" color="text.secondary">
-              Submitted on
-            </Typography>
-            <Typography variant="body1">
-              {new Date(manuscript.submission_date).toLocaleDateString(
-                "en-US",
-                {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                }
-              )}{" "}
-              (
-              {Math.floor(
-                (Date.now() - new Date(manuscript.submission_date).getTime()) /
-                  (1000 * 60 * 60 * 24)
-              )}{" "}
-              days)
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Collapsible Sections */}
-        <Box sx={{ mt: 3 }}>
-          <Accordion defaultExpanded={false}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Abstract</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography variant="body2">{manuscript.abstract}</Typography>
-            </AccordionDetails>
-          </Accordion>
-
-          <Accordion defaultExpanded={false}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Author Declaration</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography variant="body2" color="text.secondary">
-                Author declarations will appear here.
-              </Typography>
-            </AccordionDetails>
-          </Accordion>
-
-          <Accordion defaultExpanded={false}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Files</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Typography variant="body2" color="text.secondary">
-                Manuscript files will appear here.
-              </Typography>
-            </AccordionDetails>
-          </Accordion>
-        </Box>
-      </Paper>
+      {/* Article Details Card with integrated additional information */}
+      <Box sx={{ mb: 3 }}>
+        <ArticleDetailsCard
+          id={manuscript.id.split("-")[0]}
+          title={manuscript.title}
+          authors={manuscript.authors}
+          abstract={manuscript.abstract}
+          badges={[]}
+          articleType={manuscript.subject_area || "Research Article"}
+          section="Physical, Chemical and Earth Sciences"
+          specialIssue="Advanced PHWR Safety Technology: PHWR Challenging Issues for Safe Operation and Long-Term Sustainability"
+          triageEditor="Tedi Smith"
+          academicEditor={
+            academicEditors.length > 0
+              ? academicEditors.join(", ")
+              : "Unassigned"
+          }
+          journal={manuscript.journal}
+          submittedOn={submittedFormatted}
+          stateLabel={getStatusLabel(manuscript.status)}
+          stateCode={`V${manuscript.version || 1}`}
+          stateColor={getStatusColor(manuscript.status)}
+          manuscriptTags={manuscript.manuscript_tags}
+        />
+      </Box>
 
       {/* Reviewers Section */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-        <Accordion defaultExpanded={true}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Stack direction="row" spacing={2} alignItems="center" width="100%">
-              <Typography fontWeight={500}>Reviewers</Typography>
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Typography variant="body2" color="text.secondary">
-                  Reports: <strong>0</strong> Submitted
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>1</strong> Overdue
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>2</strong> Invalidated
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Invitations: <strong>0</strong> Queued
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Accepted
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Pending
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Declined
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Expired
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>0</strong> Revoked
-                </Typography>
-              </Box>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>
-            {!hasInvitedReviewers && queue.length === 0 ? (
+      <Accordion
+        expanded={expandedAccordions.reviewers}
+        onChange={() =>
+          setExpandedAccordions((prev) => ({
+            ...prev,
+            reviewers: !prev.reviewers,
+          }))
+        }
+        sx={{ mb: 3 }}
+      >
+        <AccordionSummary
+          expandIcon={null}
+          sx={{
+            bgcolor: "background.default",
+            flexDirection: "row",
+            "& .MuiAccordionSummary-content": {
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              my: 1.5,
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            {/* Custom expand icon on the left */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "secondary.main",
+              }}
+            >
+              {expandedAccordions.reviewers ? <RemoveIcon /> : <AddIcon />}
+            </Box>
+            <Typography fontWeight={500}>Reviewers</Typography>
+          </Stack>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <Typography variant="body2" color="text.secondary">
+              Reports: <strong>0</strong> Submitted
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>1</strong> Overdue
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>2</strong> Invalidated
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Invitations: <strong>0</strong> Queued
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>0</strong> Accepted
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>0</strong> Pending
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>0</strong> Declined
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>0</strong> Expired
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <strong>0</strong> Revoked
+            </Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0 }}>
+          {/* Header row with counts */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+              px: 2,
+              pt: 3,
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight={600}>
+              Invited Reviewers ({invitations.length})
+            </Typography>
+            {queue.length > 0 && (
+              <Button
+                variant="text"
+                color="secondary"
+                size="small"
+                sx={{ textTransform: "none" }}
+                onClick={() =>
+                  router.push(
+                    `/reviewer-dashboard/manage-reviewers?manuscriptId=${manuscript?.id}&tab=queue`
+                  )
+                }
+              >
+                View Queued Reviewers ({queue.length})
+              </Button>
+            )}
+          </Box>
+
+          {!hasInvitedReviewers && queue.length === 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                py: 6,
+                px: 2,
+              }}
+            >
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
+                No reviewers invited yet.
+              </Typography>
+              <Button
+                variant="contained"
+                color="success"
+                size="large"
+                onClick={handleManageReviewers}
+                sx={{ minWidth: 180 }}
+              >
+                Manage Reviewers
+              </Button>
+            </Box>
+          ) : (
+            <>
+              {/* Invited Reviewer Cards */}
+              {hasInvitedReviewers && (
+                <Box sx={{ px: 2 }}>
+                  <Stack spacing={2}>
+                    {invitations.map((invitation) => {
+                      // Calculate time left for pending invitations
+                      const invitedDate = new Date(invitation.invited_date);
+                      const dueDate = new Date(invitation.due_date);
+                      const today = new Date();
+                      const daysUntilDue = Math.ceil(
+                        (dueDate.getTime() - today.getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      );
+
+                      return (
+                        <InvitedReviewerCard
+                          key={invitation.id}
+                          reviewerName={invitation.reviewer_name || "Unknown"}
+                          affiliation={invitation.reviewer_affiliation}
+                          status={invitation.status}
+                          invitedDate={invitedDate.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                          responseDate={
+                            invitation.response_date
+                              ? new Date(
+                                  invitation.response_date
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
+                              : undefined
+                          }
+                          dueDate={dueDate.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                          timeLeftToRespond={
+                            invitation.status === "pending"
+                              ? `${daysUntilDue} days`
+                              : undefined
+                          }
+                          reportSubmissionDeadline={
+                            invitation.status === "accepted"
+                              ? `${daysUntilDue} days left`
+                              : undefined
+                          }
+                          daysLeft={
+                            invitation.status === "accepted"
+                              ? daysUntilDue
+                              : undefined
+                          }
+                          onForceAccept={() =>
+                            console.log("Force accept", invitation.id)
+                          }
+                          onForceDecline={() =>
+                            console.log("Force decline", invitation.id)
+                          }
+                          onRevokeInvitation={() =>
+                            console.log("Revoke", invitation.id)
+                          }
+                          onRemoveInvitation={() =>
+                            console.log("Remove", invitation.id)
+                          }
+                          onReadReport={() =>
+                            console.log("Read report", invitation.id)
+                          }
+                          onViewProfile={() =>
+                            console.log("View profile", invitation.reviewer_id)
+                          }
+                          onExtendDeadline={() =>
+                            console.log("Extend deadline", invitation.id)
+                          }
+                        />
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              )}
+
+              {/* Footer with Manage Reviewers Button */}
               <Box
                 sx={{
+                  bgcolor: "background.default",
+                  px: 2,
+                  py: 1.5,
                   display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  py: 6,
-                  border: "1px solid",
-                  borderColor: "divider",
-                  borderRadius: 1,
+                  justifyContent: "flex-end",
+                  mt: 3,
                 }}
               >
-                <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-                  No reviewers invited yet.
-                </Typography>
                 <Button
                   variant="contained"
                   color="success"
-                  size="large"
                   onClick={handleManageReviewers}
-                  sx={{ minWidth: 180 }}
                 >
                   Manage Reviewers
                 </Button>
               </Box>
-            ) : (
-              <Stack spacing={3}>
-                {/* Sent Invitations Table */}
-                {hasInvitedReviewers && (
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      gutterBottom
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 2,
-                      }}
-                    >
-                      <MailOutlineIcon color="primary" />
-                      Sent Invitations ({invitations.length})
-                    </Typography>
-                    <TableContainer
-                      component={Paper}
-                      variant="outlined"
-                      sx={{ mb: 2 }}
-                    >
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Reviewer</TableCell>
-                            <TableCell>Invited Date</TableCell>
-                            <TableCell align="center">Status</TableCell>
-                            <TableCell>Response Date</TableCell>
-                            <TableCell>Due Date</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {invitations.map((invitation) => (
-                            <TableRow key={invitation.id} hover>
-                              <TableCell>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 0.5,
-                                  }}
-                                >
-                                  <Typography variant="body2" fontWeight={500}>
-                                    {invitation.reviewer_name}
-                                  </Typography>
-                                  {invitation.reviewer_affiliation && (
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {invitation.reviewer_affiliation}
-                                    </Typography>
-                                  )}
-                                </Box>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="caption">
-                                  {new Date(
-                                    invitation.invited_date
-                                  ).toLocaleDateString()}
-                                </Typography>
-                              </TableCell>
-                              <TableCell align="center">
-                                <Chip
-                                  icon={getStatusIcon(invitation.status)}
-                                  label={invitation.status}
-                                  color={
-                                    getStatusColor(invitation.status) as
-                                      | "success"
-                                      | "warning"
-                                      | "error"
-                                      | "info"
-                                      | "default"
-                                  }
-                                  size="small"
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="caption">
-                                  {invitation.response_date
-                                    ? new Date(
-                                        invitation.response_date
-                                      ).toLocaleDateString()
-                                    : "—"}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="caption">
-                                  {new Date(
-                                    invitation.due_date
-                                  ).toLocaleDateString()}
-                                </Typography>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
+            </>
+          )}
+        </AccordionDetails>
+      </Accordion>
 
-                {/* Queue Table */}
-                {queue.length > 0 && (
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      gutterBottom
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 2,
-                      }}
-                    >
-                      <QueueIcon color="primary" />
-                      Invitation Queue ({queue.length})
-                    </Typography>
-                    <TableContainer
-                      component={Paper}
-                      variant="outlined"
-                      sx={{ mb: 2 }}
-                    >
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell width={80}>Position</TableCell>
-                            <TableCell>Reviewer</TableCell>
-                            <TableCell>Affiliation</TableCell>
-                            <TableCell>Scheduled Send</TableCell>
-                            <TableCell align="center">Priority</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {queue
-                            .sort((a, b) => a.queue_position - b.queue_position)
-                            .map((item) => (
-                              <TableRow key={item.id} hover>
-                                <TableCell>
-                                  <Chip
-                                    label={item.queue_position}
-                                    color="primary"
-                                    size="small"
-                                    sx={{ fontWeight: "bold" }}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 1,
-                                    }}
-                                  >
-                                    <Avatar
-                                      sx={{
-                                        width: 32,
-                                        height: 32,
-                                        fontSize: "0.875rem",
-                                      }}
-                                    >
-                                      {item.reviewer_name
-                                        ? item.reviewer_name
-                                            .split(" ")
-                                            .map((n) => n[0])
-                                            .join("")
-                                        : "?"}
-                                    </Avatar>
-                                    <Typography
-                                      variant="body2"
-                                      fontWeight={500}
-                                    >
-                                      {item.reviewer_name || "Unknown"}
-                                    </Typography>
-                                  </Box>
-                                </TableCell>
-                                <TableCell>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                  >
-                                    {item.reviewer_affiliation || "—"}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell>
-                                  <Typography variant="caption">
-                                    {new Date(
-                                      item.scheduled_send_date
-                                    ).toLocaleDateString()}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell align="center">
-                                  <Chip
-                                    label={item.priority}
-                                    color={
-                                      item.priority === "high"
-                                        ? "error"
-                                        : item.priority === "normal"
-                                        ? "default"
-                                        : "info"
-                                    }
-                                    size="small"
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
-
-                {/* Manage Reviewers Button */}
-                <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={handleManageReviewers}
-                  >
-                    Manage Reviewers
-                  </Button>
-                </Box>
-              </Stack>
-            )}
-          </AccordionDetails>
-        </Accordion>
-      </Paper>
-
-      {/* Additional Sections */}
-      <Paper elevation={0} sx={{ p: 3, mb: 3, bgcolor: "background.paper" }}>
-        <Accordion defaultExpanded={false}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      {/* Editorial Decision Section */}
+      <Accordion
+        expanded={expandedAccordions.decision}
+        onChange={() =>
+          setExpandedAccordions((prev) => ({
+            ...prev,
+            decision: !prev.decision,
+          }))
+        }
+        sx={{ mb: 3 }}
+      >
+        <AccordionSummary
+          expandIcon={null}
+          sx={{
+            bgcolor: "background.default",
+            flexDirection: "row",
+            "& .MuiAccordionSummary-content": {
+              display: "flex",
+              alignItems: "center",
+              my: 1.5,
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "secondary.main",
+              }}
+            >
+              {expandedAccordions.decision ? <RemoveIcon /> : <AddIcon />}
+            </Box>
             <Typography fontWeight={500}>Your Editorial Decision</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" color="text.secondary">
-              Editorial decision interface will appear here.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-      </Paper>
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography variant="body2" color="text.secondary">
+            Editorial decision interface will appear here.
+          </Typography>
+        </AccordionDetails>
+      </Accordion>
 
-      <Paper elevation={0} sx={{ p: 3, bgcolor: "background.paper" }}>
-        <Accordion defaultExpanded={false}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      {/* Activity Log Section */}
+      <Accordion
+        expanded={expandedAccordions.activityLog}
+        onChange={() =>
+          setExpandedAccordions((prev) => ({
+            ...prev,
+            activityLog: !prev.activityLog,
+          }))
+        }
+      >
+        <AccordionSummary
+          expandIcon={null}
+          sx={{
+            bgcolor: "background.default",
+            flexDirection: "row",
+            "& .MuiAccordionSummary-content": {
+              display: "flex",
+              alignItems: "center",
+              my: 1.5,
+            },
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "secondary.main",
+              }}
+            >
+              {expandedAccordions.activityLog ? <RemoveIcon /> : <AddIcon />}
+            </Box>
             <Typography fontWeight={500}>Activity Log</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="body2" color="text.secondary">
-              Activity log will appear here.
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-      </Paper>
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography variant="body2" color="text.secondary">
+            Activity log will appear here.
+          </Typography>
+        </AccordionDetails>
+      </Accordion>
     </Container>
   );
 }

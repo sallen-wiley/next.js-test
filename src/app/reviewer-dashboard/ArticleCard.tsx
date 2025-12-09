@@ -23,7 +23,7 @@ export type ReviewerStats = {
 type ArticleCardProps = {
   id: string;
   title: string;
-  author: string;
+  authors: string[];
   badges?: string[];
   articleType: string;
   academicEditors: string[];
@@ -40,7 +40,7 @@ type ArticleCardProps = {
 export function ArticleCard({
   id,
   title,
-  author,
+  authors,
   badges = [],
   articleType,
   academicEditors,
@@ -55,7 +55,9 @@ export function ArticleCard({
 }: ArticleCardProps) {
   const theme = useTheme();
   const academicEditorLabel =
-    academicEditors.length > 0 ? academicEditors.join(", ") : "Unassigned";
+    academicEditors && academicEditors.length > 0
+      ? academicEditors.join(", ")
+      : "Unassigned";
 
   const renderStat = (
     value: number | undefined,
@@ -127,7 +129,7 @@ export function ArticleCard({
                       borderColor: "text.secondary",
                       color: "text.secondary",
                       height: 18,
-                      textTransform: "capitalize",
+                      textTransform: "uppercase",
                     }}
                   />
                 ))}
@@ -141,6 +143,7 @@ export function ArticleCard({
                   sx={{
                     textTransform: "uppercase",
                     fontWeight: 700,
+                    height: 18,
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
                   }}
@@ -153,6 +156,7 @@ export function ArticleCard({
                   sx={{
                     textTransform: "uppercase",
                     fontWeight: 700,
+                    height: 18,
                     borderTopLeftRadius: 0,
                     borderBottomLeftRadius: 0,
                     borderLeft: 0,
@@ -166,6 +170,7 @@ export function ArticleCard({
             </Typography>
 
             <Stack spacing={1.5}>
+              {/* Authors List - Future: Add role chips (CA, SA) when author roles added to schema */}
               <Stack
                 direction="row"
                 spacing={1}
@@ -173,18 +178,10 @@ export function ArticleCard({
                 flexWrap="wrap"
               >
                 <Typography variant="body2" color="text.secondary">
-                  {author}
+                  {authors && authors.length > 0
+                    ? authors.join(", ")
+                    : "No authors"}
                 </Typography>
-                <Stack direction="row" spacing={0.5}>
-                  {badges.map((badge, index) => (
-                    <Chip
-                      key={`${badge}-${index}`}
-                      label={badge}
-                      size="small"
-                      sx={{ height: 18, textTransform: "uppercase" }}
-                    />
-                  ))}
-                </Stack>
               </Stack>
 
               <Stack

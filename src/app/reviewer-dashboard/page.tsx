@@ -274,8 +274,8 @@ export default function ArticleListingPage() {
                     key={manuscript.id}
                     id={manuscript.id.split("-")[0]}
                     title={manuscript.title}
-                    author={manuscript.authors[0] ?? "Unknown"}
-                    badges={["AE", "AE"]}
+                    authors={manuscript.authors}
+                    badges={[]}
                     articleType={manuscript.subject_area || "Research Article"}
                     academicEditors={academicEditors}
                     journal={manuscript.journal}

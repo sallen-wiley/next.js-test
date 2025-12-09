@@ -1,0 +1,483 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Chip,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  Stack,
+  IconButton,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { supabase } from "@/lib/supabase";
+import type { ReviewInvitationWithReviewer } from "@/lib/supabase";
+
+export default function ReviewInvitationManager() {
+  const router = useRouter();
+  const [invitations, setInvitations] = useState<
+    ReviewInvitationWithReviewer[]
+  >([]);
+  const [manuscripts, setManuscripts] = useState<any[]>([]);
+  const [reviewers, setReviewers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingInvitation, setEditingInvitation] =
+    useState<ReviewInvitationWithReviewer | null>(null);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    manuscript_id: "",
+    reviewer_id: "",
+    invited_date: new Date().toISOString().split("T")[0],
+    due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    status: "pending",
+    response_date: "",
+    estimated_completion_date: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Fetch invitations
+      const { data: invitationsData, error: invError } = await supabase
+        .from("review_invitations")
+        .select("*")
+        .order("invited_date", { ascending: false });
+
+      if (invError) throw invError;
+
+      // Fetch manuscripts
+      const { data: manuscriptsData, error: manError } = await supabase
+        .from("manuscripts")
+        .select("id, title")
+        .order("submission_date", { ascending: false });
+
+      if (manError) throw manError;
+
+      // Fetch reviewers
+      const { data: reviewersData, error: revError } = await supabase
+        .from("potential_reviewers")
+        .select("id, name, affiliation")
+        .order("name");
+
+      if (revError) throw revError;
+
+      // Join invitation data with reviewer info
+      const enrichedInvitations = (invitationsData || []).map((inv) => {
+        const reviewer = (reviewersData || []).find(
+          (r) => r.id === inv.reviewer_id
+        );
+        return {
+          ...inv,
+          reviewer_name: reviewer?.name || "Unknown",
+          reviewer_affiliation: reviewer?.affiliation,
+        };
+      });
+
+      setInvitations(enrichedInvitations);
+      setManuscripts(manuscriptsData || []);
+      setReviewers(reviewersData || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenDialog = (invitation?: ReviewInvitationWithReviewer) => {
+    if (invitation) {
+      setEditingInvitation(invitation);
+      setFormData({
+        manuscript_id: invitation.manuscript_id || "",
+        reviewer_id: invitation.reviewer_id || "",
+        invited_date: invitation.invited_date
+          ? new Date(invitation.invited_date).toISOString().split("T")[0]
+          : "",
+        due_date: invitation.due_date
+          ? new Date(invitation.due_date).toISOString().split("T")[0]
+          : "",
+        status: invitation.status || "pending",
+        response_date: invitation.response_date
+          ? new Date(invitation.response_date).toISOString().split("T")[0]
+          : "",
+        estimated_completion_date: invitation.estimated_completion_date
+          ? new Date(invitation.estimated_completion_date)
+              .toISOString()
+              .split("T")[0]
+          : "",
+        notes: invitation.notes || "",
+      });
+    } else {
+      setEditingInvitation(null);
+      setFormData({
+        manuscript_id: "",
+        reviewer_id: "",
+        invited_date: new Date().toISOString().split("T")[0],
+        due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        status: "pending",
+        response_date: "",
+        estimated_completion_date: "",
+        notes: "",
+      });
+    }
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setEditingInvitation(null);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const submitData = {
+        manuscript_id: formData.manuscript_id,
+        reviewer_id: formData.reviewer_id,
+        invited_date: formData.invited_date
+          ? new Date(formData.invited_date).toISOString()
+          : null,
+        due_date: formData.due_date
+          ? new Date(formData.due_date).toISOString()
+          : null,
+        status: formData.status,
+        response_date: formData.response_date
+          ? new Date(formData.response_date).toISOString()
+          : null,
+        estimated_completion_date: formData.estimated_completion_date || null,
+        notes: formData.notes || null,
+      };
+
+      if (editingInvitation) {
+        const { error } = await supabase
+          .from("review_invitations")
+          .update(submitData)
+          .eq("id", editingInvitation.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("review_invitations")
+          .insert([submitData]);
+
+        if (error) throw error;
+      }
+
+      await fetchData();
+      handleCloseDialog();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this invitation?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("review_invitations")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      await fetchData();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return "success";
+      case "pending":
+        return "warning";
+      case "declined":
+        return "error";
+      case "completed":
+      case "report_submitted":
+        return "info";
+      default:
+        return "default";
+    }
+  };
+
+  if (loading) return <Typography>Loading...</Typography>;
+
+  return (
+    <Box>
+      <Paper sx={{ p: 3 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 3 }}
+        >
+          <Typography variant="h5">Review Invitations Manager</Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Invitation
+          </Button>
+        </Stack>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Manuscript</TableCell>
+                <TableCell>Reviewer</TableCell>
+                <TableCell>Invited Date</TableCell>
+                <TableCell>Due Date</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Response Date</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {invitations.map((invitation) => {
+                const manuscript = manuscripts.find(
+                  (m) => m.id === invitation.manuscript_id
+                );
+                return (
+                  <TableRow key={invitation.id}>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        noWrap
+                        sx={{
+                          maxWidth: 200,
+                          color: "primary.main",
+                          cursor: "pointer",
+                          "&:hover": {
+                            textDecoration: "underline",
+                          },
+                        }}
+                        onClick={() =>
+                          router.push(
+                            `/reviewer-dashboard/manage-reviewers?manuscriptId=${invitation.manuscript_id}`
+                          )
+                        }
+                      >
+                        {manuscript?.title || "Unknown Manuscript"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{invitation.reviewer_name}</TableCell>
+                    <TableCell>
+                      {invitation.invited_date
+                        ? new Date(invitation.invited_date).toLocaleDateString()
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {invitation.due_date
+                        ? new Date(invitation.due_date).toLocaleDateString()
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={invitation.status}
+                        color={getStatusColor(invitation.status || "pending")}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {invitation.response_date
+                        ? new Date(
+                            invitation.response_date
+                          ).toLocaleDateString()
+                        : "—"}
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDialog(invitation)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(invitation.id)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingInvitation ? "Edit Invitation" : "Add New Invitation"}
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <FormControl fullWidth>
+              <InputLabel>Manuscript</InputLabel>
+              <Select
+                value={formData.manuscript_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, manuscript_id: e.target.value })
+                }
+                label="Manuscript"
+              >
+                {manuscripts.map((m) => (
+                  <MenuItem key={m.id} value={m.id}>
+                    {m.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Reviewer</InputLabel>
+              <Select
+                value={formData.reviewer_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, reviewer_id: e.target.value })
+                }
+                label="Reviewer"
+              >
+                {reviewers.map((r) => (
+                  <MenuItem key={r.id} value={r.id}>
+                    {r.name} {r.affiliation && `(${r.affiliation})`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Invited Date"
+              type="date"
+              value={formData.invited_date}
+              onChange={(e) =>
+                setFormData({ ...formData, invited_date: e.target.value })
+              }
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+
+            <TextField
+              label="Due Date"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) =>
+                setFormData({ ...formData, due_date: e.target.value })
+              }
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+                label="Status"
+              >
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="accepted">Accepted</MenuItem>
+                <MenuItem value="declined">Declined</MenuItem>
+                <MenuItem value="expired">Expired</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="report_submitted">Report Submitted</MenuItem>
+                <MenuItem value="overdue">Overdue</MenuItem>
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Response Date"
+              type="date"
+              value={formData.response_date}
+              onChange={(e) =>
+                setFormData({ ...formData, response_date: e.target.value })
+              }
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+
+            <TextField
+              label="Estimated Completion Date"
+              type="date"
+              value={formData.estimated_completion_date}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  estimated_completion_date: e.target.value,
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
+
+            <TextField
+              label="Notes"
+              multiline
+              rows={3}
+              value={formData.notes}
+              onChange={(e) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
+              fullWidth
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained">
+            {editingInvitation ? "Update" : "Create"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
