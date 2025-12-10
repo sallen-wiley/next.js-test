@@ -162,16 +162,23 @@ export default function QueueInvitationsTab({
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center", alignItems: "center" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            gap: 0.5,
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
                           <Chip
-                            icon={getStatusIcon(reviewer.invitation_status || "")}
+                            icon={getStatusIcon(
+                              reviewer.invitation_status || ""
+                            )}
                             label={reviewer.invitation_status || "Unknown"}
                             color={
-                              getStatusColor(reviewer.invitation_status || "") as
-                                | "success"
-                                | "primary"
-                                | "error"
-                                | "default"
+                              getStatusColor(
+                                reviewer.invitation_status || ""
+                              ) as "success" | "primary" | "error" | "default"
                             }
                             size="small"
                           />
@@ -189,7 +196,8 @@ export default function QueueInvitationsTab({
                           {/* Show expired badge for pending invitations past expiration date */}
                           {reviewer.invitation_status === "pending" &&
                             reviewer.invitation_expiration_date &&
-                            new Date(reviewer.invitation_expiration_date) < new Date() && (
+                            new Date(reviewer.invitation_expiration_date) <
+                              new Date() && (
                               <Chip
                                 icon={<ErrorIcon fontSize="small" />}
                                 label="Expired"

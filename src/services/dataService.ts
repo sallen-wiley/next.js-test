@@ -772,6 +772,8 @@ export async function getManuscriptInvitations(
       notes: item.notes,
       reminder_count: item.reminder_count,
       estimated_completion_date: item.estimated_completion_date,
+      invitation_expiration_date: item.invitation_expiration_date,
+      report_invalidated_date: item.report_invalidated_date,
       reviewer_name: reviewer?.name || "Unknown Reviewer",
       reviewer_affiliation: reviewer?.affiliation,
     };
@@ -1352,7 +1354,7 @@ export async function invalidateReport(
   reason?: string
 ): Promise<void> {
   const now = new Date().toISOString();
-  
+
   // Get current notes if any
   const { data: invitation } = await supabase
     .from("review_invitations")
@@ -1361,7 +1363,7 @@ export async function invalidateReport(
     .single();
 
   const notes = invitation?.notes || "";
-  const updatedNotes = reason 
+  const updatedNotes = reason
     ? `${notes} [Invalidated: ${reason}]`
     : `${notes} [Invalidated by editor]`;
 
@@ -1388,7 +1390,7 @@ export async function invalidateReport(
  */
 export async function uninvalidateReport(invitationId: string): Promise<void> {
   const now = new Date().toISOString();
-  
+
   // Get current notes
   const { data: invitation } = await supabase
     .from("review_invitations")
@@ -1416,39 +1418,17 @@ export async function uninvalidateReport(invitationId: string): Promise<void> {
 
 /**
  * Cancel a review (for invalidated or revoked invitations)
- * Marks the invitation as permanently cancelled
+ * Completely removes the invitation from the database
  * @param invitationId - The invitation UUID
- * @param reason - Optional reason for cancellation
+ * @param reason - Optional reason for cancellation (not used, kept for API compatibility)
  */
 export async function cancelReview(
   invitationId: string,
   reason?: string
 ): Promise<void> {
-  const now = new Date().toISOString();
-  
-  // Get current notes
-  const { data: invitation } = await supabase
-    .from("review_invitations")
-    .select("notes, status")
-    .eq("id", invitationId)
-    .single();
-
-  if (!invitation) {
-    throw new Error("Invitation not found");
-  }
-
-  const notes = invitation.notes || "";
-  const updatedNotes = reason
-    ? `${notes} [Cancelled: ${reason}]`
-    : `${notes} [Cancelled by editor]`;
-
   const { error } = await supabase
     .from("review_invitations")
-    .update({
-      status: "revoked",
-      updated_at: now,
-      notes: updatedNotes,
-    })
+    .delete()
     .eq("id", invitationId);
 
   if (error) {
@@ -1466,7 +1446,8 @@ export async function setInvitationExpiration(
   invitationId: string,
   expirationDate?: string
 ): Promise<void> {
-  const expiration = expirationDate || 
+  const expiration =
+    expirationDate ||
     new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
   const { error } = await supabase
@@ -1628,6 +1609,10 @@ export async function sendInvitation(
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + 14);
 
+  // Set invitation expiration to 14 days from now
+  const expirationDate = new Date();
+  expirationDate.setDate(expirationDate.getDate() + 14);
+
   const { data, error } = await supabase
     .from("review_invitations")
     .insert({
@@ -1635,6 +1620,7 @@ export async function sendInvitation(
       reviewer_id: reviewerId,
       invited_date: new Date().toISOString(),
       due_date: dueDate.toISOString(),
+      invitation_expiration_date: expirationDate.toISOString(),
       status: "pending",
       invitation_round: 1,
       reminder_count: 0,

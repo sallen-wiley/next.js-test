@@ -175,8 +175,8 @@ export default function ReviewerActionMenu({
         </MenuItem>,
         <Divider key="divider-invalidated" />,
       ]}
-      {/* Cancel review for invalidated/revoked */}
-      {(isInvalidated || isRevoked) && (
+      {/* Cancel review for invalidated */}
+      {isInvalidated && (
         <MenuItem key="cancel-review" onClick={onCancelReview}>
           <ListItemIcon>
             <RemoveCircleIcon fontSize="small" />
@@ -184,8 +184,9 @@ export default function ReviewerActionMenu({
           <ListItemText>Cancel Review</ListItemText>
         </MenuItem>
       )}
-      {(isInvalidated || isRevoked) && <Divider key="divider-cancel" />}
-      {hasInvitation && !isPending && !isReportSubmitted && !isInvalidated && (
+      {isInvalidated && <Divider key="divider-cancel" />}
+      {/* Remove invitation for revoked only (after revocation) */}
+      {isRevoked && (
         <MenuItem onClick={onRemoveInvitation}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" />

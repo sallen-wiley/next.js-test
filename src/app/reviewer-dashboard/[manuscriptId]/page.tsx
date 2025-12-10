@@ -392,21 +392,69 @@ export default function ArticleDetailsPage({
                 <Box sx={{ px: 2 }}>
                   <Stack spacing={2}>
                     {invitations.map((invitation) => {
-                      // Calculate time left for pending invitations
+                      // Calculate time left based on status
                       const invitedDate = new Date(invitation.invited_date);
                       const dueDate = new Date(invitation.due_date);
                       const today = new Date();
-                      const daysUntilDue = Math.ceil(
-                        (dueDate.getTime() - today.getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      );
+
+                      // Check for derived states (expired, overdue)
+                      let displayStatus = invitation.status;
+                      let isExpired = false;
+                      let isOverdue = false;
+
+                      if (
+                        invitation.status === "pending" &&
+                        invitation.invitation_expiration_date
+                      ) {
+                        const expirationDate = new Date(
+                          invitation.invitation_expiration_date
+                        );
+                        if (expirationDate < today) {
+                          displayStatus = "expired";
+                          isExpired = true;
+                        }
+                      } else if (
+                        invitation.status === "accepted" &&
+                        dueDate < today
+                      ) {
+                        isOverdue = true;
+                      }
+
+                      // For pending invitations, use expiration date; for accepted, use due date
+                      let daysUntilDue = 0;
+                      let timeLeftToRespond: string | undefined;
+                      let reportSubmissionDeadline: string | undefined;
+
+                      if (
+                        invitation.status === "pending" &&
+                        invitation.invitation_expiration_date
+                      ) {
+                        const expirationDate = new Date(
+                          invitation.invitation_expiration_date
+                        );
+                        daysUntilDue = Math.ceil(
+                          (expirationDate.getTime() - today.getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        );
+                        timeLeftToRespond = isExpired
+                          ? "Expired"
+                          : `${daysUntilDue} days`;
+                      } else if (invitation.status === "accepted") {
+                        daysUntilDue = Math.ceil(
+                          (dueDate.getTime() - today.getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        );
+                        reportSubmissionDeadline = isOverdue
+                          ? "Overdue"
+                          : `${daysUntilDue} days left`;
+                      }
 
                       return (
                         <InvitedReviewerCard
                           key={invitation.id}
                           reviewerName={invitation.reviewer_name || "Unknown"}
                           affiliation={invitation.reviewer_affiliation}
-                          status={invitation.status}
+                          status={displayStatus}
                           invitedDate={invitedDate.toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
@@ -428,16 +476,19 @@ export default function ArticleDetailsPage({
                             day: "numeric",
                             year: "numeric",
                           })}
-                          timeLeftToRespond={
-                            invitation.status === "pending"
-                              ? `${daysUntilDue} days`
+                          expirationDate={
+                            invitation.invitation_expiration_date
+                              ? new Date(
+                                  invitation.invitation_expiration_date
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
                               : undefined
                           }
-                          reportSubmissionDeadline={
-                            invitation.status === "accepted"
-                              ? `${daysUntilDue} days left`
-                              : undefined
-                          }
+                          timeLeftToRespond={timeLeftToRespond}
+                          reportSubmissionDeadline={reportSubmissionDeadline}
                           daysLeft={
                             invitation.status === "accepted"
                               ? daysUntilDue

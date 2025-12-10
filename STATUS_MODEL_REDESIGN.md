@@ -7,26 +7,28 @@ This document describes the complete redesign of the review invitation status mo
 ## Status Model Changes
 
 ### Old Status Values (Removed)
+
 - ~~`expired`~~ - Now derived from `pending` + past `invitation_expiration_date`
 - ~~`completed`~~ - Renamed to `report_submitted`
 - ~~`overdue`~~ - Now derived from `accepted` + past `due_date`
 
 ### New Status Values
 
-| Status | Description | When Used | Can Transition To |
-|--------|-------------|-----------|-------------------|
-| `pending` | Invitation sent, awaiting response | Initial state after sending invitation | `accepted`, `declined`, `revoked` |
-| `accepted` | Reviewer accepted invitation | Reviewer accepts review request | `report_submitted`, `declined`, `revoked` |
-| `declined` | Reviewer declined invitation | Reviewer declines review request | `revoked` (editor can revoke declined) |
-| `report_submitted` | Review report submitted | Reviewer submits review | `invalidated` |
-| `invalidated` | Report invalidated by editor | Editor flags report as invalid | `report_submitted` (can be reinstated), `revoked` |
-| `revoked` | Invitation cancelled/revoked | Editor cancels invitation | _(terminal state)_ |
+| Status             | Description                        | When Used                              | Can Transition To                                 |
+| ------------------ | ---------------------------------- | -------------------------------------- | ------------------------------------------------- |
+| `pending`          | Invitation sent, awaiting response | Initial state after sending invitation | `accepted`, `declined`, `revoked`                 |
+| `accepted`         | Reviewer accepted invitation       | Reviewer accepts review request        | `report_submitted`, `declined`, `revoked`         |
+| `declined`         | Reviewer declined invitation       | Reviewer declines review request       | `revoked` (editor can revoke declined)            |
+| `report_submitted` | Review report submitted            | Reviewer submits review                | `invalidated`                                     |
+| `invalidated`      | Report invalidated by editor       | Editor flags report as invalid         | `report_submitted` (can be reinstated), `revoked` |
+| `revoked`          | Invitation cancelled/revoked       | Editor cancels invitation              | _(terminal state)_                                |
 
 ### Derived States (Runtime Only)
 
 These states are NOT stored in the database but calculated when displaying invitations:
 
 - **Overdue**: `status = 'accepted'` AND `due_date < now()`
+
   - Displayed as dual-chip: `[Accepted]` + `[Overdue]` badge
   - Counted in BOTH "Accepted" and "Overdue" statistics
 
@@ -103,7 +105,7 @@ export interface ReviewInvitation {
   reminder_count: number;
   estimated_completion_date?: string;
   invitation_expiration_date?: string; // NEW
-  report_invalidated_date?: string;    // NEW
+  report_invalidated_date?: string; // NEW
 }
 ```
 
@@ -111,15 +113,15 @@ export interface ReviewInvitation {
 
 ```typescript
 export interface ReviewerStatsExtended {
-  invited: number;      // Total sent
-  agreed: number;       // Accepted
-  declined: number;     // Declined
-  submitted: number;    // Report submitted
-  pending: number;      // Pending (includes expired)
-  expired: number;      // Derived: pending + past expiration
-  overdue: number;      // Derived: accepted + past due date
-  invalidated: number;  // Invalidated reports
-  revoked: number;      // Revoked invitations
+  invited: number; // Total sent
+  agreed: number; // Accepted
+  declined: number; // Declined
+  submitted: number; // Report submitted
+  pending: number; // Pending (includes expired)
+  expired: number; // Derived: pending + past expiration
+  overdue: number; // Derived: accepted + past due date
+  invalidated: number; // Invalidated reports
+  revoked: number; // Revoked invitations
 }
 ```
 
@@ -174,15 +176,10 @@ interface StatusDisplay {
 <Box sx={{ display: "flex", gap: 0.5 }}>
   {/* Primary status chip */}
   <Chip label="Accepted" color="primary" size="small" />
-  
+
   {/* Badge chip (if overdue/expired) */}
   {isOverdue && (
-    <Chip 
-      icon={<WarningIcon />}
-      label="Overdue" 
-      color="warning" 
-      size="small" 
-    />
+    <Chip icon={<WarningIcon />} label="Overdue" color="warning" size="small" />
   )}
 </Box>
 ```
@@ -190,6 +187,7 @@ interface StatusDisplay {
 ### Updated Menu Actions
 
 **Reviewer Action Menu:**
+
 - ✅ Submit Report (testing) - For `accepted` reviewers
 - ✅ Force Accept - For `pending`/`declined` reviewers
 - ✅ Force Decline - For `accepted`/`pending` reviewers
@@ -206,7 +204,7 @@ interface StatusDisplay {
 function calculateReviewerStats(invitations) {
   const now = new Date();
   const stats = { invited: 0, agreed: 0, declined: 0, ... };
-  
+
   invitations.forEach(invitation => {
     switch (invitation.status) {
       case "accepted":
@@ -219,7 +217,7 @@ function calculateReviewerStats(invitations) {
       case "pending":
         stats.pending++;
         // Check for expired (separate count)
-        if (invitation.invitation_expiration_date && 
+        if (invitation.invitation_expiration_date &&
             new Date(invitation.invitation_expiration_date) < now) {
           stats.expired++;
         }
@@ -235,23 +233,23 @@ function calculateReviewerStats(invitations) {
         break;
     }
   });
-  
+
   return stats;
 }
 ```
 
 ## Status Color Scheme
 
-| Status | Color | Semantic Meaning |
-|--------|-------|------------------|
-| `pending` | default (gray) | Neutral, waiting |
-| `accepted` | primary (blue) | Active, in progress |
-| `declined` | default (gray) | Neutral, no action needed |
-| `report_submitted` | success (green) | Completed successfully |
-| `invalidated` | error (red) | Problem requiring attention |
-| `revoked` | default (gray) | Neutral, cancelled |
-| **overdue** (badge) | warning (orange) | Attention needed |
-| **expired** (badge) | error (red) | Critical attention |
+| Status              | Color            | Semantic Meaning            |
+| ------------------- | ---------------- | --------------------------- |
+| `pending`           | default (gray)   | Neutral, waiting            |
+| `accepted`          | primary (blue)   | Active, in progress         |
+| `declined`          | default (gray)   | Neutral, no action needed   |
+| `report_submitted`  | success (green)  | Completed successfully      |
+| `invalidated`       | error (red)      | Problem requiring attention |
+| `revoked`           | default (gray)   | Neutral, cancelled          |
+| **overdue** (badge) | warning (orange) | Attention needed            |
+| **expired** (badge) | error (red)      | Critical attention          |
 
 ## Workflow Examples
 
@@ -306,19 +304,24 @@ OR
 ## Files Modified
 
 ### Database
+
 - `database/03_status_model_update.sql` - Migration script
 
 ### TypeScript Types
+
 - `src/lib/supabase.ts` - ReviewInvitation interface
 
 ### Utilities
+
 - `src/utils/reviewerStats.ts` - Statistics calculation
 - `src/utils/statusDisplay.ts` - Status display logic (NEW)
 
 ### Services
+
 - `src/services/dataService.ts` - CRUD operations
 
 ### Components
+
 - `src/app/reviewer-dashboard/manage-reviewers/page.tsx` - Main page with handlers
 - `src/app/reviewer-dashboard/manage-reviewers/ReviewerActionMenu.tsx` - Menu actions
 - `src/app/reviewer-dashboard/manage-reviewers/UnifiedQueueTab.tsx` - Dual-chip display
@@ -333,14 +336,16 @@ To apply the new status model to your Supabase database:
    -- Execute database/03_status_model_update.sql in Supabase SQL Editor
    ```
 3. **Verify migration**:
+
    ```sql
    -- Check status distribution
    SELECT status, COUNT(*) FROM review_invitations GROUP BY status;
-   
+
    -- Check for pending without expiration
-   SELECT COUNT(*) FROM review_invitations 
+   SELECT COUNT(*) FROM review_invitations
    WHERE status = 'pending' AND invitation_expiration_date IS NULL;
    ```
+
 4. **Restart development server** to pick up type changes
 5. **Test workflows** in UI
 
@@ -349,6 +354,7 @@ To apply the new status model to your Supabase database:
 ### Why Derived States?
 
 **Overdue** and **Expired** are derived at runtime rather than stored because:
+
 - Reduces data redundancy (due_date already exists)
 - Prevents stale data (always accurate)
 - Simplifies database constraints
@@ -357,6 +363,7 @@ To apply the new status model to your Supabase database:
 ### Why Dual-Chip Display?
 
 Displays primary status + contextual badge:
+
 - Preserves workflow state (Accepted)
 - Adds temporal context (Overdue)
 - Enables filtering by either dimension
@@ -365,6 +372,7 @@ Displays primary status + contextual badge:
 ### Why Allow Revoking Declined Invitations?
 
 User confirmed this is valuable for:
+
 - Record-keeping consistency
 - Handling edge cases
 - Administrative cleanup
@@ -373,6 +381,7 @@ User confirmed this is valuable for:
 ### Default Expiration: 14 Days
 
 Based on user confirmation:
+
 - Industry standard for review invitations
 - Balances urgency with flexibility
 - Aligns with typical response times
@@ -381,6 +390,7 @@ Based on user confirmation:
 ## Future Enhancements
 
 Potential additions not in current scope:
+
 - Auto-expire pending invitations (scheduled job)
 - Email reminders before expiration
 - Customizable expiration periods per journal

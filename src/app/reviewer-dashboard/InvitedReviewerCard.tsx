@@ -36,6 +36,7 @@ type InvitedReviewerCardProps = {
   timeLeftToRespond?: string;
   reportSubmissionDeadline?: string;
   daysLeft?: number;
+  expirationDate?: string;
   onForceAccept?: () => void;
   onForceDecline?: () => void;
   onRevokeInvitation?: () => void;
@@ -54,6 +55,7 @@ export function InvitedReviewerCard({
   timeLeftToRespond,
   reportSubmissionDeadline,
   daysLeft,
+  expirationDate,
   onForceAccept,
   onForceDecline,
   onRevokeInvitation,
@@ -86,15 +88,19 @@ export function InvitedReviewerCard({
       case "report_submitted":
         return { color: "success", label: "REPORT SUBMITTED" };
       case "accepted":
-        return { color: "success", label: "ACCEPTED" };
+        return { color: "primary", label: "ACCEPTED" };
       case "pending":
-        return { color: "warning", label: "PENDING RESPONSE" };
+        return { color: "default", label: "PENDING RESPONSE" };
       case "declined":
-        return { color: "error", label: "DECLINED" };
+        return { color: "default", label: "DECLINED" };
+      case "invalidated":
+        return { color: "error", label: "INVALIDATED" };
+      case "revoked":
+        return { color: "default", label: "REVOKED" };
       case "expired":
-        return { color: "default", label: "EXPIRED" };
+        return { color: "error", label: "EXPIRED" };
       case "overdue":
-        return { color: "error", label: "OVERDUE" };
+        return { color: "warning", label: "OVERDUE" };
       default:
         return { color: "default", label: status.toUpperCase() };
     }
@@ -180,6 +186,14 @@ export function InvitedReviewerCard({
                 <strong>Time left to respond:</strong> {timeLeftToRespond}
               </Typography>
             )}
+
+            <Typography
+              variant="body2"
+              color={expirationDate ? "warning.main" : "text.disabled"}
+              sx={{ fontSize: "0.75rem", fontFamily: "monospace" }}
+            >
+              <strong>DEBUG - Expiration:</strong> {expirationDate || "NULL"}
+            </Typography>
 
             {isAccepted && reportSubmissionDeadline && (
               <Typography variant="body2" color="text.secondary">

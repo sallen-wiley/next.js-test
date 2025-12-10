@@ -61,6 +61,10 @@ export default function ReviewInvitationManager() {
     status: "pending",
     response_date: "",
     estimated_completion_date: "",
+    invitation_expiration_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    report_invalidated_date: "",
     notes: "",
   });
 
@@ -138,6 +142,16 @@ export default function ReviewInvitationManager() {
               .toISOString()
               .split("T")[0]
           : "",
+        invitation_expiration_date: invitation.invitation_expiration_date
+          ? new Date(invitation.invitation_expiration_date)
+              .toISOString()
+              .split("T")[0]
+          : "",
+        report_invalidated_date: invitation.report_invalidated_date
+          ? new Date(invitation.report_invalidated_date)
+              .toISOString()
+              .split("T")[0]
+          : "",
         notes: invitation.notes || "",
       });
     } else {
@@ -152,6 +166,12 @@ export default function ReviewInvitationManager() {
         status: "pending",
         response_date: "",
         estimated_completion_date: "",
+        invitation_expiration_date: new Date(
+          Date.now() + 14 * 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split("T")[0],
+        report_invalidated_date: "",
         notes: "",
       });
     }
@@ -179,6 +199,12 @@ export default function ReviewInvitationManager() {
           ? new Date(formData.response_date).toISOString()
           : null,
         estimated_completion_date: formData.estimated_completion_date || null,
+        invitation_expiration_date: formData.invitation_expiration_date
+          ? new Date(formData.invitation_expiration_date).toISOString()
+          : null,
+        report_invalidated_date: formData.report_invalidated_date
+          ? new Date(formData.report_invalidated_date).toISOString()
+          : null,
         notes: formData.notes || null,
       };
 
@@ -431,10 +457,9 @@ export default function ReviewInvitationManager() {
                 <MenuItem value="pending">Pending</MenuItem>
                 <MenuItem value="accepted">Accepted</MenuItem>
                 <MenuItem value="declined">Declined</MenuItem>
-                <MenuItem value="expired">Expired</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
                 <MenuItem value="report_submitted">Report Submitted</MenuItem>
-                <MenuItem value="overdue">Overdue</MenuItem>
+                <MenuItem value="invalidated">Invalidated</MenuItem>
+                <MenuItem value="revoked">Revoked</MenuItem>
               </Select>
             </FormControl>
 
@@ -464,6 +489,36 @@ export default function ReviewInvitationManager() {
             />
 
             <TextField
+              label="Invitation Expiration Date"
+              type="date"
+              value={formData.invitation_expiration_date}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  invitation_expiration_date: e.target.value,
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              helperText="Date when pending invitation expires (typically 14 days)"
+            />
+
+            <TextField
+              label="Report Invalidated Date"
+              type="date"
+              value={formData.report_invalidated_date}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  report_invalidated_date: e.target.value,
+                })
+              }
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              helperText="Only set when status is 'invalidated'"
+            />
+
+            <TextField
               label="Notes"
               multiline
               rows={3}
@@ -472,6 +527,7 @@ export default function ReviewInvitationManager() {
                 setFormData({ ...formData, notes: e.target.value })
               }
               fullWidth
+              helperText="Free-form notes for status changes, reasons, etc."
             />
           </Stack>
         </DialogContent>

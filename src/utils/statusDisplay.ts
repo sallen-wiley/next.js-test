@@ -13,9 +13,23 @@ export interface StatusDisplay {
   /** Human-readable label for badge status */
   badgeLabel?: string;
   /** Color for primary status chip */
-  primaryColor: "default" | "primary" | "secondary" | "error" | "warning" | "info" | "success";
+  primaryColor:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "error"
+    | "warning"
+    | "info"
+    | "success";
   /** Color for badge chip */
-  badgeColor?: "default" | "primary" | "secondary" | "error" | "warning" | "info" | "success";
+  badgeColor?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "error"
+    | "warning"
+    | "info"
+    | "success";
 }
 
 /**
@@ -26,9 +40,12 @@ export interface StatusDisplay {
  */
 export function getStatusDisplay(invitation: ReviewInvitation): StatusDisplay {
   const now = new Date();
-  
+
   // Base display for primary status
-  const displays: Record<ReviewInvitation["status"], Omit<StatusDisplay, "badgeStatus" | "badgeLabel" | "badgeColor">> = {
+  const displays: Record<
+    ReviewInvitation["status"],
+    Omit<StatusDisplay, "badgeStatus" | "badgeLabel" | "badgeColor">
+  > = {
     pending: {
       primaryStatus: "pending",
       primaryLabel: "Pending",
@@ -76,7 +93,10 @@ export function getStatusDisplay(invitation: ReviewInvitation): StatusDisplay {
     }
   }
 
-  if (invitation.status === "pending" && invitation.invitation_expiration_date) {
+  if (
+    invitation.status === "pending" &&
+    invitation.invitation_expiration_date
+  ) {
     // Expired: pending AND past expiration date
     if (new Date(invitation.invitation_expiration_date) < now) {
       return {
@@ -98,8 +118,18 @@ export function getStatusDisplay(invitation: ReviewInvitation): StatusDisplay {
  */
 export function getStatusColor(
   status: ReviewInvitation["status"]
-): "default" | "primary" | "secondary" | "error" | "warning" | "info" | "success" {
-  const colorMap: Record<ReviewInvitation["status"], StatusDisplay["primaryColor"]> = {
+):
+  | "default"
+  | "primary"
+  | "secondary"
+  | "error"
+  | "warning"
+  | "info"
+  | "success" {
+  const colorMap: Record<
+    ReviewInvitation["status"],
+    StatusDisplay["primaryColor"]
+  > = {
     pending: "default",
     accepted: "primary",
     declined: "default",

@@ -46,7 +46,7 @@ export function calculateReviewerStats(
   invitations: ReviewInvitationWithReviewer[] | ReviewInvitation[]
 ): ReviewerStatsExtended {
   const now = new Date();
-  
+
   const stats: ReviewerStatsExtended = {
     invited: invitations.length,
     agreed: 0,
@@ -77,8 +77,10 @@ export function calculateReviewerStats(
       case "pending":
         stats.pending++;
         // Check if expired (pending AND past invitation_expiration_date)
-        if (invitation.invitation_expiration_date && 
-            new Date(invitation.invitation_expiration_date) < now) {
+        if (
+          invitation.invitation_expiration_date &&
+          new Date(invitation.invitation_expiration_date) < now
+        ) {
           stats.expired++;
         }
         break;
