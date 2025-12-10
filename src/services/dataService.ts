@@ -1296,11 +1296,11 @@ export async function revokeInvitation(
     throw fetchError || new Error("Invitation not found");
   }
 
-  // Update status to expired
+  // Update status to revoked
   const { error: updateError } = await supabase
     .from("review_invitations")
     .update({
-      status: "expired",
+      status: "revoked",
       updated_at: new Date().toISOString(),
       notes: (invitation.notes || "") + " [Revoked by editor]",
     })
@@ -1318,6 +1318,168 @@ export async function revokeInvitation(
       invitation.reviewer_id,
       "normal"
     );
+  }
+}
+
+/**
+ * Submit a review report (for testing purposes)
+ * Updates invitation status to report_submitted
+ * @param invitationId - The invitation UUID
+ */
+export async function submitReport(invitationId: string): Promise<void> {
+  const { error } = await supabase
+    .from("review_invitations")
+    .update({
+      status: "report_submitted",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", invitationId);
+
+  if (error) {
+    console.error("Error submitting report:", error);
+    throw error;
+  }
+}
+
+/**
+ * Invalidate a submitted review report
+ * Updates invitation status to invalidated and records invalidation date
+ * @param invitationId - The invitation UUID
+ * @param reason - Optional reason for invalidation
+ */
+export async function invalidateReport(
+  invitationId: string,
+  reason?: string
+): Promise<void> {
+  const now = new Date().toISOString();
+  
+  // Get current notes if any
+  const { data: invitation } = await supabase
+    .from("review_invitations")
+    .select("notes")
+    .eq("id", invitationId)
+    .single();
+
+  const notes = invitation?.notes || "";
+  const updatedNotes = reason 
+    ? `${notes} [Invalidated: ${reason}]`
+    : `${notes} [Invalidated by editor]`;
+
+  const { error } = await supabase
+    .from("review_invitations")
+    .update({
+      status: "invalidated",
+      report_invalidated_date: now,
+      updated_at: now,
+      notes: updatedNotes,
+    })
+    .eq("id", invitationId);
+
+  if (error) {
+    console.error("Error invalidating report:", error);
+    throw error;
+  }
+}
+
+/**
+ * Reinstate an invalidated review report
+ * Updates invitation status back to report_submitted and clears invalidation date
+ * @param invitationId - The invitation UUID
+ */
+export async function uninvalidateReport(invitationId: string): Promise<void> {
+  const now = new Date().toISOString();
+  
+  // Get current notes
+  const { data: invitation } = await supabase
+    .from("review_invitations")
+    .select("notes")
+    .eq("id", invitationId)
+    .single();
+
+  const notes = (invitation?.notes || "") + " [Report reinstated]";
+
+  const { error } = await supabase
+    .from("review_invitations")
+    .update({
+      status: "report_submitted",
+      report_invalidated_date: null,
+      updated_at: now,
+      notes,
+    })
+    .eq("id", invitationId);
+
+  if (error) {
+    console.error("Error reinstating report:", error);
+    throw error;
+  }
+}
+
+/**
+ * Cancel a review (for invalidated or revoked invitations)
+ * Marks the invitation as permanently cancelled
+ * @param invitationId - The invitation UUID
+ * @param reason - Optional reason for cancellation
+ */
+export async function cancelReview(
+  invitationId: string,
+  reason?: string
+): Promise<void> {
+  const now = new Date().toISOString();
+  
+  // Get current notes
+  const { data: invitation } = await supabase
+    .from("review_invitations")
+    .select("notes, status")
+    .eq("id", invitationId)
+    .single();
+
+  if (!invitation) {
+    throw new Error("Invitation not found");
+  }
+
+  const notes = invitation.notes || "";
+  const updatedNotes = reason
+    ? `${notes} [Cancelled: ${reason}]`
+    : `${notes} [Cancelled by editor]`;
+
+  const { error } = await supabase
+    .from("review_invitations")
+    .update({
+      status: "revoked",
+      updated_at: now,
+      notes: updatedNotes,
+    })
+    .eq("id", invitationId);
+
+  if (error) {
+    console.error("Error cancelling review:", error);
+    throw error;
+  }
+}
+
+/**
+ * Set or update invitation expiration date
+ * @param invitationId - The invitation UUID
+ * @param expirationDate - ISO date string for when invitation expires (default: 14 days from now)
+ */
+export async function setInvitationExpiration(
+  invitationId: string,
+  expirationDate?: string
+): Promise<void> {
+  const expiration = expirationDate || 
+    new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { error } = await supabase
+    .from("review_invitations")
+    .update({
+      invitation_expiration_date: expiration,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", invitationId);
+
+  if (error) {
+    console.error("Error setting invitation expiration:", error);
+    throw error;
   }
 }
 

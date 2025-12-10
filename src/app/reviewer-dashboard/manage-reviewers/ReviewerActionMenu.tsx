@@ -15,6 +15,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import PublishIcon from "@mui/icons-material/Publish";
+import ErrorIcon from "@mui/icons-material/Error";
+import RestoreIcon from "@mui/icons-material/Restore";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import type { ReviewerWithStatus } from "@/lib/supabase";
 
 interface ReviewerActionMenuProps {
@@ -32,6 +36,10 @@ interface ReviewerActionMenuProps {
   onForceDecline: () => void;
   onReadReport: () => void;
   onViewProfile: () => void;
+  onSubmitReport: () => void;
+  onInvalidateReport: () => void;
+  onReinstateReport: () => void;
+  onCancelReview: () => void;
 }
 
 export default function ReviewerActionMenu({
@@ -49,6 +57,10 @@ export default function ReviewerActionMenu({
   onForceDecline,
   onReadReport,
   onViewProfile,
+  onSubmitReport,
+  onInvalidateReport,
+  onReinstateReport,
+  onCancelReview,
 }: ReviewerActionMenuProps) {
   if (!selectedReviewer) return null;
 
@@ -58,6 +70,8 @@ export default function ReviewerActionMenu({
   const isDeclined = selectedReviewer.invitation_status === "declined";
   const isReportSubmitted =
     selectedReviewer.invitation_status === "report_submitted";
+  const isInvalidated = selectedReviewer.invitation_status === "invalidated";
+  const isRevoked = selectedReviewer.invitation_status === "revoked";
   const hasInvitation =
     selectedReviewer.invitation_status &&
     selectedReviewer.invitation_status !== "queued";
@@ -95,8 +109,17 @@ export default function ReviewerActionMenu({
       ]}
       {hasInvitation &&
         !isQueued && [
+          // Testing: Submit Report for accepted reviewers
+          isAccepted && (
+            <MenuItem key="submit-report" onClick={onSubmitReport}>
+              <ListItemIcon>
+                <PublishIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Submit Report (Testing)</ListItemText>
+            </MenuItem>
+          ),
           // Show Force Accept for declined/pending reviewers
-          !isAccepted && !isReportSubmitted && (
+          !isAccepted && !isReportSubmitted && !isInvalidated && !isRevoked && (
             <MenuItem key="force-accept" onClick={onForceAccept}>
               <ListItemIcon>
                 <CheckCircleIcon fontSize="small" />
@@ -105,7 +128,7 @@ export default function ReviewerActionMenu({
             </MenuItem>
           ),
           // Show Force Decline for accepted/pending reviewers
-          !isDeclined && !isReportSubmitted && (
+          !isDeclined && !isReportSubmitted && !isInvalidated && !isRevoked && (
             <MenuItem key="force-decline" onClick={onForceDecline}>
               <ListItemIcon>
                 <CancelIcon fontSize="small" />
@@ -113,11 +136,12 @@ export default function ReviewerActionMenu({
               <ListItemText>Force Decline</ListItemText>
             </MenuItem>
           ),
-          (isPending || isAccepted || isDeclined) && (
+          (isAccepted || isPending || isDeclined) && (
             <Divider key="divider-force" />
           ),
         ]}
-      {isPending && (
+      {/* Revoke invitation for pending OR declined */}
+      {(isPending || isDeclined) && (
         <MenuItem key="revoke" onClick={onRevokeInvitation}>
           <ListItemIcon>
             <BlockIcon fontSize="small" />
@@ -125,7 +149,8 @@ export default function ReviewerActionMenu({
           <ListItemText>Revoke Invitation</ListItemText>
         </MenuItem>
       )}
-      {isPending && <Divider key="divider-pending" />}
+      {(isPending || isDeclined) && <Divider key="divider-pending" />}
+      {/* Report actions */}
       {isReportSubmitted && [
         <MenuItem key="read-report" onClick={onReadReport}>
           <ListItemIcon>
@@ -133,9 +158,34 @@ export default function ReviewerActionMenu({
           </ListItemIcon>
           <ListItemText>Read Report</ListItemText>
         </MenuItem>,
+        <MenuItem key="invalidate-report" onClick={onInvalidateReport}>
+          <ListItemIcon>
+            <ErrorIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Invalidate Report</ListItemText>
+        </MenuItem>,
         <Divider key="divider-report" />,
       ]}
-      {hasInvitation && !isPending && !isReportSubmitted && (
+      {isInvalidated && [
+        <MenuItem key="reinstate-report" onClick={onReinstateReport}>
+          <ListItemIcon>
+            <RestoreIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Reinstate Report</ListItemText>
+        </MenuItem>,
+        <Divider key="divider-invalidated" />,
+      ]}
+      {/* Cancel review for invalidated/revoked */}
+      {(isInvalidated || isRevoked) && (
+        <MenuItem key="cancel-review" onClick={onCancelReview}>
+          <ListItemIcon>
+            <RemoveCircleIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Cancel Review</ListItemText>
+        </MenuItem>
+      )}
+      {(isInvalidated || isRevoked) && <Divider key="divider-cancel" />}
+      {hasInvitation && !isPending && !isReportSubmitted && !isInvalidated && (
         <MenuItem onClick={onRemoveInvitation}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" />

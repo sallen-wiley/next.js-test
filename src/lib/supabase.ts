@@ -80,16 +80,17 @@ export interface ReviewInvitation {
     | "pending" // Invitation sent, awaiting response
     | "accepted" // Reviewer accepted, working on review
     | "declined" // Reviewer declined invitation
-    | "expired" // Invitation expired without response
-    | "completed" // Review process fully completed
-    | "overdue" // Review is past due date
-    | "report_submitted"; // Reviewer submitted their report
+    | "report_submitted" // Reviewer submitted their report
+    | "invalidated" // Report invalidated by editor (can be reinstated)
+    | "revoked"; // Invitation revoked/cancelled by editor
   response_date?: string;
   queue_position?: number; // null if sent immediately, number if queued
   invitation_round: number; // 1st choice, 2nd choice, etc.
   notes?: string;
   reminder_count: number;
   estimated_completion_date?: string;
+  invitation_expiration_date?: string; // When pending invitation expires (typically 14 days from invited_date)
+  report_invalidated_date?: string; // When report was invalidated (only set when status = invalidated)
 }
 
 export interface InvitationQueue {

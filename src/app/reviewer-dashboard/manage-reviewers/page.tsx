@@ -20,6 +20,10 @@ import {
   getQueueControlState,
   toggleQueueActive,
   sendInvitation,
+  submitReport,
+  invalidateReport,
+  uninvalidateReport,
+  cancelReview,
 } from "@/services/dataService";
 import UnifiedQueueTab from "./UnifiedQueueTab";
 import ReviewerActionMenu from "./ReviewerActionMenu";
@@ -673,6 +677,86 @@ export default function ReviewerInvitationDashboard() {
     // Placeholder for future implementation
     showSnackbar("Report viewer coming soon", "info");
     handleActionMenuClose();
+  };
+
+  const handleSubmitReport = async () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    try {
+      await submitReport(selectedReviewerForAction.invitation_id);
+      await refreshReviewersWithStatus();
+      showSnackbar("Report submitted successfully (testing)", "success");
+      handleActionMenuClose();
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      showSnackbar("Failed to submit report", "error");
+    }
+  };
+
+  const handleInvalidateReport = async () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    showConfirmDialog(
+      "Invalidate Report",
+      `Invalidate the report from ${selectedReviewerForAction.name}? This can be reversed later.`,
+      async () => {
+        try {
+          await invalidateReport(
+            selectedReviewerForAction.invitation_id!,
+            "Invalidated by editor"
+          );
+          await refreshReviewersWithStatus();
+          showSnackbar("Report invalidated", "warning");
+          handleActionMenuClose();
+        } catch (error) {
+          console.error("Error invalidating report:", error);
+          showSnackbar("Failed to invalidate report", "error");
+        }
+      }
+    );
+  };
+
+  const handleReinstateReport = async () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    showConfirmDialog(
+      "Reinstate Report",
+      `Reinstate the report from ${selectedReviewerForAction.name}?`,
+      async () => {
+        try {
+          await uninvalidateReport(selectedReviewerForAction.invitation_id!);
+          await refreshReviewersWithStatus();
+          showSnackbar("Report reinstated", "success");
+          handleActionMenuClose();
+        } catch (error) {
+          console.error("Error reinstating report:", error);
+          showSnackbar("Failed to reinstate report", "error");
+        }
+      }
+    );
+  };
+
+  const handleCancelReview = async () => {
+    if (!selectedReviewerForAction?.invitation_id) return;
+
+    showConfirmDialog(
+      "Cancel Review",
+      `Permanently cancel the review from ${selectedReviewerForAction.name}? This marks the review as cancelled.`,
+      async () => {
+        try {
+          await cancelReview(
+            selectedReviewerForAction.invitation_id!,
+            "Cancelled by editor"
+          );
+          await refreshReviewersWithStatus();
+          showSnackbar("Review cancelled", "info");
+          handleActionMenuClose();
+        } catch (error) {
+          console.error("Error cancelling review:", error);
+          showSnackbar("Failed to cancel review", "error");
+        }
+      }
+    );
   };
 
   const handleToggleQueue = async () => {
@@ -1517,6 +1601,10 @@ export default function ReviewerInvitationDashboard() {
           onForceDecline={handleForceDecline}
           onReadReport={handleReadReport}
           onViewProfile={handleViewProfile}
+          onSubmitReport={handleSubmitReport}
+          onInvalidateReport={handleInvalidateReport}
+          onReinstateReport={handleReinstateReport}
+          onCancelReview={handleCancelReview}
         />
 
         {/* Summary Cards */}

@@ -25,6 +25,9 @@ import PendingIcon from "@mui/icons-material/Pending";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import CancelIcon from "@mui/icons-material/Cancel";
+import BlockIcon from "@mui/icons-material/Block";
+import ErrorIcon from "@mui/icons-material/Error";
+import WarningIcon from "@mui/icons-material/Warning";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import type { ReviewerWithStatus, QueueControlState } from "@/lib/supabase";
 
@@ -55,19 +58,17 @@ export default function QueueInvitationsTab({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "accepted":
-        return "success";
+        return "primary";
       case "pending":
-        return "warning";
-      case "declined":
-        return "error";
-      case "expired":
         return "default";
-      case "completed":
-        return "info";
+      case "declined":
+        return "default";
       case "report_submitted":
         return "success";
-      case "overdue":
+      case "invalidated":
         return "error";
+      case "revoked":
+        return "default";
       default:
         return "default";
     }
@@ -83,6 +84,10 @@ export default function QueueInvitationsTab({
         return <CancelIcon fontSize="small" />;
       case "report_submitted":
         return <AssignmentTurnedInIcon fontSize="small" />;
+      case "invalidated":
+        return <ErrorIcon fontSize="small" />;
+      case "revoked":
+        return <BlockIcon fontSize="small" />;
       default:
         return <MailOutlineIcon fontSize="small" />;
     }
@@ -157,19 +162,42 @@ export default function QueueInvitationsTab({
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Chip
-                          icon={getStatusIcon(reviewer.invitation_status || "")}
-                          label={reviewer.invitation_status || "Unknown"}
-                          color={
-                            getStatusColor(reviewer.invitation_status || "") as
-                              | "success"
-                              | "warning"
-                              | "error"
-                              | "info"
-                              | "default"
-                          }
-                          size="small"
-                        />
+                        <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center", alignItems: "center" }}>
+                          <Chip
+                            icon={getStatusIcon(reviewer.invitation_status || "")}
+                            label={reviewer.invitation_status || "Unknown"}
+                            color={
+                              getStatusColor(reviewer.invitation_status || "") as
+                                | "success"
+                                | "primary"
+                                | "error"
+                                | "default"
+                            }
+                            size="small"
+                          />
+                          {/* Show overdue badge for accepted invitations past due date */}
+                          {reviewer.invitation_status === "accepted" &&
+                            reviewer.due_date &&
+                            new Date(reviewer.due_date) < new Date() && (
+                              <Chip
+                                icon={<WarningIcon fontSize="small" />}
+                                label="Overdue"
+                                color="warning"
+                                size="small"
+                              />
+                            )}
+                          {/* Show expired badge for pending invitations past expiration date */}
+                          {reviewer.invitation_status === "pending" &&
+                            reviewer.invitation_expiration_date &&
+                            new Date(reviewer.invitation_expiration_date) < new Date() && (
+                              <Chip
+                                icon={<ErrorIcon fontSize="small" />}
+                                label="Expired"
+                                color="error"
+                                size="small"
+                              />
+                            )}
+                        </Box>
                       </TableCell>
                       <TableCell>
                         <Typography variant="caption">
