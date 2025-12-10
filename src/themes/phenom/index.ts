@@ -308,7 +308,7 @@ theme = createTheme(theme, {
           src: url('/fonts/Nunito/Nunito-VariableFont_wght.ttf') format('truetype');
           /* Adjust vertical metrics to improve alignment */
           ascent-override: 95%;
-          descent-override: 25%;
+          descent-override: 20%;
           line-gap-override: 0%;
         }
 
@@ -320,7 +320,7 @@ theme = createTheme(theme, {
           src: url('/fonts/Nunito/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
           /* Adjust vertical metrics to improve alignment */
           ascent-override: 95%;
-          descent-override: 25%;
+          descent-override: 20%;
           line-gap-override: 0%;
         }
       `,

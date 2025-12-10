@@ -24,7 +24,6 @@ type ArticleCardProps = {
   id: string;
   title: string;
   authors: string[];
-  badges?: string[];
   articleType: string;
   academicEditors: string[];
   journal: string;
@@ -41,7 +40,6 @@ export function ArticleCard({
   id,
   title,
   authors,
-  badges = [],
   articleType,
   academicEditors,
   journal,

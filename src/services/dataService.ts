@@ -781,6 +781,77 @@ export async function getManuscriptInvitations(
 }
 
 /**
+ * Fetch invitation statistics for multiple manuscripts in a single query
+ * Returns a map of manuscriptId -> stats for efficient lookup
+ * @param manuscriptIds - Array of manuscript UUIDs
+ */
+export async function getManuscriptInvitationStats(
+  manuscriptIds: string[]
+): Promise<
+  Map<
+    string,
+    {
+      invited: number;
+      agreed: number;
+      declined: number;
+      submitted: number;
+    }
+  >
+> {
+  if (manuscriptIds.length === 0) {
+    return new Map();
+  }
+
+  const { data, error } = await supabase
+    .from("review_invitations")
+    .select("manuscript_id, status")
+    .in("manuscript_id", manuscriptIds);
+
+  if (error) {
+    console.error("Error fetching invitation stats:", error);
+    return new Map();
+  }
+
+  // Build stats map
+  const statsMap = new Map<
+    string,
+    {
+      invited: number;
+      agreed: number;
+      declined: number;
+      submitted: number;
+    }
+  >();
+
+  // Initialize all manuscripts with zero counts
+  manuscriptIds.forEach((id) => {
+    statsMap.set(id, { invited: 0, agreed: 0, declined: 0, submitted: 0 });
+  });
+
+  // Count invitations by status
+  data?.forEach((invitation) => {
+    const stats = statsMap.get(invitation.manuscript_id);
+    if (stats) {
+      stats.invited++;
+      switch (invitation.status) {
+        case "accepted":
+          stats.agreed++;
+          break;
+        case "declined":
+          stats.declined++;
+          break;
+        case "report_submitted":
+        case "completed":
+          stats.submitted++;
+          break;
+      }
+    }
+  });
+
+  return statsMap;
+}
+
+/**
  * Fetch a single manuscript by ID
  * @param manuscriptId - The manuscript UUID
  */

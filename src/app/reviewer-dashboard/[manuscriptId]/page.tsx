@@ -17,9 +17,7 @@ import type {
 import {
   Container,
   Typography,
-  Paper,
   Box,
-  Chip,
   Button,
   Accordion,
   AccordionSummary,
@@ -27,35 +25,21 @@ import {
   Stack,
   Alert,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
   IconButton,
   Select,
   MenuItem,
 } from "@mui/material";
 
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import QueueIcon from "@mui/icons-material/Queue";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import PendingIcon from "@mui/icons-material/Pending";
-import CancelIcon from "@mui/icons-material/Cancel";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-import { ArticleCard } from "../ArticleCard";
 import { ArticleDetailsCard } from "../ArticleDetailsCard";
 import { InvitedReviewerCard } from "../InvitedReviewerCard";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
+import { calculateReviewerStats } from "@/utils/reviewerStats";
 
 export default function ArticleDetailsPage({
   params,
@@ -181,61 +165,10 @@ export default function ArticleDetailsPage({
     );
   }
 
-  // Helper function to calculate reviewer stats from invitations
-  const getReviewerStats = () => {
-    const invited = invitations.length;
-    const agreed = invitations.filter(
-      (inv) => inv.status === "accepted"
-    ).length;
-    const declined = invitations.filter(
-      (inv) => inv.status === "declined"
-    ).length;
-    const submitted = invitations.filter(
-      (inv) => inv.status === "report_submitted" || inv.status === "completed"
-    ).length;
-
-    return { invited, agreed, declined, submitted };
-  };
-
-  // Helper functions for invitation status display (for table)
-  const getInvitationStatusColor = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return "success";
-      case "pending":
-        return "warning";
-      case "declined":
-        return "error";
-      case "expired":
-        return "default";
-      case "completed":
-        return "info";
-      case "report_submitted":
-        return "success";
-      case "overdue":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return <CheckCircleIcon fontSize="small" />;
-      case "pending":
-        return <PendingIcon fontSize="small" />;
-      case "declined":
-        return <CancelIcon fontSize="small" />;
-      case "report_submitted":
-        return <AssignmentTurnedInIcon fontSize="small" />;
-      default:
-        return <MailOutlineIcon fontSize="small" />;
-    }
-  };
-
   const hasInvitedReviewers = invitations.length > 0;
-  const reviewerStats = getReviewerStats();
+
+  // Calculate reviewer statistics from actual invitation data
+  const reviewerStats = calculateReviewerStats(invitations);
 
   // Format submission date for display
   const submittedDate = new Date(manuscript.submission_date);
@@ -316,7 +249,6 @@ export default function ArticleDetailsPage({
           title={manuscript.title}
           authors={manuscript.authors}
           abstract={manuscript.abstract}
-          badges={[]}
           articleType={manuscript.subject_area || "Research Article"}
           section="Physical, Chemical and Earth Sciences"
           specialIssue="Advanced PHWR Safety Technology: PHWR Challenging Issues for Safe Operation and Long-Term Sustainability"
@@ -375,31 +307,25 @@ export default function ArticleDetailsPage({
           </Stack>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              Reports: <strong>0</strong> Submitted
+              Reports: <strong>{reviewerStats.submitted}</strong> Submitted
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>1</strong> Overdue
+              <strong>{reviewerStats.overdue}</strong> Overdue
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>2</strong> Invalidated
+              Invitations: <strong>{queue.length}</strong> Queued
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Invitations: <strong>0</strong> Queued
+              <strong>{reviewerStats.agreed}</strong> Accepted
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>0</strong> Accepted
+              <strong>{reviewerStats.pending}</strong> Pending
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>0</strong> Pending
+              <strong>{reviewerStats.declined}</strong> Declined
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              <strong>0</strong> Declined
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>0</strong> Expired
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>0</strong> Revoked
+              <strong>{reviewerStats.expired}</strong> Expired
             </Typography>
           </Box>
         </AccordionSummary>

@@ -25,6 +25,7 @@ import UnifiedQueueTab from "./UnifiedQueueTab";
 import ReviewerActionMenu from "./ReviewerActionMenu";
 import { ArticleCard } from "../ArticleCard";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
+import { calculateReviewerStats, toBasicStats } from "@/utils/reviewerStats";
 import type {
   Manuscript,
   InvitationQueueItem,
@@ -862,7 +863,6 @@ export default function ReviewerInvitationDashboard() {
                   id={manuscript.id.split("-")[0]}
                   title={manuscript.title}
                   authors={manuscript.authors || []}
-                  badges={manuscript.manuscript_tags || []}
                   articleType={manuscript.subject_area || "Research Article"}
                   academicEditors={
                     manuscript.assignedEditors?.map(
@@ -877,20 +877,9 @@ export default function ReviewerInvitationDashboard() {
                   stateCode={`V${manuscript.version || 1}`}
                   stateColor={getStatusColor(manuscript.status)}
                   manuscriptTags={manuscript.manuscript_tags}
-                  reviewerStats={{
-                    invited: invitations.length,
-                    agreed: invitations.filter(
-                      (inv) => inv.status === "accepted"
-                    ).length,
-                    declined: invitations.filter(
-                      (inv) => inv.status === "declined"
-                    ).length,
-                    submitted: invitations.filter(
-                      (inv) =>
-                        inv.status === "report_submitted" ||
-                        inv.status === "completed"
-                    ).length,
-                  }}
+                  reviewerStats={toBasicStats(
+                    calculateReviewerStats(invitations)
+                  )}
                 />
               </Box>
             )}

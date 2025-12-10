@@ -25,7 +25,6 @@ type ArticleDetailsCardProps = {
   title: string;
   authors: string[];
   abstract?: string;
-  badges?: string[];
   articleType: string;
   section?: string;
   specialIssue?: string;
@@ -44,7 +43,6 @@ export function ArticleDetailsCard({
   title,
   authors,
   abstract,
-  badges = [],
   articleType,
   section,
   specialIssue,

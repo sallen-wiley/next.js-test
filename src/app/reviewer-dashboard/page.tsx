@@ -4,7 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { getUserManuscripts } from "@/services/dataService";
+import {
+  getUserManuscripts,
+  getManuscriptInvitationStats,
+} from "@/services/dataService";
 import type { ManuscriptWithUserRole } from "@/lib/supabase";
 import {
   Alert,
@@ -33,6 +36,17 @@ export default function ArticleListingPage() {
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("latest");
   const [page, setPage] = useState(1);
+  const [invitationStatsMap, setInvitationStatsMap] = useState<
+    Map<
+      string,
+      {
+        invited: number;
+        agreed: number;
+        declined: number;
+        submitted: number;
+      }
+    >
+  >(new Map());
 
   const [filters, setFilters] = useState({
     journal: "all",
@@ -54,6 +68,11 @@ export default function ArticleListingPage() {
       try {
         const userManuscripts = await getUserManuscripts(user.id);
         setManuscripts(userManuscripts);
+
+        // Fetch invitation stats for all manuscripts
+        const manuscriptIds = userManuscripts.map((m) => m.id);
+        const statsMap = await getManuscriptInvitationStats(manuscriptIds);
+        setInvitationStatsMap(statsMap);
       } catch (error) {
         console.error("Error fetching manuscripts:", error);
       } finally {
@@ -269,13 +288,20 @@ export default function ArticleListingPage() {
                     (editor) => editor.full_name || editor.email
                   ) || [];
 
+                // Get real invitation stats for this manuscript
+                const stats = invitationStatsMap.get(manuscript.id) || {
+                  invited: 0,
+                  agreed: 0,
+                  declined: 0,
+                  submitted: 0,
+                };
+
                 return (
                   <ArticleCard
                     key={manuscript.id}
                     id={manuscript.id.split("-")[0]}
                     title={manuscript.title}
                     authors={manuscript.authors}
-                    badges={[]}
                     articleType={manuscript.subject_area || "Research Article"}
                     academicEditors={academicEditors}
                     journal={manuscript.journal}
@@ -284,12 +310,7 @@ export default function ArticleListingPage() {
                     stateCode={`V${manuscript.version || 1}`}
                     stateColor={getStatusColor(manuscript.status)}
                     manuscriptTags={manuscript.manuscript_tags}
-                    reviewerStats={{
-                      invited: 3,
-                      agreed: 1,
-                      declined: 2,
-                      submitted: 1,
-                    }}
+                    reviewerStats={stats}
                     onClick={() => handleViewArticle(manuscript.id)}
                   />
                 );
