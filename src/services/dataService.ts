@@ -12,6 +12,7 @@ import {
   PotentialReviewerWithMatch,
 } from "@/lib/supabase";
 import type { UserProfile } from "@/types/roles";
+import { calculateReviewerStats, toBasicStats } from "@/utils/reviewerStats";
 
 /**
  * Helper function to check if a user has admin role
@@ -789,24 +790,14 @@ export async function getManuscriptInvitations(
  */
 export async function getManuscriptInvitationStats(
   manuscriptIds: string[]
-): Promise<
-  Map<
-    string,
-    {
-      invited: number;
-      agreed: number;
-      declined: number;
-      submitted: number;
-    }
-  >
-> {
+): Promise<Map<string, import("@/utils/reviewerStats").ReviewerStats>> {
   if (manuscriptIds.length === 0) {
     return new Map();
   }
 
   const { data, error } = await supabase
     .from("review_invitations")
-    .select("manuscript_id, status")
+    .select("*")
     .in("manuscript_id", manuscriptIds);
 
   if (error) {
@@ -814,40 +805,30 @@ export async function getManuscriptInvitationStats(
     return new Map();
   }
 
-  // Build stats map
+  // Build stats map using calculateReviewerStats
   const statsMap = new Map<
     string,
-    {
-      invited: number;
-      agreed: number;
-      declined: number;
-      submitted: number;
-    }
+    import("@/utils/reviewerStats").ReviewerStats
   >();
 
-  // Initialize all manuscripts with zero counts
+  // Group invitations by manuscript
+  const invitationsByManuscript = new Map<string, typeof data>();
   manuscriptIds.forEach((id) => {
-    statsMap.set(id, { invited: 0, agreed: 0, declined: 0, submitted: 0 });
+    invitationsByManuscript.set(id, []);
   });
 
-  // Count invitations by status
   data?.forEach((invitation) => {
-    const stats = statsMap.get(invitation.manuscript_id);
-    if (stats) {
-      stats.invited++;
-      switch (invitation.status) {
-        case "accepted":
-          stats.agreed++;
-          break;
-        case "declined":
-          stats.declined++;
-          break;
-        case "report_submitted":
-        case "completed":
-          stats.submitted++;
-          break;
-      }
+    const invitations = invitationsByManuscript.get(invitation.manuscript_id);
+    if (invitations) {
+      invitations.push(invitation);
     }
+  });
+
+  // Calculate stats for each manuscript
+  invitationsByManuscript.forEach((invitations, manuscriptId) => {
+    const extendedStats = calculateReviewerStats(invitations);
+    const basicStats = toBasicStats(extendedStats);
+    statsMap.set(manuscriptId, basicStats);
   });
 
   return statsMap;

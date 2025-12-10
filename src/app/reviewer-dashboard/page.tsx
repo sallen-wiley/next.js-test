@@ -37,15 +37,7 @@ export default function ArticleListingPage() {
   const [sort, setSort] = useState("latest");
   const [page, setPage] = useState(1);
   const [invitationStatsMap, setInvitationStatsMap] = useState<
-    Map<
-      string,
-      {
-        invited: number;
-        agreed: number;
-        declined: number;
-        submitted: number;
-      }
-    >
+    Map<string, import("@/utils/reviewerStats").ReviewerStats>
   >(new Map());
 
   const [filters, setFilters] = useState({
@@ -290,10 +282,14 @@ export default function ArticleListingPage() {
 
                 // Get real invitation stats for this manuscript
                 const stats = invitationStatsMap.get(manuscript.id) || {
-                  invited: 0,
-                  agreed: 0,
+                  accepted: 0,
+                  pending: 0,
                   declined: 0,
                   submitted: 0,
+                  invalidated: 0,
+                  expired: 0,
+                  overdue: 0,
+                  revoked: 0,
                 };
 
                 return (
