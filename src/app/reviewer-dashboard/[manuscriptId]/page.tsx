@@ -307,25 +307,17 @@ export default function ArticleDetailsPage({
           </Stack>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              Reports: <strong>{reviewerStats.submitted}</strong> Submitted
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+              Reports: <strong>{reviewerStats.submitted}</strong> Submitted,{" "}
+              <strong>{reviewerStats.invalidated}</strong> Invalidated,{" "}
               <strong>{reviewerStats.overdue}</strong> Overdue
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Invitations: <strong>{queue.length}</strong> Queued
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>{reviewerStats.agreed}</strong> Accepted
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>{reviewerStats.pending}</strong> Pending
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>{reviewerStats.declined}</strong> Declined
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>{reviewerStats.expired}</strong> Expired
+              Invitations: <strong>{reviewerStats.agreed}</strong> Accepted,{" "}
+              <strong>{reviewerStats.pending}</strong> Pending,{" "}
+              <strong>{reviewerStats.expired}</strong> Expired,{" "}
+              <strong>{reviewerStats.declined}</strong> Declined,{" "}
+              <strong>{reviewerStats.revoked}</strong> Revoked,{" "}
+              <strong>{queue.length}</strong> Queued
             </Typography>
           </Box>
         </AccordionSummary>
@@ -398,7 +390,7 @@ export default function ArticleDetailsPage({
                       const today = new Date();
 
                       // Check for derived states (expired, overdue)
-                      let displayStatus = invitation.status;
+                      let displayStatus: string = invitation.status;
                       let isExpired = false;
                       let isOverdue = false;
 

@@ -744,10 +744,7 @@ export default function ReviewerInvitationDashboard() {
       `Permanently cancel the review from ${selectedReviewerForAction.name}? This marks the review as cancelled.`,
       async () => {
         try {
-          await cancelReview(
-            selectedReviewerForAction.invitation_id!,
-            "Cancelled by editor"
-          );
+          await cancelReview(selectedReviewerForAction.invitation_id!);
           await refreshReviewersWithStatus();
           showSnackbar("Review cancelled", "info");
           handleActionMenuClose();

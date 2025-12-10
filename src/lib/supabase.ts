@@ -154,6 +154,8 @@ export interface ReviewerWithStatus extends PotentialReviewer {
     | "accepted" // Reviewer accepted, working on review
     | "declined" // Reviewer declined invitation
     | "report_submitted" // Reviewer submitted their report
+    | "invalidated" // Report was invalidated
+    | "revoked" // Invitation was revoked
     | "completed" // Review process fully completed
     | "expired" // Invitation expired
     | "overdue" // Review is overdue
@@ -166,6 +168,8 @@ export interface ReviewerWithStatus extends PotentialReviewer {
   invited_date?: string; // Date invitation was sent
   response_date?: string; // Date reviewer responded
   due_date?: string; // Review due date (if accepted)
+  invitation_expiration_date?: string; // When pending invitation expires
+  report_invalidated_date?: string; // When report was invalidated (if invalidated)
   priority?: "high" | "normal" | "low"; // Queue priority (if queued)
   scheduled_send_date?: string; // When queued item will be sent
 }

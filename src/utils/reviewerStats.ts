@@ -32,9 +32,14 @@ export interface ReviewerStatsExtended {
  */
 export interface ReviewerStats {
   invited?: number;
-  agreed?: number;
+  accepted?: number;
+  pending?: number;
   declined?: number;
   submitted?: number;
+  invalidated?: number;
+  expired?: number;
+  overdue?: number;
+  revoked?: number;
 }
 
 /**
@@ -104,8 +109,13 @@ export function calculateReviewerStats(
 export function toBasicStats(stats: ReviewerStatsExtended): ReviewerStats {
   return {
     invited: stats.invited,
-    agreed: stats.agreed,
+    accepted: stats.agreed,
+    pending: stats.pending,
     declined: stats.declined,
     submitted: stats.submitted,
+    invalidated: stats.invalidated,
+    expired: stats.expired,
+    overdue: stats.overdue,
+    revoked: stats.revoked,
   };
 }

@@ -15,9 +15,14 @@ import type { ManuscriptTag } from "@/lib/supabase";
 
 export type ReviewerStats = {
   invited?: number;
-  agreed?: number;
+  accepted?: number;
+  pending?: number;
   declined?: number;
   submitted?: number;
+  invalidated?: number;
+  expired?: number;
+  overdue?: number;
+  revoked?: number;
 };
 
 type ArticleCardProps = {
@@ -243,10 +248,14 @@ export function ArticleCard({
                     alignItems="center"
                     flexWrap="wrap"
                   >
-                    {renderStat(reviewerStats.invited, "invited", ",")}
-                    {renderStat(reviewerStats.agreed, "agreed", ",")}
+                    {renderStat(reviewerStats.submitted, "submitted", ",")}
+                    {renderStat(reviewerStats.invalidated, "invalidated", ",")}
+                    {renderStat(reviewerStats.overdue, "overdue", ",")}
+                    {renderStat(reviewerStats.accepted, "accepted", ",")}
+                    {renderStat(reviewerStats.pending, "pending", ",")}
+                    {renderStat(reviewerStats.expired, "expired", ",")}
                     {renderStat(reviewerStats.declined, "declined", ",")}
-                    {renderStat(reviewerStats.submitted, "submitted")}
+                    {renderStat(reviewerStats.revoked, "revoked")}
                   </Stack>
                 </Stack>
               </Stack>

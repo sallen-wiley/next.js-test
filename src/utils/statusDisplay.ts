@@ -49,7 +49,7 @@ export function getStatusDisplay(invitation: ReviewInvitation): StatusDisplay {
     pending: {
       primaryStatus: "pending",
       primaryLabel: "Pending",
-      primaryColor: "default",
+      primaryColor: "info",
     },
     accepted: {
       primaryStatus: "accepted",
@@ -59,7 +59,7 @@ export function getStatusDisplay(invitation: ReviewInvitation): StatusDisplay {
     declined: {
       primaryStatus: "declined",
       primaryLabel: "Declined",
-      primaryColor: "default",
+      primaryColor: "warning",
     },
     report_submitted: {
       primaryStatus: "report_submitted",
@@ -130,9 +130,9 @@ export function getStatusColor(
     ReviewInvitation["status"],
     StatusDisplay["primaryColor"]
   > = {
-    pending: "default",
+    pending: "info",
     accepted: "primary",
-    declined: "default",
+    declined: "warning",
     report_submitted: "success",
     invalidated: "error",
     revoked: "default",

@@ -1420,12 +1420,8 @@ export async function uninvalidateReport(invitationId: string): Promise<void> {
  * Cancel a review (for invalidated or revoked invitations)
  * Completely removes the invitation from the database
  * @param invitationId - The invitation UUID
- * @param reason - Optional reason for cancellation (not used, kept for API compatibility)
  */
-export async function cancelReview(
-  invitationId: string,
-  reason?: string
-): Promise<void> {
+export async function cancelReview(invitationId: string): Promise<void> {
   const { error } = await supabase
     .from("review_invitations")
     .delete()

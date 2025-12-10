@@ -86,23 +86,26 @@ export function InvitedReviewerCard({
     switch (status.toLowerCase()) {
       case "completed":
       case "report_submitted":
-        return { color: "success", label: "REPORT SUBMITTED" };
+        return { color: "success", label: "Submitted" };
       case "accepted":
-        return { color: "primary", label: "ACCEPTED" };
+        return { color: "primary", label: "Accepted" };
       case "pending":
-        return { color: "default", label: "PENDING RESPONSE" };
+        return { color: "info", label: "Pending" };
       case "declined":
-        return { color: "default", label: "DECLINED" };
+        return { color: "warning", label: "Declined" };
       case "invalidated":
-        return { color: "error", label: "INVALIDATED" };
+        return { color: "error", label: "Invalidated" };
       case "revoked":
-        return { color: "default", label: "REVOKED" };
+        return { color: "default", label: "Revoked" };
       case "expired":
-        return { color: "error", label: "EXPIRED" };
+        return { color: "error", label: "Expired" };
       case "overdue":
-        return { color: "warning", label: "OVERDUE" };
+        return { color: "warning", label: "Overdue" };
       default:
-        return { color: "default", label: status.toUpperCase() };
+        return {
+          color: "default",
+          label: status.charAt(0).toUpperCase() + status.slice(1),
+        };
     }
   };
 
