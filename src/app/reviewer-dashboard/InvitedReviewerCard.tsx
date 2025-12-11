@@ -2,8 +2,7 @@
 import * as React from "react";
 import {
   Box,
-  Card,
-  CardContent,
+  Paper,
   Chip,
   Typography,
   Button,
@@ -14,6 +13,7 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  Grid,
 } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import BlockIcon from "@mui/icons-material/Block";
@@ -55,7 +55,6 @@ export function InvitedReviewerCard({
   timeLeftToRespond,
   reportSubmissionDeadline,
   daysLeft,
-  expirationDate,
   onForceAccept,
   onForceDecline,
   onRevokeInvitation,
@@ -79,6 +78,7 @@ export function InvitedReviewerCard({
     handleMenuClose();
     if (action) action();
   };
+
   // Map status to badge color and label
   const getStatusConfig = (
     status: string
@@ -117,116 +117,115 @@ export function InvitedReviewerCard({
   const isDeclined = status === "declined";
 
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        borderColor: "divider",
-        "&:hover": {
-          boxShadow: 1,
-        },
-      }}
-    >
-      <CardContent sx={{ p: 2 }}>
-        <Stack spacing={1.5}>
-          {/* Top row: Status badge and menu */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-            }}
-          >
-            <Chip
-              label={statusConfig.label}
-              color={statusConfig.color}
-              size="small"
-              sx={{
-                fontWeight: 600,
-                fontSize: "0.6875rem",
-                height: 20,
-              }}
-            />
-            <IconButton
-              size="small"
-              sx={{ mt: -0.5, mr: -0.5 }}
-              onClick={handleMenuOpen}
-            >
-              <MoreHorizIcon fontSize="small" />
-            </IconButton>
-          </Box>
+    <>
+      <Paper
+        variant="outlined"
+        sx={{
+          borderColor: "divider",
+          p: 2,
+          py: 1,
+          position: "relative",
+        }}
+      >
+        {/* Menu CTA - absolute positioned in top-right */}
+        <IconButton
+          size="small"
+          onClick={handleMenuOpen}
+          sx={{
+            position: "absolute",
+            top: 4,
+            right: 4,
+          }}
+        >
+          <MoreHorizIcon fontSize="small" />
+        </IconButton>
 
-          {/* Reviewer name */}
-          <Typography variant="h6" component="h3" fontWeight={600}>
-            {reviewerName}
-          </Typography>
+        <Grid container spacing={2}>
+          {/* Left column - grows to fill available space */}
+          <Grid size={{ xs: 12, lg: "grow" }}>
+            <Stack spacing={1}>
+              {/* Status chip */}
+              <Box>
+                <Chip
+                  label={statusConfig.label}
+                  color={statusConfig.color}
+                  size="small"
+                />
+              </Box>
 
-          {/* Metadata lines */}
-          <Stack spacing={0.5}>
-            {submittedDate && (
-              <Typography variant="body2" color="text.secondary">
-                <strong>Submitted:</strong> {submittedDate}
+              {/* Reviewer name */}
+              <Typography variant="h6" component="h3" fontWeight={600}>
+                {reviewerName}
               </Typography>
-            )}
 
-            <Typography variant="body2" color="text.secondary">
-              <strong>Invited:</strong> {invitedDate}
-            </Typography>
-
-            {responseDate && isAccepted && (
-              <Typography variant="body2" color="text.secondary">
-                <strong>Accepted:</strong> {responseDate}
-              </Typography>
-            )}
-
-            {responseDate && isDeclined && (
-              <Typography variant="body2" color="text.secondary">
-                <strong>Declined:</strong> {responseDate}
-              </Typography>
-            )}
-
-            {isPending && timeLeftToRespond && (
-              <Typography variant="body2" color="text.secondary">
-                <strong>Time left to respond:</strong> {timeLeftToRespond}
-              </Typography>
-            )}
-
-            <Typography
-              variant="body2"
-              color={expirationDate ? "warning.main" : "text.disabled"}
-              sx={{ fontSize: "0.75rem", fontFamily: "monospace" }}
-            >
-              <strong>DEBUG - Expiration:</strong> {expirationDate || "NULL"}
-            </Typography>
-
-            {isAccepted && reportSubmissionDeadline && (
-              <Typography variant="body2" color="text.secondary">
-                <strong>Report submission deadline:</strong>{" "}
-                {reportSubmissionDeadline}
-                {daysLeft !== undefined && onExtendDeadline && (
-                  <Typography
-                    component="span"
-                    variant="body2"
-                    color="primary"
-                    sx={{ ml: 1, cursor: "pointer" }}
-                    onClick={onExtendDeadline}
-                  >
-                    ⏱ Extend Deadline
+              {/* Metadata lines */}
+              <Stack spacing={0.5}>
+                {submittedDate && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Submitted:</strong> {submittedDate}
                   </Typography>
                 )}
-              </Typography>
-            )}
-          </Stack>
 
-          {/* Action buttons */}
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Invited:</strong> {invitedDate}
+                </Typography>
+
+                {responseDate && isAccepted && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Accepted:</strong> {responseDate}
+                  </Typography>
+                )}
+
+                {responseDate && isDeclined && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Declined:</strong> {responseDate}
+                  </Typography>
+                )}
+
+                {isPending && timeLeftToRespond && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Time left to respond:</strong> {timeLeftToRespond}
+                  </Typography>
+                )}
+
+                {isAccepted && reportSubmissionDeadline && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Report submission deadline:</strong>{" "}
+                    {reportSubmissionDeadline}
+                    {daysLeft !== undefined && onExtendDeadline && (
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        color="primary"
+                        sx={{ ml: 1, cursor: "pointer" }}
+                        onClick={onExtendDeadline}
+                      >
+                        ⏱ Extend Deadline
+                      </Typography>
+                    )}
+                  </Typography>
+                )}
+              </Stack>
+            </Stack>
+          </Grid>
+
+          {/* Right column - only shows on desktop (lg+), hugs content with space-between */}
           {isReportSubmitted && onReadReport && (
-            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+            <Grid
+              size={{ xs: 12, lg: "auto" }}
+              sx={{
+                display: { xs: "flex", lg: "flex" },
+                justifyContent: { xs: "flex-end", lg: "flex-end" },
+                alignItems: { xs: "flex-start", lg: "flex-end" },
+              }}
+            >
               <Button variant="outlined" size="small" onClick={onReadReport}>
                 Read Report
               </Button>
-            </Box>
+            </Grid>
           )}
-        </Stack>
-      </CardContent>
+        </Grid>
+      </Paper>
 
       {/* Action Menu */}
       <Menu anchorEl={menuAnchor} open={menuOpen} onClose={handleMenuClose}>
@@ -306,6 +305,6 @@ export function InvitedReviewerCard({
           </MenuItem>
         )}
       </Menu>
-    </Card>
+    </>
   );
 }

@@ -198,7 +198,7 @@ export default function ArticleDetailsPage({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          mb: 3,
+          mb: 1,
         }}
       >
         {/* Left: Back button and breadcrumb */}
@@ -270,13 +270,13 @@ export default function ArticleDetailsPage({
       {/* Reviewers Section */}
       <Accordion
         expanded={expandedAccordions.reviewers}
+        disableGutters
         onChange={() =>
           setExpandedAccordions((prev) => ({
             ...prev,
             reviewers: !prev.reviewers,
           }))
         }
-        sx={{ mb: 3 }}
       >
         <AccordionSummary
           expandIcon={null}
@@ -288,7 +288,6 @@ export default function ArticleDetailsPage({
               alignItems: "center",
               justifyContent: "space-between",
               width: "100%",
-              my: 1.5,
             },
           }}
         >
@@ -307,12 +306,13 @@ export default function ArticleDetailsPage({
           </Stack>
           <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              Reports: <strong>{reviewerStats.submitted}</strong> Submitted,{" "}
+              <strong>Reports:</strong>{" "}
+              <strong>{reviewerStats.submitted}</strong> Submitted,{" "}
               <strong>{reviewerStats.invalidated}</strong> Invalidated,{" "}
               <strong>{reviewerStats.overdue}</strong> Overdue
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Invitations: <strong>{reviewerStats.agreed}</strong> Accepted,{" "}
+              <strong>Invitations:</strong>{" "}
               <strong>{reviewerStats.pending}</strong> Pending,{" "}
               <strong>{reviewerStats.expired}</strong> Expired,{" "}
               <strong>{reviewerStats.declined}</strong> Declined,{" "}
@@ -382,7 +382,7 @@ export default function ArticleDetailsPage({
               {/* Invited Reviewer Cards */}
               {hasInvitedReviewers && (
                 <Box sx={{ px: 2 }}>
-                  <Stack spacing={2}>
+                  <Stack spacing={1.5}>
                     {invitations.map((invitation) => {
                       // Calculate time left based on status
                       const invitedDate = new Date(invitation.invited_date);
@@ -541,13 +541,13 @@ export default function ArticleDetailsPage({
       {/* Editorial Decision Section */}
       <Accordion
         expanded={expandedAccordions.decision}
+        disableGutters
         onChange={() =>
           setExpandedAccordions((prev) => ({
             ...prev,
             decision: !prev.decision,
           }))
         }
-        sx={{ mb: 3 }}
       >
         <AccordionSummary
           expandIcon={null}
@@ -584,6 +584,7 @@ export default function ArticleDetailsPage({
       {/* Activity Log Section */}
       <Accordion
         expanded={expandedAccordions.activityLog}
+        disableGutters
         onChange={() =>
           setExpandedAccordions((prev) => ({
             ...prev,
