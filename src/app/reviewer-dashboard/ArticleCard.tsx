@@ -1,17 +1,10 @@
 "use client";
 import * as React from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  Typography,
-  useTheme,
-} from "@mui/material";
+import { Box, Card, CardContent, Chip, Stack, Typography } from "@mui/material";
 
 import type { ChipProps } from "@mui/material";
 import type { ManuscriptTag } from "@/lib/supabase";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 export type ReviewerStats = {
   invited?: number;
@@ -56,7 +49,9 @@ export function ArticleCard({
   manuscriptTags = [],
   onClick,
 }: ArticleCardProps) {
-  const theme = useTheme();
+  const { currentTheme } = useThemeContext();
+  const titleColor = currentTheme === "phenom" ? "secondary" : "primary";
+
   const academicEditorLabel =
     academicEditors && academicEditors.length > 0
       ? academicEditors.join(", ")
@@ -168,7 +163,7 @@ export function ArticleCard({
               </Stack>
             </Stack>
 
-            <Typography variant="h6" color="secondary" fontWeight={700}>
+            <Typography variant="h6" color={titleColor} fontWeight={700}>
               {title}
             </Typography>
 
@@ -265,7 +260,7 @@ export function ArticleCard({
 
         <Box
           sx={{
-            bgcolor: theme.palette.grey[100],
+            bgcolor: "rgba(0, 0, 0, 0.05)",
             px: 2,
             py: 1.5,
             display: "flex",
