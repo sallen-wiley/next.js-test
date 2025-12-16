@@ -308,11 +308,14 @@ figma.connect(Component, "figma-url", {
 
 ### Schema Reference
 
-**Complete schema documentation:** See `reference/database-schema-export.md` for full table structures, column types, and constraints.
+**Always use latest schema export:** Run `node database/reviewer-ingestion/export-schema.js` to generate current schema in `database/schema-exports/` - this is the single source of truth.
+
+**Legacy reference:** `reference/database-schema-export.md` exists but may be outdated. Prefer the JSON exports.
 
 ### Schema Access Pattern:
 
 - **Dynamic Schema Inspection**: When working with database functions, inspect current schema using Supabase client queries rather than assuming structure
+- **Schema Export Script**: Use `node database/reviewer-ingestion/export-schema.js` to get complete, accurate schema metadata
 - **TypeScript Types**: All database types defined in `src/lib/supabase.ts` - use these for type safety
 - **Authentication**: Supabase Auth with RLS policies - check permissions before operations
 - **Data Service Patterns**: Follow patterns in `src/services/dataService.ts` for data operations
@@ -321,15 +324,17 @@ figma.connect(Component, "figma-url", {
 
 #### manuscripts
 - **Purpose**: Manuscript submissions with metadata
-- **Key Fields**: id (uuid), title, authors (array), journal, submission_date, abstract, keywords (array), subject_area, status, editor_id
-- **Status Values**: 'submitted', 'under_review', 'revision_required', 'accepted', 'rejected'
-- **RLS**: Public read, admin/designer write
+- **Key Fields**: id (uuid), title (text), authors (text[]), journal (text), submission_date (timestamptz), doi (text), abstract (text), keywords (text[]), subject_area (text), status (text), system_id (uuid), submission_id (uuid), custom_id (text), article_type (text), version (integer), manuscript_tags (text[])
+- **Status Values**: 'submitted', 'pending_editor_assignment', 'awaiting_reviewers', 'under_review', 'reviews_in_progress', 'reviews_complete', 'revision_required', 'minor_revision', 'major_revision', 'conditionally_accepted', 'accepted', 'rejected', 'desk_rejected', 'withdrawn'
+- **Notable**: No editor_id column (removed in schema update), version must be > 0
+- **RLS**: Enabled (all authenticated users)
 
 #### potential_reviewers
-- **Purpose**: Reviewer database with expertise and metrics
-- **Key Fields**: id (uuid), name, email, affiliation, expertise_areas (array), availability_status, response_rate, quality_score, current_review_load
+- **Purpose**: Reviewer database with expertise and metrics (43 columns total)
+- **Key Fields**: id (uuid), name (text), email (text UNIQUE), affiliation (text), expertise_areas (text[]), availability_status (text), response_rate (numeric), quality_score (numeric), current_review_load (int), max_review_capacity (int), average_review_time_days (int), h_index (int), orcid_id (text), is_board_member (bool), previous_reviewer (bool)
+- **Extended Fields**: number_of_reviews, completed_reviews, currently_reviewing, citation_count, publication_year_from, publication_year_to, total_invitations, total_acceptances, average_response_time_hours
 - **Availability Values**: 'available', 'busy', 'unavailable', 'sabbatical'
-- **RLS**: Public read, admin/designer write
+- **RLS**: Enabled (all authenticated users)
 
 #### reviewer_manuscript_matches
 - **Purpose**: AI-generated match scores linking reviewers to manuscripts
@@ -339,29 +344,40 @@ figma.connect(Component, "figma-url", {
 
 #### review_invitations
 - **Purpose**: Sent reviewer invitations with status tracking
-- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), invited_date, due_date, status, response_date, invitation_round
-- **Status Values**: 'pending', 'accepted', 'declined', 'expired', 'completed', 'overdue'
-- **RLS**: Authenticated users can SELECT/INSERT/UPDATE/DELETE
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), invited_date (timestamptz), due_date (timestamptz), status (text), response_date (timestamptz), invitation_round (int), queue_position (int), reminder_count (int), estimated_completion_date (date), invitation_expiration_date (timestamptz), report_invalidated_date (timestamptz)
+- **Status Values**: 'pending', 'accepted', 'declined', 'report_submitted', 'invalidated', 'revoked'
+- **RLS**: Enabled (all authenticated users)
 
 #### invitation_queue
 - **Purpose**: Queued reviewer invitations waiting to be sent
-- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), queue_position (int), scheduled_send_date, priority
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), queue_position (int), created_date (timestamptz), scheduled_send_date (timestamptz), priority (text), notes (text), sent (bool), sent_at (timestamptz)
 - **Priority Values**: 'high', 'normal', 'low'
-- **RLS**: Authenticated users can SELECT/INSERT/UPDATE/DELETE
+- **RLS**: Enabled (all authenticated users)
 - **Data Service**: Use `getManuscriptQueue()` - returns `InvitationQueueItem[]` with joined reviewer details
 
 #### user_manuscripts
 - **Purpose**: Junction table linking users to manuscripts they manage
-- **Key Fields**: id (uuid), user_id (uuid FK), manuscript_id (uuid FK), assigned_date, role, is_active
+- **Key Fields**: id (uuid), user_id (uuid FK), manuscript_id (uuid FK), assigned_date (timestamptz), role (text), is_active (bool), created_at (timestamptz), updated_at (timestamptz)
 - **Role Values**: 'editor', 'author', 'collaborator', 'reviewer'
-- **RLS**: Users see own assignments, admins/editors see all
+- **RLS**: Enabled - users see own assignments, admins/editors see all
 - **Usage**: Dashboard shows manuscripts where user_id = auth.uid()
 
 #### user_profiles
 - **Purpose**: User authentication and RBAC
-- **Key Fields**: id (uuid), email, full_name, role, department, permissions (array), is_active
+- **Key Fields**: id (uuid), email (text UNIQUE), full_name (text), role (text), department (text), permissions (text[]), is_active (bool), last_login (timestamptz), created_at (timestamptz), updated_at (timestamptz)
 - **Role Values**: 'admin', 'editor', 'designer', 'product_manager', 'reviewer', 'guest'
-- **RLS**: All authenticated users can read, users can update own profile, admins can update any
+- **Foreign Key**: id → auth.users.id
+- **RLS**: Enabled - all authenticated users can read, users can update own profile, admins can update any
+
+#### reviewer_publications
+- **Purpose**: Reviewer publication history
+- **Key Fields**: id (uuid), reviewer_id (uuid FK), title (text), doi (text UNIQUE), journal_name (text), authors (text[]), publication_date (date), is_related (bool)
+- **RLS**: Enabled (all authenticated users)
+
+#### reviewer_retractions
+- **Purpose**: Track reviewer retractions
+- **Key Fields**: id (uuid), reviewer_id (uuid FK), retraction_reasons (text[]), created_at (timestamptz)
+- **RLS**: Enabled (all authenticated users)
 
 ### TypeScript Type Patterns
 

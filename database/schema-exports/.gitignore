@@ -1,0 +1,9 @@
+# Keep the directory and README
+!.gitignore
+!README.md
+
+# Optionally ignore all JSON exports (uncomment if you don't want to track schema history)
+# *.json
+
+# Keep at least one recent export for AI reference (if ignoring others)
+# !schema-*.json

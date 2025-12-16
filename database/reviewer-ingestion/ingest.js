@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * REVIEWER SUGGESTIONS INGESTION SCRIPT
  *
@@ -69,7 +70,7 @@ function parseDate(dateString) {
   try {
     const date = new Date(dateString);
     return date.toISOString().split("T")[0];
-  } catch (e) {
+  } catch {
     console.warn(`Failed to parse date: ${dateString}`);
     return null;
   }
@@ -536,7 +537,7 @@ async function main() {
   try {
     await ingestData(jsonFilePath);
     process.exit(0);
-  } catch (error) {
+  } catch {
     console.error("\n❌ Ingestion failed");
     process.exit(1);
   }

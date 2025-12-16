@@ -1,6 +1,16 @@
-# Reviewer Suggestions Ingestion Tool
+# Reviewer Ingestion & Schema Export Scripts
+
+This directory contains Node.js scripts for managing reviewer data and exporting database schema metadata.
+
+## Scripts Overview
+
+### 1. `ingest.js` - Reviewer Data Ingestion
 
 Ingests JSON manuscript data with reviewer suggestions and publication histories into Supabase for user testing.
+
+### 2. `export-schema.js` - Schema Metadata Export (NEW)
+
+Exports complete public schema metadata to timestamped JSON files for AI reference and documentation.
 
 ## Features
 
@@ -69,26 +79,31 @@ node ingest.js ./reviewer_suggestions_7832738.json
 The script processes:
 
 1. **Manuscript data** → `manuscripts` table
+
    - Title, abstract, journal, article type, submission date
    - Authors array
    - System IDs for deduplication
 
 2. **Reviewer data** → `potential_reviewers` table
+
    - Name, email, affiliation
    - ORCID, ROR IDs
    - Keywords/expertise areas
    - Board member status, previous reviewer flags
 
 3. **Reviewer-manuscript matches** → `reviewer_manuscript_matches` table
+
    - Match scores
    - Initial suggestion flags
    - Conflicts of interest
 
 4. **Reviewer metrics** → `reviewer_metrics` table
+
    - Review activity (number of reviews, completions, currently reviewing)
    - Publication statistics (citation count, year range, recent publications)
 
 5. **Publications** → `reviewer_publications` table
+
    - Related publications (matching the manuscript topic)
    - Other publications (full bibliography)
    - DOI, journal, authors, publication dates
@@ -115,16 +130,19 @@ The script provides detailed logging:
 ## Deduplication Strategy
 
 ### Manuscripts
+
 - **Primary key**: `system_id` (UUID from your editorial system)
 - If a manuscript with the same `system_id` exists, it will be **updated**
 - This allows you to re-ingest with updated data before user testing
 
-### Reviewers  
+### Reviewers
+
 - **Primary key**: `email` (unique constraint)
 - If a reviewer with the same email exists, their data will be **updated**
 - This prevents duplicate reviewer entries across multiple manuscript ingestions
 
 ### Publications
+
 - **Primary key**: `reviewer_id + doi` (composite unique constraint)
 - Duplicate publications for the same reviewer are automatically skipped
 - Allows multiple ingestions without duplicating publication records
@@ -152,7 +170,7 @@ ORDER BY match_score DESC;
 ### Check specific reviewer's publications
 
 ```sql
-SELECT 
+SELECT
   pr.name,
   pr.email,
   rp.title,
@@ -182,6 +200,7 @@ This is expected behaviour during re-ingestion. The script handles this graceful
 ### Publications not appearing
 
 Check that:
+
 1. The JSON file has `relatedPublications` and/or `otherPublications` arrays
 2. Publications have valid DOIs (null DOIs might cause issues with the unique constraint)
 3. Run the verification query above to check the reviewer_publications table directly
@@ -195,6 +214,7 @@ It's completely safe to run the ingestion script multiple times:
 3. **Different JSON file**: New manuscript and reviewers are added to the database
 
 This is useful when:
+
 - You receive updated data from your editorial system before user testing
 - You need to test with multiple manuscripts
 - You want to update reviewer information
@@ -216,20 +236,25 @@ Each manuscript will be added to the database with its own set of reviewers and 
 ### New columns added to existing tables
 
 **manuscripts:**
+
 - `system_id`, `submission_id`, `custom_id`, `article_type`
 
 **potential_reviewers:**
+
 - `external_id`, `pkg_id`, `given_names`, `surname`, `aff_ror_id`, `orcid_id`, `profile_url`, `reviewer_type`, `is_board_member`, `previous_reviewer`, `has_publications_saved`
 
 **reviewer_manuscript_matches:**
+
 - `is_initial_suggestion`, `conflicts_of_interest`
 
 **reviewer_metrics:**
+
 - `number_of_reviews`, `completed_reviews`, `currently_reviewing`, `citation_count`, `publication_year_from`, `publication_year_to`, `publication_count_last_year`, `last_publication_date`
 
 ### New tables created
 
 **reviewer_publications:**
+
 ```
 - id (PK)
 - reviewer_id (FK)
@@ -240,18 +265,85 @@ Each manuscript will be added to the database with its own set of reviewers and 
 ```
 
 **reviewer_retractions:**
+
 ```
 - id (PK)
 - reviewer_id (FK)
 - retraction_reasons (array)
 ```
 
+## Schema Export Script
+
+### Purpose
+
+The `export-schema.js` script exports complete public schema metadata for:
+
+- AI agent reference during development
+- Schema version tracking
+- Documentation generation
+- Database structure analysis
+
+### Setup for Schema Export
+
+**Required dependency:**
+
+```bash
+npm install --save-dev pg
+```
+
+**Required environment variable in `.env.local`:**
+
+```env
+DATABASE_URL=postgresql://postgres:[password]@db.your-project.supabase.co:5432/postgres
+```
+
+**Getting DATABASE_URL:**
+
+1. Go to Supabase Dashboard → Project Settings → Database
+2. Copy the "Connection string" (URI format)
+3. Replace `[YOUR-PASSWORD]` with your actual database password
+4. Add to `.env.local`
+
+### Running Schema Export
+
+```bash
+node database/reviewer-ingestion/export-schema.js
+```
+
+**Output:**
+
+- File: `database/schema-exports/schema-YYYY-MM-DD-HHMMSS.json`
+- Contains: Complete table structures, columns, types, constraints, foreign keys, RLS status, row counts
+
+**What's exported:**
+
+- All public schema tables
+- Column definitions (name, type, nullable, defaults, identity)
+- Primary keys and unique constraints
+- Check constraints
+- Foreign key relationships
+- RLS enabled status
+- Approximate row counts
+
+### Alternative: Manual Export
+
+If you don't have `DATABASE_URL` configured:
+
+1. Open Supabase SQL Editor
+2. Copy the `SCHEMA_QUERY` constant from `export-schema.js` (lines 55-190)
+3. Run the query in SQL Editor
+4. Copy the JSON result
+5. Save to `database/schema-exports/schema-[timestamp].json`
+
 ## Support
 
 For issues or questions:
+
 1. Check the detailed log output for error messages
 2. Verify your data against the views provided above
-3. Ensure the schema migration ran successfully
+3. Ensure the schema migration ran successfully (for ingestion)
+4. Ensure `pg` package is installed (for schema export)
+5. Verify DATABASE_URL is correct (for schema export)
 
 ## License
 
