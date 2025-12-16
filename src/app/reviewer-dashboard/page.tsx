@@ -298,7 +298,7 @@ export default function ArticleListingPage() {
                     id={manuscript.id.split("-")[0]}
                     title={manuscript.title}
                     authors={manuscript.authors}
-                    articleType={manuscript.subject_area || "Research Article"}
+                    articleType={manuscript.article_type ?? "undefined"}
                     academicEditors={academicEditors}
                     journal={manuscript.journal}
                     submittedOn={`${submittedFormatted}`}

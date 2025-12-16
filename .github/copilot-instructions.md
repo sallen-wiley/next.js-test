@@ -48,6 +48,24 @@ git push wiley main
 - Font integration via `/public/fonts/` and `/src/fonts/` structure
 - Typography scales defined per theme with proper fallbacks
 
+##### Phenom Theme Typography Mapping
+
+When working with Figma designs from the Phenom Design System (PDS), use these mappings:
+
+| Figma Text Style                                 | MUI Variant                          | Usage                            |
+| ------------------------------------------------ | ------------------------------------ | -------------------------------- |
+| **Title-Hero** (Bold, 30pt)                      | `h1` or `variant="h1"`               | Hero titles, page headers        |
+| **Title-Primary** (Bold, 20pt)                   | `h3` or `variant="h3"`               | Section titles, primary headings |
+| **Title-Small** (Bold, 16pt)                     | `h6` or `variant="h6"`               | Subsection titles, card headers  |
+| **Label-Bold** (Bold, 14pt, 16px line)           | `subtitle1` or `variant="subtitle1"` | Bold labels, form field labels   |
+| **Label-Regular** (Regular, 14pt, 16px line)     | `subtitle2` or `variant="subtitle2"` | Regular labels, metadata         |
+| **Paragraph-Primary** (Regular, 14pt, 20px line) | `body1` or `variant="body1"`         | Primary body text, descriptions  |
+| **Paragraph-Message** (Regular, 12pt)            | `body2` or `variant="body2"`         | Secondary text, helper text      |
+| **Button-Large** (Bold, 14pt, uppercase)         | `button` or `variant="button"`       | Button text (default)            |
+| **Label-Small** (Bold, 11pt, uppercase)          | `overline` or `variant="overline"`   | Small labels, tags, badges       |
+
+**Note**: h2, h4, h5 are interpolated sizes (26px, 18px, 17px) not directly from Figma, providing smooth hierarchy between mapped styles.
+
 #### Component Development
 
 - **MUI Extensions**: Limit custom MUI components - only extend when explicitly required

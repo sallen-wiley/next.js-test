@@ -89,7 +89,6 @@ export function FilterRail({
         elevation={2}
         sx={{
           p: 2,
-          borderRadius: 1.5,
           boxShadow: "0px 4px 8px rgba(51, 51, 51, 0.11)",
           display: "flex",
           flexDirection: "column",
@@ -139,7 +138,6 @@ export function FilterRail({
           variant="outlined"
           sx={{
             borderColor: "divider",
-            borderRadius: 1.5,
           }}
         >
           <Box sx={{ px: 2, py: 1 }}>
@@ -194,7 +192,6 @@ export function FilterRail({
           variant="outlined"
           sx={{
             borderColor: "divider",
-            borderRadius: 1.5,
           }}
         >
           <Box sx={{ px: 2, py: 1 }}>

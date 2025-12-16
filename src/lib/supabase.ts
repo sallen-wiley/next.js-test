@@ -25,6 +25,7 @@ export interface Manuscript {
   abstract: string;
   keywords: string[];
   subject_area: string;
+  article_type?: string;
   status:
     | "submitted"
     | "pending_editor_assignment"

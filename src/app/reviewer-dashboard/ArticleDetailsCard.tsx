@@ -2,8 +2,6 @@
 import * as React from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Chip,
   Stack,
   Typography,
@@ -12,10 +10,14 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid,
+  Paper,
+  Collapse,
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 import type { ChipProps } from "@mui/material";
 import type { ManuscriptTag } from "@/lib/supabase";
@@ -35,6 +37,8 @@ type ArticleDetailsCardProps = {
   stateCode: string;
   stateColor?: ChipProps["color"];
   manuscriptTags?: ManuscriptTag[];
+  collapsible?: boolean;
+  defaultExpanded?: boolean;
 };
 
 export function ArticleDetailsCard({
@@ -52,97 +56,151 @@ export function ArticleDetailsCard({
   stateCode,
   stateColor,
   manuscriptTags = [],
+  collapsible = false,
+  defaultExpanded = true,
 }: ArticleDetailsCardProps) {
+  const [expanded, setExpanded] = React.useState(defaultExpanded);
+
+  const toggleExpanded = () => {
+    if (collapsible) {
+      setExpanded((prev) => !prev);
+    }
+  };
+
+  // When not collapsible, always show content
+  const isExpanded = collapsible ? expanded : true;
+
   return (
-    <Box>
-      {/* Article Card */}
-      <Card
-        variant="outlined"
+    <Paper
+      elevation={3}
+      sx={{
+        borderColor: "divider",
+        overflow: "hidden",
+      }}
+    >
+      {/* Colored top bar */}
+      <Box
         sx={{
-          borderColor: "divider",
-          borderRadius: "6px 6px 0 0",
-          borderBottom: 0,
+          height: 4,
+          bgcolor: stateColor ? `${stateColor}.main` : "warning.main",
         }}
-      >
-        {/* Colored top bar */}
-        <Box
-          sx={{
-            height: 4,
-            bgcolor: stateColor ? `${stateColor}.main` : "warning.main",
-            borderTopLeftRadius: 6,
-            borderTopRightRadius: 6,
-          }}
-        />
+      />
 
-        <CardContent sx={{ p: 2 }}>
-          <Stack spacing={2}>
-            {/* Top row: ID, tags, status badges */}
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="flex-start"
-              spacing={2}
-            >
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                flexWrap="wrap"
-              >
-                <Typography variant="subtitle2" color="text.secondary">
-                  ID {id}
-                </Typography>
-                {manuscriptTags?.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      borderColor: "text.secondary",
-                      color: "text.secondary",
-                      height: 18,
-                      textTransform: "uppercase",
-                    }}
-                  />
-                ))}
-              </Stack>
-
-              <Stack direction="row" spacing={0}>
-                <Chip
-                  label={stateLabel}
-                  color={stateColor || "warning"}
-                  size="small"
-                  sx={{
-                    textTransform: "uppercase",
-                    fontWeight: 700,
-                    height: 18,
-                    borderTopRightRadius: 0,
-                    borderBottomRightRadius: 0,
-                  }}
-                />
-                <Chip
-                  label={stateCode}
-                  color={stateColor || "warning"}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    textTransform: "uppercase",
-                    fontWeight: 700,
-                    height: 18,
-                    borderTopLeftRadius: 0,
-                    borderBottomLeftRadius: 0,
-                    borderLeft: 0,
-                  }}
-                />
-              </Stack>
-            </Stack>
-
-            {/* Title - using text.primary color */}
-            <Typography variant="h3" color="text.secondary" fontWeight={700}>
-              {title}
+      {/* Main content */}
+      <Box sx={{ p: 2 }}>
+        {/* Top row: ID, tags, status badges - ALWAYS VISIBLE */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          spacing={2}
+        >
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            flexWrap="wrap"
+          >
+            <Typography variant="subtitle2" color="text.secondary">
+              ID {id}
             </Typography>
+            {manuscriptTags?.map((tag) => (
+              <Chip
+                key={tag}
+                label={tag}
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderColor: "text.secondary",
+                  color: "text.secondary",
+                  height: 18,
+                  textTransform: "uppercase",
+                }}
+              />
+            ))}
+          </Stack>
 
+          <Stack direction="row" spacing={0}>
+            <Chip
+              label={stateLabel}
+              color={stateColor || "warning"}
+              size="small"
+              sx={{
+                textTransform: "uppercase",
+                fontWeight: 700,
+                height: 18,
+                borderTopRightRadius: 0,
+                borderBottomRightRadius: 0,
+              }}
+            />
+            <Chip
+              label={stateCode}
+              color={stateColor || "warning"}
+              variant="outlined"
+              size="small"
+              sx={{
+                textTransform: "uppercase",
+                fontWeight: 700,
+                height: 18,
+                borderTopLeftRadius: 0,
+                borderBottomLeftRadius: 0,
+                borderLeft: 0,
+              }}
+            />
+          </Stack>
+        </Stack>
+
+        {/* Title with optional chevron */}
+        <Box
+          onClick={toggleExpanded}
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 1,
+            mt: 2,
+            ...(collapsible && {
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8,
+              },
+            }),
+          }}
+        >
+          {collapsible && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: "text.secondary",
+                pt: 0.5,
+              }}
+            >
+              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </Box>
+          )}
+          <Typography
+            variant="h3"
+            color="text.secondary"
+            fontWeight={700}
+            sx={{
+              flex: 1,
+              ...(collapsible &&
+                !expanded && {
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: "vertical",
+                }),
+            }}
+          >
+            {title}
+          </Typography>
+        </Box>
+
+        {/* Collapsible or always-visible content */}
+        <Collapse in={isExpanded} timeout="auto">
+          <Stack spacing={2} sx={{ pt: 2 }}>
             {/* Authors with Show Affiliations button */}
             <Stack
               direction="row"
@@ -232,19 +290,27 @@ export function ArticleDetailsCard({
               </Grid>
             </Grid>
           </Stack>
-        </CardContent>
+        </Collapse>
+      </Box>
 
-        {/* Bottom section with editors and submitted date */}
+      {/* Bottom section with editors and submitted date */}
+      <Collapse in={isExpanded} timeout="auto">
         <Box
-          sx={{
-            bgcolor: "rgba(0, 0, 0, 0.05)",
-            px: 2,
-            py: 1.5,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 2,
-          }}
+          sx={[
+            {
+              bgcolor: "rgba(0, 0, 0, 0.05)",
+              px: 2,
+              py: 1.5,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 2,
+            },
+            (theme) =>
+              theme.applyStyles("dark", {
+                bgcolor: "rgba(255, 255, 255, 0.05)",
+              }),
+          ]}
         >
           <Stack direction="row" spacing={3} alignItems="center">
             {academicEditor && (
@@ -267,35 +333,83 @@ export function ArticleDetailsCard({
             </Typography>
           </Stack>
         </Box>
-      </Card>
+      </Collapse>
 
-      {/* Additional Information - No gap, rounded bottom corners only */}
-      <Card
-        variant="outlined"
-        sx={{
-          borderColor: "divider",
-          borderRadius: "0 0 6px 6px",
-          borderTop: 0,
-        }}
-      >
+      {/* Additional Information with accordions */}
+      <Collapse in={isExpanded} timeout="auto">
         <Box
-          sx={{
-            bgcolor: "rgba(0, 0, 0, 0.05)",
-            p: 2,
-          }}
+          sx={[
+            {
+              bgcolor: "rgba(0, 0, 0, 0.05)",
+              px: 2,
+              pb: 2,
+            },
+            (theme) =>
+              theme.applyStyles("dark", {
+                bgcolor: "rgba(255, 255, 255, 0.05)",
+              }),
+          ]}
         >
-          <Accordion defaultExpanded={false} disableGutters elevation={0}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">Abstract</Typography>
+          <Accordion disableGutters elevation={0}>
+            <AccordionSummary
+              expandIcon={null}
+              sx={{
+                "& .MuiAccordionSummary-content": {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  color: "text.secondary",
+                  transition: "transform 0.2s",
+                  ".Mui-expanded &": {
+                    transform: "rotate(90deg)",
+                  },
+                }}
+              >
+                <ChevronRightIcon />
+              </Box>
+              <Typography variant="h6" color="text.secondary">
+                Abstract
+              </Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Typography variant="body1">{abstract}</Typography>
             </AccordionDetails>
           </Accordion>
 
-          <Accordion defaultExpanded={false} disableGutters elevation={0}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">Author Declaration</Typography>
+          <Accordion disableGutters elevation={0}>
+            <AccordionSummary
+              expandIcon={null}
+              sx={{
+                "& .MuiAccordionSummary-content": {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  color: "text.secondary",
+                  transition: "transform 0.2s",
+                  ".Mui-expanded &": {
+                    transform: "rotate(90deg)",
+                  },
+                }}
+              >
+                <ChevronRightIcon />
+              </Box>
+              <Typography variant="h6" color="text.secondary">
+                Author Declaration
+              </Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Typography variant="body1" color="text.secondary">
@@ -304,9 +418,33 @@ export function ArticleDetailsCard({
             </AccordionDetails>
           </Accordion>
 
-          <Accordion defaultExpanded={false} disableGutters elevation={0}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6">Files</Typography>
+          <Accordion disableGutters elevation={0}>
+            <AccordionSummary
+              expandIcon={null}
+              sx={{
+                "& .MuiAccordionSummary-content": {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  color: "text.secondary",
+                  transition: "transform 0.2s",
+                  ".Mui-expanded &": {
+                    transform: "rotate(90deg)",
+                  },
+                }}
+              >
+                <ChevronRightIcon />
+              </Box>
+              <Typography variant="h6" color="text.secondary">
+                Files
+              </Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Typography variant="body1" color="text.secondary">
@@ -315,7 +453,7 @@ export function ArticleDetailsCard({
             </AccordionDetails>
           </Accordion>
         </Box>
-      </Card>
-    </Box>
+      </Collapse>
+    </Paper>
   );
 }

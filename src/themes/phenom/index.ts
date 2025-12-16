@@ -111,6 +111,11 @@ let theme = createTheme({
       default: colors.grey[100],
       paper: colors.common.white,
     },
+    text: {
+      primary: colors.common.black,
+      secondary: "#4f4f4f",
+      disabled: colors.grey[500],
+    },
   },
   colorSchemes: {
     dark: {
@@ -126,6 +131,7 @@ let theme = createTheme({
     fontFamily: "'Nunito'",
 
     // Map design tokens to MUI typography variants
+    // Figma Text Style: Title-Hero (Bold, 30pt, Grey 70)
     h1: {
       fontSize: `${designTokens.font.title.hero.fontSize}px`,
       fontWeight: designTokens.font.title.hero.fontWeight,
@@ -139,12 +145,14 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Interpolated size between h1 and h3 (not a direct Figma style)
     h2: {
-      fontSize: "2.5rem", // Keeping existing for design consistency
+      fontSize: 26,
       fontWeight: 700,
-      lineHeight: 1.2,
-      letterSpacing: "-0.00833em",
+      lineHeight: 1.38,
+      letterSpacing: 0,
     },
+    // Figma Text Style: Title-Primary (Bold, 20pt, Grey 70)
     h3: {
       fontSize: `${designTokens.font.title.primary.fontSize}px`,
       fontWeight: designTokens.font.title.primary.fontWeight,
@@ -158,18 +166,21 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Interpolated size between h3 and h6 (not a direct Figma style)
     h4: {
-      fontSize: "1.75rem", // Keeping existing for design consistency
+      fontSize: 18,
       fontWeight: 700,
-      lineHeight: 1.286,
-      letterSpacing: "0.00735em",
+      lineHeight: 1.5,
+      letterSpacing: 0,
     },
+    // Interpolated size between h4 and h6 (not a direct Figma style)
     h5: {
-      fontSize: "1.5rem", // Keeping existing for design consistency
+      fontSize: 17,
       fontWeight: 700,
-      lineHeight: 1.334,
-      letterSpacing: "0em",
+      lineHeight: 1.53,
+      letterSpacing: 0,
     },
+    // Figma Text Style: Title-Small (Bold, 16pt, Grey 70)
     h6: {
       fontSize: `${designTokens.font.title.small.fontSize}px`,
       fontWeight: designTokens.font.title.small.fontWeight,
@@ -183,6 +194,7 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Figma Text Style: Label-Bold (Bold, 14pt, Grey 70)
     subtitle1: {
       fontSize: `${designTokens.font.label.bold.fontSize}px`,
       fontWeight: designTokens.font.label.bold.fontWeight,
@@ -196,6 +208,7 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Figma Text Style: Label-Regular (Regular, 14pt, Grey 70)
     subtitle2: {
       fontSize: `${designTokens.font.label.regular.fontSize}px`,
       fontWeight: designTokens.font.label.regular.fontWeight,
@@ -209,6 +222,7 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Figma Text Style: Paragraph-Primary (Regular, 14pt, Grey 70)
     body1: {
       fontSize: `${designTokens.font.paragraph.primary.fontSize}px`,
       fontWeight: designTokens.font.paragraph.primary.fontWeight,
@@ -222,6 +236,7 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Figma Text Style: Paragraph-Message (Regular, 12pt)
     body2: {
       fontSize: `${designTokens.font.paragraph.message.fontSize}px`,
       fontWeight: designTokens.font.paragraph.message.fontWeight,
@@ -235,6 +250,7 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Figma Text Style: Button-Large (Bold, 14pt, uppercase)
     button: {
       fontSize: `${designTokens.font.button.large.fontSize}px`,
       fontWeight: designTokens.font.button.large.fontWeight,
@@ -248,6 +264,7 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Small indicator text (not a direct Figma mapping)
     caption: {
       fontSize: `${designTokens.font.indicator.small.fontSize}px`,
       fontWeight: designTokens.font.indicator.small.fontWeight,
@@ -261,6 +278,7 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
+    // Figma Text Style: Label-Small (Bold, 11pt, uppercase)
     overline: {
       fontSize: `${designTokens.font.label.small.fontSize}px`,
       fontWeight: designTokens.font.label.small.fontWeight,

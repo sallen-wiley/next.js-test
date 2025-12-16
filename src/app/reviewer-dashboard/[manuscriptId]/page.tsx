@@ -28,6 +28,9 @@ import {
   IconButton,
   Select,
   MenuItem,
+  Breadcrumbs,
+  Link,
+  Paper,
 } from "@mui/material";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -201,22 +204,27 @@ export default function ArticleDetailsPage({
           mb: 1,
         }}
       >
-        {/* Left: Back button and breadcrumb */}
+        {/* Left: Back button and breadcrumb navigation */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => router.push("/reviewer-dashboard")}
-            size="small"
           >
             Back
           </Button>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}
+          <Breadcrumbs
+            aria-label="breadcrumb"
+            sx={{ textTransform: "uppercase" }}
           >
-            Dashboard / Article Details
-          </Typography>
+            <Link underline="hover" color="inherit" href="/reviewer-dashboard">
+              Dashboard
+            </Link>
+            <Typography
+              sx={{ color: "text.primary", textTransform: "uppercase" }}
+            >
+              Article Details
+            </Typography>
+          </Breadcrumbs>
         </Box>
 
         {/* Right: Meta actions */}
@@ -266,362 +274,398 @@ export default function ArticleDetailsPage({
         />
       </Box>
 
-      {/* Reviewers Section */}
-      <Accordion
-        expanded={expandedAccordions.reviewers}
-        disableGutters
-        onChange={() =>
-          setExpandedAccordions((prev) => ({
-            ...prev,
-            reviewers: !prev.reviewers,
-          }))
-        }
-      >
-        <AccordionSummary
-          expandIcon={null}
-          sx={{
-            bgcolor: "background.default",
-            flexDirection: "row",
-            "& .MuiAccordionSummary-content": {
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-            },
-          }}
+      {/* Accordions Section */}
+      <Stack spacing={2}>
+        {/* Reviewers Section */}
+        <Paper
+          variant="outlined"
+          sx={{ borderColor: "success.main", overflow: "hidden" }}
         >
-          <Stack direction="row" spacing={2} alignItems="center">
-            {/* Custom expand icon on the left */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                color: "secondary.main",
-              }}
-            >
-              {expandedAccordions.reviewers ? <RemoveIcon /> : <AddIcon />}
-            </Box>
-            <Typography fontWeight={500}>Reviewers</Typography>
-          </Stack>
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <Typography variant="body2" color="text.secondary">
-              <strong>Reports:</strong>{" "}
-              <strong>{reviewerStats.submitted}</strong> Submitted,{" "}
-              <strong>{reviewerStats.invalidated}</strong> Invalidated,{" "}
-              <strong>{reviewerStats.overdue}</strong> Overdue
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              <strong>Invitations:</strong>{" "}
-              <strong>{reviewerStats.pending}</strong> Pending,{" "}
-              <strong>{reviewerStats.expired}</strong> Expired,{" "}
-              <strong>{reviewerStats.declined}</strong> Declined,{" "}
-              <strong>{reviewerStats.revoked}</strong> Revoked,{" "}
-              <strong>{queue.length}</strong> Queued
-            </Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails sx={{ p: 0 }}>
-          {/* Header row with counts */}
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
-              px: 2,
-              pt: 3,
-            }}
+          <Accordion
+            expanded={expandedAccordions.reviewers}
+            disableGutters
+            onChange={() =>
+              setExpandedAccordions((prev) => ({
+                ...prev,
+                reviewers: !prev.reviewers,
+              }))
+            }
           >
-            <Typography variant="subtitle1" fontWeight={600}>
-              Invited Reviewers ({invitations.length})
-            </Typography>
-            {queue.length > 0 && (
-              <Button
-                variant="text"
-                color="secondary"
-                size="small"
-                sx={{ textTransform: "none" }}
-                onClick={() =>
-                  router.push(
-                    `/reviewer-dashboard/manage-reviewers?manuscriptId=${manuscript?.id}&tab=queue`
-                  )
-                }
-              >
-                View Queued Reviewers ({queue.length})
-              </Button>
-            )}
-          </Box>
-
-          {!hasInvitedReviewers && queue.length === 0 ? (
-            <Box
+            <AccordionSummary
+              expandIcon={null}
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                py: 6,
-                px: 2,
+                bgcolor: "background.default",
+                flexDirection: "row",
+                "& .MuiAccordionSummary-content": {
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                },
               }}
             >
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-                No reviewers invited yet.
-              </Typography>
-              <Button
-                variant="contained"
-                color="success"
-                size="large"
-                onClick={handleManageReviewers}
-                sx={{ minWidth: 180 }}
-              >
-                Manage Reviewers
-              </Button>
-            </Box>
-          ) : (
-            <>
-              {/* Invited Reviewer Cards */}
-              {hasInvitedReviewers && (
-                <Box sx={{ px: 2 }}>
-                  <Stack spacing={1.5}>
-                    {invitations.map((invitation) => {
-                      // Calculate time left based on status
-                      const invitedDate = new Date(invitation.invited_date);
-                      const dueDate = new Date(invitation.due_date);
-                      const today = new Date();
-
-                      // Check for derived states (expired, overdue)
-                      let displayStatus: string = invitation.status;
-                      let isExpired = false;
-                      let isOverdue = false;
-
-                      if (
-                        invitation.status === "pending" &&
-                        invitation.invitation_expiration_date
-                      ) {
-                        const expirationDate = new Date(
-                          invitation.invitation_expiration_date
-                        );
-                        if (expirationDate < today) {
-                          displayStatus = "expired";
-                          isExpired = true;
-                        }
-                      } else if (
-                        invitation.status === "accepted" &&
-                        dueDate < today
-                      ) {
-                        isOverdue = true;
-                      }
-
-                      // For pending invitations, use expiration date; for accepted, use due date
-                      let daysUntilDue = 0;
-                      let timeLeftToRespond: string | undefined;
-                      let reportSubmissionDeadline: string | undefined;
-
-                      if (
-                        invitation.status === "pending" &&
-                        invitation.invitation_expiration_date
-                      ) {
-                        const expirationDate = new Date(
-                          invitation.invitation_expiration_date
-                        );
-                        daysUntilDue = Math.ceil(
-                          (expirationDate.getTime() - today.getTime()) /
-                            (1000 * 60 * 60 * 24)
-                        );
-                        timeLeftToRespond = isExpired
-                          ? "Expired"
-                          : `${daysUntilDue} days`;
-                      } else if (invitation.status === "accepted") {
-                        daysUntilDue = Math.ceil(
-                          (dueDate.getTime() - today.getTime()) /
-                            (1000 * 60 * 60 * 24)
-                        );
-                        reportSubmissionDeadline = isOverdue
-                          ? "Overdue"
-                          : `${daysUntilDue} days left`;
-                      }
-
-                      return (
-                        <InvitedReviewerCard
-                          key={invitation.id}
-                          reviewerName={invitation.reviewer_name || "Unknown"}
-                          affiliation={invitation.reviewer_affiliation}
-                          status={displayStatus}
-                          invitedDate={invitedDate.toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                          responseDate={
-                            invitation.response_date
-                              ? new Date(
-                                  invitation.response_date
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })
-                              : undefined
-                          }
-                          dueDate={dueDate.toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                          expirationDate={
-                            invitation.invitation_expiration_date
-                              ? new Date(
-                                  invitation.invitation_expiration_date
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })
-                              : undefined
-                          }
-                          timeLeftToRespond={timeLeftToRespond}
-                          reportSubmissionDeadline={reportSubmissionDeadline}
-                          daysLeft={
-                            invitation.status === "accepted"
-                              ? daysUntilDue
-                              : undefined
-                          }
-                          onForceAccept={() =>
-                            console.log("Force accept", invitation.id)
-                          }
-                          onForceDecline={() =>
-                            console.log("Force decline", invitation.id)
-                          }
-                          onRevokeInvitation={() =>
-                            console.log("Revoke", invitation.id)
-                          }
-                          onRemoveInvitation={() =>
-                            console.log("Remove", invitation.id)
-                          }
-                          onReadReport={() =>
-                            console.log("Read report", invitation.id)
-                          }
-                          onViewProfile={() =>
-                            console.log("View profile", invitation.reviewer_id)
-                          }
-                          onExtendDeadline={() =>
-                            console.log("Extend deadline", invitation.id)
-                          }
-                        />
-                      );
-                    })}
-                  </Stack>
+              <Stack direction="row" spacing={2} alignItems="center">
+                {/* Custom expand icon on the left */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: "secondary.main",
+                  }}
+                >
+                  {expandedAccordions.reviewers ? <RemoveIcon /> : <AddIcon />}
                 </Box>
-              )}
-
-              {/* Footer with Manage Reviewers Button */}
+                <Typography variant="h6" color="text.secondary">
+                  Reviewers
+                </Typography>
+              </Stack>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Reports:</strong>{" "}
+                  <strong>{reviewerStats.submitted}</strong> Submitted,{" "}
+                  <strong>{reviewerStats.invalidated}</strong> Invalidated,{" "}
+                  <strong>{reviewerStats.overdue}</strong> Overdue
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Invitations:</strong>{" "}
+                  <strong>{reviewerStats.pending}</strong> Pending,{" "}
+                  <strong>{reviewerStats.expired}</strong> Expired,{" "}
+                  <strong>{reviewerStats.declined}</strong> Declined,{" "}
+                  <strong>{reviewerStats.revoked}</strong> Revoked,{" "}
+                  <strong>{queue.length}</strong> Queued
+                </Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0 }}>
+              {/* Header row with counts */}
               <Box
                 sx={{
-                  bgcolor: "background.default",
-                  px: 2,
-                  py: 1.5,
                   display: "flex",
-                  justifyContent: "flex-end",
-                  mt: 3,
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 3,
+                  px: 2,
+                  pt: 3,
                 }}
               >
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={handleManageReviewers}
-                >
-                  Manage Reviewers
-                </Button>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Invited Reviewers ({invitations.length})
+                </Typography>
+                {queue.length > 0 && (
+                  <Button
+                    variant="text"
+                    color="secondary"
+                    size="small"
+                    sx={{ textTransform: "none" }}
+                    onClick={() =>
+                      router.push(
+                        `/reviewer-dashboard/manage-reviewers?manuscriptId=${manuscript?.id}&tab=queue`
+                      )
+                    }
+                  >
+                    View Queued Reviewers ({queue.length})
+                  </Button>
+                )}
               </Box>
-            </>
-          )}
-        </AccordionDetails>
-      </Accordion>
 
-      {/* Editorial Decision Section */}
-      <Accordion
-        expanded={expandedAccordions.decision}
-        disableGutters
-        onChange={() =>
-          setExpandedAccordions((prev) => ({
-            ...prev,
-            decision: !prev.decision,
-          }))
-        }
-      >
-        <AccordionSummary
-          expandIcon={null}
-          sx={{
-            bgcolor: "background.default",
-            flexDirection: "row",
-            "& .MuiAccordionSummary-content": {
-              display: "flex",
-              alignItems: "center",
-              my: 1.5,
-            },
-          }}
-        >
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Box
+              {!hasInvitedReviewers && queue.length === 0 ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    py: 6,
+                    px: 2,
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
+                    No reviewers invited yet.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    onClick={handleManageReviewers}
+                    sx={{ minWidth: 180 }}
+                  >
+                    Manage Reviewers
+                  </Button>
+                </Box>
+              ) : (
+                <>
+                  {/* Invited Reviewer Cards */}
+                  {hasInvitedReviewers && (
+                    <Box sx={{ px: 2 }}>
+                      <Stack spacing={1.5}>
+                        {invitations.map((invitation) => {
+                          // Calculate time left based on status
+                          const invitedDate = new Date(invitation.invited_date);
+                          const dueDate = new Date(invitation.due_date);
+                          const today = new Date();
+
+                          // Check for derived states (expired, overdue)
+                          let displayStatus: string = invitation.status;
+                          let isExpired = false;
+                          let isOverdue = false;
+
+                          if (
+                            invitation.status === "pending" &&
+                            invitation.invitation_expiration_date
+                          ) {
+                            const expirationDate = new Date(
+                              invitation.invitation_expiration_date
+                            );
+                            if (expirationDate < today) {
+                              displayStatus = "expired";
+                              isExpired = true;
+                            }
+                          } else if (
+                            invitation.status === "accepted" &&
+                            dueDate < today
+                          ) {
+                            isOverdue = true;
+                          }
+
+                          // For pending invitations, use expiration date; for accepted, use due date
+                          let daysUntilDue = 0;
+                          let timeLeftToRespond: string | undefined;
+                          let reportSubmissionDeadline: string | undefined;
+
+                          if (
+                            invitation.status === "pending" &&
+                            invitation.invitation_expiration_date
+                          ) {
+                            const expirationDate = new Date(
+                              invitation.invitation_expiration_date
+                            );
+                            daysUntilDue = Math.ceil(
+                              (expirationDate.getTime() - today.getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            );
+                            timeLeftToRespond = isExpired
+                              ? "Expired"
+                              : `${daysUntilDue} days`;
+                          } else if (invitation.status === "accepted") {
+                            daysUntilDue = Math.ceil(
+                              (dueDate.getTime() - today.getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            );
+                            reportSubmissionDeadline = isOverdue
+                              ? "Overdue"
+                              : `${daysUntilDue} days left`;
+                          }
+
+                          return (
+                            <InvitedReviewerCard
+                              key={invitation.id}
+                              reviewerName={
+                                invitation.reviewer_name || "Unknown"
+                              }
+                              affiliation={invitation.reviewer_affiliation}
+                              status={displayStatus}
+                              invitedDate={invitedDate.toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}
+                              responseDate={
+                                invitation.response_date
+                                  ? new Date(
+                                      invitation.response_date
+                                    ).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })
+                                  : undefined
+                              }
+                              dueDate={dueDate.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                              expirationDate={
+                                invitation.invitation_expiration_date
+                                  ? new Date(
+                                      invitation.invitation_expiration_date
+                                    ).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })
+                                  : undefined
+                              }
+                              timeLeftToRespond={timeLeftToRespond}
+                              reportSubmissionDeadline={
+                                reportSubmissionDeadline
+                              }
+                              daysLeft={
+                                invitation.status === "accepted"
+                                  ? daysUntilDue
+                                  : undefined
+                              }
+                              onForceAccept={() =>
+                                console.log("Force accept", invitation.id)
+                              }
+                              onForceDecline={() =>
+                                console.log("Force decline", invitation.id)
+                              }
+                              onRevokeInvitation={() =>
+                                console.log("Revoke", invitation.id)
+                              }
+                              onRemoveInvitation={() =>
+                                console.log("Remove", invitation.id)
+                              }
+                              onReadReport={() =>
+                                console.log("Read report", invitation.id)
+                              }
+                              onViewProfile={() =>
+                                console.log(
+                                  "View profile",
+                                  invitation.reviewer_id
+                                )
+                              }
+                              onExtendDeadline={() =>
+                                console.log("Extend deadline", invitation.id)
+                              }
+                            />
+                          );
+                        })}
+                      </Stack>
+                    </Box>
+                  )}
+
+                  {/* Footer with Manage Reviewers Button */}
+                  <Box
+                    sx={{
+                      bgcolor: "background.default",
+                      px: 2,
+                      py: 1.5,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      mt: 3,
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleManageReviewers}
+                    >
+                      Manage Reviewers
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </AccordionDetails>
+          </Accordion>
+        </Paper>
+
+        {/* Editorial Decision Section */}
+        <Paper variant="outlined" sx={{ overflow: "hidden" }}>
+          <Accordion
+            expanded={expandedAccordions.decision}
+            disableGutters
+            onChange={() =>
+              setExpandedAccordions((prev) => ({
+                ...prev,
+                decision: !prev.decision,
+              }))
+            }
+          >
+            <AccordionSummary
+              expandIcon={null}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                color: "secondary.main",
+                bgcolor: "background.default",
+                flexDirection: "row",
+                "& .MuiAccordionSummary-content": {
+                  display: "flex",
+                  alignItems: "center",
+                  my: 1.5,
+                },
               }}
             >
-              {expandedAccordions.decision ? <RemoveIcon /> : <AddIcon />}
-            </Box>
-            <Typography fontWeight={500}>Your Editorial Decision</Typography>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography variant="body2" color="text.secondary">
-            Editorial decision interface will appear here.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: "secondary.main",
+                  }}
+                >
+                  {expandedAccordions.decision ? <RemoveIcon /> : <AddIcon />}
+                </Box>
+                <Typography variant="h6" color="text.secondary">
+                  Your Editorial Decision
+                </Typography>
+              </Stack>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="body2" color="text.secondary">
+                Editorial decision interface will appear here.
+              </Typography>
+            </AccordionDetails>
+          </Accordion>
+        </Paper>
 
-      {/* Activity Log Section */}
-      <Accordion
-        expanded={expandedAccordions.activityLog}
-        disableGutters
-        onChange={() =>
-          setExpandedAccordions((prev) => ({
-            ...prev,
-            activityLog: !prev.activityLog,
-          }))
-        }
-      >
-        <AccordionSummary
-          expandIcon={null}
-          sx={{
-            bgcolor: "background.default",
-            flexDirection: "row",
-            "& .MuiAccordionSummary-content": {
-              display: "flex",
-              alignItems: "center",
-              my: 1.5,
-            },
-          }}
-        >
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Box
+        {/* Activity Log Section */}
+        <Paper variant="outlined" sx={{ overflow: "hidden" }}>
+          <Accordion
+            expanded={expandedAccordions.activityLog}
+            disableGutters
+            onChange={() =>
+              setExpandedAccordions((prev) => ({
+                ...prev,
+                activityLog: !prev.activityLog,
+              }))
+            }
+          >
+            <AccordionSummary
+              expandIcon={null}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                color: "secondary.main",
+                bgcolor: "background.default",
+                flexDirection: "row",
+                "& .MuiAccordionSummary-content": {
+                  display: "flex",
+                  alignItems: "center",
+                  my: 1.5,
+                },
               }}
             >
-              {expandedAccordions.activityLog ? <RemoveIcon /> : <AddIcon />}
-            </Box>
-            <Typography fontWeight={500}>Activity Log</Typography>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography variant="body2" color="text.secondary">
-            Activity log will appear here.
-          </Typography>
-        </AccordionDetails>
-      </Accordion>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: "secondary.main",
+                  }}
+                >
+                  {expandedAccordions.activityLog ? (
+                    <RemoveIcon />
+                  ) : (
+                    <AddIcon />
+                  )}
+                </Box>
+                <Typography variant="h6" color="text.secondary">
+                  Activity Log
+                </Typography>
+              </Stack>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="body2" color="text.secondary">
+                Activity log will appear here.
+              </Typography>
+            </AccordionDetails>
+          </Accordion>
+        </Paper>
+      </Stack>
     </Container>
   );
 }

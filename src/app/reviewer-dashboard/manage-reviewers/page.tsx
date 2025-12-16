@@ -25,11 +25,11 @@ import {
   uninvalidateReport,
   cancelReview,
 } from "@/services/dataService";
-import UnifiedQueueTab from "./UnifiedQueueTab";
 import ReviewerActionMenu from "./ReviewerActionMenu";
-import { ArticleCard } from "../ArticleCard";
+import { ArticleDetailsCard } from "../ArticleDetailsCard";
+import { ReviewerSearchAndTable } from "./ReviewerSearchAndTable";
+import { InvitationsAndQueuePanel } from "./InvitationsAndQueuePanel";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
-import { calculateReviewerStats, toBasicStats } from "@/utils/reviewerStats";
 import type {
   Manuscript,
   InvitationQueueItem,
@@ -53,75 +53,26 @@ declare global {
   }
 }
 import {
-  Container,
   Typography,
-  Grid,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  IconButton,
-  TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Box,
-  Card,
-  CardContent,
-  LinearProgress,
-  Tooltip,
-  Avatar,
   Alert,
-  Tabs,
-  Tab,
-  Badge,
   Snackbar,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Collapse,
+  Breadcrumbs,
+  Link,
 } from "@mui/material";
 
 // Icons
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import QueueIcon from "@mui/icons-material/Queue";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import CancelIcon from "@mui/icons-material/Cancel";
-import StarIcon from "@mui/icons-material/Star";
-import SearchOffIcon from "@mui/icons-material/SearchOff";
-import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 // Mock data removed - using real database queries
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`reviewer-tabpanel-${index}`}
-      aria-labelledby={`reviewer-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-}
 
 export default function ReviewerInvitationDashboard() {
   // Authentication and user data
@@ -133,6 +84,23 @@ export default function ReviewerInvitationDashboard() {
   // Get manuscript ID from URL params
   const manuscriptId = searchParams?.get("manuscriptId") || null;
   const [manuscript, setManuscript] = React.useState<Manuscript | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  // Panel state with localStorage persistence (default open)
+  const [rightPanelOpen, setRightPanelOpen] = React.useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("reviewerPanelOpen");
+      return stored !== null ? stored === "true" : true; // default to true
+    }
+    return true;
+  });
+
+  // Persist panel state to localStorage
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("reviewerPanelOpen", String(rightPanelOpen));
+    }
+  }, [rightPanelOpen]);
 
   // LogRocket user identification
   React.useEffect(() => {
@@ -230,59 +198,42 @@ export default function ReviewerInvitationDashboard() {
     return combined;
   }, [allReviewers, suggestedReviewers]);
 
-  // Fetch suggested reviewers, invitations, and all reviewers when manuscript is loaded
+  // Fetch all data when manuscript is loaded
   React.useEffect(() => {
-    async function fetchReviewersData() {
+    async function fetchAllData() {
       if (!manuscriptId) return;
 
+      setLoading(true);
       try {
-        const [reviewersData, invitationsData, allReviewersData] =
-          await Promise.all([
-            getManuscriptReviewers(manuscriptId),
-            getManuscriptInvitations(manuscriptId),
-            getAllReviewers(), // Load all reviewers upfront for search functionality
-          ]);
-        setSuggestedReviewers(reviewersData);
-        setInvitations(invitationsData);
-        setAllReviewers(allReviewersData);
-      } catch (error) {
-        console.error("Error fetching reviewers:", error);
-        showSnackbar("Failed to load reviewers", "error");
-      }
-    }
-
-    fetchReviewersData();
-  }, [manuscriptId]);
-
-  // Fetch reviewers with status for unified queue/invitations view
-  React.useEffect(() => {
-    async function fetchReviewersWithStatusData() {
-      if (!manuscriptId) return;
-
-      try {
-        const [statusData, queueControlData] = await Promise.all([
+        const [
+          reviewersData,
+          invitationsData,
+          allReviewersData,
+          statusData,
+          queueControlData,
+        ] = await Promise.all([
+          getManuscriptReviewers(manuscriptId),
+          getManuscriptInvitations(manuscriptId),
+          getAllReviewers(),
           getReviewersWithStatus(manuscriptId),
           getQueueControlState(manuscriptId),
         ]);
+        setSuggestedReviewers(reviewersData);
+        setInvitations(invitationsData);
+        setAllReviewers(allReviewersData);
         setReviewersWithStatus(statusData);
         setQueueControl(queueControlData);
       } catch (error) {
-        console.error("Error fetching reviewers with status:", error);
-        showSnackbar("Failed to load reviewer status data", "error");
+        console.error("Error fetching data:", error);
+        showSnackbar("Failed to load data", "error");
+      } finally {
+        setLoading(false);
       }
     }
 
-    fetchReviewersWithStatusData();
+    fetchAllData();
   }, [manuscriptId]);
 
-  // Initialize tab from URL parameter
-  const initialTab = React.useMemo(() => {
-    const tabParam = searchParams?.get("tab");
-    if (tabParam === "queue") return 1; // Invitations & Queue tab
-    return 0; // Default to Potential Reviewers tab
-  }, [searchParams]);
-
-  const [tabValue, setTabValue] = React.useState(initialTab);
   const [sortBy, setSortBy] = React.useState<string>("match_score");
   const [filterAvailability, setFilterAvailability] = React.useState<string[]>([
     "available",
@@ -398,10 +349,6 @@ export default function ReviewerInvitationDashboard() {
     searchTerm,
   ]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
   const handleBackToArticle = () => {
     if (manuscriptId) {
       router.push(`/reviewer-dashboard/${manuscriptId}`);
@@ -463,8 +410,8 @@ export default function ReviewerInvitationDashboard() {
 
           showSnackbar(`Invitation sent to ${reviewer.name}`, "success");
 
-          // Switch to invitations tab to show the result
-          setTimeout(() => setTabValue(1), 1000);
+          // Open right panel to show the result
+          setTimeout(() => setRightPanelOpen(true), 1000);
         } catch (error) {
           console.error("Error sending invitation:", error);
           showSnackbar("Failed to send invitation", "error");
@@ -617,55 +564,51 @@ export default function ReviewerInvitationDashboard() {
     handleActionMenuClose();
   };
 
-  const handleForceAccept = () => {
+  // Consolidated handler for invitation status updates
+  const handleUpdateInvitationStatus = (
+    status:
+      | "accepted"
+      | "declined"
+      | "pending"
+      | "report_submitted"
+      | "invalidated"
+      | "revoked",
+    title: string,
+    message: string,
+    successMessage: string
+  ) => {
     if (!selectedReviewerForAction?.invitation_id) return;
 
-    showConfirmDialog(
+    showConfirmDialog(title, message, async () => {
+      try {
+        await updateInvitationStatus(
+          selectedReviewerForAction.invitation_id!,
+          status
+        );
+        await refreshReviewersWithStatus();
+        showSnackbar(successMessage, "success");
+      } catch {
+        showSnackbar("Failed to update invitation status", "error");
+      }
+    });
+    handleActionMenuClose();
+  };
+
+  const handleForceAccept = () =>
+    handleUpdateInvitationStatus(
+      "accepted",
       "Force Accept Invitation",
-      `Manually mark ${selectedReviewerForAction.name}'s invitation as accepted? This will set their status to "accepted" and assign a review due date.`,
-      async () => {
-        try {
-          await updateInvitationStatus(
-            selectedReviewerForAction.invitation_id!,
-            "accepted"
-          );
-          await refreshReviewersWithStatus();
-          showSnackbar(
-            `${selectedReviewerForAction.name} marked as accepted`,
-            "success"
-          );
-        } catch {
-          showSnackbar("Failed to update invitation status", "error");
-        }
-      }
+      `Manually mark ${selectedReviewerForAction?.name}'s invitation as accepted? This will set their status to "accepted" and assign a review due date.`,
+      `${selectedReviewerForAction?.name} marked as accepted`
     );
-    handleActionMenuClose();
-  };
 
-  const handleForceDecline = () => {
-    if (!selectedReviewerForAction?.invitation_id) return;
-
-    showConfirmDialog(
+  const handleForceDecline = () =>
+    handleUpdateInvitationStatus(
+      "declined",
       "Force Decline Invitation",
-      `Manually mark ${selectedReviewerForAction.name}'s invitation as declined?`,
-      async () => {
-        try {
-          await updateInvitationStatus(
-            selectedReviewerForAction.invitation_id!,
-            "declined"
-          );
-          await refreshReviewersWithStatus();
-          showSnackbar(
-            `${selectedReviewerForAction.name} marked as declined`,
-            "success"
-          );
-        } catch {
-          showSnackbar("Failed to update invitation status", "error");
-        }
-      }
+      `Manually mark ${selectedReviewerForAction?.name}'s invitation as declined?`,
+      `${selectedReviewerForAction?.name} marked as declined`
     );
-    handleActionMenuClose();
-  };
 
   const handleViewProfile = () => {
     // Placeholder for future implementation
@@ -803,7 +746,7 @@ export default function ReviewerInvitationDashboard() {
             );
 
             // Switch to queue tab to show the result
-            setTimeout(() => setTabValue(1), 1000);
+            setTimeout(() => setRightPanelOpen(true), 1000);
           }
         } catch (error) {
           console.error("Error adding to queue:", error);
@@ -845,7 +788,7 @@ export default function ReviewerInvitationDashboard() {
 
         setSelectedReviewers([]);
         showSnackbar(`Sent ${selectedReviewers.length} invitations`, "success");
-        setTimeout(() => setTabValue(1), 1000);
+        setTimeout(() => setRightPanelOpen(true), 1000);
       }
     );
   };
@@ -880,28 +823,13 @@ export default function ReviewerInvitationDashboard() {
           setSelectedReviewers([]);
 
           showSnackbar(`Added ${newItems.length} reviewers to queue`, "info");
-          setTimeout(() => setTabValue(1), 1000);
+          setTimeout(() => setRightPanelOpen(true), 1000);
         } catch (error) {
           console.error("Error batch adding to queue:", error);
           showSnackbar("Failed to add reviewers to queue", "error");
         }
       }
     );
-  };
-
-  const getAvailabilityColor = (status: string) => {
-    switch (status) {
-      case "available":
-        return "success";
-      case "busy":
-        return "warning";
-      case "unavailable":
-        return "error";
-      case "sabbatical":
-        return "info";
-      default:
-        return "default";
-    }
   };
 
   // Configure header for reviewer dashboard
@@ -912,43 +840,80 @@ export default function ReviewerInvitationDashboard() {
 
   return (
     <>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        {/* Header */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid size={12}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-              <Button
-                startIcon={<ArrowBackIcon />}
-                onClick={handleBackToArticle}
-                size="small"
-              >
-                Back to Article Details
-              </Button>
-              <Typography variant="body2" color="text.secondary">
-                DASHBOARD / ARTICLE DETAILS / MANAGE REVIEWERS
-              </Typography>
-            </Box>
-            <Typography
-              variant="h4"
-              component="h1"
-              fontWeight={600}
-              sx={{ mb: 2 }}
+      <Box sx={{ width: "100%", py: 4 }}>
+        {/* Navigation Row: Back button, breadcrumbs, and panel toggle */}
+        <Box
+          sx={{
+            px: 3,
+            mb: 3,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Button startIcon={<ArrowBackIcon />} onClick={handleBackToArticle}>
+              Back
+            </Button>
+            <Breadcrumbs
+              aria-label="breadcrumb"
+              sx={{ textTransform: "uppercase" }}
             >
-              Manage Reviewers
-            </Typography>
+              <Link
+                underline="hover"
+                color="inherit"
+                href="/reviewer-dashboard"
+              >
+                Dashboard
+              </Link>
+              <Link
+                underline="hover"
+                color="inherit"
+                href={`/reviewer-dashboard/${manuscriptId}`}
+              >
+                Article Details
+              </Link>
+              <Typography
+                sx={{ color: "text.primary", textTransform: "uppercase" }}
+              >
+                Manage Reviewers
+              </Typography>
+            </Breadcrumbs>
+          </Box>
+          <Button
+            variant="text"
+            color="secondary"
+            endIcon={
+              rightPanelOpen ? <ChevronRightIcon /> : <ChevronLeftIcon />
+            }
+            onClick={() => setRightPanelOpen(!rightPanelOpen)}
+          >
+            {rightPanelOpen ? "Hide" : "Show"} Invitations & Queue
+          </Button>
+        </Box>
 
-            {/* Manuscript Details Card - Dynamic Data */}
+        {/* Two-Column Layout */}
+        <Box sx={{ px: 3, display: "flex" }}>
+          {/* Left Column: Potential Reviewers */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {/* Article Details Card */}
             {manuscript && (
               <Box sx={{ mb: 3 }}>
-                <ArticleCard
+                <ArticleDetailsCard
                   id={manuscript.id.split("-")[0]}
                   title={manuscript.title}
                   authors={manuscript.authors || []}
-                  articleType={manuscript.subject_area || "Research Article"}
-                  academicEditors={
-                    manuscript.assignedEditors?.map(
-                      (editor) => editor.full_name || editor.email
-                    ) || []
+                  abstract={manuscript.abstract}
+                  articleType={manuscript.article_type ?? "undefined"}
+                  section="{{Physical, Chemical and Earth Sciences}}"
+                  specialIssue="{{Advanced PHWR Safety Technology: PHWR Challenging Issues for Safe Operation and Long-Term Sustainability}}"
+                  academicEditor={
+                    manuscript.assignedEditors &&
+                    manuscript.assignedEditors.length > 0
+                      ? manuscript.assignedEditors
+                          .map((editor) => editor.full_name || editor.email)
+                          .join(", ")
+                      : "Unassigned"
                   }
                   journal={manuscript.journal}
                   submittedOn={new Date(
@@ -958,704 +923,81 @@ export default function ReviewerInvitationDashboard() {
                   stateCode={`V${manuscript.version || 1}`}
                   stateColor={getStatusColor(manuscript.status)}
                   manuscriptTags={manuscript.manuscript_tags}
-                  reviewerStats={toBasicStats(
-                    calculateReviewerStats(invitations)
-                  )}
+                  collapsible
+                  defaultExpanded={false}
                 />
               </Box>
             )}
-          </Grid>
-        </Grid>
 
-        {/* Tabs */}
-        <Paper sx={{ mb: 3 }}>
-          <Box
-            sx={{
-              borderBottom: 1,
-              borderColor: "divider",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              px: 2,
-              pt: 1,
-            }}
-          >
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              aria-label="reviewer dashboard tabs"
-            >
-              <Tab
-                label={
-                  <Badge
-                    badgeContent={filteredReviewers.length}
-                    color="primary"
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <PersonAddIcon fontSize="small" />
-                      Potential Reviewers
-                    </Box>
-                  </Badge>
-                }
-              />
-              <Tab
-                label={
-                  <Badge
-                    badgeContent={
-                      reviewersWithStatus.filter((r) => r.invitation_status)
-                        .length
-                    }
-                    color="secondary"
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <QueueIcon fontSize="small" />
-                      Queue & Invitations
-                    </Box>
-                  </Badge>
-                }
-              />
-            </Tabs>
+            {/* Reviewer Search and Table Component */}
+            <ReviewerSearchAndTable
+              filteredReviewers={filteredReviewers}
+              selectedReviewers={selectedReviewers}
+              searchTerm={searchTerm}
+              sortBy={sortBy}
+              filterAvailability={filterAvailability}
+              minMatchScore={minMatchScore}
+              loading={loading}
+              onSearchChange={setSearchTerm}
+              onSortChange={setSortBy}
+              onAvailabilityChange={setFilterAvailability}
+              onMinMatchScoreChange={setMinMatchScore}
+              onReviewerSelect={handleReviewerSelect}
+              onInviteReviewer={handleInviteReviewer}
+              onAddToQueue={handleAddToQueue}
+              onBatchInvite={handleBatchInvite}
+              onBatchAddToQueue={handleBatchAddToQueue}
+              onClearFilters={() => {
+                setSearchTerm("");
+                setFilterAvailability(["available"]);
+                setMinMatchScore(70);
+              }}
+            />
           </Box>
-        </Paper>
 
-        {/* Tab Panels */}
-        <TabPanel value={tabValue} index={0}>
-          {/* Potential Reviewers Tab */}
-          <Grid container spacing={3}>
-            {/* Filters and Controls */}
-            <Grid size={12}>
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  <FilterListIcon sx={{ mr: 1, verticalAlign: "middle" }} />
-                  Search & Filter Reviewers
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Showing suggested reviewers with match scores by default.
-                  Search to find any reviewer in the full database.
-                </Alert>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid size={{ xs: 12, md: 3 }}>
-                    <TextField
-                      fullWidth
-                      label="Search reviewers"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Name, affiliation, expertise..."
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 2 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>Sort by</InputLabel>
-                      <Select
-                        value={sortBy}
-                        label="Sort by"
-                        onChange={(e) => setSortBy(e.target.value)}
-                      >
-                        <MenuItem value="match_score">Match Score</MenuItem>
-                        <MenuItem value="response_rate">Response Rate</MenuItem>
-                        <MenuItem value="quality_score">Quality Score</MenuItem>
-                        <MenuItem value="current_load">Current Load</MenuItem>
-                        <MenuItem value="name">Name</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 2 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>Availability</InputLabel>
-                      <Select
-                        multiple
-                        value={filterAvailability}
-                        label="Availability"
-                        onChange={(e) =>
-                          setFilterAvailability(e.target.value as string[])
-                        }
-                      >
-                        <MenuItem value="available">Available</MenuItem>
-                        <MenuItem value="busy">Busy</MenuItem>
-                        <MenuItem value="unavailable">Unavailable</MenuItem>
-                        <MenuItem value="sabbatical">Sabbatical</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 2 }}>
-                    <TextField
-                      fullWidth
-                      label="Min Match Score"
-                      type="number"
-                      value={minMatchScore}
-                      onChange={(e) => setMinMatchScore(Number(e.target.value))}
-                      inputProps={{ min: 0, max: 100 }}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 3 }}>
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        variant="contained"
-                        disabled={selectedReviewers.length === 0}
-                        startIcon={<MailOutlineIcon />}
-                        onClick={handleBatchInvite}
-                      >
-                        Invite Selected ({selectedReviewers.length})
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        disabled={selectedReviewers.length === 0}
-                        startIcon={<QueueIcon />}
-                        onClick={handleBatchAddToQueue}
-                      >
-                        Add to Queue
-                      </Button>
-                    </Stack>
-                  </Grid>
-                </Grid>
-              </Paper>
-            </Grid>
+          {/* Right Column: Collapsible Panel with Metrics + Queue/Invitations */}
+          <Collapse
+            in={rightPanelOpen}
+            orientation="horizontal"
+            timeout={{ enter: 300, exit: 300 }}
+            collapsedSize={0}
+          >
+            <InvitationsAndQueuePanel
+              reviewersWithStatus={reviewersWithStatus}
+              queueControl={queueControl}
+              invitations={invitations}
+              queue={simulatedQueue}
+              highMatchCount={
+                potentialReviewers.filter((r) => r.match_score >= 90).length
+              }
+              onToggleQueue={handleToggleQueue}
+              onActionMenuOpen={handleActionMenuOpen}
+            />
+          </Collapse>
+        </Box>
+      </Box>
 
-            {/* Reviewers Table */}
-            <Grid size={12}>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell padding="checkbox">Select</TableCell>
-                      <TableCell>Reviewer</TableCell>
-                      <TableCell align="center">Match Score</TableCell>
-                      <TableCell align="center">Availability</TableCell>
-                      <TableCell align="center">Current Load</TableCell>
-                      <TableCell align="center">Response Rate</TableCell>
-                      <TableCell align="center">Quality Score</TableCell>
-                      <TableCell align="center">Avg Review Time</TableCell>
-                      <TableCell align="center">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredReviewers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={9}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              py: 8,
-                              px: 3,
-                            }}
-                          >
-                            {searchTerm ? (
-                              <>
-                                <SearchOffIcon
-                                  sx={{
-                                    fontSize: 64,
-                                    color: "text.secondary",
-                                    mb: 2,
-                                  }}
-                                />
-                                <Typography
-                                  variant="h6"
-                                  color="text.secondary"
-                                  gutterBottom
-                                >
-                                  No reviewers match your search
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                  sx={{ mb: 3, textAlign: "center" }}
-                                >
-                                  Try adjusting your search term or filters to
-                                  find more reviewers
-                                </Typography>
-                                <Button
-                                  variant="outlined"
-                                  onClick={() => {
-                                    setSearchTerm("");
-                                    setFilterAvailability(["available"]);
-                                    setMinMatchScore(70);
-                                  }}
-                                >
-                                  Clear Filters
-                                </Button>
-                              </>
-                            ) : potentialReviewers.length === 0 ? (
-                              <>
-                                <PersonSearchIcon
-                                  sx={{
-                                    fontSize: 64,
-                                    color: "text.secondary",
-                                    mb: 2,
-                                  }}
-                                />
-                                <Typography
-                                  variant="h6"
-                                  color="text.secondary"
-                                  gutterBottom
-                                >
-                                  No reviewers available
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                  sx={{
-                                    mb: 3,
-                                    textAlign: "center",
-                                    maxWidth: 500,
-                                  }}
-                                >
-                                  There are no reviewer matches for this
-                                  manuscript yet. The system automatically
-                                  generates suggested reviewers based on
-                                  manuscript content. You can also search for
-                                  any reviewer in the database using the search
-                                  field above.
-                                </Typography>
-                                <Alert severity="info" sx={{ maxWidth: 600 }}>
-                                  <Typography variant="body2">
-                                    <strong>Tip:</strong> Use the search field
-                                    to find reviewers by name, affiliation, or
-                                    expertise area from the full reviewer
-                                    database.
-                                  </Typography>
-                                </Alert>
-                              </>
-                            ) : (
-                              <>
-                                <FilterListIcon
-                                  sx={{
-                                    fontSize: 64,
-                                    color: "text.secondary",
-                                    mb: 2,
-                                  }}
-                                />
-                                <Typography
-                                  variant="h6"
-                                  color="text.secondary"
-                                  gutterBottom
-                                >
-                                  No reviewers match your filters
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                  sx={{ mb: 3, textAlign: "center" }}
-                                >
-                                  Try adjusting availability, match score, or
-                                  other filter criteria
-                                </Typography>
-                                <Button
-                                  variant="outlined"
-                                  onClick={() => {
-                                    setFilterAvailability(["available"]);
-                                    setMinMatchScore(0);
-                                  }}
-                                >
-                                  Reset Filters
-                                </Button>
-                              </>
-                            )}
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredReviewers.map((reviewer) => (
-                        <TableRow
-                          key={reviewer.id}
-                          hover
-                          sx={{
-                            backgroundColor:
-                              reviewer.conflicts_of_interest.length > 0
-                                ? (theme) =>
-                                    theme.vars?.palette?.error?.main
-                                      ? `${theme.vars.palette.error.main}08`
-                                      : "rgba(211, 47, 47, 0.03)"
-                                : "inherit",
-                            borderLeft:
-                              reviewer.conflicts_of_interest.length > 0
-                                ? (theme) =>
-                                    `4px solid ${
-                                      theme.vars?.palette?.error?.main ||
-                                      "#ccff00"
-                                    }`
-                                : "4px solid transparent",
-                            "&:hover": {
-                              backgroundColor:
-                                reviewer.conflicts_of_interest.length > 0
-                                  ? (theme) =>
-                                      theme.vars?.palette?.error?.main
-                                        ? `${theme.vars.palette.error.main}12`
-                                        : "rgba(211, 47, 47, 0.06)"
-                                  : (theme) =>
-                                      theme.vars?.palette?.action?.hover ||
-                                      "rgba(0, 0, 0, 0.04)",
-                            },
-                          }}
-                        >
-                          <TableCell padding="checkbox">
-                            <Box
-                              sx={{
-                                position: "relative",
-                                display: "inline-block",
-                              }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedReviewers.includes(
-                                  reviewer.id
-                                )}
-                                onChange={() =>
-                                  handleReviewerSelect(reviewer.id)
-                                }
-                                disabled={
-                                  reviewer.conflicts_of_interest.length > 0
-                                }
-                                style={{
-                                  opacity:
-                                    reviewer.conflicts_of_interest.length > 0
-                                      ? 0.5
-                                      : 1,
-                                  cursor:
-                                    reviewer.conflicts_of_interest.length > 0
-                                      ? "not-allowed"
-                                      : "pointer",
-                                }}
-                              />
-                              {reviewer.conflicts_of_interest.length > 0 && (
-                                <CancelIcon
-                                  sx={{
-                                    position: "absolute",
-                                    top: "-2px",
-                                    right: "-8px",
-                                    fontSize: 16,
-                                    color: "error.main",
-                                    pointerEvents: "none",
-                                  }}
-                                />
-                              )}
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                              }}
-                            >
-                              <Avatar sx={{ bgcolor: "primary.main" }}>
-                                {reviewer.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </Avatar>
-                              <Box>
-                                <Typography
-                                  variant="subtitle2"
-                                  sx={{
-                                    fontWeight: 600,
-                                    color:
-                                      reviewer.conflicts_of_interest.length > 0
-                                        ? "text.primary"
-                                        : "inherit",
-                                    opacity:
-                                      reviewer.conflicts_of_interest.length > 0
-                                        ? 0.8
-                                        : 1,
-                                  }}
-                                >
-                                  {reviewer.name}
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    color:
-                                      reviewer.conflicts_of_interest.length > 0
-                                        ? "text.secondary"
-                                        : "text.secondary",
-                                    opacity:
-                                      reviewer.conflicts_of_interest.length > 0
-                                        ? 0.7
-                                        : 1,
-                                  }}
-                                >
-                                  {reviewer.affiliation}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  {reviewer.department}
-                                </Typography>
-                                <Box sx={{ mt: 0.5 }}>
-                                  {reviewer.expertise_areas
-                                    .slice(0, 3)
-                                    .map((area, index) => (
-                                      <Chip
-                                        key={index}
-                                        label={area}
-                                        size="small"
-                                        variant="outlined"
-                                        sx={{
-                                          mr: 0.5,
-                                          mb: 0.5,
-                                          fontSize: "0.7rem",
-                                        }}
-                                      />
-                                    ))}
-                                </Box>
-                                {reviewer.conflicts_of_interest.length > 0 && (
-                                  <Chip
-                                    label={`Conflict: ${reviewer.conflicts_of_interest.join(
-                                      ", "
-                                    )}`}
-                                    color="error"
-                                    size="small"
-                                    icon={<CancelIcon />}
-                                    sx={{
-                                      mt: 1,
-                                      fontWeight: 600,
-                                      "& .MuiChip-label": {
-                                        fontWeight: 600,
-                                      },
-                                    }}
-                                  />
-                                )}
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <Typography variant="h6" color="primary">
-                                {reviewer.match_score}%
-                              </Typography>
-                              {reviewer.match_score >= 90 && (
-                                <StarIcon color="warning" fontSize="small" />
-                              )}
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Chip
-                              label={reviewer.availability_status}
-                              color={
-                                getAvailabilityColor(
-                                  reviewer.availability_status
-                                ) as
-                                  | "success"
-                                  | "warning"
-                                  | "error"
-                                  | "info"
-                                  | "default"
-                              }
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <Box>
-                              <Typography variant="body2">
-                                {reviewer.current_review_load}/
-                                {reviewer.max_review_capacity}
-                              </Typography>
-                              <LinearProgress
-                                variant="determinate"
-                                value={
-                                  (reviewer.current_review_load /
-                                    reviewer.max_review_capacity) *
-                                  100
-                                }
-                                sx={{ mt: 0.5, width: 40 }}
-                              />
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography
-                              variant="body2"
-                              color={
-                                reviewer.response_rate >= 80
-                                  ? "success.main"
-                                  : "warning.main"
-                              }
-                            >
-                              {reviewer.response_rate}%
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2" color="primary">
-                              {reviewer.quality_score}%
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2">
-                              {reviewer.average_review_time_days} days
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              justifyContent="center"
-                            >
-                              <Tooltip
-                                title={
-                                  reviewer.conflicts_of_interest.length > 0
-                                    ? "Cannot invite - Conflict of interest"
-                                    : "Invite immediately"
-                                }
-                              >
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    color="primary"
-                                    disabled={
-                                      reviewer.conflicts_of_interest.length > 0
-                                    }
-                                    onClick={() =>
-                                      handleInviteReviewer(reviewer.id)
-                                    }
-                                    sx={{
-                                      "&.Mui-disabled": {
-                                        color: (theme) =>
-                                          theme.vars?.palette?.error?.main ||
-                                          "#ccff00",
-                                        opacity: 0.8,
-                                      },
-                                    }}
-                                  >
-                                    <MailOutlineIcon />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                              <Tooltip
-                                title={
-                                  reviewer.conflicts_of_interest.length > 0
-                                    ? "Cannot queue - Conflict of interest"
-                                    : "Add to queue"
-                                }
-                              >
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    color="secondary"
-                                    disabled={
-                                      reviewer.conflicts_of_interest.length > 0
-                                    }
-                                    onClick={() =>
-                                      handleAddToQueue(reviewer.id)
-                                    }
-                                    sx={{
-                                      "&.Mui-disabled": {
-                                        color: (theme) =>
-                                          theme.vars?.palette?.error?.main ||
-                                          "#ccff00",
-                                        opacity: 0.8,
-                                      },
-                                    }}
-                                  >
-                                    <QueueIcon />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                            </Stack>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-          </Grid>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          {/* Queue & Invitations Tab - Unified View */}
-          <UnifiedQueueTab
-            reviewersWithStatus={reviewersWithStatus}
-            queueControl={queueControl}
-            onToggleQueue={handleToggleQueue}
-            onActionMenuOpen={handleActionMenuOpen}
-          />
-        </TabPanel>
-
-        {/* Reviewer Action Menu */}
-        <ReviewerActionMenu
-          anchorEl={actionMenuAnchor}
-          open={Boolean(actionMenuAnchor)}
-          onClose={handleActionMenuClose}
-          selectedReviewer={selectedReviewerForAction}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
-          onRemoveFromQueue={handleRemoveFromQueue}
-          onInviteFromQueue={handleInviteFromQueue}
-          onRevokeInvitation={handleRevokeInvitation}
-          onRemoveInvitation={handleRemoveInvitation}
-          onForceAccept={handleForceAccept}
-          onForceDecline={handleForceDecline}
-          onReadReport={handleReadReport}
-          onViewProfile={handleViewProfile}
-          onSubmitReport={handleSubmitReport}
-          onInvalidateReport={handleInvalidateReport}
-          onReinstateReport={handleReinstateReport}
-          onCancelReview={handleCancelReview}
-        />
-
-        {/* Summary Cards */}
-        <Grid container spacing={3} sx={{ mt: 2 }}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent sx={{ textAlign: "center" }}>
-                <Typography variant="h4" color="primary">
-                  {potentialReviewers.filter((r) => r.match_score >= 90).length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  High Match Reviewers (90%+)
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent sx={{ textAlign: "center" }}>
-                <Typography variant="h4" color="success.main">
-                  {invitations.filter((i) => i.status === "accepted").length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Accepted Invitations
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent sx={{ textAlign: "center" }}>
-                <Typography variant="h4" color="warning.main">
-                  {invitations.filter((i) => i.status === "pending").length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pending Responses
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card>
-              <CardContent sx={{ textAlign: "center" }}>
-                <Typography variant="h4" color="info.main">
-                  {simulatedQueue.length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Queued Invitations
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Container>
+      {/* Reviewer Action Menu */}
+      <ReviewerActionMenu
+        anchorEl={actionMenuAnchor}
+        open={Boolean(actionMenuAnchor)}
+        onClose={handleActionMenuClose}
+        selectedReviewer={selectedReviewerForAction}
+        onMoveUp={handleMoveUp}
+        onMoveDown={handleMoveDown}
+        onRemoveFromQueue={handleRemoveFromQueue}
+        onInviteFromQueue={handleInviteFromQueue}
+        onRevokeInvitation={handleRevokeInvitation}
+        onRemoveInvitation={handleRemoveInvitation}
+        onForceAccept={handleForceAccept}
+        onForceDecline={handleForceDecline}
+        onReadReport={handleReadReport}
+        onViewProfile={handleViewProfile}
+        onSubmitReport={handleSubmitReport}
+        onInvalidateReport={handleInvalidateReport}
+        onReinstateReport={handleReinstateReport}
+        onCancelReview={handleCancelReview}
+      />
 
       {/* Confirmation Dialog */}
       <Dialog

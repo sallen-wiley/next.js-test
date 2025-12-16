@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { Box, Card, CardContent, Chip, Stack, Typography } from "@mui/material";
+import { Box, Paper, Chip, Stack, Typography } from "@mui/material";
 
 import type { ChipProps } from "@mui/material";
 import type { ManuscriptTag } from "@/lib/supabase";
@@ -65,10 +65,10 @@ export function ArticleCard({
     if (value === undefined) return null;
     return (
       <Stack direction="row" spacing={0.5} alignItems="center">
-        <Typography variant="body2" fontWeight={700} color="text.secondary">
+        <Typography variant="subtitle1" color="text.secondary">
           {value}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="subtitle2" color="text.secondary">
           {label}
           {suffix ? "," : ""}
         </Typography>
@@ -77,30 +77,30 @@ export function ArticleCard({
   };
 
   return (
-    <Box display="flex" width="100%">
+    <Paper
+      variant="outlined"
+      sx={{
+        borderColor: "divider",
+        overflow: "hidden",
+        cursor: onClick ? "pointer" : "default",
+        display: "flex",
+        width: "100%",
+      }}
+      onClick={onClick}
+    >
+      {/* Colored left bar */}
       <Box
         sx={{
           width: 4,
           bgcolor: stateColor ? `${stateColor}.main` : "warning.main",
-          borderTopLeftRadius: 6,
-          borderBottomLeftRadius: 6,
+          flexShrink: 0,
         }}
       />
-      <Card
-        variant="outlined"
-        sx={{
-          borderColor: "divider",
-          borderLeft: 0,
-          borderTopLeftRadius: 0,
-          borderBottomLeftRadius: 0,
-          borderTopRightRadius: 6,
-          borderBottomRightRadius: 6,
-          width: "100%",
-          cursor: onClick ? "pointer" : "default",
-        }}
-        onClick={onClick}
-      >
-        <CardContent sx={{ p: 2 }}>
+
+      {/* Content wrapper */}
+      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+        {/* Main content */}
+        <Box sx={{ p: 2 }}>
           <Stack spacing={2}>
             <Stack
               direction="row"
@@ -114,7 +114,7 @@ export function ArticleCard({
                 alignItems="center"
                 flexWrap="wrap"
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="subtitle2" color="text.secondary">
                   ID {id}
                 </Typography>
                 {manuscriptTags?.map((tag) => (
@@ -124,9 +124,6 @@ export function ArticleCard({
                     size="small"
                     variant="outlined"
                     sx={{
-                      borderColor: "text.secondary",
-                      color: "text.secondary",
-                      height: 18,
                       textTransform: "uppercase",
                     }}
                   />
@@ -140,8 +137,6 @@ export function ArticleCard({
                   size="small"
                   sx={{
                     textTransform: "uppercase",
-                    fontWeight: 700,
-                    height: 18,
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
                   }}
@@ -153,8 +148,6 @@ export function ArticleCard({
                   size="small"
                   sx={{
                     textTransform: "uppercase",
-                    fontWeight: 700,
-                    height: 18,
                     borderTopLeftRadius: 0,
                     borderBottomLeftRadius: 0,
                     borderLeft: 0,
@@ -175,7 +168,7 @@ export function ArticleCard({
                 alignItems="center"
                 flexWrap="wrap"
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body1" color="text.secondary">
                   {authors && authors.length > 0
                     ? authors.join(", ")
                     : "No authors"}
@@ -194,14 +187,10 @@ export function ArticleCard({
                   alignItems="center"
                   minWidth={220}
                 >
-                  <Typography
-                    variant="body2"
-                    fontWeight={700}
-                    color="text.secondary"
-                  >
+                  <Typography variant="subtitle1" color="text.secondary">
                     Article Type:
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="subtitle2" color="text.secondary">
                     {articleType}
                   </Typography>
                 </Stack>
@@ -212,14 +201,10 @@ export function ArticleCard({
                   alignItems="center"
                   flexGrow={1}
                 >
-                  <Typography
-                    variant="body2"
-                    fontWeight={700}
-                    color="text.secondary"
-                  >
+                  <Typography variant="subtitle1" color="text.secondary">
                     Academic Editor:
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="subtitle2" color="text.secondary">
                     {academicEditorLabel}
                   </Typography>
                 </Stack>
@@ -230,11 +215,7 @@ export function ArticleCard({
                   alignItems="center"
                   flexWrap="wrap"
                 >
-                  <Typography
-                    variant="body2"
-                    fontWeight={700}
-                    color="text.secondary"
-                  >
+                  <Typography variant="subtitle1" color="text.secondary">
                     Reviewer Reports:
                   </Typography>
                   <Stack
@@ -256,37 +237,44 @@ export function ArticleCard({
               </Stack>
             </Stack>
           </Stack>
-        </CardContent>
+        </Box>
 
+        {/* Bottom section */}
         <Box
-          sx={{
-            bgcolor: "rgba(0, 0, 0, 0.05)",
-            px: 2,
-            py: 1.5,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 2,
-          }}
+          sx={[
+            {
+              bgcolor: "rgba(0, 0, 0, 0.05)",
+              px: 2,
+              py: 1.5,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 2,
+            },
+            (theme) =>
+              theme.applyStyles("dark", {
+                bgcolor: "rgba(255, 255, 255, 0.05)",
+              }),
+          ]}
         >
           <Stack direction="row" spacing={0.5} alignItems="center" flexGrow={1}>
-            <Typography variant="body2" fontWeight={700} color="text.secondary">
+            <Typography variant="subtitle1" color="text.secondary">
               Journal:
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="subtitle2" color="text.secondary">
               {journal}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="body2" fontWeight={700} color="text.secondary">
+            <Typography variant="subtitle1" color="text.secondary">
               Submitted on:
             </Typography>
-            <Typography variant="body2" color="text.primary">
+            <Typography variant="subtitle2" color="text.primary">
               {submittedOn}
             </Typography>
           </Stack>
         </Box>
-      </Card>
-    </Box>
+      </Box>
+    </Paper>
   );
 }
