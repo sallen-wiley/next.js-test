@@ -28,7 +28,6 @@ type ArticleDetailsCardProps = {
   articleType: string;
   section?: string;
   specialIssue?: string;
-  triageEditor?: string;
   academicEditor?: string;
   journal: string;
   submittedOn: string;
@@ -46,7 +45,6 @@ export function ArticleDetailsCard({
   articleType,
   section,
   specialIssue,
-  triageEditor,
   academicEditor,
   journal,
   submittedOn,
@@ -91,7 +89,7 @@ export function ArticleDetailsCard({
                 alignItems="center"
                 flexWrap="wrap"
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="subtitle2" color="text.secondary">
                   ID {id}
                 </Typography>
                 {manuscriptTags?.map((tag) => (
@@ -141,7 +139,7 @@ export function ArticleDetailsCard({
             </Stack>
 
             {/* Title - using text.primary color */}
-            <Typography variant="h6" color="text.primary" fontWeight={700}>
+            <Typography variant="h3" color="text.secondary" fontWeight={700}>
               {title}
             </Typography>
 
@@ -155,7 +153,7 @@ export function ArticleDetailsCard({
               {authors.map((author, index) => (
                 <React.Fragment key={author}>
                   <Typography
-                    variant="body2"
+                    variant="body1"
                     color="secondary"
                     sx={{
                       cursor: "pointer",
@@ -165,7 +163,7 @@ export function ArticleDetailsCard({
                     {author}
                   </Typography>
                   {index < authors.length - 1 && (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body1" color="text.secondary">
                       ,
                     </Typography>
                   )}
@@ -187,45 +185,22 @@ export function ArticleDetailsCard({
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
-                      color="text.secondary"
-                    >
+                    <Typography variant="subtitle1" color="text.secondary">
                       Article Type
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="subtitle2" color="text.secondary">
                       {articleType}
                     </Typography>
                   </Stack>
 
                   <Stack direction="row" spacing={0.5} alignItems="center">
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
-                      color="text.secondary"
-                    >
+                    <Typography variant="subtitle1" color="text.secondary">
                       Journal
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="subtitle2" color="text.secondary">
                       {journal}
                     </Typography>
                   </Stack>
-
-                  {triageEditor && (
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color="text.secondary"
-                      >
-                        Triage Editor:
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {triageEditor}
-                      </Typography>
-                    </Stack>
-                  )}
                 </Stack>
               </Grid>
 
@@ -234,14 +209,10 @@ export function ArticleDetailsCard({
                 <Stack spacing={1.5}>
                   {section && (
                     <Stack direction="row" spacing={0.5} alignItems="center">
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color="text.secondary"
-                      >
+                      <Typography variant="subtitle1" color="text.secondary">
                         Section
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="subtitle2" color="text.secondary">
                         {section}
                       </Typography>
                     </Stack>
@@ -249,30 +220,11 @@ export function ArticleDetailsCard({
 
                   {specialIssue && (
                     <Stack direction="column" spacing={0.5}>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color="text.secondary"
-                      >
+                      <Typography variant="subtitle1" color="text.secondary">
                         Special Issue
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body1" color="text.secondary">
                         {specialIssue}
-                      </Typography>
-                    </Stack>
-                  )}
-
-                  {academicEditor && (
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color="text.secondary"
-                      >
-                        Academic Editor:
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {academicEditor}
                       </Typography>
                     </Stack>
                   )}
@@ -282,25 +234,35 @@ export function ArticleDetailsCard({
           </Stack>
         </CardContent>
 
-        {/* Bottom section with journal/submitted info */}
+        {/* Bottom section with editors and submitted date */}
         <Box
           sx={{
-            bgcolor: (theme) =>
-              theme.palette.mode === "light"
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900],
+            bgcolor: "rgba(0, 0, 0, 0.05)",
             px: 2,
             py: 1.5,
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "space-between",
             alignItems: "center",
+            gap: 2,
           }}
         >
+          <Stack direction="row" spacing={3} alignItems="center">
+            {academicEditor && (
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <Typography variant="subtitle1" color="text.secondary">
+                  Academic Editor:
+                </Typography>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {academicEditor}
+                </Typography>
+              </Stack>
+            )}
+          </Stack>
           <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="body2" fontWeight={700} color="text.secondary">
+            <Typography variant="subtitle1" color="text.secondary">
               Submitted on:
             </Typography>
-            <Typography variant="body2" color="text.primary">
+            <Typography variant="subtitle2" color="text.primary">
               {submittedOn}
             </Typography>
           </Stack>
@@ -318,27 +280,25 @@ export function ArticleDetailsCard({
       >
         <Box
           sx={{
-            bgcolor: (theme) =>
-              theme.palette.mode === "light"
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900],
+            bgcolor: "rgba(0, 0, 0, 0.05)",
+            p: 2,
           }}
         >
           <Accordion defaultExpanded={false} disableGutters elevation={0}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Abstract</Typography>
+              <Typography variant="h6">Abstract</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography variant="body2">{abstract}</Typography>
+              <Typography variant="body1">{abstract}</Typography>
             </AccordionDetails>
           </Accordion>
 
           <Accordion defaultExpanded={false} disableGutters elevation={0}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Author Declaration</Typography>
+              <Typography variant="h6">Author Declaration</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 Author declarations will appear here.
               </Typography>
             </AccordionDetails>
@@ -346,10 +306,10 @@ export function ArticleDetailsCard({
 
           <Accordion defaultExpanded={false} disableGutters elevation={0}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography fontWeight={500}>Files</Typography>
+              <Typography variant="h6">Files</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 Manuscript files will appear here.
               </Typography>
             </AccordionDetails>

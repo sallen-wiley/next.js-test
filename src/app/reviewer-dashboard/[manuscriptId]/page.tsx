@@ -249,10 +249,9 @@ export default function ArticleDetailsPage({
           title={manuscript.title}
           authors={manuscript.authors}
           abstract={manuscript.abstract}
-          articleType={manuscript.subject_area || "Research Article"}
-          section="Physical, Chemical and Earth Sciences"
-          specialIssue="Advanced PHWR Safety Technology: PHWR Challenging Issues for Safe Operation and Long-Term Sustainability"
-          triageEditor="Tedi Smith"
+          articleType={manuscript.article_type ?? "undefined"}
+          section="{{Physical, Chemical and Earth Sciences}}"
+          specialIssue="{{Advanced PHWR Safety Technology: PHWR Challenging Issues for Safe Operation and Long-Term Sustainability}}"
           academicEditor={
             academicEditors.length > 0
               ? academicEditors.join(", ")
