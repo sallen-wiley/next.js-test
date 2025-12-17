@@ -58,7 +58,7 @@ export interface PotentialReviewer {
   affiliation: string;
   department?: string;
   expertise_areas: string[];
-  match_score: number; // 0-100, how well they match the manuscript
+  match_score: number; // 0-1, how well they match the manuscript (display as percentage)
   current_review_load: number; // number of papers currently reviewing
   max_review_capacity: number; // maximum papers they can review simultaneously
   average_review_time_days: number;

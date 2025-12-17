@@ -131,8 +131,28 @@ let theme = createTheme({
     fontFamily: "'Nunito'",
 
     // Map design tokens to MUI typography variants
-    // Figma Text Style: Title-Hero (Bold, 30pt, Grey 70)
+    // Using Wiley theme sizes for h1-h3 to maintain consistent layouts across themes
+    // PDS heading styles (Title-Hero, Title-Primary, Title-Small) mapped to h4-h6
     h1: {
+      fontSize: "3rem", // 48px - matches wiley theme for layout consistency
+      fontWeight: 700,
+      lineHeight: 1.167,
+      letterSpacing: "-0.01562em",
+    },
+    h2: {
+      fontSize: "2.5rem", // 40px - matches wiley theme for layout consistency
+      fontWeight: 700,
+      lineHeight: 1.2,
+      letterSpacing: "-0.00833em",
+    },
+    h3: {
+      fontSize: "2.125rem", // 34px - matches wiley theme for layout consistency
+      fontWeight: 700,
+      lineHeight: 1.167,
+      letterSpacing: "0em",
+    },
+    // Figma Text Style: Title-Hero (Bold, 30pt, Grey 70)
+    h4: {
       fontSize: `${designTokens.font.title.hero.fontSize}px`,
       fontWeight: designTokens.font.title.hero.fontWeight,
       lineHeight:
@@ -145,15 +165,8 @@ let theme = createTheme({
           ? "uppercase"
           : "none",
     },
-    // Interpolated size between h1 and h3 (not a direct Figma style)
-    h2: {
-      fontSize: 26,
-      fontWeight: 700,
-      lineHeight: 1.38,
-      letterSpacing: 0,
-    },
     // Figma Text Style: Title-Primary (Bold, 20pt, Grey 70)
-    h3: {
+    h5: {
       fontSize: `${designTokens.font.title.primary.fontSize}px`,
       fontWeight: designTokens.font.title.primary.fontWeight,
       lineHeight:
@@ -165,20 +178,6 @@ let theme = createTheme({
         designTokens.font.title.primary.textCase === "uppercase"
           ? "uppercase"
           : "none",
-    },
-    // Interpolated size between h3 and h6 (not a direct Figma style)
-    h4: {
-      fontSize: 18,
-      fontWeight: 700,
-      lineHeight: 1.5,
-      letterSpacing: 0,
-    },
-    // Interpolated size between h4 and h6 (not a direct Figma style)
-    h5: {
-      fontSize: 17,
-      fontWeight: 700,
-      lineHeight: 1.53,
-      letterSpacing: 0,
     },
     // Figma Text Style: Title-Small (Bold, 16pt, Grey 70)
     h6: {

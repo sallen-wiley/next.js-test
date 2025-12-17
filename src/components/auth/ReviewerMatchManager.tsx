@@ -63,16 +63,16 @@ interface ReviewerMatch {
 }
 
 const getScoreColor = (score: number): "error" | "warning" | "success" => {
-  if (score >= 80) return "success";
-  if (score >= 60) return "warning";
+  if (score >= 0.8) return "success";
+  if (score >= 0.6) return "warning";
   return "error";
 };
 
 const getScoreLabel = (score: number): string => {
-  if (score >= 90) return "Excellent Match";
-  if (score >= 80) return "Very Good Match";
-  if (score >= 70) return "Good Match";
-  if (score >= 60) return "Moderate Match";
+  if (score >= 0.9) return "Excellent Match";
+  if (score >= 0.8) return "Very Good Match";
+  if (score >= 0.7) return "Good Match";
+  if (score >= 0.6) return "Moderate Match";
   return "Low Match";
 };
 
@@ -89,7 +89,7 @@ export default function ReviewerMatchManager() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedManuscriptId, setSelectedManuscriptId] = useState("");
   const [selectedReviewerId, setSelectedReviewerId] = useState("");
-  const [matchScore, setMatchScore] = useState(75);
+  const [matchScore, setMatchScore] = useState(0.75);
   const [editingMatch, setEditingMatch] = useState<ReviewerMatch | null>(null);
 
   useEffect(() => {
@@ -139,7 +139,7 @@ export default function ReviewerMatchManager() {
       setDialogOpen(false);
       setSelectedManuscriptId("");
       setSelectedReviewerId("");
-      setMatchScore(75);
+      setMatchScore(0.75);
       await loadData();
     } catch (err: unknown) {
       console.error("Error adding match:", err);
@@ -342,7 +342,7 @@ export default function ReviewerMatchManager() {
                             variant="h6"
                             color={`${getScoreColor(match.match_score)}.main`}
                           >
-                            {match.match_score}
+                            {Math.round(match.match_score * 100)}%
                           </Typography>
                           <TrendingUpIcon
                             fontSize="small"
@@ -351,7 +351,7 @@ export default function ReviewerMatchManager() {
                         </Box>
                         <LinearProgress
                           variant="determinate"
-                          value={match.match_score}
+                          value={match.match_score * 100}
                           color={getScoreColor(match.match_score)}
                           sx={{ mb: 0.5 }}
                         />
@@ -502,25 +502,28 @@ export default function ReviewerMatchManager() {
 
               <Box sx={{ mt: 3 }}>
                 <Typography gutterBottom>
-                  Match Score: <strong>{matchScore}</strong> (
-                  {getScoreLabel(matchScore)})
+                  Match Score: <strong>{Math.round(matchScore * 100)}%</strong>{" "}
+                  ({getScoreLabel(matchScore)})
                 </Typography>
                 <Slider
-                  value={matchScore}
-                  onChange={(_, value) => setMatchScore(value as number)}
+                  value={matchScore * 100}
+                  onChange={(_, value) =>
+                    setMatchScore((value as number) / 100)
+                  }
                   min={0}
                   max={100}
                   step={5}
                   marks={[
-                    { value: 0, label: "0" },
-                    { value: 50, label: "50" },
-                    { value: 100, label: "100" },
+                    { value: 0, label: "0%" },
+                    { value: 50, label: "50%" },
+                    { value: 100, label: "100%" },
                   ]}
                   valueLabelDisplay="auto"
+                  valueLabelFormat={(value) => `${value}%`}
                   color={getScoreColor(matchScore)}
                 />
                 <Typography variant="caption" color="text.secondary">
-                  Adjust the match quality score (0-100)
+                  Adjust the match quality score (0-100%)
                 </Typography>
               </Box>
             </Box>

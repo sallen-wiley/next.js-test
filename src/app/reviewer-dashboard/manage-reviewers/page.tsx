@@ -238,7 +238,7 @@ export default function ReviewerInvitationDashboard() {
   const [filterAvailability, setFilterAvailability] = React.useState<string[]>([
     "available",
   ]);
-  const [minMatchScore, setMinMatchScore] = React.useState<number>(70);
+  const [minMatchScore, setMinMatchScore] = React.useState<number>(0.7);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedReviewers, setSelectedReviewers] = React.useState<string[]>(
     []
@@ -950,7 +950,7 @@ export default function ReviewerInvitationDashboard() {
               onClearFilters={() => {
                 setSearchTerm("");
                 setFilterAvailability(["available"]);
-                setMinMatchScore(70);
+                setMinMatchScore(0.7);
               }}
             />
           </Box>

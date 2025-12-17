@@ -182,7 +182,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
       "machine learning",
       "computational linguistics",
     ],
-    match_score: 95,
+    match_score: 0.95,
     current_review_load: 2,
     max_review_capacity: 4,
     average_review_time_days: 21,
@@ -205,7 +205,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
       "neural networks",
       "artificial intelligence",
     ],
-    match_score: 88,
+    match_score: 0.88,
     current_review_load: 3,
     max_review_capacity: 3,
     average_review_time_days: 18,
@@ -228,7 +228,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
       "text processing",
       "corpus linguistics",
     ],
-    match_score: 91,
+    match_score: 0.91,
     current_review_load: 1,
     max_review_capacity: 5,
     average_review_time_days: 25,
@@ -251,7 +251,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
       "text mining",
       "natural language processing",
     ],
-    match_score: 82,
+    match_score: 0.82,
     current_review_load: 4,
     max_review_capacity: 4,
     average_review_time_days: 30,
@@ -274,7 +274,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
       "data mining",
       "artificial intelligence",
     ],
-    match_score: 79,
+    match_score: 0.79,
     current_review_load: 1,
     max_review_capacity: 3,
     average_review_time_days: 22,
@@ -293,7 +293,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     affiliation: "University of Toronto",
     department: "Computer Science",
     expertise_areas: ["deep learning", "transformers", "language models"],
-    match_score: 93,
+    match_score: 0.93,
     current_review_load: 0,
     max_review_capacity: 4,
     average_review_time_days: 19,
@@ -316,7 +316,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
       "semantic analysis",
       "text classification",
     ],
-    match_score: 86,
+    match_score: 0.86,
     current_review_load: 2,
     max_review_capacity: 5,
     average_review_time_days: 28,
@@ -338,7 +338,7 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
       "arabic nlp",
       "cross-lingual processing",
     ],
-    match_score: 75,
+    match_score: 0.75,
     current_review_load: 3,
     max_review_capacity: 3,
     average_review_time_days: 35,
@@ -1704,7 +1704,7 @@ export async function getMatchesForManuscript(
  * Add a reviewer-manuscript match
  * @param manuscriptId - The manuscript UUID
  * @param reviewerId - The reviewer UUID
- * @param matchScore - Match score (0-100)
+ * @param matchScore - Match score (0-1, will be displayed as percentage)
  */
 export async function addReviewerMatch(
   manuscriptId: string,
@@ -1713,8 +1713,8 @@ export async function addReviewerMatch(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   // Validate match score
-  if (matchScore < 0 || matchScore > 100) {
-    throw new Error("Match score must be between 0 and 100");
+  if (matchScore < 0 || matchScore > 1) {
+    throw new Error("Match score must be between 0 and 1");
   }
 
   // Check if match already exists

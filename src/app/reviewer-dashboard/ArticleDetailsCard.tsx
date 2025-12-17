@@ -179,7 +179,7 @@ export function ArticleDetailsCard({
             </Box>
           )}
           <Typography
-            variant="h3"
+            variant="h5"
             color="text.secondary"
             fontWeight={700}
             sx={{

@@ -356,9 +356,10 @@ figma.connect(Component, "figma-url", {
 
 #### reviewer_manuscript_matches
 - **Purpose**: AI-generated match scores linking reviewers to manuscripts
-- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), match_score (numeric), calculated_at
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), match_score (numeric 0-1), calculated_at
 - **Constraint**: Unique (manuscript_id, reviewer_id)
 - **Usage**: Powers "Suggested Reviewers" tab - join with potential_reviewers to get reviewer details
+- **Important**: match_score is stored as 0-1 (e.g., 0.95) but should be displayed as percentage (95%)
 
 #### review_invitations
 - **Purpose**: Sent reviewer invitations with status tracking

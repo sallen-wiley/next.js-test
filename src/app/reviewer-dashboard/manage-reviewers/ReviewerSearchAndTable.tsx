@@ -147,10 +147,12 @@ export function ReviewerSearchAndTable({
           <Grid size={{ xs: 12, md: 2 }}>
             <TextField
               fullWidth
-              label="Min Match Score"
+              label="Min Match Score (%)"
               type="number"
-              value={minMatchScore}
-              onChange={(e) => onMinMatchScoreChange(Number(e.target.value))}
+              value={Math.round(minMatchScore * 100)}
+              onChange={(e) =>
+                onMinMatchScoreChange(Number(e.target.value) / 100)
+              }
               inputProps={{ min: 0, max: 100 }}
             />
           </Grid>
@@ -373,9 +375,9 @@ export function ReviewerSearchAndTable({
                         }}
                       >
                         <Typography variant="h6" color="primary">
-                          {reviewer.match_score}%
+                          {Math.round(reviewer.match_score * 100)}%
                         </Typography>
-                        {reviewer.match_score >= 90 && (
+                        {reviewer.match_score >= 0.9 && (
                           <StarIcon color="warning" fontSize="small" />
                         )}
                       </Box>

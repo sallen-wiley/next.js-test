@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS reviewer_manuscript_matches (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     manuscript_id UUID REFERENCES manuscripts(id) ON DELETE CASCADE,
     reviewer_id UUID REFERENCES potential_reviewers(id) ON DELETE CASCADE,
-    match_score DECIMAL(5,2) NOT NULL, -- 0-100
+    match_score DECIMAL(5,2) NOT NULL, -- OUTDATED: should be 0-1, see 01_core_tables.sql
     calculated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(manuscript_id, reviewer_id)
 );
