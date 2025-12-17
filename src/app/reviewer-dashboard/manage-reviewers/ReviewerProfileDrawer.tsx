@@ -76,100 +76,104 @@ export default function ReviewerProfileDrawer({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const fetchReviewerProfile = React.useCallback(async (id: string) => {
-    setLoading(true);
-    setError(null);
+  const fetchReviewerProfile = React.useCallback(
+    async (id: string) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      // Fetch base reviewer data
-      const { data: reviewerData, error: reviewerError } = await supabase
-        .from("potential_reviewers")
-        .select("*")
-        .eq("id", id)
-        .single();
+      try {
+        // Fetch base reviewer data
+        const { data: reviewerData, error: reviewerError } = await supabase
+          .from("potential_reviewers")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-      if (reviewerError) throw reviewerError;
+        if (reviewerError) throw reviewerError;
 
-      // Fetch manuscript-specific conflicts if manuscriptId is provided
-      let manuscriptConflicts: string | null = null;
-      if (manuscriptId) {
-        const { data: matchData, error: matchError } = await supabase
-          .from("reviewer_manuscript_matches")
-          .select("conflicts_of_interest")
-          .eq("manuscript_id", manuscriptId)
+        // Fetch manuscript-specific conflicts if manuscriptId is provided
+        let manuscriptConflicts: string | null = null;
+        if (manuscriptId) {
+          const { data: matchData, error: matchError } = await supabase
+            .from("reviewer_manuscript_matches")
+            .select("conflicts_of_interest")
+            .eq("manuscript_id", manuscriptId)
+            .eq("reviewer_id", id)
+            .single();
+
+          console.log("Match data for conflicts:", {
+            manuscriptId,
+            reviewerId: id,
+            matchData,
+            matchError,
+            conflicts: matchData?.conflicts_of_interest,
+          });
+
+          manuscriptConflicts = matchData?.conflicts_of_interest || null;
+        }
+
+        // Fetch publications
+        const { data: publicationsData } = await supabase
+          .from("reviewer_publications")
+          .select("*")
+          .eq("reviewer_id", id)
+          .order("publication_date", { ascending: false })
+          .limit(4); // Show top 4 in drawer
+
+        // Fetch retractions
+        const { data: retractionsData } = await supabase
+          .from("reviewer_retractions")
+          .select("*")
           .eq("reviewer_id", id)
           .single();
 
-        console.log("Match data for conflicts:", {
-          manuscriptId,
-          reviewerId: id,
-          matchData,
-          matchError,
-          conflicts: matchData?.conflicts_of_interest,
-        });
-
-        manuscriptConflicts = matchData?.conflicts_of_interest || null;
-      }
-
-      // Fetch publications
-      const { data: publicationsData } = await supabase
-        .from("reviewer_publications")
-        .select("*")
-        .eq("reviewer_id", id)
-        .order("publication_date", { ascending: false })
-        .limit(4); // Show top 4 in drawer
-
-      // Fetch retractions
-      const { data: retractionsData } = await supabase
-        .from("reviewer_retractions")
-        .select("*")
-        .eq("reviewer_id", id)
-        .single();
-
-      // Combine all data
-      const profile: ReviewerProfile = {
-        ...reviewerData,
-        conflicts_of_interest: manuscriptConflicts || "",
-        match_score: 0, // Will be populated if from manuscript matches
-        email_is_institutional: isInstitutionalEmail(reviewerData.email),
-        acceptance_rate:
-          reviewerData.total_invitations > 0
-            ? Math.round(
-                (reviewerData.total_acceptances /
-                  reviewerData.total_invitations) *
-                  100
+        // Combine all data
+        const profile: ReviewerProfile = {
+          ...reviewerData,
+          conflicts_of_interest: manuscriptConflicts || "",
+          match_score: 0, // Will be populated if from manuscript matches
+          email_is_institutional: isInstitutionalEmail(reviewerData.email),
+          acceptance_rate:
+            reviewerData.total_invitations > 0
+              ? Math.round(
+                  (reviewerData.total_acceptances /
+                    reviewerData.total_invitations) *
+                    100
+                )
+              : 0,
+          related_publications_count:
+            publicationsData?.filter((p) => p.is_related).length || 0,
+          solo_authored_count:
+            publicationsData?.filter((p) => p.authors?.length === 1).length ||
+            0,
+          publications_last_5_years:
+            publicationsData?.filter((p) => {
+              if (!p.publication_date) return false;
+              const pubYear = new Date(p.publication_date).getFullYear();
+              const currentYear = new Date().getFullYear();
+              return currentYear - pubYear <= 5;
+            }).length || 0,
+          days_since_last_review: reviewerData.last_review_completed
+            ? Math.floor(
+                (Date.now() -
+                  new Date(reviewerData.last_review_completed).getTime()) /
+                  (1000 * 60 * 60 * 24)
               )
-            : 0,
-        related_publications_count:
-          publicationsData?.filter((p) => p.is_related).length || 0,
-        solo_authored_count:
-          publicationsData?.filter((p) => p.authors?.length === 1).length || 0,
-        publications_last_5_years:
-          publicationsData?.filter((p) => {
-            if (!p.publication_date) return false;
-            const pubYear = new Date(p.publication_date).getFullYear();
-            const currentYear = new Date().getFullYear();
-            return currentYear - pubYear <= 5;
-          }).length || 0,
-        days_since_last_review: reviewerData.last_review_completed
-          ? Math.floor(
-              (Date.now() -
-                new Date(reviewerData.last_review_completed).getTime()) /
-                (1000 * 60 * 60 * 24)
-            )
-          : null,
-        publications: publicationsData || [],
-        retractions: retractionsData || undefined,
-      };
+            : null,
+          publications: publicationsData || [],
+          retractions: retractionsData || undefined,
+        };
 
-      setReviewer(profile);
-    } catch (err) {
-      console.error("Error fetching reviewer profile:", err);
-      setError("Failed to load reviewer profile. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [manuscriptId]);
+        setReviewer(profile);
+      } catch (err) {
+        console.error("Error fetching reviewer profile:", err);
+        setError("Failed to load reviewer profile. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [manuscriptId]
+  );
 
   // Fetch reviewer details when drawer opens
   React.useEffect(() => {

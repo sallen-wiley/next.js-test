@@ -14,7 +14,10 @@ import {
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { SvgIcon } from "@mui/material";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import { SvgIcon, IconButton } from "@mui/material";
 import type { PotentialReviewerWithMatch } from "@/lib/supabase";
 
 // ORCID Icon Component
@@ -87,7 +90,7 @@ export default function ReviewerCard({
               <Chip
                 label={reviewer.availability_status}
                 size="small"
-                variant="solid-light"
+                variant="outlined"
                 color={
                   getAvailabilityColor(reviewer.availability_status) as
                     | "success"
@@ -107,7 +110,7 @@ export default function ReviewerCard({
                 alignItems="center"
                 sx={{ minWidth: 0 }}
               >
-                <Typography variant="subtitle1" fontWeight={700} noWrap>
+                <Typography variant="body1" fontWeight={700} noWrap>
                   {reviewer.name}
                 </Typography>
                 {orcidId && (
@@ -119,8 +122,13 @@ export default function ReviewerCard({
                     />
                   </Tooltip>
                 )}
+                <Tooltip title="Add to bookmarks">
+                  <IconButton size="small">
+                    <BookmarkBorderIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Tooltip>
               </Stack>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography variant="body1" color="text.secondary" noWrap>
                 {reviewer.affiliation}
               </Typography>
               <Stack
@@ -129,7 +137,7 @@ export default function ReviewerCard({
                 alignItems="center"
                 sx={{ minWidth: 0 }}
               >
-                <Typography variant="body2" color="text.secondary" noWrap>
+                <Typography variant="body1" color="text.secondary" noWrap>
                   {reviewer.email}
                 </Typography>
                 {reviewer.email_is_institutional && (
@@ -161,11 +169,11 @@ export default function ReviewerCard({
           {/* Column 2: Keywords (first 5) + View Publications (grow) */}
           <Grid size={{ xs: 12, md: "grow" }}>
             <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 Top keywords:
               </Typography>
               <Typography
-                variant="body2"
+                variant="body1"
                 color="text.secondary"
                 sx={{ whiteSpace: "normal" }}
               >
@@ -178,9 +186,16 @@ export default function ReviewerCard({
                 color="secondary"
                 underline="hover"
                 onClick={() => onViewProfile(reviewer.id)}
-                sx={{ fontWeight: 600, alignSelf: "flex-start" }}
+                sx={{
+                  fontWeight: 600,
+                  alignSelf: "flex-start",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
               >
                 View Publications
+                <ChevronRightIcon sx={{ fontSize: 16 }} />
               </MuiLink>
             </Stack>
           </Grid>
@@ -198,9 +213,15 @@ export default function ReviewerCard({
               color="secondary"
               underline="hover"
               onClick={() => onViewProfile(reviewer.id)}
-              sx={{ whiteSpace: "nowrap" }}
+              sx={{
+                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+              }}
             >
               Open Profile
+              <OpenInFullIcon sx={{ fontSize: 16 }} />
             </MuiLink>
           </Grid>
         </Grid>

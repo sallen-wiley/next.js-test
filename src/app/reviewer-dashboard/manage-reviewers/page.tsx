@@ -257,11 +257,27 @@ export default function ReviewerInvitationDashboard() {
     fetchAllData();
   }, [manuscriptId]);
 
-  const [sortBy, setSortBy] = React.useState<string>("match_score");
-  const [filterAvailability, setFilterAvailability] = React.useState<string[]>([
-    "available",
-  ]);
+  const [sortBy] = React.useState<string>("match_score");
   const [searchTerm, setSearchTerm] = React.useState("");
+
+  // Initialize filters with default values
+  const [filters, setFilters] = React.useState<
+    import("./ReviewerSearchAndCards").ReviewerFilters
+  >({
+    availability: ["available"],
+    institutionalEmail: false,
+    country: "",
+    responseTimeMax: 0,
+    reviewsLast12Months: 0,
+    totalReviewsMin: 0,
+    totalReviewsMax: 1000,
+    assignedManuscriptsMax: 0,
+    publicationYearFrom: 0,
+    publicationYearTo: 0,
+    publishedArticlesMin: 0,
+    publishedInJournal: false,
+    inAuthorsGroup: false,
+  });
   // Multi-select removed; no selected reviewers state
 
   // New state for unified queue/invitations view
@@ -328,11 +344,93 @@ export default function ReviewerInvitationDashboard() {
 
       // Filter by availability
       if (
-        filterAvailability.length > 0 &&
-        !filterAvailability.includes(reviewer.availability_status)
+        filters.availability.length > 0 &&
+        !filters.availability.includes(reviewer.availability_status)
       ) {
         return false;
       }
+
+      // Filter by institutional email
+      if (filters.institutionalEmail && !isInstitutionalEmail(reviewer.email)) {
+        return false;
+      }
+
+      // Filter by country
+      if (
+        filters.country &&
+        !reviewer.affiliation
+          ?.toLowerCase()
+          .includes(filters.country.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Filter by response time
+      if (filters.responseTimeMax > 0) {
+        const responseTimeDays = reviewer.average_response_time_hours
+          ? reviewer.average_response_time_hours / 24
+          : reviewer.average_review_time_days || 0;
+        if (responseTimeDays > filters.responseTimeMax) {
+          return false;
+        }
+      }
+
+      // Filter by reviews in last 12 months
+      if (filters.reviewsLast12Months > 0) {
+        const recentReviews = reviewer.publication_count_last_year || 0;
+        if (recentReviews < filters.reviewsLast12Months) {
+          return false;
+        }
+      }
+
+      // Filter by total reviews completed (range)
+      if (filters.totalReviewsMin > 0 || filters.totalReviewsMax < 1000) {
+        const totalReviews =
+          reviewer.completed_reviews || reviewer.total_completions || 0;
+        if (
+          totalReviews < filters.totalReviewsMin ||
+          totalReviews > filters.totalReviewsMax
+        ) {
+          return false;
+        }
+      }
+
+      // Filter by assigned manuscripts
+      if (filters.assignedManuscriptsMax > 0) {
+        if (reviewer.current_review_load > filters.assignedManuscriptsMax) {
+          return false;
+        }
+      }
+
+      // Filter by publication recency
+      if (filters.publicationYearFrom > 0 || filters.publicationYearTo > 0) {
+        const pubYearFrom = reviewer.publication_year_from || 0;
+        const pubYearTo =
+          reviewer.publication_year_to || new Date().getFullYear();
+
+        if (
+          filters.publicationYearFrom > 0 &&
+          pubYearTo < filters.publicationYearFrom
+        ) {
+          return false;
+        }
+        if (
+          filters.publicationYearTo > 0 &&
+          pubYearFrom > filters.publicationYearTo
+        ) {
+          return false;
+        }
+      }
+
+      // Filter by number of published articles
+      if (filters.publishedArticlesMin > 0) {
+        const totalPublications = reviewer.total_publications || 0;
+        if (totalPublications < filters.publishedArticlesMin) {
+          return false;
+        }
+      }
+
+      // Note: publishedInJournal and inAuthorsGroup filters are disabled (coming soon)
 
       // Filter by search term
       if (searchTerm) {
@@ -364,13 +462,7 @@ export default function ReviewerInvitationDashboard() {
     });
 
     return filtered;
-  }, [
-    potentialReviewers,
-    reviewersWithStatus,
-    sortBy,
-    filterAvailability,
-    searchTerm,
-  ]);
+  }, [potentialReviewers, reviewersWithStatus, sortBy, filters, searchTerm]);
 
   const handleBackToArticle = () => {
     if (manuscriptId) {
@@ -873,17 +965,29 @@ export default function ReviewerInvitationDashboard() {
             <ReviewerSearchAndCards
               filteredReviewers={filteredReviewers}
               searchTerm={searchTerm}
-              sortBy={sortBy}
-              filterAvailability={filterAvailability}
+              filters={filters}
               loading={loading}
               onSearchChange={setSearchTerm}
-              onSortChange={setSortBy}
-              onAvailabilityChange={setFilterAvailability}
+              onFiltersChange={setFilters}
               onInviteReviewer={handleInviteReviewer}
               onAddToQueue={handleAddToQueue}
               onClearFilters={() => {
                 setSearchTerm("");
-                setFilterAvailability(["available"]);
+                setFilters({
+                  availability: ["available"],
+                  institutionalEmail: false,
+                  country: "",
+                  responseTimeMax: 0,
+                  reviewsLast12Months: 0,
+                  totalReviewsMin: 0,
+                  totalReviewsMax: 1000,
+                  assignedManuscriptsMax: 0,
+                  publicationYearFrom: 0,
+                  publicationYearTo: 0,
+                  publishedArticlesMin: 0,
+                  publishedInJournal: false,
+                  inAuthorsGroup: false,
+                });
               }}
               onViewProfile={openProfileDrawer}
             />

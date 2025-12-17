@@ -308,9 +308,6 @@ let theme = createTheme({
 });
 
 // Step 2: Extend theme with component overrides that can access theme values
-// supporting variables to help with calculations
-const SHRUNK_LABEL_SCALE = 0.875; // MUI default is 0.75 - which is too small for this design system
-const SHRUNK_LABEL_LINEHEIGHT = 1.5; // The line height of the shrunk label - we use this to translate the label and ensure it is vertically aligned with teh outlined input border. We need a lineheight larger than the font-size to prevent decenders from being hidden in the overflow
 
 theme = createTheme(theme, {
   components: {
@@ -547,82 +544,65 @@ theme = createTheme(theme, {
     },
 
     MuiInputLabel: {
+      defaultProps: {
+        // Force shrink to prevent label animation
+        shrink: true,
+      },
       styleOverrides: {
-        root: ({ theme }: { theme: Theme }) => ({
-          // Force all labels to be in shrunk position via CSS
-          // This ensures immediate application regardless of JS timing
-          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
-          transform: `translate(14px, ${
-            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16 // 16px is the default font size in MUI, so we multiply by SHRUNK_LABEL_SCALE and SHRUNK_LABEL_LINEHEIGHT to get the correct translation
-          }px) scale(${SHRUNK_LABEL_SCALE})`,
-          transformOrigin: "top left",
-          // Color-specific styles that change with color scheme
+        outlined: ({ theme }: { theme: Theme }) => ({
+          // Position label above and outside the input
+          position: "relative", // Change from absolute
+          transform: "none", // Remove transform entirely
+          marginBottom: theme.spacing(1), // Space between label and input
+          fontSize: "14px",
+          lineHeight: "16px",
+          fontWeight: theme.typography.fontWeightBold,
+
           ...theme.applyStyles("light", {
             color: theme.colorSchemes.light.palette.text.primary,
           }),
           ...theme.applyStyles("dark", {
             color: theme.colorSchemes.dark.palette.text.primary,
           }),
+
+          // Remove shrunk state styling since we're not using it
+          "&.MuiInputLabel-shrink": {
+            transform: "none",
+          },
         }),
-        outlined: {
-          // Ensure consistent styling for outlined variant
-          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
-          transform: `translate(14px, ${
-            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16
-          }px) scale(${SHRUNK_LABEL_SCALE})`,
-          transformOrigin: "top left",
-        },
-        filled: {
-          // Ensure consistent styling for filled variant
-          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
-          transform: `translate(12px, ${
-            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16 - 6 // Slightly different positioning for filled variant
-          }px) scale(${SHRUNK_LABEL_SCALE})`,
-          transformOrigin: "top left",
-        },
-        standard: {
-          // Ensure consistent styling for standard variant
-          lineHeight: SHRUNK_LABEL_LINEHEIGHT,
-          transform: `translate(0, ${
-            SHRUNK_LABEL_LINEHEIGHT * SHRUNK_LABEL_SCALE * -0.5 * 16 - 10 // Different positioning for standard variant
-          }px) scale(${SHRUNK_LABEL_SCALE})`,
-          transformOrigin: "top left",
-        },
       },
     },
 
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          // Styles for the root element
+          ".MuiOutlinedInput-notchedOutline": {
+            top: 0,
+          },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
             borderWidth: 2,
-            // increase width to compensate for low contrast between dark blue and default border color
           },
-          "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: undefined, // or use theme.palette.action.hover if you want MUI's default
-          },
+
+          backgroundColor: theme.palette.background.paper,
         },
         notchedOutline: ({ theme }: { theme: Theme }) => ({
-          // Color-specific styles that change with color scheme
           ...theme.applyStyles("light", {
             borderColor: theme.palette.text.secondary,
-            // reuse the secondary text color for the border in light mode only
           }),
-          // Dark mode uses default border color
+
+          // Remove the notch entirely since label is no longer inside
           "& legend": {
-            fontSize: `${SHRUNK_LABEL_SCALE}em`,
-            // increase the font size of the invisible label used to 'notch' the outline. This should match the MuiInput Label transformation value
-            maxWidth: "100%",
-            // Force the legend to always show (as if label is always shrunk)
-            // width: "auto",
-          },
-          // Always show the notch as if label is shrunk
-          "& legend > span": {
-            // paddingLeft: "5px",
-            // paddingRight: "5px",
+            display: "none", // Hide the legend element
           },
         }),
+      },
+    },
+
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          marginLeft: 0, // Align helper text with input border
+        },
       },
     },
 

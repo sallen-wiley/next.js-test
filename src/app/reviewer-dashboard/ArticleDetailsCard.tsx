@@ -72,7 +72,7 @@ export function ArticleDetailsCard({
 
   return (
     <Paper
-      elevation={3}
+      elevation={1}
       sx={{
         borderColor: "divider",
         overflow: "hidden",
