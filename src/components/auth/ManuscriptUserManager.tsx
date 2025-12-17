@@ -24,6 +24,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Stack,
   CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -210,162 +211,159 @@ export default function ManuscriptUserManager() {
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
         <CircularProgress />
+        <Typography color="text.secondary">
+          Loading manuscript assignments...
+        </Typography>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              Manuscript User Assignments
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Manage which users can access and manage specific manuscripts
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setDialogOpen(true)}
-          >
-            Add Assignment
-          </Button>
+    <Box sx={{ p: 3 }}>
+      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            User-Manuscript Assignments
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage which users can access and manage specific manuscripts
+          </Typography>
         </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setDialogOpen(true)}
+        >
+          Add Assignment
+        </Button>
+      </Stack>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-        {success && (
-          <Alert
-            severity="success"
-            sx={{ mb: 2 }}
-            onClose={() => setSuccess(null)}
-          >
-            {success}
-          </Alert>
-        )}
+      {success && (
+        <Alert
+          severity="success"
+          sx={{ mb: 2 }}
+          onClose={() => setSuccess(null)}
+        >
+          {success}
+        </Alert>
+      )}
 
-        <TableContainer>
-          <Table>
-            <TableHead>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>User</TableCell>
+              <TableCell>Manuscript</TableCell>
+              <TableCell>Journal</TableCell>
+              <TableCell>Role</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Assigned Date</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {assignments.length === 0 ? (
               <TableRow>
-                <TableCell>User</TableCell>
-                <TableCell>Manuscript</TableCell>
-                <TableCell>Journal</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Assigned Date</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell colSpan={7} align="center">
+                  <Typography color="text.secondary" sx={{ py: 3 }}>
+                    No assignments found. Click &quot;Add Assignment&quot; to
+                    get started.
+                  </Typography>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {assignments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    <Typography color="text.secondary" sx={{ py: 3 }}>
-                      No assignments found. Click &quot;Add Assignment&quot; to
-                      get started.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                assignments
-                  .filter((a) => a.is_active)
-                  .map((assignment) => (
-                    <TableRow key={assignment.id}>
-                      <TableCell>
-                        <Box>
-                          <Typography variant="body2" fontWeight="medium">
-                            {assignment.user_profiles.full_name ||
-                              assignment.user_profiles.email}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {assignment.user_profiles.email}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography
-                          variant="body2"
-                          noWrap
-                          sx={{ maxWidth: 300 }}
+            ) : (
+              assignments
+                .filter((a) => a.is_active)
+                .map((assignment) => (
+                  <TableRow key={assignment.id}>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="body2" fontWeight="medium">
+                          {assignment.user_profiles.full_name ||
+                            assignment.user_profiles.email}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {assignment.user_profiles.email}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
+                        {assignment.manuscripts.title}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {assignment.manuscripts.journal}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={assignment.role}
+                        color={getRoleColor(assignment.role)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={assignment.manuscripts.status}
+                        variant="outlined"
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {new Date(assignment.assigned_date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Edit Role">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenEditDialog(assignment)}
                         >
-                          {assignment.manuscripts.title}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary">
-                          {assignment.manuscripts.journal}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={assignment.role}
-                          color={getRoleColor(assignment.role)}
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Remove Assignment">
+                        <IconButton
                           size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={assignment.manuscripts.status}
-                          variant="outlined"
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {new Date(
-                          assignment.assigned_date
-                        ).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Edit Role">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleOpenEditDialog(assignment)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Remove Assignment">
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() =>
-                              handleRemoveAssignment(
-                                assignment.user_id,
-                                assignment.manuscript_id,
-                                assignment.user_profiles.full_name ||
-                                  assignment.user_profiles.email,
-                                assignment.manuscripts.title
-                              )
-                            }
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+                          color="error"
+                          onClick={() =>
+                            handleRemoveAssignment(
+                              assignment.user_id,
+                              assignment.manuscript_id,
+                              assignment.user_profiles.full_name ||
+                                assignment.user_profiles.email,
+                              assignment.manuscripts.title
+                            )
+                          }
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {/* Add Assignment Dialog */}
       <Dialog

@@ -341,22 +341,23 @@ figma.connect(Component, "figma-url", {
 ### Core Tables
 
 #### manuscripts
-- **Purpose**: Manuscript submissions with metadata
+- **Purpose**: Manuscript submissions with metadata (18 columns - verify with schema export script)
 - **Key Fields**: id (uuid), title (text), authors (text[]), journal (text), submission_date (timestamptz), doi (text), abstract (text), keywords (text[]), subject_area (text), status (text), system_id (uuid), submission_id (uuid), custom_id (text), article_type (text), version (integer), manuscript_tags (text[])
 - **Status Values**: 'submitted', 'pending_editor_assignment', 'awaiting_reviewers', 'under_review', 'reviews_in_progress', 'reviews_complete', 'revision_required', 'minor_revision', 'major_revision', 'conditionally_accepted', 'accepted', 'rejected', 'desk_rejected', 'withdrawn'
 - **Notable**: No editor_id column (removed in schema update), version must be > 0
 - **RLS**: Enabled (all authenticated users)
 
 #### potential_reviewers
-- **Purpose**: Reviewer database with expertise and metrics (43 columns total)
+- **Purpose**: Reviewer database with expertise and metrics (40 columns total - verify with schema export script)
 - **Key Fields**: id (uuid), name (text), email (text UNIQUE), affiliation (text), expertise_areas (text[]), availability_status (text), current_review_load (int), max_review_capacity (int), average_review_time_days (int), h_index (int), orcid_id (text), is_board_member (bool), previous_reviewer (bool), total_acceptances (int), total_invitations (int)
 - **Extended Fields**: number_of_reviews, completed_reviews, currently_reviewing, citation_count, publication_year_from, publication_year_to, total_invitations, total_acceptances, average_response_time_hours
 - **Availability Values**: 'available', 'busy', 'unavailable', 'sabbatical'
+- **Note**: conflicts_of_interest field is in reviewer_manuscript_matches table, NOT this table
 - **RLS**: Enabled (all authenticated users)
 
 #### reviewer_manuscript_matches
 - **Purpose**: AI-generated match scores linking reviewers to manuscripts
-- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), match_score (numeric 0-1), calculated_at
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), reviewer_id (uuid FK), match_score (numeric 0-1), calculated_at (timestamptz), is_initial_suggestion (bool), conflicts_of_interest (text)
 - **Constraint**: Unique (manuscript_id, reviewer_id)
 - **Usage**: Powers "Suggested Reviewers" tab - join with potential_reviewers to get reviewer details
 - **Important**: match_score is stored as 0-1 (e.g., 0.95) but should be displayed as percentage (95%)

@@ -1,9 +1,27 @@
 # Database Schema Export
 
-**Last Updated:** 2025-12-04 (Verified from live Supabase instance)
+⚠️ **This document is DEPRECATED and may be outdated.**
 
-This document contains the current Supabase database schema exported directly from the database.
-Use this as a reference for accurate column names, types, and constraints.
+## Get Current Schema
+
+**Always use the schema export script for up-to-date information:**
+
+```bash
+node database/reviewer-ingestion/export-schema.js
+```
+
+This generates timestamped JSON exports in `database/schema-exports/` with complete metadata including:
+
+- All column names, types, and constraints
+- Foreign key relationships
+- RLS policies
+- Row counts and indexes
+
+**Latest exports:** See `database/schema-exports/` directory
+
+---
+
+## Legacy Documentation (DO NOT TRUST - Use export script instead)
 
 ## Table Summary
 

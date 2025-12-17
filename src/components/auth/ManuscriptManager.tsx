@@ -28,6 +28,8 @@ import {
   Autocomplete,
   Checkbox,
   ListItemText,
+  Stack,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -60,6 +62,10 @@ interface FormData {
   version?: number;
   manuscript_tags: ManuscriptTag[];
   editorIds: string[];
+  system_id?: string;
+  submission_id?: string;
+  custom_id?: string;
+  article_type?: string;
 }
 
 const emptyFormData: FormData = {
@@ -75,6 +81,10 @@ const emptyFormData: FormData = {
   version: 1,
   manuscript_tags: [],
   editorIds: [],
+  system_id: undefined,
+  submission_id: undefined,
+  custom_id: undefined,
+  article_type: undefined,
 };
 
 function toDateInputValue(value: string): string {
@@ -156,6 +166,14 @@ export default function ManuscriptManager() {
         version: manuscript.version || 1,
         manuscript_tags: manuscript.manuscript_tags || [],
         editorIds: manuscript.assignedEditorIds || [],
+        system_id: (manuscript as unknown as Record<string, unknown>)
+          .system_id as string | undefined,
+        submission_id: (manuscript as unknown as Record<string, unknown>)
+          .submission_id as string | undefined,
+        custom_id: (manuscript as unknown as Record<string, unknown>)
+          .custom_id as string | undefined,
+        article_type: (manuscript as unknown as Record<string, unknown>)
+          .article_type as string | undefined,
       });
     } else {
       setEditingManuscript(null);
@@ -287,25 +305,36 @@ export default function ManuscriptManager() {
       keywords: prev.keywords.filter((keyword) => keyword !== keywordToDelete),
     }));
   }
+
   if (loading) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Typography>Loading manuscripts...</Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <CircularProgress />
+        <Typography color="text.secondary">Loading manuscripts...</Typography>
       </Box>
     );
   }
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h5">Manuscript Database</Typography>
+      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            Manuscript Database
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage manuscript submissions and metadata
+          </Typography>
+        </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -313,7 +342,7 @@ export default function ManuscriptManager() {
         >
           Add Manuscript
         </Button>
-      </Box>
+      </Stack>
 
       <TableContainer component={Paper}>
         <Table>
@@ -682,7 +711,58 @@ export default function ManuscriptManager() {
                   setFormData({ ...formData, doi: e.target.value || undefined })
                 }
                 fullWidth
-                placeholder="10.1000/example.doi"
+              />
+
+              <TextField
+                label="System ID (Optional)"
+                value={formData.system_id || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    system_id: e.target.value || undefined,
+                  })
+                }
+                fullWidth
+                helperText="Internal system identifier (UUID)"
+              />
+
+              <TextField
+                label="Submission ID (Optional)"
+                value={formData.submission_id || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    submission_id: e.target.value || undefined,
+                  })
+                }
+                fullWidth
+                helperText="External submission system identifier (UUID)"
+              />
+
+              <TextField
+                label="Custom ID (Optional)"
+                value={formData.custom_id || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    custom_id: e.target.value || undefined,
+                  })
+                }
+                fullWidth
+                helperText="Custom manuscript identifier"
+              />
+
+              <TextField
+                label="Article Type (Optional)"
+                value={formData.article_type || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    article_type: e.target.value || undefined,
+                  })
+                }
+                fullWidth
+                helperText="e.g., Research Article, Review, Case Study"
               />
             </Box>
           </DialogContent>

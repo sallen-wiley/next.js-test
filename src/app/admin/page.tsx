@@ -6,10 +6,13 @@ import {
   Container,
   Typography,
   Alert,
-  Button,
   Paper,
-  Tabs,
-  Tab,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  CircularProgress,
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PeopleIcon from "@mui/icons-material/People";
@@ -19,6 +22,9 @@ import PsychologyIcon from "@mui/icons-material/Psychology";
 import GroupsIcon from "@mui/icons-material/Groups";
 import DescriptionIcon from "@mui/icons-material/Description";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import QueueIcon from "@mui/icons-material/Queue";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import AdminUserManager from "@/components/auth/AdminUserManager";
 import RoleManager from "@/components/auth/RoleManager";
 import ManuscriptUserManager from "@/components/auth/ManuscriptUserManager";
@@ -26,14 +32,18 @@ import ReviewerMatchManager from "@/components/auth/ReviewerMatchManager";
 import ReviewerManager from "@/components/auth/ReviewerManager";
 import ManuscriptManager from "@/components/auth/ManuscriptManager";
 import ReviewInvitationManager from "@/components/auth/ReviewInvitationManager";
+import InvitationQueueManager from "@/components/auth/InvitationQueueManager";
+import PublicationsManager from "@/components/auth/PublicationsManager";
+import RetractionsManager from "@/components/auth/RetractionsManager";
 import { useRoleAccess } from "@/hooks/useRoles";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 
+const DRAWER_WIDTH = 280;
+
 export default function AdminPage() {
-  const [showAdmin, setShowAdmin] = useState(false);
   const [authEnabled, setAuthEnabled] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const { hasPermission, profile } = useRoleAccess();
+  const { hasPermission, profile, loading } = useRoleAccess();
 
   // Configure global header
   useHeaderConfig({
@@ -78,15 +88,31 @@ export default function AdminPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "60vh",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          <CircularProgress size={48} />
+          <Typography variant="body1" color="text.secondary">
+            Loading admin dashboard...
+          </Typography>
+        </Box>
+      </Container>
+    );
+  }
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ py: 4 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" gutterBottom>
-          Admin Dashboard
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          Manage users, roles, and system settings
-        </Typography>
         {profile && (
           <Alert severity="info" sx={{ mt: 2 }}>
             Logged in as: <strong>{profile.full_name || profile.email}</strong>{" "}
@@ -95,88 +121,140 @@ export default function AdminPage() {
         )}
       </Box>
 
-      {!showAdmin ? (
-        <Paper sx={{ p: 4, textAlign: "center" }}>
-          <SettingsIcon sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
-          <Typography variant="h5" gutterBottom>
-            Administration Tools
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3 }} color="text.secondary">
-            Access user management, role assignment, and system administration
-            tools.
-          </Typography>
+      {!hasPermission("canManageUsers") && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          You don&apos;t have permission to access admin tools. Contact an
+          administrator to request access.
+        </Alert>
+      )}
 
-          {hasPermission("canManageUsers") ? (
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => setShowAdmin(true)}
-              startIcon={<SettingsIcon />}
+      <Box sx={{ display: "flex", gap: 3 }}>
+        {/* Left Navigation Menu */}
+        <Paper
+          sx={{
+            width: DRAWER_WIDTH,
+            flexShrink: 0,
+            height: "fit-content",
+            position: "sticky",
+            top: 16,
+          }}
+        >
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+            <Typography variant="h6" fontWeight={600}>
+              Admin Tools
+            </Typography>
+          </Box>
+          <List component="nav">
+            <ListItemButton
+              selected={activeTab === 0}
+              onClick={() => setActiveTab(0)}
             >
-              Access Admin Tools
-            </Button>
-          ) : (
-            <Alert severity="warning">
-              You don&apos;t have permission to access admin tools. Contact an
-              administrator to request access.
-            </Alert>
-          )}
+              <ListItemIcon>
+                <PersonAddIcon />
+              </ListItemIcon>
+              <ListItemText primary="User Management" />
+            </ListItemButton>
+
+            <ListItemButton
+              selected={activeTab === 1}
+              onClick={() => setActiveTab(1)}
+            >
+              <ListItemIcon>
+                <PeopleIcon />
+              </ListItemIcon>
+              <ListItemText primary="Role Management" />
+            </ListItemButton>
+
+            <Divider sx={{ my: 1 }} />
+
+            <ListItemButton
+              selected={activeTab === 2}
+              onClick={() => setActiveTab(2)}
+            >
+              <ListItemIcon>
+                <ArticleIcon />
+              </ListItemIcon>
+              <ListItemText primary="Manuscript Assignments" />
+            </ListItemButton>
+
+            <ListItemButton
+              selected={activeTab === 3}
+              onClick={() => setActiveTab(3)}
+            >
+              <ListItemIcon>
+                <PsychologyIcon />
+              </ListItemIcon>
+              <ListItemText primary="Reviewer Matches" />
+            </ListItemButton>
+
+            <ListItemButton
+              selected={activeTab === 4}
+              onClick={() => setActiveTab(4)}
+            >
+              <ListItemIcon>
+                <GroupsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Reviewer Database" />
+            </ListItemButton>
+
+            <ListItemButton
+              selected={activeTab === 5}
+              onClick={() => setActiveTab(5)}
+            >
+              <ListItemIcon>
+                <DescriptionIcon />
+              </ListItemIcon>
+              <ListItemText primary="Manuscript Database" />
+            </ListItemButton>
+
+            <Divider sx={{ my: 1 }} />
+
+            <ListItemButton
+              selected={activeTab === 6}
+              onClick={() => setActiveTab(6)}
+            >
+              <ListItemIcon>
+                <MailOutlineIcon />
+              </ListItemIcon>
+              <ListItemText primary="Review Invitations" />
+            </ListItemButton>
+
+            <ListItemButton
+              selected={activeTab === 7}
+              onClick={() => setActiveTab(7)}
+            >
+              <ListItemIcon>
+                <QueueIcon />
+              </ListItemIcon>
+              <ListItemText primary="Invitation Queue" />
+            </ListItemButton>
+
+            <Divider sx={{ my: 1 }} />
+
+            <ListItemButton
+              selected={activeTab === 8}
+              onClick={() => setActiveTab(8)}
+            >
+              <ListItemIcon>
+                <MenuBookIcon />
+              </ListItemIcon>
+              <ListItemText primary="Publications" />
+            </ListItemButton>
+
+            <ListItemButton
+              selected={activeTab === 9}
+              onClick={() => setActiveTab(9)}
+            >
+              <ListItemIcon>
+                <ReportProblemIcon />
+              </ListItemIcon>
+              <ListItemText primary="Retractions" />
+            </ListItemButton>
+          </List>
         </Paper>
-      ) : (
-        <Box>
-          <Paper sx={{ mb: 3 }}>
-            <Tabs
-              value={activeTab}
-              onChange={(_, newValue) => setActiveTab(newValue)}
-              variant="scrollable"
-              scrollButtons="auto"
-              allowScrollButtonsMobile
-              sx={{
-                borderBottom: 1,
-                borderColor: "divider",
-                "& .MuiTabs-scrollButtons.Mui-disabled": {
-                  opacity: 0.3,
-                },
-              }}
-            >
-              <Tab
-                icon={<PersonAddIcon />}
-                label="User Management"
-                iconPosition="start"
-              />
-              <Tab
-                icon={<PeopleIcon />}
-                label="Role Management"
-                iconPosition="start"
-              />
-              <Tab
-                icon={<ArticleIcon />}
-                label="Manuscript Assignments"
-                iconPosition="start"
-              />
-              <Tab
-                icon={<PsychologyIcon />}
-                label="Reviewer Matches"
-                iconPosition="start"
-              />
-              <Tab
-                icon={<GroupsIcon />}
-                label="Reviewer Database"
-                iconPosition="start"
-              />
-              <Tab
-                icon={<DescriptionIcon />}
-                label="Manuscript Database"
-                iconPosition="start"
-              />
-              <Tab
-                icon={<MailOutlineIcon />}
-                label="Review Invitations"
-                iconPosition="start"
-              />
-            </Tabs>
-          </Paper>
 
+        {/* Main Content Area */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           {activeTab === 0 && <AdminUserManager />}
           {activeTab === 1 && <RoleManager />}
           {activeTab === 2 && <ManuscriptUserManager />}
@@ -184,8 +262,11 @@ export default function AdminPage() {
           {activeTab === 4 && <ReviewerManager />}
           {activeTab === 5 && <ManuscriptManager />}
           {activeTab === 6 && <ReviewInvitationManager />}
+          {activeTab === 7 && <InvitationQueueManager />}
+          {activeTab === 8 && <PublicationsManager />}
+          {activeTab === 9 && <RetractionsManager />}
         </Box>
-      )}
+      </Box>
     </Container>
   );
 }

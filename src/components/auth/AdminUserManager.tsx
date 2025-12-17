@@ -20,6 +20,7 @@ import {
   DialogActions,
   Chip,
   IconButton,
+  Stack,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -134,15 +135,15 @@ export default function AdminUserManager() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h4">User Account Management</Typography>
+      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            User Account Management
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Create and manage test user accounts
+          </Typography>
+        </Box>
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
@@ -160,7 +161,8 @@ export default function AdminUserManager() {
             Create Test User
           </Button>
         </Box>
-      </Box>{" "}
+      </Stack>
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}

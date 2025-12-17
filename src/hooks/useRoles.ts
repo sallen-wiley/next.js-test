@@ -140,7 +140,7 @@ export function useUserProfile() {
 }
 
 export function useRoleAccess() {
-  const { profile, role, permissions } = useUserProfile();
+  const { profile, role, permissions, loading } = useUserProfile();
 
   const hasPermission = (permission: keyof RolePermissions): boolean => {
     return permissions[permission];
@@ -164,6 +164,7 @@ export function useRoleAccess() {
     profile,
     role,
     permissions,
+    loading,
     hasPermission,
     requiresRole,
     isAdmin,

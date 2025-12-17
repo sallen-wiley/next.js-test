@@ -64,8 +64,37 @@ export interface PotentialReviewer {
   average_review_time_days: number;
   recent_publications: number; // publications in last 2 years
   h_index?: number;
+  orcid_id?: string; // ORCID identifier
   last_review_completed?: string; // ISO date
   availability_status: "available" | "busy" | "unavailable" | "sabbatical";
+
+  // Extended fields from database
+  created_at?: string;
+  updated_at?: string;
+  external_id?: string;
+  pkg_id?: string;
+  given_names?: string;
+  surname?: string;
+  aff_ror_id?: string;
+  profile_url?: string;
+  reviewer_type?: string;
+  is_board_member?: boolean;
+  previous_reviewer?: boolean;
+  has_publications_saved?: boolean;
+  number_of_reviews?: number;
+  completed_reviews?: number;
+  currently_reviewing?: number;
+  total_publications?: number;
+  citation_count?: number;
+  publication_year_from?: number;
+  publication_year_to?: number;
+  publication_count_last_year?: number;
+  last_publication_date?: string;
+  total_invitations?: number;
+  total_acceptances?: number;
+  total_completions?: number;
+  average_response_time_hours?: number;
+  last_activity_date?: string;
 }
 
 export interface ReviewInvitation {

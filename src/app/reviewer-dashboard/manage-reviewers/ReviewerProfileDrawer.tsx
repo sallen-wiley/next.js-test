@@ -231,12 +231,11 @@ export default function ReviewerProfileDrawer({
           alignItems: "flex-start",
           justifyContent: "space-between",
           p: 3,
-          pb: 5,
           borderBottom: 1,
           borderColor: "divider",
         }}
       >
-        <Typography variant="h3" sx={{ flexGrow: 1 }}>
+        <Typography variant="h4" sx={{ flexGrow: 1 }}>
           Reviewer Details
         </Typography>
         <IconButton onClick={onClose} size="small" sx={{ mt: -1, mr: -1 }}>

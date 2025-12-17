@@ -26,6 +26,7 @@ import {
   Alert,
   Stack,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -60,6 +61,9 @@ export default function ReviewInvitationManager() {
       .split("T")[0],
     status: "pending",
     response_date: "",
+    queue_position: undefined as number | undefined,
+    invitation_round: 1,
+    reminder_count: 0,
     estimated_completion_date: "",
     invitation_expiration_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
       .toISOString()
@@ -137,6 +141,14 @@ export default function ReviewInvitationManager() {
         response_date: invitation.response_date
           ? new Date(invitation.response_date).toISOString().split("T")[0]
           : "",
+        queue_position: (invitation as unknown as Record<string, unknown>)
+          .queue_position as number | undefined,
+        invitation_round:
+          ((invitation as unknown as Record<string, unknown>)
+            .invitation_round as number) || 1,
+        reminder_count:
+          ((invitation as unknown as Record<string, unknown>)
+            .reminder_count as number) || 0,
         estimated_completion_date: invitation.estimated_completion_date
           ? new Date(invitation.estimated_completion_date)
               .toISOString()
@@ -165,6 +177,9 @@ export default function ReviewInvitationManager() {
           .split("T")[0],
         status: "pending",
         response_date: "",
+        queue_position: undefined,
+        invitation_round: 1,
+        reminder_count: 0,
         estimated_completion_date: "",
         invitation_expiration_date: new Date(
           Date.now() + 14 * 24 * 60 * 60 * 1000
@@ -198,6 +213,9 @@ export default function ReviewInvitationManager() {
         response_date: formData.response_date
           ? new Date(formData.response_date).toISOString()
           : null,
+        queue_position: formData.queue_position || null,
+        invitation_round: formData.invitation_round,
+        reminder_count: formData.reminder_count,
         estimated_completion_date: formData.estimated_completion_date || null,
         invitation_expiration_date: formData.invitation_expiration_date
           ? new Date(formData.invitation_expiration_date).toISOString()
@@ -262,120 +280,134 @@ export default function ReviewInvitationManager() {
     }
   };
 
-  if (loading) return <Typography>Loading...</Typography>;
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <CircularProgress />
+        <Typography color="text.secondary">Loading invitations...</Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Box>
-      <Paper sx={{ p: 3 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 3 }}
+    <Box sx={{ p: 3 }}>
+      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            Review Invitations
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage reviewer invitations and responses
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
         >
-          <Typography variant="h5">Review Invitations Manager</Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Add Invitation
-          </Button>
-        </Stack>
+          Add Invitation
+        </Button>
+      </Stack>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Manuscript</TableCell>
-                <TableCell>Reviewer</TableCell>
-                <TableCell>Invited Date</TableCell>
-                <TableCell>Due Date</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Response Date</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {invitations.map((invitation) => {
-                const manuscript = manuscripts.find(
-                  (m) => m.id === invitation.manuscript_id
-                );
-                return (
-                  <TableRow key={invitation.id}>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        noWrap
-                        sx={{
-                          maxWidth: 200,
-                          color: "primary.main",
-                          cursor: "pointer",
-                          "&:hover": {
-                            textDecoration: "underline",
-                          },
-                        }}
-                        onClick={() =>
-                          router.push(
-                            `/reviewer-dashboard/manage-reviewers?manuscriptId=${invitation.manuscript_id}`
-                          )
-                        }
-                      >
-                        {manuscript?.title || "Unknown Manuscript"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{invitation.reviewer_name}</TableCell>
-                    <TableCell>
-                      {invitation.invited_date
-                        ? new Date(invitation.invited_date).toLocaleDateString()
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {invitation.due_date
-                        ? new Date(invitation.due_date).toLocaleDateString()
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={invitation.status}
-                        color={getStatusColor(invitation.status || "pending")}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {invitation.response_date
-                        ? new Date(
-                            invitation.response_date
-                          ).toLocaleDateString()
-                        : "—"}
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleOpenDialog(invitation)}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(invitation.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Manuscript</TableCell>
+              <TableCell>Reviewer</TableCell>
+              <TableCell>Invited Date</TableCell>
+              <TableCell>Due Date</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Response Date</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {invitations.map((invitation) => {
+              const manuscript = manuscripts.find(
+                (m) => m.id === invitation.manuscript_id
+              );
+              return (
+                <TableRow key={invitation.id}>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      noWrap
+                      sx={{
+                        maxWidth: 200,
+                        color: "primary.main",
+                        cursor: "pointer",
+                        "&:hover": {
+                          textDecoration: "underline",
+                        },
+                      }}
+                      onClick={() =>
+                        router.push(
+                          `/reviewer-dashboard/manage-reviewers?manuscriptId=${invitation.manuscript_id}`
+                        )
+                      }
+                    >
+                      {manuscript?.title || "Unknown Manuscript"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{invitation.reviewer_name}</TableCell>
+                  <TableCell>
+                    {invitation.invited_date
+                      ? new Date(invitation.invited_date).toLocaleDateString()
+                      : "—"}
+                  </TableCell>
+                  <TableCell>
+                    {invitation.due_date
+                      ? new Date(invitation.due_date).toLocaleDateString()
+                      : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={invitation.status}
+                      color={getStatusColor(invitation.status || "pending")}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {invitation.response_date
+                      ? new Date(invitation.response_date).toLocaleDateString()
+                      : "—"}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenDialog(invitation)}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(invitation.id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {/* Add/Edit Dialog */}
       <Dialog
@@ -473,6 +505,50 @@ export default function ReviewInvitationManager() {
               InputLabelProps={{ shrink: true }}
               fullWidth
             />
+
+            <Stack direction="row" spacing={2}>
+              <TextField
+                label="Queue Position"
+                type="number"
+                value={formData.queue_position || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    queue_position: e.target.value
+                      ? parseInt(e.target.value)
+                      : undefined,
+                  })
+                }
+                fullWidth
+                helperText="Position in invitation queue (optional)"
+              />
+              <TextField
+                label="Invitation Round"
+                type="number"
+                value={formData.invitation_round}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    invitation_round: parseInt(e.target.value) || 1,
+                  })
+                }
+                fullWidth
+                inputProps={{ min: 1 }}
+              />
+              <TextField
+                label="Reminder Count"
+                type="number"
+                value={formData.reminder_count}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    reminder_count: parseInt(e.target.value) || 0,
+                  })
+                }
+                fullWidth
+                inputProps={{ min: 0 }}
+              />
+            </Stack>
 
             <TextField
               label="Estimated Completion Date"

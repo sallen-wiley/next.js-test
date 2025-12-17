@@ -17,8 +17,6 @@ import {
   Card,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import QueueIcon from "@mui/icons-material/Queue";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import type { PotentialReviewerWithMatch } from "@/lib/supabase";

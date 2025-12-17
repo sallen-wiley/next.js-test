@@ -24,9 +24,13 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  CircularProgress,
   LinearProgress,
   Slider,
+  TextField,
+  Stack,
+  CircularProgress,
+  Autocomplete,
+  Snackbar,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -37,7 +41,6 @@ import {
   getAllReviewers,
   getAllReviewerMatches,
   addReviewerMatch,
-  updateReviewerMatchScore,
   removeReviewerMatch,
 } from "@/services/dataService";
 import type { Manuscript, PotentialReviewer } from "@/lib/supabase";
@@ -48,6 +51,8 @@ interface ReviewerMatch {
   reviewer_id: string;
   match_score: number;
   calculated_at: string;
+  is_initial_suggestion: boolean;
+  conflicts_of_interest: string | null;
   potential_reviewers: {
     name: string;
     email: string;
@@ -89,7 +94,9 @@ export default function ReviewerMatchManager() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedManuscriptId, setSelectedManuscriptId] = useState("");
   const [selectedReviewerId, setSelectedReviewerId] = useState("");
-  const [matchScore, setMatchScore] = useState(0.75);
+  const [matchScore, setMatchScore] = useState(0.75); // 0-1 scale
+  const [isInitialSuggestion, setIsInitialSuggestion] = useState(false);
+  const [conflictsOfInterest, setConflictsOfInterest] = useState("");
   const [editingMatch, setEditingMatch] = useState<ReviewerMatch | null>(null);
 
   useEffect(() => {
@@ -131,15 +138,21 @@ export default function ReviewerMatchManager() {
       await addReviewerMatch(
         selectedManuscriptId,
         selectedReviewerId,
-        matchScore
+        matchScore, // Already in 0-1 scale
+        isInitialSuggestion,
+        conflictsOfInterest
       );
       setSuccess(
-        `Reviewer match added with score ${matchScore}. This reviewer will now appear in the "Suggested Reviewers" tab.`
+        `Reviewer match added with score ${Math.round(
+          matchScore * 100
+        )}%. This reviewer will now appear in the "Suggested Reviewers" tab.`
       );
       setDialogOpen(false);
       setSelectedManuscriptId("");
       setSelectedReviewerId("");
       setMatchScore(0.75);
+      setIsInitialSuggestion(false);
+      setConflictsOfInterest("");
       await loadData();
     } catch (err: unknown) {
       console.error("Error adding match:", err);
@@ -176,6 +189,8 @@ export default function ReviewerMatchManager() {
   const handleOpenEditDialog = (match: ReviewerMatch) => {
     setEditingMatch(match);
     setMatchScore(match.match_score);
+    setIsInitialSuggestion(match.is_initial_suggestion);
+    setConflictsOfInterest(match.conflicts_of_interest || "");
     setEditDialogOpen(true);
   };
 
@@ -186,226 +201,245 @@ export default function ReviewerMatchManager() {
     setSuccess(null);
 
     try {
-      await updateReviewerMatchScore(editingMatch.id, matchScore);
-      setSuccess("Match score updated successfully");
+      const { updateReviewerMatch } = await import("@/services/dataService");
+      await updateReviewerMatch(
+        editingMatch.id,
+        matchScore,
+        isInitialSuggestion,
+        conflictsOfInterest
+      );
+      setSuccess("Match updated successfully");
       setEditDialogOpen(false);
       setEditingMatch(null);
       await loadData();
     } catch (err: unknown) {
-      console.error("Error updating score:", err);
-      setError(err instanceof Error ? err.message : "Failed to update score");
+      console.error("Error updating match:", err);
+      setError(err instanceof Error ? err.message : "Failed to update match");
     }
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
         <CircularProgress />
+        <Typography color="text.secondary">
+          Loading reviewer matches...
+        </Typography>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              Reviewer-Manuscript Match Suggestions
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Manage which reviewers appear as suggestions for specific
-              manuscripts
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setDialogOpen(true)}
-          >
-            Add Match
-          </Button>
-        </Box>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        {success && (
-          <Alert
-            severity="success"
-            sx={{ mb: 2 }}
-            onClose={() => setSuccess(null)}
-          >
-            {success}
-          </Alert>
-        )}
-
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <strong>Note:</strong> These matches control which reviewers appear in
-          the &quot;Suggested Reviewers&quot; tab. Higher scores appear first in
-          the list.
-        </Alert>
-
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Reviewer</TableCell>
-                <TableCell>Manuscript</TableCell>
-                <TableCell>Journal</TableCell>
-                <TableCell>Expertise Match</TableCell>
-                <TableCell>Match Score</TableCell>
-                <TableCell>Added</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {matches.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    <Typography color="text.secondary" sx={{ py: 3 }}>
-                      No reviewer matches found. Click &quot;Add Match&quot; to
-                      create suggested reviewers.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                matches.map((match) => (
-                  <TableRow key={match.id}>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium">
-                          {match.potential_reviewers.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {match.potential_reviewers.email}
-                        </Typography>
-                        <Typography variant="caption" display="block">
-                          {match.potential_reviewers.affiliation}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                        {match.manuscripts.title}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {match.manuscripts.journal}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ maxWidth: 200 }}>
-                        {match.potential_reviewers.expertise_areas
-                          .slice(0, 2)
-                          .map((area, idx) => (
-                            <Chip
-                              key={idx}
-                              label={area}
-                              size="small"
-                              sx={{ mr: 0.5, mb: 0.5 }}
-                            />
-                          ))}
-                        {match.potential_reviewers.expertise_areas.length >
-                          2 && (
-                          <Typography variant="caption" color="text.secondary">
-                            +
-                            {match.potential_reviewers.expertise_areas.length -
-                              2}{" "}
-                            more
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ minWidth: 120 }}>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            mb: 0.5,
-                          }}
-                        >
-                          <Typography
-                            variant="h6"
-                            color={`${getScoreColor(match.match_score)}.main`}
-                          >
-                            {Math.round(match.match_score * 100)}%
-                          </Typography>
-                          <TrendingUpIcon
-                            fontSize="small"
-                            color={getScoreColor(match.match_score)}
-                          />
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={match.match_score * 100}
-                          color={getScoreColor(match.match_score)}
-                          sx={{ mb: 0.5 }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          {getScoreLabel(match.match_score)}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(match.calculated_at).toLocaleDateString()}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Edit Score">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenEditDialog(match)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Remove Match">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() =>
-                            handleRemoveMatch(
-                              match.id,
-                              match.potential_reviewers.name,
-                              match.manuscripts.title
-                            )
-                          }
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        <Box
-          sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            <strong>Total Matches:</strong> {matches.length} reviewer-manuscript
-            pairings
+    <Box sx={{ p: 3 }}>
+      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>
+            Reviewer-Manuscript Matches
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage which reviewers appear as suggestions for specific
+            manuscripts
           </Typography>
         </Box>
-      </Paper>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setDialogOpen(true)}
+        >
+          Add Match
+        </Button>
+      </Stack>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity="error"
+          onClose={() => setError(null)}
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          onClose={() => setSuccess(null)}
+          sx={{ width: "100%" }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
+
+      <Alert severity="info" sx={{ mb: 2 }}>
+        <strong>Note:</strong> These matches control which reviewers appear in
+        the &quot;Suggested Reviewers&quot; tab. Higher scores appear first in
+        the list.
+      </Alert>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Reviewer</TableCell>
+              <TableCell>Manuscript</TableCell>
+              <TableCell>Journal</TableCell>
+              <TableCell>Expertise Match</TableCell>
+              <TableCell>Match Score</TableCell>
+              <TableCell>Added</TableCell>
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {matches.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography color="text.secondary" sx={{ py: 3 }}>
+                    No reviewer matches found. Click &quot;Add Match&quot; to
+                    create suggested reviewers.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              matches.map((match) => (
+                <TableRow key={match.id}>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {match.potential_reviewers.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {match.potential_reviewers.email}
+                      </Typography>
+                      <Typography variant="caption" display="block">
+                        {match.potential_reviewers.affiliation}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
+                      {match.manuscripts.title}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {match.manuscripts.journal}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ maxWidth: 200 }}>
+                      {match.potential_reviewers.expertise_areas
+                        .slice(0, 2)
+                        .map((area, idx) => (
+                          <Chip
+                            key={idx}
+                            label={area}
+                            size="small"
+                            sx={{ mr: 0.5, mb: 0.5 }}
+                          />
+                        ))}
+                      {match.potential_reviewers.expertise_areas.length > 2 && (
+                        <Typography variant="caption" color="text.secondary">
+                          +
+                          {match.potential_reviewers.expertise_areas.length - 2}{" "}
+                          more
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ minWidth: 120 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mb: 0.5,
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          color={`${getScoreColor(match.match_score)}.main`}
+                        >
+                          {Math.round(match.match_score * 100)}%
+                        </Typography>
+                        <TrendingUpIcon
+                          fontSize="small"
+                          color={getScoreColor(match.match_score)}
+                        />
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={match.match_score * 100}
+                        color={getScoreColor(match.match_score)}
+                        sx={{ mb: 0.5 }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {getScoreLabel(match.match_score)}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(match.calculated_at).toLocaleDateString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit Score">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenEditDialog(match)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Remove Match">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() =>
+                          handleRemoveMatch(
+                            match.id,
+                            match.potential_reviewers.name,
+                            match.manuscripts.title
+                          )
+                        }
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1 }}>
+        <Typography variant="caption" color="text.secondary">
+          <strong>Total Matches:</strong> {matches.length} reviewer-manuscript
+          pairings
+        </Typography>
+      </Box>
 
       {/* Add Match Dialog */}
       <Dialog
@@ -415,22 +449,36 @@ export default function ReviewerMatchManager() {
         fullWidth
       >
         <DialogTitle>Add Reviewer Match</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ overflowX: "hidden" }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-            <FormControl fullWidth>
-              <InputLabel>Manuscript</InputLabel>
-              <Select
-                value={selectedManuscriptId}
-                onChange={(e) => setSelectedManuscriptId(e.target.value)}
-                label="Manuscript"
-              >
-                {manuscripts.map((manuscript) => (
-                  <MenuItem key={manuscript.id} value={manuscript.id}>
-                    {manuscript.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Autocomplete
+              options={manuscripts}
+              getOptionLabel={(option) => option.title}
+              value={
+                manuscripts.find((m) => m.id === selectedManuscriptId) || null
+              }
+              onChange={(_, newValue) =>
+                setSelectedManuscriptId(newValue?.id || "")
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Manuscript"
+                  placeholder="Search manuscripts..."
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  <Box>
+                    <Typography variant="body2">{option.title}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.journal} • {option.status}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+              fullWidth
+            />
 
             <FormControl fullWidth>
               <InputLabel>Reviewer</InputLabel>
@@ -449,24 +497,68 @@ export default function ReviewerMatchManager() {
 
             <Box>
               <Typography gutterBottom>
-                Match Score: <strong>{matchScore}</strong>
+                Match Score: <strong>{Math.round(matchScore * 100)}%</strong> (
+                {getScoreLabel(matchScore)})
               </Typography>
               <Slider
-                value={matchScore}
-                onChange={(_, value) => setMatchScore(value as number)}
+                value={Math.round(matchScore * 100)}
+                onChange={(_, value) =>
+                  setMatchScore(Math.round(value as number) / 100)
+                }
                 min={0}
                 max={100}
                 step={5}
                 marks={[
-                  { value: 0, label: "0" },
-                  { value: 50, label: "50" },
-                  { value: 100, label: "100" },
+                  { value: 0, label: "0%" },
+                  { value: 50, label: "50%" },
+                  { value: 100, label: "100%" },
                 ]}
                 valueLabelDisplay="auto"
+                valueLabelFormat={(value) => `${Math.round(value)}%`}
+                color={getScoreColor(matchScore)}
               />
               <Typography variant="caption" color="text.secondary">
                 Higher scores appear first in suggested reviewers list
               </Typography>
+            </Box>
+
+            <Box>
+              <FormControl component="fieldset">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={isInitialSuggestion}
+                    onChange={(e) => setIsInitialSuggestion(e.target.checked)}
+                  />
+                  <Typography component="span" sx={{ ml: 1 }}>
+                    Mark as initial AI suggestion
+                  </Typography>
+                </label>
+              </FormControl>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                sx={{ mt: 1 }}
+              >
+                Check this if this match was generated by AI/algorithm during
+                initial ingestion
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Conflicts of Interest (Optional)
+              </Typography>
+              <TextField
+                value={conflictsOfInterest}
+                onChange={(e) => setConflictsOfInterest(e.target.value)}
+                multiline
+                rows={3}
+                fullWidth
+                placeholder="Describe any known conflicts (e.g., co-authorship, institutional affiliation)"
+                helperText="Free-form text describing potential conflicts"
+              />
             </Box>
           </Box>
         </DialogContent>
@@ -506,9 +598,9 @@ export default function ReviewerMatchManager() {
                   ({getScoreLabel(matchScore)})
                 </Typography>
                 <Slider
-                  value={matchScore * 100}
+                  value={Math.round(matchScore * 100)}
                   onChange={(_, value) =>
-                    setMatchScore((value as number) / 100)
+                    setMatchScore(Math.round(value as number) / 100)
                   }
                   min={0}
                   max={100}
@@ -519,12 +611,41 @@ export default function ReviewerMatchManager() {
                     { value: 100, label: "100%" },
                   ]}
                   valueLabelDisplay="auto"
-                  valueLabelFormat={(value) => `${value}%`}
+                  valueLabelFormat={(value) => `${Math.round(value)}%`}
                   color={getScoreColor(matchScore)}
                 />
                 <Typography variant="caption" color="text.secondary">
                   Adjust the match quality score (0-100%)
                 </Typography>
+              </Box>
+
+              <Box sx={{ mt: 3 }}>
+                <FormControl component="fieldset">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={isInitialSuggestion}
+                      onChange={(e) => setIsInitialSuggestion(e.target.checked)}
+                    />
+                    <Typography component="span" sx={{ ml: 1 }}>
+                      Mark as initial AI suggestion
+                    </Typography>
+                  </label>
+                </FormControl>
+              </Box>
+
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Conflicts of Interest
+                </Typography>
+                <TextField
+                  value={conflictsOfInterest}
+                  onChange={(e) => setConflictsOfInterest(e.target.value)}
+                  multiline
+                  rows={3}
+                  fullWidth
+                  placeholder="Describe any known conflicts"
+                />
               </Box>
             </Box>
           )}

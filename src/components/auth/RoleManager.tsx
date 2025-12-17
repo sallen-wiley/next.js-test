@@ -19,6 +19,7 @@ import {
   InputLabel,
   Alert,
   CircularProgress,
+  Stack,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import PersonIcon from "@mui/icons-material/Person";
@@ -101,22 +102,33 @@ export default function RoleManager() {
     return new Date(dateString).toLocaleDateString();
   };
 
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "400px",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <CircularProgress />
+        <Typography color="text.secondary">Loading user roles...</Typography>
+      </Box>
+    );
+  }
+
   return (
     <RoleGuard requiredPermission="canManageUsers">
       <Box sx={{ p: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
+        <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
-            <Typography variant="h4" gutterBottom>
+            <Typography variant="h5" fontWeight={600}>
               User Role Management
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
+            <Typography variant="body2" color="text.secondary">
               Manage user roles and permissions
             </Typography>
           </Box>
@@ -128,7 +140,7 @@ export default function RoleManager() {
           >
             Refresh
           </Button>
-        </Box>
+        </Stack>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>

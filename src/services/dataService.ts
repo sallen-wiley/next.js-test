@@ -198,7 +198,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 45,
     last_review_completed: "2024-09-15T00:00:00Z",
     availability_status: "available",
-    conflicts_of_interest: [],
   },
   {
     id: "rev-002",
@@ -219,7 +218,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 38,
     last_review_completed: "2024-08-20T00:00:00Z",
     availability_status: "busy",
-    conflicts_of_interest: [],
   },
   {
     id: "rev-003",
@@ -240,7 +238,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 52,
     last_review_completed: "2024-09-30T00:00:00Z",
     availability_status: "available",
-    conflicts_of_interest: [],
   },
   {
     id: "rev-004",
@@ -261,9 +258,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 35,
     last_review_completed: "2024-07-10T00:00:00Z",
     availability_status: "busy",
-    response_rate: 65,
-    quality_score: 85,
-    conflicts_of_interest: [],
   },
   {
     id: "rev-005",
@@ -284,7 +278,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 28,
     last_review_completed: "2024-09-05T00:00:00Z",
     availability_status: "available",
-    conflicts_of_interest: [],
   },
   {
     id: "rev-006",
@@ -301,7 +294,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 41,
     last_review_completed: "2024-08-15T00:00:00Z",
     availability_status: "available",
-    conflicts_of_interest: ["Dr. Sarah Chen"], // Conflict with manuscript author
   },
   {
     id: "rev-007",
@@ -321,7 +313,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     recent_publications: 9,
     h_index: 33,
     availability_status: "available",
-    conflicts_of_interest: [],
   },
   {
     id: "rev-008",
@@ -341,7 +332,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     recent_publications: 7,
     h_index: 24,
     availability_status: "busy",
-    conflicts_of_interest: [],
   },
 ];
 
@@ -1743,11 +1733,15 @@ export async function getMatchesForManuscript(
  * @param manuscriptId - The manuscript UUID
  * @param reviewerId - The reviewer UUID
  * @param matchScore - Match score (0-1, will be displayed as percentage)
+ * @param isInitialSuggestion - Whether this is an AI-generated initial suggestion
+ * @param conflictsOfInterest - Free-form text describing any conflicts
  */
 export async function addReviewerMatch(
   manuscriptId: string,
   reviewerId: string,
-  matchScore: number
+  matchScore: number,
+  isInitialSuggestion: boolean = false,
+  conflictsOfInterest: string = ""
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   // Validate match score
@@ -1776,6 +1770,8 @@ export async function addReviewerMatch(
       reviewer_id: reviewerId,
       match_score: matchScore,
       calculated_at: new Date().toISOString(),
+      is_initial_suggestion: isInitialSuggestion,
+      conflicts_of_interest: conflictsOfInterest || null,
     })
     .select()
     .single();
@@ -1801,29 +1797,58 @@ export async function addReviewerMatch(
 /**
  * Update match score for an existing reviewer-manuscript match
  * @param matchId - The match UUID
- * @param matchScore - New match score (0-100)
+ * @param matchScore - New match score (0-1)
+ * @param isInitialSuggestion - Whether this is an AI-generated initial suggestion
+ * @param conflictsOfInterest - Free-form text describing any conflicts
+ */
+export async function updateReviewerMatch(
+  matchId: string,
+  matchScore: number,
+  isInitialSuggestion?: boolean,
+  conflictsOfInterest?: string
+): Promise<void> {
+  // Validate match score
+  if (matchScore < 0 || matchScore > 1) {
+    throw new Error("Match score must be between 0 and 1");
+  }
+
+  const updateData: {
+    match_score: number;
+    calculated_at: string;
+    is_initial_suggestion?: boolean;
+    conflicts_of_interest?: string | null;
+  } = {
+    match_score: matchScore,
+    calculated_at: new Date().toISOString(),
+  };
+
+  if (isInitialSuggestion !== undefined) {
+    updateData.is_initial_suggestion = isInitialSuggestion;
+  }
+
+  if (conflictsOfInterest !== undefined) {
+    updateData.conflicts_of_interest = conflictsOfInterest || null;
+  }
+
+  const { error } = await supabase
+    .from("reviewer_manuscript_matches")
+    .update(updateData)
+    .eq("id", matchId);
+
+  if (error) {
+    console.error("Error updating match:", error);
+    throw error;
+  }
+}
+
+/**
+ * @deprecated Use updateReviewerMatch instead
  */
 export async function updateReviewerMatchScore(
   matchId: string,
   matchScore: number
 ): Promise<void> {
-  // Validate match score
-  if (matchScore < 0 || matchScore > 100) {
-    throw new Error("Match score must be between 0 and 100");
-  }
-
-  const { error } = await supabase
-    .from("reviewer_manuscript_matches")
-    .update({
-      match_score: matchScore,
-      calculated_at: new Date().toISOString(),
-    })
-    .eq("id", matchId);
-
-  if (error) {
-    console.error("Error updating match score:", error);
-    throw error;
-  }
+  return updateReviewerMatch(matchId, matchScore);
 }
 
 /**
