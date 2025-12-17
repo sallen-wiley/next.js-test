@@ -263,19 +263,26 @@ export default function ReviewerManager() {
     }
 
     try {
+      // Clean up formData to remove empty strings for UUID and date fields
+      const cleanedData = {
+        ...formData,
+        // Convert empty strings to undefined for UUID fields
+        external_id: formData.external_id || undefined,
+        // Convert empty strings to undefined for date fields
+        h_index: formData.h_index ?? undefined,
+        last_review_completed: formData.last_review_completed || undefined,
+        last_publication_date: formData.last_publication_date || undefined,
+        last_activity_date: formData.last_activity_date || undefined,
+        // Convert empty strings to undefined for optional numeric fields
+        average_response_time_hours:
+          formData.average_response_time_hours ?? undefined,
+      };
+
       if (editMode && selectedReviewer) {
-        await updateReviewer(selectedReviewer.id, {
-          ...formData,
-          h_index: formData.h_index ?? undefined,
-          last_review_completed: formData.last_review_completed || undefined,
-        });
+        await updateReviewer(selectedReviewer.id, cleanedData);
         showSnackbar("Reviewer updated successfully", "success");
       } else {
-        await addReviewer({
-          ...formData,
-          h_index: formData.h_index ?? undefined,
-          last_review_completed: formData.last_review_completed || undefined,
-        });
+        await addReviewer(cleanedData);
         showSnackbar("Reviewer added successfully", "success");
       }
       handleCloseDialog();

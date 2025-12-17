@@ -1000,6 +1000,7 @@ export default function ReviewerInvitationDashboard() {
         open={profileDrawerOpen}
         onClose={closeProfileDrawer}
         reviewerId={profileReviewerId}
+        manuscriptId={manuscriptId}
         onAddToQueue={manuscriptId ? handleAddToQueue : undefined}
         onInvite={manuscriptId ? handleInviteReviewer : undefined}
       />

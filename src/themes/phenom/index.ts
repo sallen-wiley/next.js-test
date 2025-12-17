@@ -371,14 +371,59 @@ theme = createTheme(theme, {
     MuiChip: {
       styleOverrides: {
         root: {
-          // Use theme shape border radius instead of default fully rounded
-          borderRadius: theme.shape.borderRadius,
+          height: "20px",
+          fontSize: "11px",
+          lineHeight: "12px",
+          borderRadius: "2px",
         },
         label: {
           // Chip uses same font weight as buttons
           fontWeight: theme.typography.button.fontWeight,
+          padding: "4px 8px",
+        },
+        sizeSmall: {
+          height: "16px",
+          fontSize: "11px",
+          lineHeight: "12px",
+          borderRadius: "2px",
+          "& .MuiChip-label": {
+            padding: "4px",
+          },
         },
       },
+      variants: [
+        {
+          props: { variant: "solid-light" },
+          style: ({ theme, ownerState }: { theme: Theme; ownerState: any }) => {
+            const color = ownerState.color || "default";
+
+            // Get the main color from palette
+            let mainColor: string;
+            if (color === "default") {
+              mainColor = theme.palette.action.active;
+            } else {
+              mainColor =
+                theme.palette[color as keyof typeof theme.palette]?.main ||
+                theme.palette.primary.main;
+            }
+
+            // Create very light background by mixing main color with white (90% white blend)
+            const lightBg = lighten(mainColor, 0.9);
+
+            return {
+              backgroundColor: lightBg,
+              color: mainColor,
+              border: "none",
+              "&:hover": {
+                backgroundColor: lighten(mainColor, 0.85), // Slightly darker on hover
+              },
+              "&:focus": {
+                backgroundColor: lighten(mainColor, 0.85),
+              },
+            };
+          },
+        },
+      ],
     },
     MuiAlert: {
       styleOverrides: {

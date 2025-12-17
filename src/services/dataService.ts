@@ -2161,28 +2161,32 @@ export async function addReviewer(
     throw new Error(`Reviewer with email ${reviewer.email} already exists`);
   }
 
+  // Prepare insert data, removing any undefined or empty string values for UUID/date fields
+  const insertData = { ...reviewer };
+
+  // Clean up the data - remove keys with undefined values
+  Object.keys(insertData).forEach((key) => {
+    if (insertData[key as keyof typeof insertData] === undefined) {
+      delete insertData[key as keyof typeof insertData];
+    }
+  });
+
   const { data, error } = await supabase
     .from("potential_reviewers")
-    .insert({
-      name: reviewer.name,
-      email: reviewer.email,
-      affiliation: reviewer.affiliation,
-      department: reviewer.department,
-      expertise_areas: reviewer.expertise_areas,
-      current_review_load: reviewer.current_review_load ?? 0,
-      max_review_capacity: reviewer.max_review_capacity ?? 3,
-      average_review_time_days: reviewer.average_review_time_days ?? 21,
-      recent_publications: reviewer.recent_publications ?? 0,
-      h_index: reviewer.h_index,
-      last_review_completed: reviewer.last_review_completed,
-      availability_status: reviewer.availability_status ?? "available",
-    })
+    .insert(insertData)
     .select()
     .single();
 
   if (error) {
-    console.error("Error adding reviewer:", error);
-    throw error;
+    console.error("Error adding reviewer:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+    throw new Error(
+      error.message || "Failed to add reviewer. Please check your data."
+    );
   }
 
   return { ...data, match_score: 0 };
@@ -2222,8 +2226,15 @@ export async function updateReviewer(
     .eq("id", reviewerId);
 
   if (error) {
-    console.error("Error updating reviewer:", error);
-    throw error;
+    console.error("Error updating reviewer:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+    throw new Error(
+      error.message || "Failed to update reviewer. Please check your data."
+    );
   }
 }
 

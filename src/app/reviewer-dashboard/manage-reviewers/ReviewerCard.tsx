@@ -13,9 +13,20 @@ import {
 } from "@mui/material";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
-import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { SvgIcon } from "@mui/material";
 import type { PotentialReviewerWithMatch } from "@/lib/supabase";
+
+// ORCID Icon Component
+const OrcidIcon = (props: React.ComponentProps<typeof SvgIcon>) => (
+  <SvgIcon {...props} viewBox="0 0 1024 1024">
+    <circle cx="512" cy="512" r="512" fill="#a6ce39" />
+    <path
+      d="M373.7 709.3h-50.4V358.5h50.4v350.8zm74-350.8h136.2c129.7 0 186.7 92.7 186.7 175.5 0 90.1-70.4 175.5-186 175.5H447.7v-351zm50.4 305.6h80.2c114.3 0 140.5-86.8 140.5-130 0-70.4-44.9-130-143.1-130h-77.6v260zM381.6 285.5c0 18-14.7 33.1-33.1 33.1-18.3 0-33.1-15.1-33.1-33.1 0-18.3 14.7-33.1 33.1-33.1 18.3 0 33.1 15.1 33.1 33.1z"
+      fill="#fff"
+    />
+  </SvgIcon>
+);
 
 type ReviewerCardProps = {
   reviewer: PotentialReviewerWithMatch;
@@ -76,6 +87,7 @@ export default function ReviewerCard({
               <Chip
                 label={reviewer.availability_status}
                 size="small"
+                variant="solid-light"
                 color={
                   getAvailabilityColor(reviewer.availability_status) as
                     | "success"
@@ -85,8 +97,7 @@ export default function ReviewerCard({
                     | "default"
                 }
                 sx={{
-                  height: 20,
-                  textTransform: "capitalize",
+                  textTransform: "uppercase",
                   alignSelf: "flex-start",
                 }}
               />
@@ -101,11 +112,9 @@ export default function ReviewerCard({
                 </Typography>
                 {orcidId && (
                   <Tooltip title={orcidId}>
-                    <FingerprintIcon
+                    <OrcidIcon
                       sx={{
                         fontSize: 16,
-                        color: (theme) =>
-                          (theme.vars || theme).palette.text.secondary,
                       }}
                     />
                   </Tooltip>
@@ -166,7 +175,7 @@ export default function ReviewerCard({
               <MuiLink
                 component="button"
                 type="button"
-                color="primary"
+                color="secondary"
                 underline="hover"
                 onClick={() => onViewProfile(reviewer.id)}
                 sx={{ fontWeight: 600, alignSelf: "flex-start" }}
@@ -186,10 +195,10 @@ export default function ReviewerCard({
             <MuiLink
               component="button"
               type="button"
-              color="primary"
+              color="secondary"
               underline="hover"
               onClick={() => onViewProfile(reviewer.id)}
-              sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+              sx={{ whiteSpace: "nowrap" }}
             >
               Open Profile
             </MuiLink>
@@ -214,7 +223,7 @@ export default function ReviewerCard({
         <MuiLink
           component="button"
           type="button"
-          color="primary"
+          color="secondary"
           underline="hover"
           sx={{ fontWeight: 600 }}
         >
@@ -224,9 +233,10 @@ export default function ReviewerCard({
         <Stack direction="row" spacing={1} alignItems="center">
           <Button
             size="small"
-            color="primary"
+            color="secondary"
             onClick={() => onInvite(reviewer.id)}
             startIcon={<MailOutlineIcon />}
+            disabled={conflict}
           >
             Invite Now
           </Button>

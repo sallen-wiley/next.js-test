@@ -113,7 +113,6 @@ export function ArticleDetailsCard({
                 sx={{
                   borderColor: "text.secondary",
                   color: "text.secondary",
-                  height: 18,
                   textTransform: "uppercase",
                 }}
               />
@@ -127,8 +126,6 @@ export function ArticleDetailsCard({
               size="small"
               sx={{
                 textTransform: "uppercase",
-                fontWeight: 700,
-                height: 18,
                 borderTopRightRadius: 0,
                 borderBottomRightRadius: 0,
               }}
@@ -140,8 +137,6 @@ export function ArticleDetailsCard({
               size="small"
               sx={{
                 textTransform: "uppercase",
-                fontWeight: 700,
-                height: 18,
                 borderTopLeftRadius: 0,
                 borderBottomLeftRadius: 0,
                 borderLeft: 0,

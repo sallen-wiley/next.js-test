@@ -59,6 +59,7 @@ interface ReviewerProfileDrawerProps {
   open: boolean;
   onClose: () => void;
   reviewerId: string | null;
+  manuscriptId?: string | null;
   onAddToQueue?: (reviewerId: string) => void;
   onInvite?: (reviewerId: string) => void;
 }
@@ -67,6 +68,7 @@ export default function ReviewerProfileDrawer({
   open,
   onClose,
   reviewerId,
+  manuscriptId,
   onAddToQueue,
   onInvite,
 }: ReviewerProfileDrawerProps) {
@@ -95,6 +97,27 @@ export default function ReviewerProfileDrawer({
 
       if (reviewerError) throw reviewerError;
 
+      // Fetch manuscript-specific conflicts if manuscriptId is provided
+      let manuscriptConflicts: string | null = null;
+      if (manuscriptId) {
+        const { data: matchData, error: matchError } = await supabase
+          .from("reviewer_manuscript_matches")
+          .select("conflicts_of_interest")
+          .eq("manuscript_id", manuscriptId)
+          .eq("reviewer_id", id)
+          .single();
+
+        console.log("Match data for conflicts:", {
+          manuscriptId,
+          reviewerId: id,
+          matchData,
+          matchError,
+          conflicts: matchData?.conflicts_of_interest,
+        });
+
+        manuscriptConflicts = matchData?.conflicts_of_interest || null;
+      }
+
       // Fetch publications
       const { data: publicationsData } = await supabase
         .from("reviewer_publications")
@@ -113,6 +136,8 @@ export default function ReviewerProfileDrawer({
       // Combine all data
       const profile: ReviewerProfile = {
         ...reviewerData,
+        conflicts_of_interest: manuscriptConflicts || "",
+        match_score: 0, // Will be populated if from manuscript matches
         email_is_institutional: isInstitutionalEmail(reviewerData.email),
         acceptance_rate:
           reviewerData.total_invitations > 0
@@ -181,8 +206,13 @@ export default function ReviewerProfileDrawer({
     if (reviewer.retractions?.retraction_reasons?.length) {
       points.push("Retracted publication(s)");
     }
-    if (reviewer.conflicts_of_interest) {
-      points.push(reviewer.conflicts_of_interest);
+    // Check for conflicts with proper trimming
+    if (
+      reviewer.conflicts_of_interest &&
+      reviewer.conflicts_of_interest.trim().length > 0
+    ) {
+      console.log("Conflict found:", reviewer.conflicts_of_interest);
+      points.push(reviewer.conflicts_of_interest.trim());
     }
     if (reviewer.current_review_load >= (reviewer.max_review_capacity || 3)) {
       points.push("At capacity");
@@ -192,6 +222,13 @@ export default function ReviewerProfileDrawer({
     }
 
     return points;
+  };
+
+  const hasConflicts = (): boolean => {
+    return !!(
+      reviewer?.conflicts_of_interest &&
+      reviewer.conflicts_of_interest.trim().length > 0
+    );
   };
 
   const handleAddToQueue = () => {
@@ -425,15 +462,21 @@ export default function ReviewerProfileDrawer({
 
                 {/* Alert Chips */}
                 <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                  {reviewer.conflicts_of_interest && (
-                    <Chip
-                      label="CONFLICT OF INTEREST"
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      sx={{ textTransform: "uppercase", fontWeight: "bold" }}
-                    />
-                  )}
+                  {reviewer.conflicts_of_interest &&
+                    reviewer.conflicts_of_interest.trim().length > 0 && (
+                      <Tooltip title={reviewer.conflicts_of_interest.trim()}>
+                        <Chip
+                          label="CONFLICT OF INTEREST"
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          sx={{
+                            textTransform: "uppercase",
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </Tooltip>
+                    )}
                   {reviewer.previous_reviewer && (
                     <Chip
                       label="REVIEWED PREVIOUS VERSION"
@@ -821,7 +864,7 @@ export default function ReviewerProfileDrawer({
             variant="outlined"
             size="large"
             onClick={handleAddToQueue}
-            disabled={!onAddToQueue}
+            disabled={!onAddToQueue || hasConflicts()}
           >
             Add to Queue
           </Button>
@@ -829,7 +872,7 @@ export default function ReviewerProfileDrawer({
             variant="contained"
             size="large"
             onClick={handleInvite}
-            disabled={!onInvite}
+            disabled={!onInvite || hasConflicts()}
           >
             Invite Reviewer
           </Button>

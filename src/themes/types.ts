@@ -43,4 +43,8 @@ declare module "@mui/material/Chip" {
     black: true;
     white: true;
   }
+
+  interface ChipPropsVariantOverrides {
+    "solid-light": true;
+  }
 }
