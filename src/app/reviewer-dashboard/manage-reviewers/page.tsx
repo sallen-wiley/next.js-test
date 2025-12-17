@@ -32,7 +32,7 @@ import {
 } from "@/services/dataService";
 import ReviewerActionMenu from "./ReviewerActionMenu";
 import { ArticleDetailsCard } from "../ArticleDetailsCard";
-import { ReviewerSearchAndTable } from "./ReviewerSearchAndTable";
+import { ReviewerSearchAndCards } from "./ReviewerSearchAndCards";
 import { InvitationsAndQueuePanel } from "./InvitationsAndQueuePanel";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 import ReviewerProfileDrawer from "./ReviewerProfileDrawer";
@@ -262,9 +262,7 @@ export default function ReviewerInvitationDashboard() {
     "available",
   ]);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [selectedReviewers, setSelectedReviewers] = React.useState<string[]>(
-    []
-  );
+  // Multi-select removed; no selected reviewers state
 
   // New state for unified queue/invitations view
   const [reviewersWithStatus, setReviewersWithStatus] = React.useState<
@@ -382,13 +380,7 @@ export default function ReviewerInvitationDashboard() {
     }
   };
 
-  const handleReviewerSelect = (reviewerId: string) => {
-    setSelectedReviewers((prev) =>
-      prev.includes(reviewerId)
-        ? prev.filter((id) => id !== reviewerId)
-        : [...prev, reviewerId]
-    );
-  };
+  // Multi-select removed; no reviewer select handler
 
   // Interactive functions for demo purposes
   const showSnackbar = (
@@ -425,10 +417,7 @@ export default function ReviewerInvitationDashboard() {
           // Send the invitation to the database
           await sendInvitation(manuscriptId, reviewerId);
 
-          // Remove from selected reviewers
-          setSelectedReviewers((prev) =>
-            prev.filter((id) => id !== reviewerId)
-          );
+          // Multi-select removed; no selection to update
 
           // Refresh the reviewers with status to show the new invitation
           await refreshReviewersWithStatus();
@@ -762,9 +751,7 @@ export default function ReviewerInvitationDashboard() {
 
             // Update local state
             setSimulatedQueue((prev) => [...prev, newQueueItem]);
-            setSelectedReviewers((prev) =>
-              prev.filter((id) => id !== reviewerId)
-            );
+            // Multi-select removed; no selection to update
             showSnackbar(
               `${reviewer.name} added to queue (Position ${newQueueItem.queue_position})`,
               "info"
@@ -781,81 +768,9 @@ export default function ReviewerInvitationDashboard() {
     );
   };
 
-  const handleBatchInvite = () => {
-    if (selectedReviewers.length === 0) return;
+  // Batch invite removed
 
-    const reviewerNames = selectedReviewers
-      .map((id) => potentialReviewers.find((r) => r.id === id)?.name)
-      .filter(Boolean)
-      .join(", ");
-
-    showConfirmDialog(
-      "Send Batch Invitations",
-      `Send invitations to ${selectedReviewers.length} reviewers: ${reviewerNames}?`,
-      () => {
-        selectedReviewers.forEach((reviewerId) => {
-          const newInvitation = {
-            id: `inv-${Date.now()}-${reviewerId}`,
-            manuscript_id: "ms-001",
-            reviewer_id: reviewerId,
-            invited_date: new Date().toISOString(),
-            due_date: new Date(
-              Date.now() + 30 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-            status: "pending" as const,
-            invitation_round: 1,
-            reminder_count: 0,
-            notes: "Batch invitation via dashboard",
-          };
-
-          setInvitations((prev) => [...prev, newInvitation]);
-        });
-
-        setSelectedReviewers([]);
-        showSnackbar(`Sent ${selectedReviewers.length} invitations`, "success");
-        setTimeout(() => setRightPanelOpen(true), 1000);
-      }
-    );
-  };
-
-  const handleBatchAddToQueue = () => {
-    if (selectedReviewers.length === 0 || !manuscriptId) return;
-
-    const reviewerNames = selectedReviewers
-      .map((id) => potentialReviewers.find((r) => r.id === id)?.name)
-      .filter(Boolean)
-      .join(", ");
-
-    showConfirmDialog(
-      "Add to Queue",
-      `Add ${selectedReviewers.length} reviewers to queue: ${reviewerNames}?`,
-      async () => {
-        try {
-          // Add all reviewers to queue
-          const addPromises = selectedReviewers.map((reviewerId) =>
-            addToQueue(manuscriptId, reviewerId, "normal")
-          );
-
-          const results: (InvitationQueueItem | null)[] = await Promise.all(
-            addPromises
-          );
-
-          // Update local state with new queue items
-          const newItems = results.filter(
-            (item): item is InvitationQueueItem => item !== null
-          );
-          setSimulatedQueue((prev) => [...prev, ...newItems]);
-          setSelectedReviewers([]);
-
-          showSnackbar(`Added ${newItems.length} reviewers to queue`, "info");
-          setTimeout(() => setRightPanelOpen(true), 1000);
-        } catch (error) {
-          console.error("Error batch adding to queue:", error);
-          showSnackbar("Failed to add reviewers to queue", "error");
-        }
-      }
-    );
-  };
+  // Batch add to queue removed
 
   // Configure header for reviewer dashboard
   useHeaderConfig({
@@ -954,10 +869,9 @@ export default function ReviewerInvitationDashboard() {
               </Box>
             )}
 
-            {/* Reviewer Search and Table Component */}
-            <ReviewerSearchAndTable
+            {/* Reviewer Search and Cards Component */}
+            <ReviewerSearchAndCards
               filteredReviewers={filteredReviewers}
-              selectedReviewers={selectedReviewers}
               searchTerm={searchTerm}
               sortBy={sortBy}
               filterAvailability={filterAvailability}
@@ -965,11 +879,8 @@ export default function ReviewerInvitationDashboard() {
               onSearchChange={setSearchTerm}
               onSortChange={setSortBy}
               onAvailabilityChange={setFilterAvailability}
-              onReviewerSelect={handleReviewerSelect}
               onInviteReviewer={handleInviteReviewer}
               onAddToQueue={handleAddToQueue}
-              onBatchInvite={handleBatchInvite}
-              onBatchAddToQueue={handleBatchAddToQueue}
               onClearFilters={() => {
                 setSearchTerm("");
                 setFilterAvailability(["available"]);
