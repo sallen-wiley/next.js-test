@@ -87,14 +87,12 @@ CREATE TABLE IF NOT EXISTS potential_reviewers (
   h_index integer,
   last_review_completed date,
   availability_status text DEFAULT 'available'::text CHECK (availability_status IN ('available', 'busy', 'unavailable', 'sabbatical')),
-  response_rate numeric DEFAULT 0.0,
-  quality_score numeric DEFAULT 0.0,
-  conflicts_of_interest text[] DEFAULT '{}'::text[],
+
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
 
-COMMENT ON TABLE potential_reviewers IS 'Reviewer database with expertise, metrics, and availability tracking';
+COMMENT ON TABLE potential_reviewers IS 'Reviewer database with expertise, metrics, and availability tracking. Conflicts of interest are manuscript-specific and stored in reviewer_manuscript_matches.';
 COMMENT ON COLUMN potential_reviewers.availability_status IS 'Current availability: available, busy, unavailable, sabbatical';
 COMMENT ON COLUMN potential_reviewers.response_rate IS 'Percentage of invitations accepted (0.0-1.0)';
 COMMENT ON COLUMN potential_reviewers.quality_score IS 'Quality rating based on review history (0.0-1.0)';
@@ -130,11 +128,13 @@ CREATE TABLE IF NOT EXISTS reviewer_manuscript_matches (
   reviewer_id uuid REFERENCES potential_reviewers(id) ON DELETE CASCADE,
   match_score numeric NOT NULL CHECK (match_score >= 0 AND match_score <= 1),
   calculated_at timestamptz DEFAULT now(),
+  conflicts_of_interest text,
   UNIQUE(manuscript_id, reviewer_id)
 );
 
 COMMENT ON TABLE reviewer_manuscript_matches IS 'AI-generated match scores for manuscript-reviewer pairs. Powers "Suggested Reviewers" feature.';
 COMMENT ON COLUMN reviewer_manuscript_matches.match_score IS 'Match quality score (0.0-1.0) based on expertise, availability, and other factors';
+COMMENT ON COLUMN reviewer_manuscript_matches.conflicts_of_interest IS 'Manuscript-specific conflicts of interest for this reviewer (text description)';
 
 -- =====================================================
 -- Table: invitation_queue

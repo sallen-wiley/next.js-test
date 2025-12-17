@@ -78,8 +78,6 @@ export default function ReviewerManager() {
       | "busy"
       | "unavailable"
       | "sabbatical",
-    response_rate: 0,
-    quality_score: 0,
     conflicts_of_interest: [] as string[],
   });
 
@@ -127,8 +125,6 @@ export default function ReviewerManager() {
         h_index: reviewer.h_index,
         last_review_completed: reviewer.last_review_completed ?? "",
         availability_status: reviewer.availability_status,
-        response_rate: reviewer.response_rate,
-        quality_score: reviewer.quality_score,
         conflicts_of_interest: reviewer.conflicts_of_interest || [],
       });
     } else {
@@ -147,8 +143,6 @@ export default function ReviewerManager() {
         h_index: undefined,
         last_review_completed: "",
         availability_status: "available",
-        response_rate: 0,
-        quality_score: 0,
         conflicts_of_interest: [],
       });
     }
@@ -305,7 +299,6 @@ export default function ReviewerManager() {
               <TableCell>Expertise</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Review Load</TableCell>
-              <TableCell>Response Rate</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -358,7 +351,6 @@ export default function ReviewerManager() {
                   {reviewer.current_review_load} /{" "}
                   {reviewer.max_review_capacity}
                 </TableCell>
-                <TableCell>{Math.round(reviewer.response_rate)}%</TableCell>
                 <TableCell align="right">
                   <IconButton
                     size="small"
@@ -554,34 +546,6 @@ export default function ReviewerManager() {
                   Performance Metrics
                 </Typography>
                 <Stack spacing={2}>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Response Rate (%)"
-                      type="number"
-                      value={formData.response_rate}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          response_rate: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      inputProps={{ min: 0, max: 100 }}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Quality Score (%)"
-                      type="number"
-                      value={formData.quality_score}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          quality_score: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      inputProps={{ min: 0, max: 100 }}
-                      fullWidth
-                    />
-                  </Stack>
                   <Stack direction="row" spacing={2}>
                     <TextField
                       label="Recent Publications"

@@ -5,6 +5,11 @@ import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useUserProfile } from "@/hooks/useRoles";
 import {
+  isInstitutionalEmail,
+  calculateAcceptanceRate,
+  daysSince,
+} from "@/utils/reviewerMetrics";
+import {
   getManuscriptById,
   getManuscriptQueue,
   addToQueue,
@@ -30,6 +35,8 @@ import { ArticleDetailsCard } from "../ArticleDetailsCard";
 import { ReviewerSearchAndTable } from "./ReviewerSearchAndTable";
 import { InvitationsAndQueuePanel } from "./InvitationsAndQueuePanel";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
+import ReviewerProfileDrawer from "./ReviewerProfileDrawer";
+import { useReviewerProfileDrawer } from "@/hooks/useReviewerProfileDrawer";
 import type {
   Manuscript,
   InvitationQueueItem,
@@ -188,9 +195,25 @@ export default function ReviewerInvitationDashboard() {
     // Add reviewers from allReviewers that aren't in the suggested list
     allReviewers.forEach((reviewer) => {
       if (!suggestedMap.has(reviewer.id)) {
+        // Type assertion for database fields not in interface
+        const reviewerData = reviewer as PotentialReviewer &
+          Record<string, unknown>;
+
         combined.push({
           ...reviewer,
           match_score: 0, // Default score for reviewers without matches
+          conflicts_of_interest: "", // No conflicts since no match relationship exists
+          email_is_institutional: isInstitutionalEmail(reviewer.email),
+          acceptance_rate: calculateAcceptanceRate(
+            (reviewerData.total_acceptances as number) || 0,
+            (reviewerData.total_invitations as number) || 0
+          ),
+          related_publications_count: 0, // Would need to fetch publications
+          solo_authored_count: 0, // Would need to fetch publications
+          publications_last_5_years: 0, // Would need to fetch publications
+          days_since_last_review: daysSince(
+            reviewerData.last_review_completed as string | undefined
+          ),
         });
       }
     });
@@ -238,7 +261,6 @@ export default function ReviewerInvitationDashboard() {
   const [filterAvailability, setFilterAvailability] = React.useState<string[]>([
     "available",
   ]);
-  const [minMatchScore, setMinMatchScore] = React.useState<number>(0.7);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [selectedReviewers, setSelectedReviewers] = React.useState<string[]>(
     []
@@ -254,6 +276,14 @@ export default function ReviewerInvitationDashboard() {
     React.useState<null | HTMLElement>(null);
   const [selectedReviewerForAction, setSelectedReviewerForAction] =
     React.useState<ReviewerWithStatus | null>(null);
+
+  // Reviewer profile drawer state
+  const {
+    open: profileDrawerOpen,
+    reviewerId: profileReviewerId,
+    openDrawer: openProfileDrawer,
+    closeDrawer: closeProfileDrawer,
+  } = useReviewerProfileDrawer();
 
   // State for interactive features
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -292,17 +322,17 @@ export default function ReviewerInvitationDashboard() {
         return false;
       }
 
+      // By default, only show reviewers with a match relationship (match_score > 0)
+      // When searching, include all reviewers from the database
+      if (!searchTerm && reviewer.match_score === 0) {
+        return false;
+      }
+
       // Filter by availability
       if (
         filterAvailability.length > 0 &&
         !filterAvailability.includes(reviewer.availability_status)
       ) {
-        return false;
-      }
-
-      // Filter by minimum match score only if there's no search term
-      // When searching, we want to include all reviewers regardless of match score
-      if (!searchTerm && reviewer.match_score < minMatchScore) {
         return false;
       }
 
@@ -326,10 +356,6 @@ export default function ReviewerInvitationDashboard() {
       switch (sortBy) {
         case "match_score":
           return b.match_score - a.match_score;
-        case "response_rate":
-          return b.response_rate - a.response_rate;
-        case "quality_score":
-          return b.quality_score - a.quality_score;
         case "current_load":
           return a.current_review_load - b.current_review_load;
         case "name":
@@ -345,7 +371,6 @@ export default function ReviewerInvitationDashboard() {
     reviewersWithStatus,
     sortBy,
     filterAvailability,
-    minMatchScore,
     searchTerm,
   ]);
 
@@ -936,12 +961,10 @@ export default function ReviewerInvitationDashboard() {
               searchTerm={searchTerm}
               sortBy={sortBy}
               filterAvailability={filterAvailability}
-              minMatchScore={minMatchScore}
               loading={loading}
               onSearchChange={setSearchTerm}
               onSortChange={setSortBy}
               onAvailabilityChange={setFilterAvailability}
-              onMinMatchScoreChange={setMinMatchScore}
               onReviewerSelect={handleReviewerSelect}
               onInviteReviewer={handleInviteReviewer}
               onAddToQueue={handleAddToQueue}
@@ -950,8 +973,8 @@ export default function ReviewerInvitationDashboard() {
               onClearFilters={() => {
                 setSearchTerm("");
                 setFilterAvailability(["available"]);
-                setMinMatchScore(0.7);
               }}
+              onViewProfile={openProfileDrawer}
             />
           </Box>
 
@@ -1060,6 +1083,15 @@ export default function ReviewerInvitationDashboard() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      {/* Reviewer Profile Drawer */}
+      <ReviewerProfileDrawer
+        open={profileDrawerOpen}
+        onClose={closeProfileDrawer}
+        reviewerId={profileReviewerId}
+        onAddToQueue={manuscriptId ? handleAddToQueue : undefined}
+        onInvite={manuscriptId ? handleInviteReviewer : undefined}
+      />
     </>
   );
 }

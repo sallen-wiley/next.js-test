@@ -66,9 +66,6 @@ export interface PotentialReviewer {
   h_index?: number;
   last_review_completed?: string; // ISO date
   availability_status: "available" | "busy" | "unavailable" | "sabbatical";
-  response_rate: number; // 0-100, historical acceptance rate
-  quality_score: number; // 0-100, based on review quality feedback
-  conflicts_of_interest: string[]; // manuscript IDs or author names they conflict with
 }
 
 export interface ReviewInvitation {
@@ -143,7 +140,16 @@ export interface ManuscriptWithUserRole extends Manuscript {
 }
 
 export interface PotentialReviewerWithMatch extends PotentialReviewer {
-  match_score: number; // Specific to a manuscript from reviewer_manuscript_matches
+  match_score: number; // 0-1, specific to a manuscript from reviewer_manuscript_matches (display as percentage)
+  conflicts_of_interest: string; // Manuscript-specific conflicts from reviewer_manuscript_matches
+
+  // Calculated fields
+  email_is_institutional: boolean; // True if email domain is NOT a public provider (gmail, yahoo, etc.)
+  acceptance_rate: number; // 0-100, calculated from total_acceptances/total_invitations
+  related_publications_count: number; // Count of publications with is_related=true
+  solo_authored_count: number; // Count of publications with single author
+  publications_last_5_years: number; // Count of publications from last 5 years
+  days_since_last_review: number | null; // Days since last_review_completed (null if never)
 }
 
 // Combined view of reviewer with their current status in the invitation workflow

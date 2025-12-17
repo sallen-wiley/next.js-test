@@ -9,8 +9,6 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get("sortBy") as
       | "match_score"
       | "availability"
-      | "response_rate"
-      | "quality_score"
       | undefined;
     const search = searchParams.get("search");
     const minMatchScore = searchParams.get("minMatchScore");

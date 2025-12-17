@@ -1,6 +1,6 @@
 // Mock data service for reviewer invitation system
+import { supabase } from "@/lib/supabase";
 import {
-  supabase,
   Manuscript,
   PotentialReviewer,
   ReviewInvitation,
@@ -13,6 +13,14 @@ import {
 } from "@/lib/supabase";
 import type { UserProfile } from "@/types/roles";
 import { calculateReviewerStats, toBasicStats } from "@/utils/reviewerStats";
+import {
+  isInstitutionalEmail,
+  calculateAcceptanceRate,
+  daysSince,
+  countSoloAuthored,
+  countRecentPublications,
+  countRelatedPublications,
+} from "@/utils/reviewerMetrics";
 
 /**
  * Helper function to check if a user has admin role
@@ -190,8 +198,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 45,
     last_review_completed: "2024-09-15T00:00:00Z",
     availability_status: "available",
-    response_rate: 85,
-    quality_score: 92,
     conflicts_of_interest: [],
   },
   {
@@ -213,8 +219,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 38,
     last_review_completed: "2024-08-20T00:00:00Z",
     availability_status: "busy",
-    response_rate: 92,
-    quality_score: 88,
     conflicts_of_interest: [],
   },
   {
@@ -236,8 +240,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 52,
     last_review_completed: "2024-09-30T00:00:00Z",
     availability_status: "available",
-    response_rate: 78,
-    quality_score: 95,
     conflicts_of_interest: [],
   },
   {
@@ -282,8 +284,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 28,
     last_review_completed: "2024-09-05T00:00:00Z",
     availability_status: "available",
-    response_rate: 88,
-    quality_score: 90,
     conflicts_of_interest: [],
   },
   {
@@ -301,8 +301,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     h_index: 41,
     last_review_completed: "2024-08-15T00:00:00Z",
     availability_status: "available",
-    response_rate: 90,
-    quality_score: 93,
     conflicts_of_interest: ["Dr. Sarah Chen"], // Conflict with manuscript author
   },
   {
@@ -323,8 +321,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     recent_publications: 9,
     h_index: 33,
     availability_status: "available",
-    response_rate: 82,
-    quality_score: 87,
     conflicts_of_interest: [],
   },
   {
@@ -345,8 +341,6 @@ export const mockPotentialReviewers: PotentialReviewer[] = [
     recent_publications: 7,
     h_index: 24,
     availability_status: "busy",
-    response_rate: 70,
-    quality_score: 82,
     conflicts_of_interest: [],
   },
 ];
@@ -524,10 +518,6 @@ export class ReviewerDataService {
         switch (params.sortBy) {
           case "match_score":
             return b.match_score - a.match_score;
-          case "response_rate":
-            return b.response_rate - a.response_rate;
-          case "quality_score":
-            return b.quality_score - a.quality_score;
           case "availability":
             const order = {
               available: 0,
@@ -680,6 +670,7 @@ export async function getManuscriptReviewers(
     .select(
       `
       match_score,
+      conflicts_of_interest,
       potential_reviewers (*)
     `
     )
@@ -691,12 +682,59 @@ export async function getManuscriptReviewers(
     throw error;
   }
 
-  // Transform the nested structure to include match_score at top level
+  // Get unique reviewer IDs
+  const reviewerIds = (data || []).map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (item: any) => item.potential_reviewers.id
+  );
+
+  // Fetch publications for all reviewers in parallel
+  const { data: publications } = await supabase
+    .from("reviewer_publications")
+    .select("reviewer_id, authors, publication_date, is_related")
+    .in("reviewer_id", reviewerIds);
+
+  // Group publications by reviewer_id
+  const publicationsByReviewer = new Map<
+    string,
+    Array<{
+      authors: string[] | null;
+      publication_date: string | null;
+      is_related: boolean;
+    }>
+  >();
+
+  (publications || []).forEach((pub) => {
+    const existing = publicationsByReviewer.get(pub.reviewer_id) || [];
+    existing.push({
+      authors: pub.authors,
+      publication_date: pub.publication_date,
+      is_related: pub.is_related,
+    });
+    publicationsByReviewer.set(pub.reviewer_id, existing);
+  });
+
+  // Transform the nested structure to include match_score, conflicts, and calculated fields
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data || []).map((item: any) => ({
-    ...item.potential_reviewers,
-    match_score: item.match_score,
-  }));
+  return (data || []).map((item: any) => {
+    const reviewer = item.potential_reviewers;
+    const reviewerPubs = publicationsByReviewer.get(reviewer.id) || [];
+
+    return {
+      ...reviewer,
+      match_score: item.match_score,
+      conflicts_of_interest: item.conflicts_of_interest || "",
+      email_is_institutional: isInstitutionalEmail(reviewer.email),
+      acceptance_rate: calculateAcceptanceRate(
+        reviewer.total_acceptances || 0,
+        reviewer.total_invitations || 0
+      ),
+      related_publications_count: countRelatedPublications(reviewerPubs),
+      solo_authored_count: countSoloAuthored(reviewerPubs),
+      publications_last_5_years: countRecentPublications(reviewerPubs, 5),
+      days_since_last_review: daysSince(reviewer.last_review_completed),
+    };
+  });
 }
 
 /**
@@ -2113,9 +2151,6 @@ export async function addReviewer(
       h_index: reviewer.h_index,
       last_review_completed: reviewer.last_review_completed,
       availability_status: reviewer.availability_status ?? "available",
-      response_rate: reviewer.response_rate ?? 0,
-      quality_score: reviewer.quality_score ?? 0,
-      conflicts_of_interest: reviewer.conflicts_of_interest ?? [],
     })
     .select()
     .single();

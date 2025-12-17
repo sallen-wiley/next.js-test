@@ -48,7 +48,8 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
         display: "flex",
         flexDirection: "column",
         alignItems: "normal",
-        zIndex: theme.zIndex.drawer + 1,
+        // Only apply z-index when fixed; keep it below drawers (1200) but above content
+        zIndex: fixed ? theme.zIndex.appBar : undefined,
         position: fixed ? "fixed" : "relative",
         top: 0,
         left: 0,

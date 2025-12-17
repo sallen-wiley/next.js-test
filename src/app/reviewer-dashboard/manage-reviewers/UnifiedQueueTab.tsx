@@ -356,9 +356,15 @@ export default function QueueInvitationsTab({
                         </TableCell>
                         <TableCell align="center">
                           <Chip
-                            label={`${Math.round(reviewer.match_score * 100)}%`}
+                            label={
+                              reviewer.match_score === 0
+                                ? "N/A"
+                                : `${Math.round(reviewer.match_score * 100)}%`
+                            }
                             size="small"
-                            color="primary"
+                            color={
+                              reviewer.match_score === 0 ? "default" : "primary"
+                            }
                             variant="outlined"
                           />
                         </TableCell>

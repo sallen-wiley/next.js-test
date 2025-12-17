@@ -27,7 +27,7 @@ import {
 
 export function useReviewers(params: {
   manuscriptId: string;
-  sortBy?: "match_score" | "availability" | "response_rate" | "quality_score";
+  sortBy?: "match_score" | "availability";
   filterBy?: {
     minMatchScore?: number;
     availability?: string[];

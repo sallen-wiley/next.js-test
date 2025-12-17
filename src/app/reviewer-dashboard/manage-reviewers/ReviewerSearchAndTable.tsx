@@ -19,9 +19,7 @@ import {
   TableRow,
   Chip,
   IconButton,
-  LinearProgress,
   Tooltip,
-  Avatar,
   Box,
   Skeleton,
 } from "@mui/material";
@@ -29,9 +27,11 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import QueueIcon from "@mui/icons-material/Queue";
 import CancelIcon from "@mui/icons-material/Cancel";
-import StarIcon from "@mui/icons-material/Star";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+// Removed unused Star icon
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { PotentialReviewerWithMatch } from "@/lib/supabase";
 
 interface ReviewerSearchAndTableProps {
@@ -40,18 +40,17 @@ interface ReviewerSearchAndTableProps {
   searchTerm: string;
   sortBy: string;
   filterAvailability: string[];
-  minMatchScore: number;
   loading: boolean;
   onSearchChange: (value: string) => void;
   onSortChange: (value: string) => void;
   onAvailabilityChange: (value: string[]) => void;
-  onMinMatchScoreChange: (value: number) => void;
   onReviewerSelect: (reviewerId: string) => void;
   onInviteReviewer: (reviewerId: string) => void;
   onAddToQueue: (reviewerId: string) => void;
   onBatchInvite: () => void;
   onBatchAddToQueue: () => void;
   onClearFilters: () => void;
+  onViewProfile: (reviewerId: string) => void;
 }
 
 const getAvailabilityColor = (status: string) => {
@@ -69,24 +68,37 @@ const getAvailabilityColor = (status: string) => {
   }
 };
 
+// Helper function to check if reviewer has conflicts
+const hasConflicts = (conflicts: string | string[] | undefined) => {
+  if (!conflicts) return false;
+  if (typeof conflicts === "string") return conflicts.trim().length > 0;
+  return conflicts.length > 0;
+};
+
+// Helper function to display conflicts
+const getConflictsDisplay = (conflicts: string | string[] | undefined) => {
+  if (!conflicts) return "";
+  if (typeof conflicts === "string") return conflicts;
+  return conflicts.join(", ");
+};
+
 export function ReviewerSearchAndTable({
   filteredReviewers,
   selectedReviewers,
   searchTerm,
   sortBy,
   filterAvailability,
-  minMatchScore,
   loading,
   onSearchChange,
   onSortChange,
   onAvailabilityChange,
-  onMinMatchScoreChange,
   onReviewerSelect,
   onInviteReviewer,
   onAddToQueue,
   onBatchInvite,
   onBatchAddToQueue,
   onClearFilters,
+  onViewProfile,
 }: ReviewerSearchAndTableProps) {
   return (
     <>
@@ -97,8 +109,8 @@ export function ReviewerSearchAndTable({
           Search & Filter Reviewers
         </Typography>
         <Alert severity="info" sx={{ mb: 2 }}>
-          Showing suggested reviewers with match scores by default. Search to
-          find any reviewer in the full database.
+          Showing reviewers with AI-generated match scores for this manuscript.
+          Use search to browse all reviewers in the database.
         </Alert>
         <Grid container spacing={2} alignItems="center">
           <Grid size={{ xs: 12, md: 3 }}>
@@ -119,8 +131,6 @@ export function ReviewerSearchAndTable({
                 onChange={(e) => onSortChange(e.target.value)}
               >
                 <MenuItem value="match_score">Match Score</MenuItem>
-                <MenuItem value="response_rate">Response Rate</MenuItem>
-                <MenuItem value="quality_score">Quality Score</MenuItem>
                 <MenuItem value="current_load">Current Load</MenuItem>
                 <MenuItem value="name">Name</MenuItem>
               </Select>
@@ -144,19 +154,7 @@ export function ReviewerSearchAndTable({
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <TextField
-              fullWidth
-              label="Min Match Score (%)"
-              type="number"
-              value={Math.round(minMatchScore * 100)}
-              onChange={(e) =>
-                onMinMatchScoreChange(Number(e.target.value) / 100)
-              }
-              inputProps={{ min: 0, max: 100 }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <Stack direction="row" spacing={1}>
               <Button
                 variant="contained"
@@ -186,13 +184,21 @@ export function ReviewerSearchAndTable({
             <TableHead>
               <TableRow>
                 <TableCell padding="checkbox"></TableCell>
-                <TableCell>Reviewer</TableCell>
-                <TableCell align="center">Match Score</TableCell>
-                <TableCell align="center">Availability</TableCell>
-                <TableCell align="center">Current Load</TableCell>
-                <TableCell align="center">Response Rate</TableCell>
-                <TableCell align="center">Quality Score</TableCell>
-                <TableCell align="center">Avg Review Time</TableCell>
+                <TableCell>Name & Affiliation</TableCell>
+                <TableCell align="center">Match</TableCell>
+                <TableCell align="center">Avail</TableCell>
+                <TableCell align="center">Email</TableCell>
+                <TableCell align="center">ORCID</TableCell>
+                <TableCell>Expertise</TableCell>
+                <TableCell align="center">Conflict</TableCell>
+                <TableCell align="center">Related Pubs</TableCell>
+                <TableCell align="center">H-Index</TableCell>
+                <TableCell align="center">Solo Pubs</TableCell>
+                <TableCell align="center">5yr Pubs</TableCell>
+                <TableCell align="center">Current</TableCell>
+                <TableCell align="center">Accept %</TableCell>
+                <TableCell align="center">Completed</TableCell>
+                <TableCell align="center">Last Review</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -215,7 +221,7 @@ export function ReviewerSearchAndTable({
                         </Box>
                       </Box>
                     </TableCell>
-                    {Array.from({ length: 7 }).map((_, i) => (
+                    {Array.from({ length: 15 }).map((_, i) => (
                       <TableCell key={i} align="center">
                         <Skeleton width={60} sx={{ mx: "auto" }} />
                       </TableCell>
@@ -224,7 +230,7 @@ export function ReviewerSearchAndTable({
                 ))
               ) : filteredReviewers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9}>
+                  <TableCell colSpan={17}>
                     <Box
                       sx={{
                         display: "flex",
@@ -303,137 +309,230 @@ export function ReviewerSearchAndTable({
                         type="checkbox"
                         checked={selectedReviewers.includes(reviewer.id)}
                         onChange={() => onReviewerSelect(reviewer.id)}
-                        disabled={reviewer.conflicts_of_interest.length > 0}
+                        disabled={hasConflicts(reviewer.conflicts_of_interest)}
                       />
                     </TableCell>
+                    {/* Name & Affiliation */}
                     <TableCell>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                      >
-                        <Avatar sx={{ bgcolor: "primary.main" }}>
-                          {reviewer.name.charAt(0)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            {reviewer.name}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ mb: 0.5 }}
-                          >
-                            {reviewer.affiliation}
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              gap: 0.5,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            {reviewer.expertise_areas
-                              .slice(0, 3)
-                              .map((area) => (
-                                <Chip
-                                  key={area}
-                                  label={area}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{
-                                    fontSize: "0.7rem",
-                                  }}
-                                />
-                              ))}
-                          </Box>
-                          {reviewer.conflicts_of_interest.length > 0 && (
-                            <Chip
-                              label={`Conflict: ${reviewer.conflicts_of_interest.join(
-                                ", "
-                              )}`}
-                              color="error"
-                              size="small"
-                              icon={<CancelIcon />}
-                              sx={{
-                                mt: 1,
-                                fontWeight: 600,
-                                "& .MuiChip-label": {
-                                  fontWeight: 600,
-                                },
-                              }}
-                            />
-                          )}
-                        </Box>
+                      <Box sx={{ minWidth: 200 }}>
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          {reviewer.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {reviewer.affiliation}
+                        </Typography>
                       </Box>
                     </TableCell>
+
+                    {/* Match Score */}
+                    <TableCell align="center">
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        color={
+                          reviewer.match_score === 0
+                            ? "text.disabled"
+                            : reviewer.match_score >= 0.8
+                            ? "success.main"
+                            : "text.primary"
+                        }
+                      >
+                        {reviewer.match_score === 0
+                          ? "—"
+                          : `${Math.round(reviewer.match_score * 100)}%`}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Availability */}
+                    <TableCell align="center">
+                      <Chip
+                        label={reviewer.availability_status.substring(0, 4)}
+                        color={
+                          getAvailabilityColor(reviewer.availability_status) as
+                            | "success"
+                            | "warning"
+                            | "error"
+                            | "default"
+                        }
+                        size="small"
+                        sx={{ fontSize: "0.7rem", height: 20 }}
+                      />
+                    </TableCell>
+
+                    {/* Email with validation icon */}
                     <TableCell align="center">
                       <Box
                         sx={{
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: 1,
+                          gap: 0.5,
                         }}
                       >
-                        <Typography variant="h6" color="primary">
-                          {Math.round(reviewer.match_score * 100)}%
-                        </Typography>
-                        {reviewer.match_score >= 0.9 && (
-                          <StarIcon color="warning" fontSize="small" />
+                        <Tooltip title={reviewer.email}>
+                          <Typography
+                            variant="caption"
+                            noWrap
+                            sx={{ maxWidth: 120 }}
+                          >
+                            {reviewer.email.split("@")[0]}
+                          </Typography>
+                        </Tooltip>
+                        {reviewer.email_is_institutional && (
+                          <Tooltip title="Institutional email">
+                            <CheckCircleIcon
+                              sx={{ fontSize: 14, color: "success.main" }}
+                            />
+                          </Tooltip>
                         )}
                       </Box>
                     </TableCell>
+
+                    {/* ORCID */}
                     <TableCell align="center">
-                      <Chip
-                        label={reviewer.availability_status}
-                        color={
-                          getAvailabilityColor(reviewer.availability_status) as
-                            | "success"
-                            | "warning"
-                            | "error"
-                            | "info"
-                            | "default"
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Box>
-                        <Typography variant="body2">
-                          {reviewer.current_review_load}/
-                          {reviewer.max_review_capacity}
+                      {reviewer.orcid_id ? (
+                        <Tooltip title={reviewer.orcid_id}>
+                          <Typography variant="caption" color="primary">
+                            ✓
+                          </Typography>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="caption" color="text.disabled">
+                          —
                         </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={
-                            (reviewer.current_review_load /
-                              reviewer.max_review_capacity) *
-                            100
-                          }
-                          sx={{ mt: 0.5, width: 40 }}
-                        />
+                      )}
+                    </TableCell>
+
+                    {/* Expertise */}
+                    <TableCell>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 0.5,
+                          flexWrap: "wrap",
+                          maxWidth: 200,
+                        }}
+                      >
+                        {reviewer.expertise_areas
+                          .slice(0, 2)
+                          .map((area, idx) => (
+                            <Chip
+                              key={idx}
+                              label={area}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontSize: "0.65rem", height: 18 }}
+                            />
+                          ))}
+                        {reviewer.expertise_areas.length > 2 && (
+                          <Chip
+                            label={`+${reviewer.expertise_areas.length - 2}`}
+                            size="small"
+                            sx={{ fontSize: "0.65rem", height: 18 }}
+                          />
+                        )}
                       </Box>
                     </TableCell>
+
+                    {/* Conflict */}
+                    <TableCell align="center">
+                      {hasConflicts(reviewer.conflicts_of_interest) ? (
+                        <Tooltip
+                          title={getConflictsDisplay(
+                            reviewer.conflicts_of_interest
+                          )}
+                        >
+                          <CancelIcon
+                            sx={{ fontSize: 18, color: "error.main" }}
+                          />
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="caption" color="text.disabled">
+                          —
+                        </Typography>
+                      )}
+                    </TableCell>
+
+                    {/* Related Publications */}
+                    <TableCell align="center">
+                      <Typography variant="body2">
+                        {reviewer.related_publications_count}
+                      </Typography>
+                    </TableCell>
+
+                    {/* H-Index */}
+                    <TableCell align="center">
+                      <Typography variant="body2" fontWeight={500}>
+                        {reviewer.h_index ?? "—"}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Solo Authored */}
+                    <TableCell align="center">
+                      <Typography variant="body2">
+                        {reviewer.solo_authored_count}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Publications Last 5 Years */}
+                    <TableCell align="center">
+                      <Typography variant="body2">
+                        {reviewer.publications_last_5_years}
+                      </Typography>
+                    </TableCell>
+
+                    {/* Current Reviews */}
+                    <TableCell align="center">
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>
+                          {reviewer.current_review_load}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          /{reviewer.max_review_capacity}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+
+                    {/* Acceptance Rate */}
                     <TableCell align="center">
                       <Typography
                         variant="body2"
                         color={
-                          reviewer.response_rate >= 80
+                          reviewer.acceptance_rate >= 80
                             ? "success.main"
-                            : "warning.main"
+                            : reviewer.acceptance_rate >= 50
+                            ? "warning.main"
+                            : "text.secondary"
                         }
                       >
-                        {reviewer.response_rate}%
+                        {reviewer.acceptance_rate}%
                       </Typography>
                     </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body2" color="primary">
-                        {reviewer.quality_score}%
-                      </Typography>
-                    </TableCell>
+
+                    {/* Completed Reviews */}
                     <TableCell align="center">
                       <Typography variant="body2">
-                        {reviewer.average_review_time_days} days
+                        {reviewer.completed_reviews || 0}
                       </Typography>
+                    </TableCell>
+
+                    {/* Last Review Date */}
+                    <TableCell align="center">
+                      {reviewer.days_since_last_review !== null ? (
+                        <Tooltip
+                          title={new Date(
+                            reviewer.last_review_completed!
+                          ).toLocaleDateString()}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            {reviewer.days_since_last_review}d ago
+                          </Typography>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="caption" color="text.disabled">
+                          Never
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell align="center">
                       <Stack
@@ -441,9 +540,17 @@ export function ReviewerSearchAndTable({
                         spacing={1}
                         justifyContent="center"
                       >
+                        <Tooltip title="View full profile">
+                          <IconButton
+                            size="small"
+                            onClick={() => onViewProfile(reviewer.id)}
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip
                           title={
-                            reviewer.conflicts_of_interest.length > 0
+                            hasConflicts(reviewer.conflicts_of_interest)
                               ? "Cannot invite - Conflict of interest"
                               : "Invite immediately"
                           }
@@ -452,9 +559,9 @@ export function ReviewerSearchAndTable({
                             <IconButton
                               size="small"
                               color="primary"
-                              disabled={
-                                reviewer.conflicts_of_interest.length > 0
-                              }
+                              disabled={hasConflicts(
+                                reviewer.conflicts_of_interest
+                              )}
                               onClick={() => onInviteReviewer(reviewer.id)}
                               sx={{
                                 "&.Mui-disabled": {
@@ -471,7 +578,7 @@ export function ReviewerSearchAndTable({
                         </Tooltip>
                         <Tooltip
                           title={
-                            reviewer.conflicts_of_interest.length > 0
+                            hasConflicts(reviewer.conflicts_of_interest)
                               ? "Cannot queue - Conflict of interest"
                               : "Add to queue"
                           }
@@ -480,9 +587,9 @@ export function ReviewerSearchAndTable({
                             <IconButton
                               size="small"
                               color="secondary"
-                              disabled={
-                                reviewer.conflicts_of_interest.length > 0
-                              }
+                              disabled={hasConflicts(
+                                reviewer.conflicts_of_interest
+                              )}
                               onClick={() => onAddToQueue(reviewer.id)}
                               sx={{
                                 "&.Mui-disabled": {

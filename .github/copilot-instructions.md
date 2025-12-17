@@ -349,7 +349,7 @@ figma.connect(Component, "figma-url", {
 
 #### potential_reviewers
 - **Purpose**: Reviewer database with expertise and metrics (43 columns total)
-- **Key Fields**: id (uuid), name (text), email (text UNIQUE), affiliation (text), expertise_areas (text[]), availability_status (text), response_rate (numeric), quality_score (numeric), current_review_load (int), max_review_capacity (int), average_review_time_days (int), h_index (int), orcid_id (text), is_board_member (bool), previous_reviewer (bool)
+- **Key Fields**: id (uuid), name (text), email (text UNIQUE), affiliation (text), expertise_areas (text[]), availability_status (text), current_review_load (int), max_review_capacity (int), average_review_time_days (int), h_index (int), orcid_id (text), is_board_member (bool), previous_reviewer (bool), total_acceptances (int), total_invitations (int)
 - **Extended Fields**: number_of_reviews, completed_reviews, currently_reviewing, citation_count, publication_year_from, publication_year_to, total_invitations, total_acceptances, average_response_time_hours
 - **Availability Values**: 'available', 'busy', 'unavailable', 'sabbatical'
 - **RLS**: Enabled (all authenticated users)
