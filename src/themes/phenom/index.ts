@@ -394,7 +394,13 @@ theme = createTheme(theme, {
       variants: [
         {
           props: { variant: "solid-light" },
-          style: ({ theme, ownerState }: { theme: Theme; ownerState: any }) => {
+          style: ({
+            theme,
+            ownerState,
+          }: {
+            theme: Theme;
+            ownerState: { color?: string };
+          }) => {
             const color = ownerState.color || "default";
 
             // Get the main color from palette
@@ -402,9 +408,11 @@ theme = createTheme(theme, {
             if (color === "default") {
               mainColor = theme.palette.action.active;
             } else {
-              mainColor =
-                theme.palette[color as keyof typeof theme.palette]?.main ||
-                theme.palette.primary.main;
+              // Type-safe palette access for color variants
+              const paletteColor = theme.palette[
+                color as keyof typeof theme.palette
+              ] as { main?: string } | undefined;
+              mainColor = paletteColor?.main || theme.palette.primary.main;
             }
 
             // Create very light background by mixing main color with white (90% white blend)

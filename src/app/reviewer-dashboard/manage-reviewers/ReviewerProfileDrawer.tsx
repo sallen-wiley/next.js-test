@@ -76,14 +76,7 @@ export default function ReviewerProfileDrawer({
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Fetch reviewer details when drawer opens
-  React.useEffect(() => {
-    if (open && reviewerId) {
-      fetchReviewerProfile(reviewerId);
-    }
-  }, [open, reviewerId]);
-
-  const fetchReviewerProfile = async (id: string) => {
+  const fetchReviewerProfile = React.useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
 
@@ -176,7 +169,14 @@ export default function ReviewerProfileDrawer({
     } finally {
       setLoading(false);
     }
-  };
+  }, [manuscriptId]);
+
+  // Fetch reviewer details when drawer opens
+  React.useEffect(() => {
+    if (open && reviewerId) {
+      fetchReviewerProfile(reviewerId);
+    }
+  }, [open, reviewerId, fetchReviewerProfile]);
 
   // Calculate strong and weak points
   const getStrongPoints = (): string[] => {
