@@ -539,9 +539,6 @@ theme = createTheme(theme, {
         }),
       },
     },
-    MuiTextField: {
-      // Remove defaultProps that depend on JS timing - we'll handle this via CSS
-    },
 
     MuiInputLabel: {
       defaultProps: {
@@ -582,8 +579,6 @@ theme = createTheme(theme, {
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
             borderWidth: 2,
           },
-
-          backgroundColor: theme.palette.background.paper,
         },
         notchedOutline: ({ theme }: { theme: Theme }) => ({
           ...theme.applyStyles("light", {

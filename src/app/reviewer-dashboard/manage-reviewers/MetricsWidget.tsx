@@ -1,69 +1,197 @@
 import * as React from "react";
-import { Grid, Card, CardContent, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  Typography,
+  Divider,
+  IconButton,
+  Tooltip,
+  Paper,
+} from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 interface MetricsWidgetProps {
-  highMatchCount: number;
+  submittedCount: number;
+  overdueCount: number;
+  invalidatedCount: number;
+  expiredCount: number;
+  revokedCount: number;
   acceptedCount: number;
+  declinedCount: number;
   pendingCount: number;
   queuedCount: number;
 }
 
 export function MetricsWidget({
-  highMatchCount,
+  submittedCount,
+  overdueCount,
+  invalidatedCount,
+  expiredCount,
+  revokedCount,
   acceptedCount,
+  declinedCount,
   pendingCount,
   queuedCount,
 }: MetricsWidgetProps) {
   return (
-    <Grid container spacing={2} sx={{ mb: 3 }}>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <Card>
-          <CardContent sx={{ textAlign: "center" }}>
-            <Typography variant="h4" color="primary">
-              {highMatchCount}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              High Match Reviewers (90%+)
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <Card>
-          <CardContent sx={{ textAlign: "center" }}>
-            <Typography variant="h4" color="success.main">
-              {acceptedCount}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Accepted Invitations
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <Card>
-          <CardContent sx={{ textAlign: "center" }}>
-            <Typography variant="h4" color="warning.main">
-              {pendingCount}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Pending Responses
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <Card>
-          <CardContent sx={{ textAlign: "center" }}>
-            <Typography variant="h4" color="info.main">
-              {queuedCount}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Queued Invitations
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+    <Card sx={{ mb: 3 }}>
+      <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+        {/* Reports Section */}
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Typography variant="subtitle1">Reports</Typography>
+            <Tooltip title="Number of reviewer reports for this manuscript">
+              <IconButton size="small" sx={{ p: 0.5 }}>
+                <HelpOutlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+            <Typography variant="subtitle1">{submittedCount}</Typography>
+            <Typography variant="body1">Submitted</Typography>
+            <Tooltip title="Reports submitted by reviewers">
+              <IconButton size="small" sx={{ p: 0.5 }}>
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Typography variant="subtitle1">{overdueCount}</Typography>
+            <Typography variant="body1">Overdue,</Typography>
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "83px",
+              }}
+            >
+              <Typography variant="subtitle1">{invalidatedCount}</Typography>
+              <Typography variant="body1">Invalidated</Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem sx={{ height: "20px" }} />
+          </Box>
+        </Box>
+
+        {/* Invitations Section */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, py: 0.5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            <Typography variant="subtitle1">Invitations</Typography>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Typography variant="subtitle1">{expiredCount}</Typography>
+              <Typography variant="body1">Expired,</Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Typography variant="subtitle1">{revokedCount}</Typography>
+              <Typography variant="body1">Revoked</Typography>
+            </Box>
+          </Box>
+
+          {/* Stats Cards */}
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+            }}
+          >
+            <Paper
+              elevation={0}
+              sx={{
+                bgcolor: "background.default",
+                flex: 1,
+                px: 1.5,
+                py: 1.25,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="overline">Accepted</Typography>
+              <Typography variant="h5">{acceptedCount}</Typography>
+            </Paper>
+
+            <Paper
+              elevation={0}
+              sx={{
+                bgcolor: "background.default",
+                flex: 1,
+                px: 1.5,
+                py: 1.25,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="overline">Declined</Typography>
+              <Typography variant="h5">{declinedCount}</Typography>
+            </Paper>
+
+            <Paper
+              elevation={0}
+              sx={{
+                bgcolor: "background.default",
+                flex: 1,
+                px: 1.5,
+                py: 1.25,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="overline">Pending</Typography>
+              <Typography variant="h5">{pendingCount}</Typography>
+            </Paper>
+
+            <Paper
+              elevation={0}
+              sx={{
+                bgcolor: "background.default",
+                flex: 1,
+                px: 1.5,
+                py: 1.25,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="overline">Queued</Typography>
+              <Typography variant="h5">{queuedCount}</Typography>
+            </Paper>
+          </Box>
+        </Box>
+      </Box>
+    </Card>
   );
 }

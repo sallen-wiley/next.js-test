@@ -25,6 +25,8 @@ export interface ReviewerStatsExtended {
   invalidated: number;
   /** Invitations revoked/cancelled (status: revoked) */
   revoked: number;
+  /** Reviewers in queue waiting to be invited */
+  queued: number;
 }
 
 /**
@@ -40,6 +42,7 @@ export interface ReviewerStats {
   expired?: number;
   overdue?: number;
   revoked?: number;
+  queued?: number;
 }
 
 /**
@@ -62,6 +65,7 @@ export function calculateReviewerStats(
     overdue: 0,
     invalidated: 0,
     revoked: 0,
+    queued: 0, // Must be set externally from invitation_queue table
   };
 
   invitations.forEach((invitation) => {
@@ -117,5 +121,6 @@ export function toBasicStats(stats: ReviewerStatsExtended): ReviewerStats {
     expired: stats.expired,
     overdue: stats.overdue,
     revoked: stats.revoked,
+    queued: stats.queued,
   };
 }

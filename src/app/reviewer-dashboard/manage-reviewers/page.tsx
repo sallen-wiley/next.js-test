@@ -511,8 +511,8 @@ export default function ReviewerInvitationDashboard() {
 
           // Multi-select removed; no selection to update
 
-          // Refresh the reviewers with status to show the new invitation
-          await refreshReviewersWithStatus();
+          // Refresh the reviewers with status and invitations to show the new invitation
+          await refreshReviewerData();
 
           showSnackbar(`Invitation sent to ${reviewer.name}`, "success");
 
@@ -537,6 +537,40 @@ export default function ReviewerInvitationDashboard() {
     }
   };
 
+  const refreshInvitations = async () => {
+    if (!manuscriptId) return;
+    try {
+      const invitationsData = await getManuscriptInvitations(manuscriptId);
+      setInvitations(invitationsData);
+    } catch (error) {
+      console.error("Error refreshing invitations:", error);
+    }
+  };
+
+  const refreshQueue = async () => {
+    if (!manuscriptId) return;
+    try {
+      const queueData = await getManuscriptQueue(manuscriptId);
+      setSimulatedQueue(queueData);
+    } catch (error) {
+      console.error("Error refreshing queue:", error);
+    }
+  };
+
+  // Combined refresh for both reviewer status and invitations (updates MetricsWidget)
+  const refreshReviewerData = async () => {
+    await Promise.all([refreshReviewersWithStatus(), refreshInvitations()]);
+  };
+
+  // Combined refresh including queue (for queue operations)
+  const refreshAllReviewerData = async () => {
+    await Promise.all([
+      refreshReviewersWithStatus(),
+      refreshInvitations(),
+      refreshQueue(),
+    ]);
+  };
+
   const handleActionMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
     reviewer: ReviewerWithStatus
@@ -555,7 +589,7 @@ export default function ReviewerInvitationDashboard() {
 
     try {
       await moveInQueue(selectedReviewerForAction.queue_id, "up");
-      await refreshReviewersWithStatus();
+      await refreshAllReviewerData();
       showSnackbar("Reviewer moved up in queue", "success");
     } catch (error: unknown) {
       showSnackbar(
@@ -571,7 +605,7 @@ export default function ReviewerInvitationDashboard() {
 
     try {
       await moveInQueue(selectedReviewerForAction.queue_id, "down");
-      await refreshReviewersWithStatus();
+      await refreshAllReviewerData();
       showSnackbar("Reviewer moved down in queue", "success");
     } catch (error: unknown) {
       showSnackbar(
@@ -594,7 +628,7 @@ export default function ReviewerInvitationDashboard() {
             selectedReviewerForAction.invitation_id!,
             false
           );
-          await refreshReviewersWithStatus();
+          await refreshReviewerData();
           showSnackbar("Invitation revoked", "success");
         } catch {
           showSnackbar("Failed to revoke invitation", "error");
@@ -613,7 +647,7 @@ export default function ReviewerInvitationDashboard() {
       async () => {
         try {
           await removeFromQueue(selectedReviewerForAction.queue_id!);
-          await refreshReviewersWithStatus();
+          await refreshAllReviewerData();
           showSnackbar("Removed from queue", "success");
         } catch {
           showSnackbar("Failed to remove from queue", "error");
@@ -637,8 +671,8 @@ export default function ReviewerInvitationDashboard() {
           // Then send invitation
           await sendInvitation(manuscriptId, selectedReviewerForAction.id);
 
-          // Refresh the data
-          await refreshReviewersWithStatus();
+          // Refresh all data including queue
+          await refreshAllReviewerData();
           showSnackbar(
             `Invitation sent to ${selectedReviewerForAction.name}`,
             "success"
@@ -660,7 +694,7 @@ export default function ReviewerInvitationDashboard() {
       async () => {
         try {
           await removeInvitation(selectedReviewerForAction.invitation_id!);
-          await refreshReviewersWithStatus();
+          await refreshReviewerData();
           showSnackbar("Invitation removed", "success");
         } catch {
           showSnackbar("Failed to remove invitation", "error");
@@ -691,7 +725,7 @@ export default function ReviewerInvitationDashboard() {
           selectedReviewerForAction.invitation_id!,
           status
         );
-        await refreshReviewersWithStatus();
+        await refreshReviewerData();
         showSnackbar(successMessage, "success");
       } catch {
         showSnackbar("Failed to update invitation status", "error");
@@ -733,7 +767,7 @@ export default function ReviewerInvitationDashboard() {
 
     try {
       await submitReport(selectedReviewerForAction.invitation_id);
-      await refreshReviewersWithStatus();
+      await refreshReviewerData();
       showSnackbar("Report submitted successfully (testing)", "success");
       handleActionMenuClose();
     } catch (error) {
@@ -754,7 +788,7 @@ export default function ReviewerInvitationDashboard() {
             selectedReviewerForAction.invitation_id!,
             "Invalidated by editor"
           );
-          await refreshReviewersWithStatus();
+          await refreshReviewerData();
           showSnackbar("Report invalidated", "warning");
           handleActionMenuClose();
         } catch (error) {
@@ -774,7 +808,7 @@ export default function ReviewerInvitationDashboard() {
       async () => {
         try {
           await uninvalidateReport(selectedReviewerForAction.invitation_id!);
-          await refreshReviewersWithStatus();
+          await refreshReviewerData();
           showSnackbar("Report reinstated", "success");
           handleActionMenuClose();
         } catch (error) {
@@ -794,7 +828,7 @@ export default function ReviewerInvitationDashboard() {
       async () => {
         try {
           await cancelReview(selectedReviewerForAction.invitation_id!);
-          await refreshReviewersWithStatus();
+          await refreshReviewerData();
           showSnackbar("Review cancelled", "info");
           handleActionMenuClose();
         } catch (error) {
@@ -838,11 +872,9 @@ export default function ReviewerInvitationDashboard() {
           );
 
           if (newQueueItem) {
-            // Refresh the reviewers with status data
-            await refreshReviewersWithStatus();
+            // Refresh all data including queue
+            await refreshAllReviewerData();
 
-            // Update local state
-            setSimulatedQueue((prev) => [...prev, newQueueItem]);
             // Multi-select removed; no selection to update
             showSnackbar(
               `${reviewer.name} added to queue (Position ${newQueueItem.queue_position})`,

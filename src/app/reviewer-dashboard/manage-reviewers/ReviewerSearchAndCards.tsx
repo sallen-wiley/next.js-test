@@ -189,11 +189,16 @@ export function ReviewerSearchAndCards({
             anchor="right"
             slotProps={{
               paper: {
-                sx: { width: 420 },
+                sx: {
+                  width: { xs: "100vw", sm: 400, md: 420 },
+                  maxWidth: "100%",
+                },
               },
             }}
           >
-            <Box>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", height: "100%" }}
+            >
               {/* Filter Header */}
               <Box
                 sx={{
@@ -204,6 +209,7 @@ export function ReviewerSearchAndCards({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  flexShrink: 0,
                 }}
               >
                 <Typography variant="h6" sx={{ fontWeight: "bold" }}>
@@ -218,8 +224,8 @@ export function ReviewerSearchAndCards({
                 </Button>
               </Box>
 
-              {/* Filter Content */}
-              <Box sx={{ p: 2 }}>
+              {/* Filter Content - Scrollable */}
+              <Box sx={{ p: 2, flex: 1, overflow: "auto" }}>
                 <Stack spacing={2}>
                   {/* Section 1: Demographics */}
                   <Stack spacing={2}>
@@ -1057,16 +1063,18 @@ export function ReviewerSearchAndCards({
                 </Stack>
               </Box>
 
-              {/* Filter Footer */}
+              {/* Filter Footer - Fixed at bottom */}
               <Box
                 sx={{
                   px: 2,
-                  py: 1,
+                  py: 1.5,
                   borderTop: 1,
                   borderColor: "divider",
                   display: "flex",
                   gap: 2,
                   justifyContent: "flex-end",
+                  flexShrink: 0,
+                  bgcolor: "background.paper",
                 }}
               >
                 <Button

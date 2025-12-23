@@ -5,17 +5,18 @@ import { Box, Paper, Chip, Stack, Typography } from "@mui/material";
 import type { ChipProps } from "@mui/material";
 import type { ManuscriptTag } from "@/lib/supabase";
 import { useThemeContext } from "@/contexts/ThemeContext";
+import { renderMetricStat } from "./ReviewerMetricsDisplay";
 
 export type ReviewerStats = {
-  invited?: number;
-  accepted?: number;
-  pending?: number;
-  declined?: number;
   submitted?: number;
+  overdue?: number;
   invalidated?: number;
   expired?: number;
-  overdue?: number;
   revoked?: number;
+  accepted?: number;
+  declined?: number;
+  pending?: number;
+  queued?: number;
 };
 
 type ArticleCardProps = {
@@ -56,25 +57,6 @@ export function ArticleCard({
     academicEditors && academicEditors.length > 0
       ? academicEditors.join(", ")
       : "Unassigned";
-
-  const renderStat = (
-    value: number | undefined,
-    label: string,
-    suffix?: string
-  ) => {
-    if (value === undefined) return null;
-    return (
-      <Stack direction="row" spacing={0.5} alignItems="center">
-        <Typography variant="subtitle1" color="text.secondary">
-          {value}
-        </Typography>
-        <Typography variant="subtitle2" color="text.secondary">
-          {label}
-          {suffix ? "," : ""}
-        </Typography>
-      </Stack>
-    );
-  };
 
   return (
     <Paper
@@ -190,7 +172,7 @@ export function ArticleCard({
                   <Typography variant="subtitle1" color="text.secondary">
                     Article Type:
                   </Typography>
-                  <Typography variant="subtitle2" color="text.secondary">
+                  <Typography variant="subtitle1" color="text.secondary">
                     {articleType}
                   </Typography>
                 </Stack>
@@ -204,7 +186,7 @@ export function ArticleCard({
                   <Typography variant="subtitle1" color="text.secondary">
                     Academic Editor:
                   </Typography>
-                  <Typography variant="subtitle2" color="text.secondary">
+                  <Typography variant="subtitle1" color="text.secondary">
                     {academicEditorLabel}
                   </Typography>
                 </Stack>
@@ -216,7 +198,7 @@ export function ArticleCard({
                   flexWrap="wrap"
                 >
                   <Typography variant="subtitle1" color="text.secondary">
-                    Reviewer Reports:
+                    Reviewers:
                   </Typography>
                   <Stack
                     direction="row"
@@ -224,14 +206,25 @@ export function ArticleCard({
                     alignItems="center"
                     flexWrap="wrap"
                   >
-                    {renderStat(reviewerStats.submitted, "submitted", ",")}
-                    {renderStat(reviewerStats.invalidated, "invalidated", ",")}
-                    {renderStat(reviewerStats.overdue, "overdue", ",")}
-                    {renderStat(reviewerStats.accepted, "accepted", ",")}
-                    {renderStat(reviewerStats.pending, "pending", ",")}
-                    {renderStat(reviewerStats.expired, "expired", ",")}
-                    {renderStat(reviewerStats.declined, "declined", ",")}
-                    {renderStat(reviewerStats.revoked, "revoked")}
+                    {renderMetricStat(reviewerStats.accepted, "accepted", ",")}
+                    {renderMetricStat(reviewerStats.declined, "declined", ",")}
+                    {renderMetricStat(reviewerStats.pending, "pending", ",")}
+                    {renderMetricStat(reviewerStats.queued, "queued")}
+                    <Typography variant="subtitle1" color="text.secondary">
+                      |
+                    </Typography>
+                    {renderMetricStat(
+                      reviewerStats.submitted,
+                      "submitted",
+                      ","
+                    )}
+                    {renderMetricStat(reviewerStats.overdue, "overdue", ",")}
+                    {renderMetricStat(reviewerStats.invalidated, "invalidated")}
+                    <Typography variant="subtitle1" color="text.secondary">
+                      |
+                    </Typography>
+                    {renderMetricStat(reviewerStats.expired, "expired", ",")}
+                    {renderMetricStat(reviewerStats.revoked, "revoked")}
                   </Stack>
                 </Stack>
               </Stack>
@@ -261,7 +254,7 @@ export function ArticleCard({
             <Typography variant="subtitle1" color="text.secondary">
               Journal:
             </Typography>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle1" color="text.secondary">
               {journal}
             </Typography>
           </Stack>
@@ -269,7 +262,7 @@ export function ArticleCard({
             <Typography variant="subtitle1" color="text.secondary">
               Submitted on:
             </Typography>
-            <Typography variant="subtitle2" color="text.primary">
+            <Typography variant="subtitle1" color="text.primary">
               {submittedOn}
             </Typography>
           </Stack>

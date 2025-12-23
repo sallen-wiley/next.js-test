@@ -195,6 +195,11 @@ This project can be deployed to any platform that supports Node.js:
    git push wiley main
    ```
 
+## Documentation
+
+- **[Main Documentation Hub](docs/README.md)** - Organized guides for setup, development, and components
+- **[Archive](docs/archive/README.md)** - Historical documentation from completed features
+
 ## License
 
 This project is for demonstration purposes and internal development.

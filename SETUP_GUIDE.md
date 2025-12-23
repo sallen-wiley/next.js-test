@@ -22,14 +22,13 @@ npm install
 Create a `.env.local` file in the root directory with these environment variables:
 
 ```bash
-# Supabase Configuration
+# Supabase Configuration (Required)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 
-# App Configuration (choose your setup mode)
+# App Configuration
 NEXT_PUBLIC_ENABLE_AUTH=false              # Start with auth disabled for easier testing
-USE_MOCK_DATA=true                          # Use mock data initially
-NEXT_PUBLIC_AUTH_TYPE=supabase             # Use Supabase when auth is enabled
+NEXT_PUBLIC_AUTH_TYPE=supabase             # Authentication provider
 ```
 
 **Replace the placeholders with actual values:**
@@ -37,7 +36,7 @@ NEXT_PUBLIC_AUTH_TYPE=supabase             # Use Supabase when auth is enabled
 - `your_supabase_url_here` → Your Supabase project URL
 - `your_supabase_anon_key_here` → Your Supabase anonymous/public key
 
-> **Note**: I'll provide these actual values separately via secure communication.
+> **Note**: Contact your team lead for the Supabase credentials.
 
 ## 3. Run the Application
 
@@ -59,37 +58,31 @@ Open [http://localhost:6006](http://localhost:6006) to view the component librar
 
 ## Configuration Options
 
-### Option A: Quick Demo Mode (Recommended First)
+### Authentication Modes
+
+**Development Mode (Recommended First):**
 
 ```bash
-# .env.local
 NEXT_PUBLIC_ENABLE_AUTH=false
-USE_MOCK_DATA=true
-NEXT_PUBLIC_SUPABASE_URL=your_url_here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key_here
 ```
 
 - ✅ No login required
-- ✅ Uses sample data
-- ✅ Perfect for exploring the app
+- ✅ Perfect for UI/UX development
+- ✅ Explore features without user setup
 
-### Option B: Full Database Mode
+**Production Mode:**
 
 ```bash
-# .env.local
 NEXT_PUBLIC_ENABLE_AUTH=true
-USE_MOCK_DATA=false
-NEXT_PUBLIC_SUPABASE_URL=your_url_here
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key_here
 ```
 
 - 🔐 Requires Supabase login
-- 📊 Uses real database
-- 👥 Full user management features
+- 👥 Full role-based access control
+- 📊 User activity tracking
 
-## Test User Accounts (for Option B)
+## Test User Accounts
 
-If you enable authentication, use these test accounts:
+When you enable authentication (`NEXT_PUBLIC_ENABLE_AUTH=true`), you can use these test accounts:
 
 ```
 Email: designer@test.com
@@ -101,6 +94,8 @@ Password: test1234
 Email: reviewer@test.com
 Password: test1234
 ```
+
+See [Test User Guide](docs/setup/TEST_USER_GUIDE.md) for complete user setup instructions.
 
 ## Key Pages to Explore
 
@@ -146,8 +141,9 @@ npm install
 ### Supabase Connection Issues
 
 - Verify the Supabase URL and key are correct
-- Start with `USE_MOCK_DATA=true` to test without database
+- Check that your Supabase project is active
 - Check browser console for specific error messages
+- Verify database tables are created (see [Database Setup](docs/setup/database-setup.md))
 
 ## Project Structure
 
@@ -177,9 +173,10 @@ npm run lint             # Check code quality
 If you run into issues:
 
 1. **Check the console** - Browser dev tools often show helpful error messages
-2. **Try mock data mode** - Set `USE_MOCK_DATA=true` to isolate database issues
+2. **Verify database setup** - Ensure Supabase tables are created
 3. **Restart the server** - After changing environment variables
 4. **Check Node version** - Ensure you're using Node 20+
+5. **Check credentials** - Verify Supabase URL and key are correct
 
 ## Development Workflow
 
@@ -197,9 +194,9 @@ If you run into issues:
 
 ### Database Development
 
-1. **Start with mock data** (`USE_MOCK_DATA=true`)
-2. **Develop API routes** with mock data first
-3. **Switch to real data** when ready (`USE_MOCK_DATA=false`)
+1. **Set up database schema** - Run SQL scripts from `database/` folder
+2. **Test with auth disabled** - Develop without login requirements initially
+3. **Enable authentication** - Test role-based features when ready
 
 ## Role-Based Access Control
 
@@ -243,20 +240,17 @@ NEXT_PUBLIC_ENABLE_AUTH=false    # No login required
 
 ## Advanced Features
 
-### Data Integration Setup
+### Database Setup
 
-**Using Mock Data (Default)**
-
-- No additional setup required
-- Perfect for UI development and testing
-- Visit `/data-demo` to see sample data
-
-**Using Real Supabase Data**
+**Required for full functionality:**
 
 1. **Set up Supabase project** at [supabase.com](https://supabase.com)
-2. **Run database schema**: Copy `database/setup.sql` to Supabase SQL Editor
-3. **Update environment**: Set `USE_MOCK_DATA=false`
-4. **Add credentials**: Update Supabase URL and anon key
+2. **Run database migrations**: Execute SQL files from `database/` folder in order
+   - Start with `01_core_tables.sql`
+   - Then `02_rls_policies.sql`
+   - See [Database README](database/README.md) for details
+3. **Add credentials**: Update `.env.local` with your Supabase URL and key
+4. **Verify setup**: Check Supabase dashboard to confirm tables exist
 
 ### Advanced Scripts
 

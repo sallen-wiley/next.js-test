@@ -28,6 +28,7 @@ Comprehensive documentation for the Next.js + Material-UI Demo Project.
 ### 🎨 Component Documentation
 
 - **[Palette Generator](components/palette-generator.md)** - HSV color palette generator tool
+- **[Reviewer Drawer](components/reviewer-drawer.md)** - ReviewerProfileDrawer component usage guide
 
 ## 📖 Documentation Guidelines
 

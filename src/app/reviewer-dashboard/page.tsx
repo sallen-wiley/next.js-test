@@ -282,14 +282,15 @@ export default function ArticleListingPage() {
 
                 // Get real invitation stats for this manuscript
                 const stats = invitationStatsMap.get(manuscript.id) || {
-                  accepted: 0,
-                  pending: 0,
-                  declined: 0,
                   submitted: 0,
+                  overdue: 0,
                   invalidated: 0,
                   expired: 0,
-                  overdue: 0,
                   revoked: 0,
+                  accepted: 0,
+                  declined: 0,
+                  pending: 0,
+                  queued: 0,
                 };
 
                 return (

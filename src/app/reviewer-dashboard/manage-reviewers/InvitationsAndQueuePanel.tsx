@@ -2,6 +2,7 @@ import * as React from "react";
 import { Box } from "@mui/material";
 import UnifiedQueueTab from "./UnifiedQueueTab";
 import { MetricsWidget } from "./MetricsWidget";
+import { calculateReviewerStats } from "@/utils/reviewerStats";
 import type {
   ReviewerWithStatus,
   QueueControlState,
@@ -27,24 +28,26 @@ export function InvitationsAndQueuePanel({
   queueControl,
   invitations,
   queue,
-  highMatchCount,
   onToggleQueue,
   onActionMenuOpen,
 }: InvitationsAndQueuePanelProps) {
-  const acceptedCount = invitations.filter(
-    (i) => i.status === "accepted"
-  ).length;
-  const pendingCount = invitations.filter((i) => i.status === "pending").length;
-  const queuedCount = queue.length;
+  // Calculate all metrics using shared utility
+  const stats = calculateReviewerStats(invitations);
+  stats.queued = queue.length;
 
   return (
     <Box sx={{ width: 400, pl: 3 }}>
       {/* Summary Metrics */}
       <MetricsWidget
-        highMatchCount={highMatchCount}
-        acceptedCount={acceptedCount}
-        pendingCount={pendingCount}
-        queuedCount={queuedCount}
+        submittedCount={stats.submitted}
+        overdueCount={stats.overdue}
+        invalidatedCount={stats.invalidated}
+        expiredCount={stats.expired}
+        revokedCount={stats.revoked}
+        acceptedCount={stats.agreed}
+        declinedCount={stats.declined}
+        pendingCount={stats.pending}
+        queuedCount={stats.queued}
       />
 
       {/* Queue & Invitations - Unified View */}

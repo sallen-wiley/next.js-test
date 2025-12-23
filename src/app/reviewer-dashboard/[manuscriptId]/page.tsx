@@ -41,6 +41,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 
 import { ArticleDetailsCard } from "../ArticleDetailsCard";
 import { InvitedReviewerCard } from "../InvitedReviewerCard";
+import { ReviewerMetricsDisplay } from "../ReviewerMetricsDisplay";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 import { calculateReviewerStats } from "@/utils/reviewerStats";
 
@@ -319,22 +320,12 @@ export default function ArticleDetailsPage({
                   Reviewers
                 </Typography>
               </Stack>
-              <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Reports:</strong>{" "}
-                  <strong>{reviewerStats.submitted}</strong> Submitted,{" "}
-                  <strong>{reviewerStats.invalidated}</strong> Invalidated,{" "}
-                  <strong>{reviewerStats.overdue}</strong> Overdue
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Invitations:</strong>{" "}
-                  <strong>{reviewerStats.pending}</strong> Pending,{" "}
-                  <strong>{reviewerStats.expired}</strong> Expired,{" "}
-                  <strong>{reviewerStats.declined}</strong> Declined,{" "}
-                  <strong>{reviewerStats.revoked}</strong> Revoked,{" "}
-                  <strong>{queue.length}</strong> Queued
-                </Typography>
-              </Box>
+              <ReviewerMetricsDisplay
+                stats={reviewerStats}
+                queuedCount={queue.length}
+                variant="grouped"
+                showLabels={true}
+              />
             </AccordionSummary>
             <AccordionDetails sx={{ p: 0 }}>
               {/* Header row with counts */}
