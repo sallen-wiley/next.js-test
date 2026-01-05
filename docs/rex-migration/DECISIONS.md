@@ -100,12 +100,14 @@ const states = [
 **Decision:** AI assistant updates documentation at end of each session based on work completed.
 
 **Rationale:**
+
 - AI has full context of session work
 - Reduces friction (no manual checklist updates)
 - Ensures documentation stays current
 - Human focuses on coding, AI handles bookkeeping
 
 **Workflow:**
+
 1. Human says "session end" or runs command
 2. AI reviews work done in session
 3. AI updates README.md (status, checkboxes, dates)
@@ -126,12 +128,14 @@ const states = [
 **Decision:** Automate session start recap and end workflow with shell scripts + VS Code tasks.
 
 **Features Implemented:**
+
 - **Session Start:** Auto-runs on folder open, shows status/commits/todos/next steps
 - **Session End:** Interactive script validates, prompts doc updates, commits, pushes
 - **VS Code Tasks:** Both accessible via Command Palette
 - **npm scripts:** `npm run session:start` and `npm run session:end`
 
 **Rationale:**
+
 - Eliminates "where was I?" context switching cost
 - Ensures clean commits (validation before commit)
 - Standardizes git workflow

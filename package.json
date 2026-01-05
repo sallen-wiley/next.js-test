@@ -15,9 +15,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test-storybook": "storybook build && echo '✅ Storybook build successful'",
-    "chromatic": "npx chromatic --project-token=chpt_427a80d49e16b8f",
-    "session:start": "bash .github/scripts/session-start.sh",
-    "session:end": "bash .github/scripts/session-end.sh"
+    "chromatic": "npx chromatic --project-token=chpt_427a80d49e16b8f"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
