@@ -232,6 +232,13 @@ const rexTheme = createTheme({
   shape: {
     borderRadius: 4, // Standard border radius
   },
+  spacing: 5, // Base spacing unit (5px)
+  // Named spacing scale:
+  // 1 (5px)  = inline - text elements (text↔legend, label↔helper)
+  // 2 (10px) = component - pieces within same component (title↔field, pill↔pill)
+  // 3 (15px) = sibling - related elements (fields, items, paragraphs)
+  // 6 (30px) = group - distinct sections (item groups, step sections)
+  // 12 (60px) = layout - major layout divisions (header↔content, footer)
   components: {
     MuiCssBaseline: {
       styleOverrides: `

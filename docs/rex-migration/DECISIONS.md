@@ -4,6 +4,43 @@ This document tracks all significant technical and design decisions made during 
 
 ---
 
+## 2026-01-05: Spacing System
+
+**Context:** Need consistent spacing hierarchy for ReX component layouts.
+
+**Decision:** Define 5-tier named spacing system based on 5px base unit.
+
+**Named Spacing Scale:**
+
+- **5px (1x) - inline**: Text elements (text↔legend, label↔helper)
+- **10px (2x) - component**: Pieces within same component (title↔field, pill↔pill)
+- **15px (3x) - sibling**: Related elements (fields, items, paragraphs)
+- **30px (6x) - group**: Distinct sections (item groups, step sections)
+- **60px (12x) - layout**: Major layout divisions (header↔content, footer)
+
+**Usage in Code:**
+
+```tsx
+// Use MUI spacing function with semantic multipliers
+<Box sx={{ mt: 1 }}>  {/* 5px - inline spacing */}
+<Box sx={{ mt: 2 }}>  {/* 10px - component spacing */}
+<Box sx={{ mb: 3 }}>  {/* 15px - sibling spacing */}
+<Box sx={{ py: 6 }}>  {/* 30px - group spacing */}
+<Box sx={{ mt: 12 }}> {/* 60px - layout spacing */}
+```
+
+**Rationale:**
+
+- Provides clear hierarchy of spacing relationships
+- Semantic names match design intent (inline/component/sibling/group/layout)
+- Easy to remember (1/2/3/6/12 multipliers)
+- Consistent with Figma designs
+- Leverages MUI's built-in spacing function
+
+**Impact:** Theme configured with `spacing: 5` (5px base). All components use semantic multipliers for spacing.
+
+---
+
 ## 2026-01-05: Manual Figma Export Strategy
 
 **Context:** Attempted to use Figma MCP extension for automated design token extraction.
