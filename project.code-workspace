@@ -48,5 +48,67 @@
       "source.fixAll.eslint": "explicit"
     },
     "window.title": "📓 storybook"
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "📖 Start storybook",
+        "type": "shell",
+        "command": "npm run storybook",
+        "group": "build",
+        "runOptions": {
+          "runOn": "folderOpen"
+        }
+      },
+      {
+        "label": "🚀 Start dev server",
+        "type": "shell",
+        "command": "npm run dev",
+        "group": "build"
+      },
+      {
+        "label": "🏗️ Build for production",
+        "type": "shell",
+        "command": "npm run build",
+        "group": "build"
+      },
+      {
+        "label": "▶️ Start production server",
+        "type": "shell",
+        "command": "npm run start",
+        "group": "build"
+      },
+      {
+        "label": "🔍 Run ESLint",
+        "type": "shell",
+        "command": "npm run lint",
+        "group": "test"
+      },
+      {
+        "label": "📦 Build Storybook",
+        "type": "shell",
+        "command": "npm run build-storybook",
+        "group": "build"
+      },
+      {
+        "label": "🎨 Deploy to Chromatic",
+        "type": "shell",
+        "command": "npm run chromatic",
+        "group": "build"
+      },
+      {
+        "label": "✅ Commit changes",
+        "type": "shell",
+        "command": "git add -A && echo 'Enter commit message:' && read msg && git commit -m \"$msg\" && git pull --rebase && git push",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      }
+    ]
   }
 }

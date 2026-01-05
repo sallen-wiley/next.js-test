@@ -2,17 +2,14 @@
 description: "Brainstorm and develop new application ideas through fun, interactive questioning until ready for specification creation."
 tools:
   [
+    "search",
+    "usages",
+    "problems",
     "changes",
-    "codebase",
+    "openSimpleBrowser",
     "fetch",
     "githubRepo",
-    "openSimpleBrowser",
-    "problems",
-    "search",
-    "searchResults",
-    "usages",
-    "microsoft.docs.mcp",
-    "websearch",
+    "todos",
   ]
 ---
 
