@@ -13,7 +13,8 @@
       "figma.figma-vscode-extension",
       "github.copilot",
       "github.copilot-chat",
-      "esbenp.prettier-vscode"
+      "esbenp.prettier-vscode",
+      "Orta.vscode-jest"
     ]
   },
   "settings": {

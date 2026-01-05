@@ -77,6 +77,53 @@ When working with Figma designs from the Phenom Design System (PDS), use these m
 - **Theme-Aware Components**: Leverage `useTheme()` hook for dynamic styling
 - **Custom Colors**: Available theme colors: `color="neutral"`, `color="black"`, `color="white"`
 
+#### Automatic Validation Workflow
+
+**CRITICAL: After creating or editing any code files, ALWAYS validate immediately before responding to the user.**
+
+**Validation Steps (MANDATORY):**
+
+1. Edit/create component, story, or theme file
+2. **Immediately run:** `npm run validate` **via `run_in_terminal` tool** (runs ESLint + Storybook build)
+3. **Read the output carefully** - the tool returns the actual terminal output
+4. **If errors found:** Fix them and repeat step 2
+5. **Only report completion** to user after validation passes
+
+**ALWAYS use `run_in_terminal` for commands:**
+
+- ✅ Use `run_in_terminal` - You see output automatically and can react to errors
+- ❌ Never suggest commands for user to run manually
+- ❌ Never show commands in code blocks without executing them
+- **Feedback loop:** `run_in_terminal` returns output → you read it → you fix issues → you validate again
+
+**When to validate (ALWAYS):**
+
+- Creating/editing `.tsx`, `.ts`, `.jsx`, `.js` files
+- Creating/editing `.stories.tsx` files
+- Modifying theme files in `src/themes/`
+- Changing imports or adding dependencies
+- Any code refactoring
+
+**When to skip:**
+
+- Editing markdown/documentation only
+- Configuration changes without code (package.json metadata, etc.)
+- Non-code file changes
+
+**Example workflow:**
+
+```bash
+# User: "Create a ReviewerCard component"
+# 1. Create src/components/ReviewerCard.tsx
+# 2. IMMEDIATELY run validation via run_in_terminal
+run_in_terminal("npm run validate")
+# 3. Read output - if error, fix immediately
+# 4. Re-run validation until clean
+# 5. Only then respond: "Created ReviewerCard component"
+```
+
+**This ensures the user never discovers broken code. You catch and fix issues proactively.**
+
 #### Light/Dark Mode Color Patterns
 
 ````tsx

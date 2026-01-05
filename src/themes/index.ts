@@ -4,6 +4,7 @@ import wileyTheme from "./wiley";
 import wiley2025Theme from "./wiley2025";
 import phenomTheme from "./phenom";
 import techTheme from "./tech";
+import rexTheme from "./rex";
 
 // Available themes with different typography approaches
 export const themes = {
@@ -13,6 +14,7 @@ export const themes = {
   wiley2025: wiley2025Theme,
   phenom: phenomTheme,
   tech: techTheme,
+  rex: rexTheme,
 };
 
 // Helper to get theme by name with fallback
@@ -30,5 +32,6 @@ export {
   wiley2025Theme,
   phenomTheme,
   techTheme,
+  rexTheme,
 };
 export default themes;
