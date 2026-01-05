@@ -93,6 +93,25 @@ npm run storybook
 
 Open [http://localhost:6006](http://localhost:6006) to view the Storybook interface.
 
+## Active Projects
+
+### ReX Components Migration (In Progress)
+
+**Goal:** Migrate ReX Components design system from Figma to Storybook using Material UI with custom ReX theme.
+
+**Status:** Phase 2 - Screen Documentation (1 of 15 screens documented)
+
+**Documentation:** See [`/docs/rex-migration/README.md`](/docs/rex-migration/README.md) for complete project tracker.
+
+**Key Files:**
+
+- ReX Theme: `/src/themes/rex/`
+- Documentation Stories: `/src/components/rex-flow/`
+- Design Assets: `/reference/ReX steps/`
+- Progress Tracker: `/docs/rex-migration/README.md`
+
+---
+
 ## Available Scripts
 
 - `npm run dev` - Start the development server
