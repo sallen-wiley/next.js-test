@@ -27,7 +27,7 @@ git push wiley main     # Organization repo
 - **Material-UI v7**: Latest version with emotion styling
 - **Multiple Themes**: 6 custom themes (Default, Sage, Tech, Wiley, Wiley2025, Phenom) with dynamic switching
 - **Light/Dark Mode**: Full color mode support across all themes
-- **Supabase Integration**: Authentication, RBAC, and database features
+- **Supabase Integration**: PostgreSQL database with authentication and RBAC (configurable)
 - **Custom Components**: Reusable UI components with theme-aware styling
 - **Storybook Integration**: Component documentation and testing
 - **Typography Demo**: Comprehensive font and typography showcase
@@ -41,12 +41,15 @@ src/
 ├── app/                    # Next.js App Router pages
 │   ├── admin/              # Admin tools and dashboards
 │   ├── auth/               # Authentication pages
-│   ├── data-demo/          # Real data demonstrations
+│   ├── debug/              # System diagnostics and debugging
 │   ├── experiments/        # Experimental features
+│   │   ├── notifications/  # Notification system experiments
+│   │   ├── palette-generator/ # HSV color palette generator
+│   │   └── workflow-builder/  # Workflow builder experiments
 │   ├── kitchen-sink/       # Component showcase
 │   ├── onboarding-demos/   # User onboarding flows
+│   ├── reset-password/     # Password reset flow
 │   ├── reviewer-dashboard/ # Reviewer invitation system
-│   ├── write-demo/         # Write operations demo
 │   └── woaa/              # Custom demo page
 ├── components/            # Reusable components
 │   ├── app/               # App-level components (headers, FAB)
@@ -105,7 +108,7 @@ Open [http://localhost:6006](http://localhost:6006) to view the Storybook interf
 
 ## Key Technologies
 
-- **Next.js 15.3.2** - React framework with App Router
+- **Next.js 15.3.6** - React framework with App Router
 - **React 19** - Latest React with concurrent features
 - **Material-UI v7.1** - React component library with custom theming
 - **Emotion** - CSS-in-JS styling engine
@@ -140,11 +143,13 @@ The project includes a sophisticated theming system with:
 - `/` - Main landing page with featured tools and demo links
 - `/kitchen-sink` - Complete MUI component library showcase
 - `/experiments/palette-generator` - HSV color palette generator
+- `/experiments/workflow-builder` - Workflow builder experiments
+- `/experiments/notifications/admin` - Notification administration
+- `/experiments/notifications/history` - Notification history
+- `/experiments/notifications/preferences` - Notification preferences
 - `/onboarding-demos` - User onboarding workflow examples
 - `/woaa` - WOAA demo implementation
 - `/reviewer-dashboard` - Reviewer invitation management system
-- `/data-demo` - Real Supabase data demonstrations
-- `/write-demo` - Create operations with mock and real data
 - `/admin` - Administrative tools and role management
 - `/debug` - System diagnostics and connection testing
 

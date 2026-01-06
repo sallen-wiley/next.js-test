@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -28,12 +28,14 @@ import {
   Alert,
   Checkbox,
   FormControlLabel,
-  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { createClient } from "@/utils/supabase/client";
+import AdminLoadingState from "./AdminLoadingState";
+import RoleGuard from "./RoleGuard";
+import { useRoleAccess } from "@/hooks/useRoles";
 
 interface Publication {
   id: string;
@@ -58,6 +60,7 @@ export default function PublicationsManager() {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loading, setLoading] = useState(true);
+  const { loading: permissionsLoading, permissions, profile } = useRoleAccess();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedPublication, setSelectedPublication] =
@@ -82,7 +85,7 @@ export default function PublicationsManager() {
 
   const supabase = createClient();
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
       const [publicationsRes, reviewersRes] = await Promise.all([
@@ -111,15 +114,30 @@ export default function PublicationsManager() {
       setReviewers(reviewersRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
-      showSnackbar("Failed to load data", "error");
+      setSnackbar({
+        open: true,
+        message: "Failed to load data",
+        severity: "error",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Wait for permissions to finish loading before checking
+    if (permissionsLoading) {
+      return; // Still loading permissions, don't do anything
+    }
+
+    // Only load data if user has permission
+    if (permissions.canViewReviewerData) {
+      loadData();
+    } else {
+      // User doesn't have permission, stop loading
+      setLoading(false);
+    }
+  }, [permissionsLoading, permissions.canViewReviewerData, loadData]);
 
   const showSnackbar = (message: string, severity: "success" | "error") => {
     setSnackbar({ open: true, message, severity });
@@ -251,272 +269,271 @@ export default function PublicationsManager() {
     }
   };
 
+  // Show different messages for permissions vs data loading
+  if (permissionsLoading) {
+    return <AdminLoadingState message="Checking permissions..." />;
+  }
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <CircularProgress />
-        <Typography color="text.secondary">Loading publications...</Typography>
-      </Box>
-    );
+    return <AdminLoadingState message="Loading publications..." />;
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Reviewer Publications
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage reviewer publication history
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Publication
-        </Button>
-      </Stack>
+    <RoleGuard
+      requiredPermission="canViewReviewerData"
+      skipCheck={true}
+      permissions={permissions}
+      profile={profile}
+    >
+      <Box sx={{ p: 3 }}>
+        <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight={600}>
+              Reviewer Publications
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage reviewer publication history
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Publication
+          </Button>
+        </Stack>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Reviewer</TableCell>
-              <TableCell>Journal</TableCell>
-              <TableCell>Authors</TableCell>
-              <TableCell>Publication Date</TableCell>
-              <TableCell>DOI</TableCell>
-              <TableCell>Related</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {publications.length === 0 ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={8} align="center">
-                  <Typography color="text.secondary">
-                    No publications found
-                  </Typography>
-                </TableCell>
+                <TableCell>Title</TableCell>
+                <TableCell>Reviewer</TableCell>
+                <TableCell>Journal</TableCell>
+                <TableCell>Authors</TableCell>
+                <TableCell>Publication Date</TableCell>
+                <TableCell>DOI</TableCell>
+                <TableCell>Related</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            ) : (
-              publications.map((pub) => (
-                <TableRow key={pub.id}>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {pub.title}
+            </TableHead>
+            <TableBody>
+              {publications.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Typography color="text.secondary">
+                      No publications found
                     </Typography>
                   </TableCell>
-                  <TableCell>{pub.reviewer_name || "Unknown"}</TableCell>
-                  <TableCell>{pub.journal_name || "—"}</TableCell>
-                  <TableCell>
-                    {pub.authors && pub.authors.length > 0 ? (
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {pub.authors.slice(0, 2).map((author, idx) => (
-                          <Chip key={idx} label={author} size="small" />
-                        ))}
-                        {pub.authors.length > 2 && (
-                          <Chip
-                            label={`+${pub.authors.length - 2} more`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {pub.publication_date
-                      ? new Date(pub.publication_date).toLocaleDateString()
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {pub.doi ? (
-                      <Typography variant="caption">{pub.doi}</Typography>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {pub.is_related ? (
-                      <Chip label="Related" size="small" color="success" />
-                    ) : (
-                      <Chip label="Not Related" size="small" />
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpenDialog(pub)}
-                      color="primary"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(pub.id, pub.title)}
-                      color="error"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                publications.map((pub) => (
+                  <TableRow key={pub.id}>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {pub.title}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{pub.reviewer_name || "Unknown"}</TableCell>
+                    <TableCell>{pub.journal_name || "—"}</TableCell>
+                    <TableCell>
+                      {pub.authors && pub.authors.length > 0 ? (
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {pub.authors.slice(0, 2).map((author, idx) => (
+                            <Chip key={idx} label={author} size="small" />
+                          ))}
+                          {pub.authors.length > 2 && (
+                            <Chip
+                              label={`+${pub.authors.length - 2} more`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                        </Box>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {pub.publication_date
+                        ? new Date(pub.publication_date).toLocaleDateString()
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {pub.doi ? (
+                        <Typography variant="caption">{pub.doi}</Typography>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {pub.is_related ? (
+                        <Chip label="Related" size="small" color="success" />
+                      ) : (
+                        <Chip label="Not Related" size="small" />
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDialog(pub)}
+                        color="primary"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(pub.id, pub.title)}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Add/Edit Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {editMode ? "Edit Publication" : "Add New Publication"}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            <FormControl fullWidth required>
-              <InputLabel>Reviewer</InputLabel>
-              <Select
-                value={formData.reviewer_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, reviewer_id: e.target.value })
-                }
-                label="Reviewer"
-                disabled={editMode}
-              >
-                {reviewers.map((reviewer) => (
-                  <MenuItem key={reviewer.id} value={reviewer.id}>
-                    {reviewer.name} ({reviewer.affiliation})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              required
-              fullWidth
-              multiline
-              rows={2}
-            />
-
-            <TextField
-              label="Journal Name"
-              value={formData.journal_name}
-              onChange={(e) =>
-                setFormData({ ...formData, journal_name: e.target.value })
-              }
-              fullWidth
-            />
-
-            <TextField
-              label="DOI"
-              value={formData.doi}
-              onChange={(e) =>
-                setFormData({ ...formData, doi: e.target.value })
-              }
-              fullWidth
-              helperText="e.g., 10.1234/example.doi"
-            />
-
-            <Box>
-              <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                <TextField
-                  label="Add Author"
-                  value={authorInput}
-                  onChange={(e) => setAuthorInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddAuthor();
-                    }
-                  }}
-                  fullWidth
-                  size="small"
-                  helperText="Enter one or more authors separated by commas"
-                />
-                <Button onClick={handleAddAuthor} variant="outlined">
-                  Add
-                </Button>
-              </Stack>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {formData.authors.map((author, idx) => (
-                  <Chip
-                    key={idx}
-                    label={author}
-                    onDelete={() => handleRemoveAuthor(idx)}
-                    size="small"
-                  />
-                ))}
-              </Box>
-            </Box>
-
-            <TextField
-              label="Publication Date"
-              type="date"
-              value={formData.publication_date}
-              onChange={(e) =>
-                setFormData({ ...formData, publication_date: e.target.value })
-              }
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.is_related}
+        {/* Add/Edit Dialog */}
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            {editMode ? "Edit Publication" : "Add New Publication"}
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <FormControl fullWidth required>
+                <InputLabel>Reviewer</InputLabel>
+                <Select
+                  value={formData.reviewer_id}
                   onChange={(e) =>
-                    setFormData({ ...formData, is_related: e.target.checked })
+                    setFormData({ ...formData, reviewer_id: e.target.value })
                   }
-                />
-              }
-              label="Related to current manuscript"
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editMode ? "Update" : "Add"} Publication
-          </Button>
-        </DialogActions>
-      </Dialog>
+                  label="Reviewer"
+                  disabled={editMode}
+                >
+                  {reviewers.map((reviewer) => (
+                    <MenuItem key={reviewer.id} value={reviewer.id}>
+                      {reviewer.name} ({reviewer.affiliation})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+              <TextField
+                label="Title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                required
+                fullWidth
+                multiline
+                rows={2}
+              />
+
+              <TextField
+                label="Journal Name"
+                value={formData.journal_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, journal_name: e.target.value })
+                }
+                fullWidth
+              />
+
+              <TextField
+                label="DOI"
+                value={formData.doi}
+                onChange={(e) =>
+                  setFormData({ ...formData, doi: e.target.value })
+                }
+                fullWidth
+                helperText="e.g., 10.1234/example.doi"
+              />
+
+              <Box>
+                <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                  <TextField
+                    label="Add Author"
+                    value={authorInput}
+                    onChange={(e) => setAuthorInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddAuthor();
+                      }
+                    }}
+                    fullWidth
+                    size="small"
+                    helperText="Enter one or more authors separated by commas"
+                  />
+                  <Button onClick={handleAddAuthor} variant="outlined">
+                    Add
+                  </Button>
+                </Stack>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {formData.authors.map((author, idx) => (
+                    <Chip
+                      key={idx}
+                      label={author}
+                      onDelete={() => handleRemoveAuthor(idx)}
+                      size="small"
+                    />
+                  ))}
+                </Box>
+              </Box>
+
+              <TextField
+                label="Publication Date"
+                type="date"
+                value={formData.publication_date}
+                onChange={(e) =>
+                  setFormData({ ...formData, publication_date: e.target.value })
+                }
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.is_related}
+                    onChange={(e) =>
+                      setFormData({ ...formData, is_related: e.target.checked })
+                    }
+                  />
+                }
+                label="Related to current manuscript"
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleSubmit} variant="contained">
+              {editMode ? "Update" : "Add"} Publication
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </RoleGuard>
   );
 }

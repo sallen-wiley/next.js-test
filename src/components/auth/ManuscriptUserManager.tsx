@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -25,7 +25,6 @@ import {
   IconButton,
   Tooltip,
   Stack,
-  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -39,6 +38,9 @@ import {
   updateUserManuscriptRole,
 } from "@/services/dataService";
 import type { Manuscript } from "@/lib/supabase";
+import AdminLoadingState from "./AdminLoadingState";
+import RoleGuard from "./RoleGuard";
+import { useRoleAccess } from "@/hooks/useRoles";
 
 interface UserProfile {
   id: string;
@@ -79,6 +81,7 @@ export default function ManuscriptUserManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { loading: permissionsLoading, permissions, profile } = useRoleAccess();
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -92,11 +95,7 @@ export default function ManuscriptUserManager() {
     null
   );
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -116,7 +115,22 @@ export default function ManuscriptUserManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Wait for permissions to finish loading before checking
+    if (permissionsLoading) {
+      return; // Still loading permissions, don't do anything
+    }
+
+    // Only load data if user has permission
+    if (permissions.canEditManuscripts) {
+      loadData();
+    } else {
+      // User doesn't have permission, stop loading
+      setLoading(false);
+    }
+  }, [permissionsLoading, permissions.canEditManuscripts, loadData]);
 
   const handleAddAssignment = async () => {
     if (!selectedUserId || !selectedManuscriptId) {
@@ -209,259 +223,205 @@ export default function ManuscriptUserManager() {
     return roleConfig?.color || "primary";
   };
 
+  // Show different messages for permissions vs data loading
+  if (permissionsLoading) {
+    return <AdminLoadingState message="Checking permissions..." />;
+  }
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <CircularProgress />
-        <Typography color="text.secondary">
-          Loading manuscript assignments...
-        </Typography>
-      </Box>
-    );
+    return <AdminLoadingState message="Loading manuscript assignments..." />;
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            User-Manuscript Assignments
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage which users can access and manage specific manuscripts
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setDialogOpen(true)}
-        >
-          Add Assignment
-        </Button>
-      </Stack>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
-        <Alert
-          severity="success"
-          sx={{ mb: 2 }}
-          onClose={() => setSuccess(null)}
-        >
-          {success}
-        </Alert>
-      )}
-
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>User</TableCell>
-              <TableCell>Manuscript</TableCell>
-              <TableCell>Journal</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Assigned Date</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {assignments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography color="text.secondary" sx={{ py: 3 }}>
-                    No assignments found. Click &quot;Add Assignment&quot; to
-                    get started.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              assignments
-                .filter((a) => a.is_active)
-                .map((assignment) => (
-                  <TableRow key={assignment.id}>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium">
-                          {assignment.user_profiles.full_name ||
-                            assignment.user_profiles.email}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {assignment.user_profiles.email}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
-                        {assignment.manuscripts.title}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {assignment.manuscripts.journal}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={assignment.role}
-                        color={getRoleColor(assignment.role)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={assignment.manuscripts.status}
-                        variant="outlined"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {new Date(assignment.assigned_date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Edit Role">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenEditDialog(assignment)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Remove Assignment">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() =>
-                            handleRemoveAssignment(
-                              assignment.user_id,
-                              assignment.manuscript_id,
-                              assignment.user_profiles.full_name ||
-                                assignment.user_profiles.email,
-                              assignment.manuscripts.title
-                            )
-                          }
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Add Assignment Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Add User to Manuscript</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-            <FormControl fullWidth>
-              <InputLabel>User</InputLabel>
-              <Select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                label="User"
-              >
-                {users.map((user) => (
-                  <MenuItem key={user.id} value={user.id}>
-                    {user.full_name || user.email} ({user.email})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>Manuscript</InputLabel>
-              <Select
-                value={selectedManuscriptId}
-                onChange={(e) => setSelectedManuscriptId(e.target.value)}
-                label="Manuscript"
-              >
-                {manuscripts.map((manuscript) => (
-                  <MenuItem key={manuscript.id} value={manuscript.id}>
-                    {manuscript.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={selectedRole}
-                onChange={(e) =>
-                  setSelectedRole(
-                    e.target.value as
-                      | "editor"
-                      | "author"
-                      | "collaborator"
-                      | "reviewer"
-                  )
-                }
-                label="Role"
-              >
-                {MANUSCRIPT_ROLES.map((role) => (
-                  <MenuItem key={role.value} value={role.value}>
-                    {role.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+    <RoleGuard
+      requiredPermission="canEditManuscripts"
+      skipCheck={true}
+      permissions={permissions}
+      profile={profile}
+    >
+      <Box sx={{ p: 3 }}>
+        <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight={600}>
+              User-Manuscript Assignments
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage which users can access and manage specific manuscripts
+            </Typography>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
           <Button
-            onClick={handleAddAssignment}
             variant="contained"
-            disabled={!selectedUserId || !selectedManuscriptId}
+            startIcon={<AddIcon />}
+            onClick={() => setDialogOpen(true)}
           >
             Add Assignment
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Stack>
 
-      {/* Edit Role Dialog */}
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Edit User Role</DialogTitle>
-        <DialogContent>
-          {editingAssignment && (
-            <Box sx={{ pt: 2 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                User:{" "}
-                {editingAssignment.user_profiles.full_name ||
-                  editingAssignment.user_profiles.email}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Manuscript: {editingAssignment.manuscripts.title}
-              </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
-              <FormControl fullWidth sx={{ mt: 2 }}>
+        {success && (
+          <Alert
+            severity="success"
+            sx={{ mb: 2 }}
+            onClose={() => setSuccess(null)}
+          >
+            {success}
+          </Alert>
+        )}
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>User</TableCell>
+                <TableCell>Manuscript</TableCell>
+                <TableCell>Journal</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Assigned Date</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {assignments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    <Typography color="text.secondary" sx={{ py: 3 }}>
+                      No assignments found. Click &quot;Add Assignment&quot; to
+                      get started.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                assignments
+                  .filter((a) => a.is_active)
+                  .map((assignment) => (
+                    <TableRow key={assignment.id}>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {assignment.user_profiles.full_name ||
+                              assignment.user_profiles.email}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {assignment.user_profiles.email}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          noWrap
+                          sx={{ maxWidth: 300 }}
+                        >
+                          {assignment.manuscripts.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {assignment.manuscripts.journal}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={assignment.role}
+                          color={getRoleColor(assignment.role)}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={assignment.manuscripts.status}
+                          variant="outlined"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {new Date(
+                          assignment.assigned_date
+                        ).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Tooltip title="Edit Role">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenEditDialog(assignment)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Remove Assignment">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() =>
+                              handleRemoveAssignment(
+                                assignment.user_id,
+                                assignment.manuscript_id,
+                                assignment.user_profiles.full_name ||
+                                  assignment.user_profiles.email,
+                                assignment.manuscripts.title
+                              )
+                            }
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Add Assignment Dialog */}
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Add User to Manuscript</DialogTitle>
+          <DialogContent>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+            >
+              <FormControl fullWidth>
+                <InputLabel>User</InputLabel>
+                <Select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  label="User"
+                >
+                  {users.map((user) => (
+                    <MenuItem key={user.id} value={user.id}>
+                      {user.full_name || user.email} ({user.email})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel>Manuscript</InputLabel>
+                <Select
+                  value={selectedManuscriptId}
+                  onChange={(e) => setSelectedManuscriptId(e.target.value)}
+                  label="Manuscript"
+                >
+                  {manuscripts.map((manuscript) => (
+                    <MenuItem key={manuscript.id} value={manuscript.id}>
+                      {manuscript.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth>
                 <InputLabel>Role</InputLabel>
                 <Select
                   value={selectedRole}
@@ -484,15 +444,72 @@ export default function ManuscriptUserManager() {
                 </Select>
               </FormControl>
             </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleUpdateRole} variant="contained">
-            Update Role
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleAddAssignment}
+              variant="contained"
+              disabled={!selectedUserId || !selectedManuscriptId}
+            >
+              Add Assignment
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Edit Role Dialog */}
+        <Dialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Edit User Role</DialogTitle>
+          <DialogContent>
+            {editingAssignment && (
+              <Box sx={{ pt: 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  User:{" "}
+                  {editingAssignment.user_profiles.full_name ||
+                    editingAssignment.user_profiles.email}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Manuscript: {editingAssignment.manuscripts.title}
+                </Typography>
+
+                <FormControl fullWidth sx={{ mt: 2 }}>
+                  <InputLabel>Role</InputLabel>
+                  <Select
+                    value={selectedRole}
+                    onChange={(e) =>
+                      setSelectedRole(
+                        e.target.value as
+                          | "editor"
+                          | "author"
+                          | "collaborator"
+                          | "reviewer"
+                      )
+                    }
+                    label="Role"
+                  >
+                    {MANUSCRIPT_ROLES.map((role) => (
+                      <MenuItem key={role.value} value={role.value}>
+                        {role.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateRole} variant="contained">
+              Update Role
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </RoleGuard>
   );
 }

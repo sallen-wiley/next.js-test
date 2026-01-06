@@ -26,13 +26,15 @@ import {
   Alert,
   Stack,
   IconButton,
-  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { supabase } from "@/lib/supabase";
 import type { ReviewInvitationWithReviewer } from "@/lib/supabase";
+import AdminLoadingState from "./AdminLoadingState";
+import RoleGuard from "./RoleGuard";
+import { useRoleAccess } from "@/hooks/useRoles";
 
 export default function ReviewInvitationManager() {
   const router = useRouter();
@@ -47,6 +49,7 @@ export default function ReviewInvitationManager() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { loading: permissionsLoading, permissions, profile } = useRoleAccess();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvitation, setEditingInvitation] =
     useState<ReviewInvitationWithReviewer | null>(null);
@@ -73,8 +76,19 @@ export default function ReviewInvitationManager() {
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    // Wait for permissions to finish loading before checking
+    if (permissionsLoading) {
+      return; // Still loading permissions, don't do anything
+    }
+
+    // Only load data if user has permission
+    if (permissions.canAssignReviewers) {
+      fetchData();
+    } else {
+      // User doesn't have permission, stop loading
+      setLoading(false);
+    }
+  }, [permissionsLoading, permissions.canAssignReviewers]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -280,340 +294,339 @@ export default function ReviewInvitationManager() {
     }
   };
 
+  // Show different messages for permissions vs data loading
+  if (permissionsLoading) {
+    return <AdminLoadingState message="Checking permissions..." />;
+  }
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <CircularProgress />
-        <Typography color="text.secondary">Loading invitations...</Typography>
-      </Box>
-    );
+    return <AdminLoadingState message="Loading invitations..." />;
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Review Invitations
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage reviewer invitations and responses
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
+    <RoleGuard
+      requiredPermission="canAssignReviewers"
+      skipCheck={true}
+      permissions={permissions}
+      profile={profile}
+    >
+      <Box sx={{ p: 3 }}>
+        <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight={600}>
+              Review Invitations
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage reviewer invitations and responses
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Invitation
+          </Button>
+        </Stack>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Manuscript</TableCell>
+                <TableCell>Reviewer</TableCell>
+                <TableCell>Invited Date</TableCell>
+                <TableCell>Due Date</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Response Date</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {invitations.map((invitation) => {
+                const manuscript = manuscripts.find(
+                  (m) => m.id === invitation.manuscript_id
+                );
+                return (
+                  <TableRow key={invitation.id}>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        noWrap
+                        sx={{
+                          maxWidth: 200,
+                          color: "primary.main",
+                          cursor: "pointer",
+                          "&:hover": {
+                            textDecoration: "underline",
+                          },
+                        }}
+                        onClick={() =>
+                          router.push(
+                            `/reviewer-dashboard/manage-reviewers?manuscriptId=${invitation.manuscript_id}`
+                          )
+                        }
+                      >
+                        {manuscript?.title || "Unknown Manuscript"}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{invitation.reviewer_name}</TableCell>
+                    <TableCell>
+                      {invitation.invited_date
+                        ? new Date(invitation.invited_date).toLocaleDateString()
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {invitation.due_date
+                        ? new Date(invitation.due_date).toLocaleDateString()
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={invitation.status}
+                        color={getStatusColor(invitation.status || "pending")}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {invitation.response_date
+                        ? new Date(
+                            invitation.response_date
+                          ).toLocaleDateString()
+                        : "—"}
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDialog(invitation)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(invitation.id)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Add/Edit Dialog */}
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="sm"
+          fullWidth
         >
-          Add Invitation
-        </Button>
-      </Stack>
+          <DialogTitle>
+            {editingInvitation ? "Edit Invitation" : "Add New Invitation"}
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <FormControl fullWidth>
+                <InputLabel>Manuscript</InputLabel>
+                <Select
+                  value={formData.manuscript_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, manuscript_id: e.target.value })
+                  }
+                  label="Manuscript"
+                >
+                  {manuscripts.map((m) => (
+                    <MenuItem key={m.id} value={m.id}>
+                      {m.title}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+              <FormControl fullWidth>
+                <InputLabel>Reviewer</InputLabel>
+                <Select
+                  value={formData.reviewer_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reviewer_id: e.target.value })
+                  }
+                  label="Reviewer"
+                >
+                  {reviewers.map((r) => (
+                    <MenuItem key={r.id} value={r.id}>
+                      {r.name} {r.affiliation && `(${r.affiliation})`}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Manuscript</TableCell>
-              <TableCell>Reviewer</TableCell>
-              <TableCell>Invited Date</TableCell>
-              <TableCell>Due Date</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Response Date</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {invitations.map((invitation) => {
-              const manuscript = manuscripts.find(
-                (m) => m.id === invitation.manuscript_id
-              );
-              return (
-                <TableRow key={invitation.id}>
-                  <TableCell>
-                    <Typography
-                      variant="body2"
-                      noWrap
-                      sx={{
-                        maxWidth: 200,
-                        color: "primary.main",
-                        cursor: "pointer",
-                        "&:hover": {
-                          textDecoration: "underline",
-                        },
-                      }}
-                      onClick={() =>
-                        router.push(
-                          `/reviewer-dashboard/manage-reviewers?manuscriptId=${invitation.manuscript_id}`
-                        )
-                      }
-                    >
-                      {manuscript?.title || "Unknown Manuscript"}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{invitation.reviewer_name}</TableCell>
-                  <TableCell>
-                    {invitation.invited_date
-                      ? new Date(invitation.invited_date).toLocaleDateString()
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    {invitation.due_date
-                      ? new Date(invitation.due_date).toLocaleDateString()
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={invitation.status}
-                      color={getStatusColor(invitation.status || "pending")}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {invitation.response_date
-                      ? new Date(invitation.response_date).toLocaleDateString()
-                      : "—"}
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpenDialog(invitation)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(invitation.id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Add/Edit Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {editingInvitation ? "Edit Invitation" : "Add New Invitation"}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormControl fullWidth>
-              <InputLabel>Manuscript</InputLabel>
-              <Select
-                value={formData.manuscript_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, manuscript_id: e.target.value })
-                }
-                label="Manuscript"
-              >
-                {manuscripts.map((m) => (
-                  <MenuItem key={m.id} value={m.id}>
-                    {m.title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>Reviewer</InputLabel>
-              <Select
-                value={formData.reviewer_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, reviewer_id: e.target.value })
-                }
-                label="Reviewer"
-              >
-                {reviewers.map((r) => (
-                  <MenuItem key={r.id} value={r.id}>
-                    {r.name} {r.affiliation && `(${r.affiliation})`}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Invited Date"
-              type="date"
-              value={formData.invited_date}
-              onChange={(e) =>
-                setFormData({ ...formData, invited_date: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-
-            <TextField
-              label="Due Date"
-              type="date"
-              value={formData.due_date}
-              onChange={(e) =>
-                setFormData({ ...formData, due_date: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-
-            <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value })
-                }
-                label="Status"
-              >
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="accepted">Accepted</MenuItem>
-                <MenuItem value="declined">Declined</MenuItem>
-                <MenuItem value="report_submitted">Report Submitted</MenuItem>
-                <MenuItem value="invalidated">Invalidated</MenuItem>
-                <MenuItem value="revoked">Revoked</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Response Date"
-              type="date"
-              value={formData.response_date}
-              onChange={(e) =>
-                setFormData({ ...formData, response_date: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-
-            <Stack direction="row" spacing={2}>
               <TextField
-                label="Queue Position"
-                type="number"
-                value={formData.queue_position || ""}
+                label="Invited Date"
+                type="date"
+                value={formData.invited_date}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    queue_position: e.target.value
-                      ? parseInt(e.target.value)
-                      : undefined,
-                  })
+                  setFormData({ ...formData, invited_date: e.target.value })
                 }
+                InputLabelProps={{ shrink: true }}
                 fullWidth
-                helperText="Position in invitation queue (optional)"
               />
+
               <TextField
-                label="Invitation Round"
-                type="number"
-                value={formData.invitation_round}
+                label="Due Date"
+                type="date"
+                value={formData.due_date}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    invitation_round: parseInt(e.target.value) || 1,
-                  })
+                  setFormData({ ...formData, due_date: e.target.value })
                 }
+                InputLabelProps={{ shrink: true }}
                 fullWidth
-                inputProps={{ min: 1 }}
               />
+
+              <FormControl fullWidth>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
+                  label="Status"
+                >
+                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="accepted">Accepted</MenuItem>
+                  <MenuItem value="declined">Declined</MenuItem>
+                  <MenuItem value="report_submitted">Report Submitted</MenuItem>
+                  <MenuItem value="invalidated">Invalidated</MenuItem>
+                  <MenuItem value="revoked">Revoked</MenuItem>
+                </Select>
+              </FormControl>
+
               <TextField
-                label="Reminder Count"
-                type="number"
-                value={formData.reminder_count}
+                label="Response Date"
+                type="date"
+                value={formData.response_date}
+                onChange={(e) =>
+                  setFormData({ ...formData, response_date: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  label="Queue Position"
+                  type="number"
+                  value={formData.queue_position || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      queue_position: e.target.value
+                        ? parseInt(e.target.value)
+                        : undefined,
+                    })
+                  }
+                  fullWidth
+                  helperText="Position in invitation queue (optional)"
+                />
+                <TextField
+                  label="Invitation Round"
+                  type="number"
+                  value={formData.invitation_round}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      invitation_round: parseInt(e.target.value) || 1,
+                    })
+                  }
+                  fullWidth
+                  inputProps={{ min: 1 }}
+                />
+                <TextField
+                  label="Reminder Count"
+                  type="number"
+                  value={formData.reminder_count}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      reminder_count: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  fullWidth
+                  inputProps={{ min: 0 }}
+                />
+              </Stack>
+
+              <TextField
+                label="Estimated Completion Date"
+                type="date"
+                value={formData.estimated_completion_date}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    reminder_count: parseInt(e.target.value) || 0,
+                    estimated_completion_date: e.target.value,
                   })
                 }
+                InputLabelProps={{ shrink: true }}
                 fullWidth
-                inputProps={{ min: 0 }}
+              />
+
+              <TextField
+                label="Invitation Expiration Date"
+                type="date"
+                value={formData.invitation_expiration_date}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    invitation_expiration_date: e.target.value,
+                  })
+                }
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                helperText="Date when pending invitation expires (typically 14 days)"
+              />
+
+              <TextField
+                label="Report Invalidated Date"
+                type="date"
+                value={formData.report_invalidated_date}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    report_invalidated_date: e.target.value,
+                  })
+                }
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                helperText="Only set when status is 'invalidated'"
+              />
+
+              <TextField
+                label="Notes"
+                multiline
+                rows={3}
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                fullWidth
+                helperText="Free-form notes for status changes, reasons, etc."
               />
             </Stack>
-
-            <TextField
-              label="Estimated Completion Date"
-              type="date"
-              value={formData.estimated_completion_date}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  estimated_completion_date: e.target.value,
-                })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-
-            <TextField
-              label="Invitation Expiration Date"
-              type="date"
-              value={formData.invitation_expiration_date}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  invitation_expiration_date: e.target.value,
-                })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-              helperText="Date when pending invitation expires (typically 14 days)"
-            />
-
-            <TextField
-              label="Report Invalidated Date"
-              type="date"
-              value={formData.report_invalidated_date}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  report_invalidated_date: e.target.value,
-                })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-              helperText="Only set when status is 'invalidated'"
-            />
-
-            <TextField
-              label="Notes"
-              multiline
-              rows={3}
-              value={formData.notes}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
-              fullWidth
-              helperText="Free-form notes for status changes, reasons, etc."
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editingInvitation ? "Update" : "Create"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleSubmit} variant="contained">
+              {editingInvitation ? "Update" : "Create"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </RoleGuard>
   );
 }

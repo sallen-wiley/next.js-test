@@ -16,7 +16,6 @@ import {
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PeopleIcon from "@mui/icons-material/People";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import ArticleIcon from "@mui/icons-material/Article";
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -25,8 +24,7 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import QueueIcon from "@mui/icons-material/Queue";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
-import AdminUserManager from "@/components/auth/AdminUserManager";
-import RoleManager from "@/components/auth/RoleManager";
+import UserManagement from "@/components/auth/UserManagement";
 import ManuscriptUserManager from "@/components/auth/ManuscriptUserManager";
 import ReviewerMatchManager from "@/components/auth/ReviewerMatchManager";
 import ReviewerManager from "@/components/auth/ReviewerManager";
@@ -150,26 +148,16 @@ export default function AdminPage() {
               onClick={() => setActiveTab(0)}
             >
               <ListItemIcon>
-                <PersonAddIcon />
-              </ListItemIcon>
-              <ListItemText primary="User Management" />
-            </ListItemButton>
-
-            <ListItemButton
-              selected={activeTab === 1}
-              onClick={() => setActiveTab(1)}
-            >
-              <ListItemIcon>
                 <PeopleIcon />
               </ListItemIcon>
-              <ListItemText primary="Role Management" />
+              <ListItemText primary="User Management" />
             </ListItemButton>
 
             <Divider sx={{ my: 1 }} />
 
             <ListItemButton
-              selected={activeTab === 2}
-              onClick={() => setActiveTab(2)}
+              selected={activeTab === 1}
+              onClick={() => setActiveTab(1)}
             >
               <ListItemIcon>
                 <ArticleIcon />
@@ -178,8 +166,8 @@ export default function AdminPage() {
             </ListItemButton>
 
             <ListItemButton
-              selected={activeTab === 3}
-              onClick={() => setActiveTab(3)}
+              selected={activeTab === 2}
+              onClick={() => setActiveTab(2)}
             >
               <ListItemIcon>
                 <PsychologyIcon />
@@ -188,8 +176,8 @@ export default function AdminPage() {
             </ListItemButton>
 
             <ListItemButton
-              selected={activeTab === 4}
-              onClick={() => setActiveTab(4)}
+              selected={activeTab === 3}
+              onClick={() => setActiveTab(3)}
             >
               <ListItemIcon>
                 <GroupsIcon />
@@ -198,8 +186,8 @@ export default function AdminPage() {
             </ListItemButton>
 
             <ListItemButton
-              selected={activeTab === 5}
-              onClick={() => setActiveTab(5)}
+              selected={activeTab === 4}
+              onClick={() => setActiveTab(4)}
             >
               <ListItemIcon>
                 <DescriptionIcon />
@@ -210,8 +198,8 @@ export default function AdminPage() {
             <Divider sx={{ my: 1 }} />
 
             <ListItemButton
-              selected={activeTab === 6}
-              onClick={() => setActiveTab(6)}
+              selected={activeTab === 5}
+              onClick={() => setActiveTab(5)}
             >
               <ListItemIcon>
                 <MailOutlineIcon />
@@ -220,8 +208,8 @@ export default function AdminPage() {
             </ListItemButton>
 
             <ListItemButton
-              selected={activeTab === 7}
-              onClick={() => setActiveTab(7)}
+              selected={activeTab === 6}
+              onClick={() => setActiveTab(6)}
             >
               <ListItemIcon>
                 <QueueIcon />
@@ -232,8 +220,8 @@ export default function AdminPage() {
             <Divider sx={{ my: 1 }} />
 
             <ListItemButton
-              selected={activeTab === 8}
-              onClick={() => setActiveTab(8)}
+              selected={activeTab === 7}
+              onClick={() => setActiveTab(7)}
             >
               <ListItemIcon>
                 <MenuBookIcon />
@@ -242,8 +230,8 @@ export default function AdminPage() {
             </ListItemButton>
 
             <ListItemButton
-              selected={activeTab === 9}
-              onClick={() => setActiveTab(9)}
+              selected={activeTab === 8}
+              onClick={() => setActiveTab(8)}
             >
               <ListItemIcon>
                 <ReportProblemIcon />
@@ -255,16 +243,15 @@ export default function AdminPage() {
 
         {/* Main Content Area */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          {activeTab === 0 && <AdminUserManager />}
-          {activeTab === 1 && <RoleManager />}
-          {activeTab === 2 && <ManuscriptUserManager />}
-          {activeTab === 3 && <ReviewerMatchManager />}
-          {activeTab === 4 && <ReviewerManager />}
-          {activeTab === 5 && <ManuscriptManager />}
-          {activeTab === 6 && <ReviewInvitationManager />}
-          {activeTab === 7 && <InvitationQueueManager />}
-          {activeTab === 8 && <PublicationsManager />}
-          {activeTab === 9 && <RetractionsManager />}
+          {activeTab === 0 && <UserManagement />}
+          {activeTab === 1 && <ManuscriptUserManager />}
+          {activeTab === 2 && <ReviewerMatchManager />}
+          {activeTab === 3 && <ReviewerManager />}
+          {activeTab === 4 && <ManuscriptManager />}
+          {activeTab === 5 && <ReviewInvitationManager />}
+          {activeTab === 6 && <InvitationQueueManager />}
+          {activeTab === 7 && <PublicationsManager />}
+          {activeTab === 8 && <RetractionsManager />}
         </Box>
       </Box>
     </Container>

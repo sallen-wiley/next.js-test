@@ -27,7 +27,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -39,6 +38,9 @@ import {
   deleteReviewer,
 } from "@/services/dataService";
 import type { PotentialReviewer } from "@/lib/supabase";
+import AdminLoadingState from "./AdminLoadingState";
+import RoleGuard from "./RoleGuard";
+import { useRoleAccess } from "@/hooks/useRoles";
 
 const availabilityOptions = [
   { value: "available", label: "Available" },
@@ -50,6 +52,7 @@ const availabilityOptions = [
 export default function ReviewerManager() {
   const [reviewers, setReviewers] = React.useState<PotentialReviewer[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { loading: permissionsLoading, permissions, profile } = useRoleAccess();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [editMode, setEditMode] = React.useState(false);
@@ -130,8 +133,19 @@ export default function ReviewerManager() {
   }, []);
 
   React.useEffect(() => {
-    fetchReviewers();
-  }, [fetchReviewers]);
+    // Wait for permissions to finish loading before checking
+    if (permissionsLoading) {
+      return; // Still loading permissions, don't do anything
+    }
+
+    // Only load data if user has permission
+    if (permissions.canViewReviewerData) {
+      fetchReviewers();
+    } else {
+      // User doesn't have permission, stop loading
+      setLoading(false);
+    }
+  }, [permissionsLoading, permissions.canViewReviewerData, fetchReviewers]);
 
   const showSnackbar = (
     message: string,
@@ -334,761 +348,796 @@ export default function ReviewerManager() {
     }
   };
 
+  // Show different messages for permissions vs data loading
+  if (permissionsLoading) {
+    return <AdminLoadingState message="Checking permissions..." />;
+  }
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <CircularProgress />
-        <Typography color="text.secondary">Loading reviewers...</Typography>
-      </Box>
-    );
+    return <AdminLoadingState message="Loading reviewers..." />;
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Reviewer Database
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage the pool of potential reviewers
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Reviewer
-        </Button>
-      </Stack>
+    <RoleGuard
+      requiredPermission="canViewReviewerData"
+      skipCheck={true}
+      permissions={permissions}
+      profile={profile}
+    >
+      <Box sx={{ p: 3 }}>
+        <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight={600}>
+              Reviewer Database
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage the pool of potential reviewers
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Reviewer
+          </Button>
+        </Stack>
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Manage the pool of potential reviewers. This is separate from assigning
-        reviewers to specific manuscripts.
-      </Alert>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Manage the pool of potential reviewers. This is separate from
+          assigning reviewers to specific manuscripts.
+        </Alert>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Affiliation</TableCell>
-              <TableCell>Expertise</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Review Load</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {reviewers.map((reviewer) => (
-              <TableRow key={reviewer.id}>
-                <TableCell>{reviewer.name}</TableCell>
-                <TableCell>{reviewer.email}</TableCell>
-                <TableCell>
-                  {reviewer.affiliation}
-                  {reviewer.department && (
-                    <Typography
-                      variant="caption"
-                      display="block"
-                      color="text.secondary"
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Affiliation</TableCell>
+                <TableCell>Expertise</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Review Load</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {reviewers.map((reviewer) => (
+                <TableRow key={reviewer.id}>
+                  <TableCell>{reviewer.name}</TableCell>
+                  <TableCell>{reviewer.email}</TableCell>
+                  <TableCell>
+                    {reviewer.affiliation}
+                    {reviewer.department && (
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        color="text.secondary"
+                      >
+                        {reviewer.department}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                      {reviewer.expertise_areas.slice(0, 2).map((area, idx) => (
+                        <Chip
+                          key={idx}
+                          label={area}
+                          size="small"
+                          variant="outlined"
+                          sx={{ mb: 0.5 }}
+                        />
+                      ))}
+                      {reviewer.expertise_areas.length > 2 && (
+                        <Chip
+                          label={`+${reviewer.expertise_areas.length - 2}`}
+                          size="small"
+                          variant="outlined"
+                          sx={{ mb: 0.5 }}
+                        />
+                      )}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={reviewer.availability_status}
+                      size="small"
+                      color={getStatusColor(reviewer.availability_status)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {reviewer.current_review_load} /{" "}
+                    {reviewer.max_review_capacity}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenDialog(reviewer)}
+                      color="primary"
                     >
-                      {reviewer.department}
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell>
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenDeleteDialog(reviewer)}
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Add/Edit Dialog */}
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            {editMode ? "Edit Reviewer" : "Add New Reviewer"}
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={3} sx={{ mt: 2 }}>
+              {/* Basic Information */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Basic Information
+                  </Typography>
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Name"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      required
+                      fullWidth
+                    />
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Given Names"
+                        value={formData.given_names}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            given_names: e.target.value,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Surname"
+                        value={formData.surname}
+                        onChange={(e) =>
+                          setFormData({ ...formData, surname: e.target.value })
+                        }
+                        fullWidth
+                      />
+                    </Stack>
+                    <TextField
+                      label="Email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      required
+                      fullWidth
+                    />
+                    <TextField
+                      label="Affiliation"
+                      value={formData.affiliation}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          affiliation: e.target.value,
+                        })
+                      }
+                      required
+                      fullWidth
+                    />
+                    <TextField
+                      label="Department"
+                      value={formData.department}
+                      onChange={(e) =>
+                        setFormData({ ...formData, department: e.target.value })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              {/* Identity & External IDs */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Identity & External IDs
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="External ID"
+                        value={formData.external_id}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            external_id: e.target.value,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="PKG ID"
+                        value={formData.pkg_id}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pkg_id: e.target.value })
+                        }
+                        fullWidth
+                      />
+                    </Stack>
+                    <TextField
+                      label="ORCID ID"
+                      value={formData.orcid_id}
+                      onChange={(e) =>
+                        setFormData({ ...formData, orcid_id: e.target.value })
+                      }
+                      fullWidth
+                      helperText="e.g., 0000-0002-1825-0097"
+                    />
+                    <TextField
+                      label="ROR ID (Affiliation)"
+                      value={formData.aff_ror_id}
+                      onChange={(e) =>
+                        setFormData({ ...formData, aff_ror_id: e.target.value })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Profile URL"
+                      value={formData.profile_url}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          profile_url: e.target.value,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Reviewer Type"
+                      value={formData.reviewer_type}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          reviewer_type: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      helperText="e.g., External, Editorial Board, Ad Hoc"
+                    />
+                  </Stack>
+                </CardContent>
+              </Card>
+
+              {/* Expertise */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Expertise Areas
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                    <TextField
+                      label="Add expertise area"
+                      value={expertiseInput}
+                      onChange={(e) => setExpertiseInput(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && handleAddExpertise()
+                      }
+                      size="small"
+                      fullWidth
+                    />
+                    <Button onClick={handleAddExpertise} variant="outlined">
+                      Add
+                    </Button>
+                  </Stack>
                   <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                    {reviewer.expertise_areas.slice(0, 2).map((area, idx) => (
+                    {formData.expertise_areas.map((area, idx) => (
                       <Chip
                         key={idx}
                         label={area}
-                        size="small"
-                        variant="outlined"
+                        onDelete={() => handleRemoveExpertise(idx)}
                         sx={{ mb: 0.5 }}
                       />
                     ))}
-                    {reviewer.expertise_areas.length > 2 && (
-                      <Chip
-                        label={`+${reviewer.expertise_areas.length - 2}`}
-                        size="small"
-                        variant="outlined"
-                        sx={{ mb: 0.5 }}
-                      />
-                    )}
                   </Stack>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={reviewer.availability_status}
-                    size="small"
-                    color={getStatusColor(reviewer.availability_status)}
-                  />
-                </TableCell>
-                <TableCell>
-                  {reviewer.current_review_load} /{" "}
-                  {reviewer.max_review_capacity}
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenDialog(reviewer)}
-                    color="primary"
+                </CardContent>
+              </Card>
+
+              {/* Availability & Capacity */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
                   >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenDeleteDialog(reviewer)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Add/Edit Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          {editMode ? "Edit Reviewer" : "Add New Reviewer"}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            {/* Basic Information */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Basic Information
-                </Typography>
-                <Stack spacing={2}>
-                  <TextField
-                    label="Name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                    fullWidth
-                  />
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Given Names"
-                      value={formData.given_names}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          given_names: e.target.value,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Surname"
-                      value={formData.surname}
-                      onChange={(e) =>
-                        setFormData({ ...formData, surname: e.target.value })
-                      }
-                      fullWidth
-                    />
-                  </Stack>
-                  <TextField
-                    label="Email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    required
-                    fullWidth
-                  />
-                  <TextField
-                    label="Affiliation"
-                    value={formData.affiliation}
-                    onChange={(e) =>
-                      setFormData({ ...formData, affiliation: e.target.value })
-                    }
-                    required
-                    fullWidth
-                  />
-                  <TextField
-                    label="Department"
-                    value={formData.department}
-                    onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
-                    }
-                    fullWidth
-                  />
-                </Stack>
-              </CardContent>
-            </Card>
-
-            {/* Identity & External IDs */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Identity & External IDs
-                </Typography>
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="External ID"
-                      value={formData.external_id}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          external_id: e.target.value,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="PKG ID"
-                      value={formData.pkg_id}
-                      onChange={(e) =>
-                        setFormData({ ...formData, pkg_id: e.target.value })
-                      }
-                      fullWidth
-                    />
-                  </Stack>
-                  <TextField
-                    label="ORCID ID"
-                    value={formData.orcid_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, orcid_id: e.target.value })
-                    }
-                    fullWidth
-                    helperText="e.g., 0000-0002-1825-0097"
-                  />
-                  <TextField
-                    label="ROR ID (Affiliation)"
-                    value={formData.aff_ror_id}
-                    onChange={(e) =>
-                      setFormData({ ...formData, aff_ror_id: e.target.value })
-                    }
-                    fullWidth
-                  />
-                  <TextField
-                    label="Profile URL"
-                    value={formData.profile_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, profile_url: e.target.value })
-                    }
-                    fullWidth
-                  />
-                  <TextField
-                    label="Reviewer Type"
-                    value={formData.reviewer_type}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        reviewer_type: e.target.value,
-                      })
-                    }
-                    fullWidth
-                    helperText="e.g., External, Editorial Board, Ad Hoc"
-                  />
-                </Stack>
-              </CardContent>
-            </Card>
-
-            {/* Expertise */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Expertise Areas
-                </Typography>
-                <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                  <TextField
-                    label="Add expertise area"
-                    value={expertiseInput}
-                    onChange={(e) => setExpertiseInput(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && handleAddExpertise()
-                    }
-                    size="small"
-                    fullWidth
-                  />
-                  <Button onClick={handleAddExpertise} variant="outlined">
-                    Add
-                  </Button>
-                </Stack>
-                <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                  {formData.expertise_areas.map((area, idx) => (
-                    <Chip
-                      key={idx}
-                      label={area}
-                      onDelete={() => handleRemoveExpertise(idx)}
-                      sx={{ mb: 0.5 }}
-                    />
-                  ))}
-                </Stack>
-              </CardContent>
-            </Card>
-
-            {/* Availability & Capacity */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Availability & Capacity
-                </Typography>
-                <Stack spacing={2}>
-                  <FormControl fullWidth>
-                    <InputLabel>Availability Status</InputLabel>
-                    <Select
-                      value={formData.availability_status}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          availability_status: e.target.value as
-                            | "available"
-                            | "busy"
-                            | "unavailable"
-                            | "sabbatical",
-                        })
-                      }
-                      label="Availability Status"
-                    >
-                      {availabilityOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Current Review Load"
-                      type="number"
-                      value={formData.current_review_load}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          current_review_load: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Max Review Capacity"
-                      type="number"
-                      value={formData.max_review_capacity}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          max_review_capacity: parseInt(e.target.value) || 3,
-                        })
-                      }
-                      fullWidth
-                    />
-                  </Stack>
-                  <TextField
-                    label="Average Review Time (days)"
-                    type="number"
-                    value={formData.average_review_time_days}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        average_review_time_days:
-                          parseInt(e.target.value) || 21,
-                      })
-                    }
-                    fullWidth
-                  />
-                </Stack>
-              </CardContent>
-            </Card>
-
-            {/* Status Flags */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Status & Flags
-                </Typography>
-                <Stack spacing={2}>
-                  <FormControl component="fieldset">
+                    Availability & Capacity
+                  </Typography>
+                  <Stack spacing={2}>
+                    <FormControl fullWidth>
+                      <InputLabel>Availability Status</InputLabel>
+                      <Select
+                        value={formData.availability_status}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            availability_status: e.target.value as
+                              | "available"
+                              | "busy"
+                              | "unavailable"
+                              | "sabbatical",
+                          })
+                        }
+                        label="Availability Status"
+                      >
+                        {availabilityOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                     <Stack direction="row" spacing={2}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={formData.is_board_member}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              is_board_member: e.target.checked,
-                            })
-                          }
-                        />
-                        <Typography component="span" sx={{ ml: 1 }}>
-                          Editorial Board Member
-                        </Typography>
-                      </label>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={formData.previous_reviewer}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              previous_reviewer: e.target.checked,
-                            })
-                          }
-                        />
-                        <Typography component="span" sx={{ ml: 1 }}>
-                          Previous Reviewer
-                        </Typography>
-                      </label>
-                      <label>
-                        <input
-                          type="checkbox"
-                          checked={formData.has_publications_saved}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              has_publications_saved: e.target.checked,
-                            })
-                          }
-                        />
-                        <Typography component="span" sx={{ ml: 1 }}>
-                          Has Publications Saved
-                        </Typography>
-                      </label>
+                      <TextField
+                        label="Current Review Load"
+                        type="number"
+                        value={formData.current_review_load}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            current_review_load: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Max Review Capacity"
+                        type="number"
+                        value={formData.max_review_capacity}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            max_review_capacity: parseInt(e.target.value) || 3,
+                          })
+                        }
+                        fullWidth
+                      />
                     </Stack>
-                  </FormControl>
-                </Stack>
-              </CardContent>
-            </Card>
+                    <TextField
+                      label="Average Review Time (days)"
+                      type="number"
+                      value={formData.average_review_time_days}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          average_review_time_days:
+                            parseInt(e.target.value) || 21,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                </CardContent>
+              </Card>
 
-            {/* Review Statistics */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Review Statistics
-                </Typography>
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Number of Reviews"
-                      type="number"
-                      value={formData.number_of_reviews}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          number_of_reviews: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Completed Reviews"
-                      type="number"
-                      value={formData.completed_reviews}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          completed_reviews: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Currently Reviewing"
-                      type="number"
-                      value={formData.currently_reviewing}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          currently_reviewing: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
+              {/* Status Flags */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Status & Flags
+                  </Typography>
+                  <Stack spacing={2}>
+                    <FormControl component="fieldset">
+                      <Stack direction="row" spacing={2}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={formData.is_board_member}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                is_board_member: e.target.checked,
+                              })
+                            }
+                          />
+                          <Typography component="span" sx={{ ml: 1 }}>
+                            Editorial Board Member
+                          </Typography>
+                        </label>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={formData.previous_reviewer}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                previous_reviewer: e.target.checked,
+                              })
+                            }
+                          />
+                          <Typography component="span" sx={{ ml: 1 }}>
+                            Previous Reviewer
+                          </Typography>
+                        </label>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={formData.has_publications_saved}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                has_publications_saved: e.target.checked,
+                              })
+                            }
+                          />
+                          <Typography component="span" sx={{ ml: 1 }}>
+                            Has Publications Saved
+                          </Typography>
+                        </label>
+                      </Stack>
+                    </FormControl>
                   </Stack>
-                  <TextField
-                    label="Last Review Completed"
-                    type="date"
-                    value={formData.last_review_completed || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        last_review_completed: e.target.value || "",
-                      })
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                  />
-                </Stack>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Publication Metrics */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Publication Metrics
-                </Typography>
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={2}>
+              {/* Review Statistics */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Review Statistics
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Number of Reviews"
+                        type="number"
+                        value={formData.number_of_reviews}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            number_of_reviews: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Completed Reviews"
+                        type="number"
+                        value={formData.completed_reviews}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            completed_reviews: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Currently Reviewing"
+                        type="number"
+                        value={formData.currently_reviewing}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            currently_reviewing: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                    </Stack>
                     <TextField
-                      label="Recent Publications"
-                      type="number"
-                      value={formData.recent_publications}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          recent_publications: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Total Publications"
-                      type="number"
-                      value={formData.total_publications || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          total_publications: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      fullWidth
-                    />
-                  </Stack>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="H-Index"
-                      type="number"
-                      value={formData.h_index || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          h_index: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Citation Count"
-                      type="number"
-                      value={formData.citation_count || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          citation_count: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      fullWidth
-                    />
-                  </Stack>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Publication Year From"
-                      type="number"
-                      value={formData.publication_year_from || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          publication_year_from: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Publication Year To"
-                      type="number"
-                      value={formData.publication_year_to || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          publication_year_to: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      fullWidth
-                    />
-                  </Stack>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Publications Last Year"
-                      type="number"
-                      value={formData.publication_count_last_year || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          publication_count_last_year: e.target.value
-                            ? parseInt(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Last Publication Date"
+                      label="Last Review Completed"
                       type="date"
-                      value={formData.last_publication_date || ""}
+                      value={formData.last_review_completed || ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          last_publication_date: e.target.value || "",
+                          last_review_completed: e.target.value || "",
                         })
                       }
                       InputLabelProps={{ shrink: true }}
                       fullWidth
                     />
                   </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Invitation Statistics */}
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
-                  Invitation Statistics
-                </Typography>
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Total Invitations"
-                      type="number"
-                      value={formData.total_invitations}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          total_invitations: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Total Acceptances"
-                      type="number"
-                      value={formData.total_acceptances}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          total_acceptances: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Total Completions"
-                      type="number"
-                      value={formData.total_completions}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          total_completions: parseInt(e.target.value) || 0,
-                        })
-                      }
-                      fullWidth
-                    />
+              {/* Publication Metrics */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Publication Metrics
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Recent Publications"
+                        type="number"
+                        value={formData.recent_publications}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            recent_publications: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Total Publications"
+                        type="number"
+                        value={formData.total_publications || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            total_publications: e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        fullWidth
+                      />
+                    </Stack>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="H-Index"
+                        type="number"
+                        value={formData.h_index || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            h_index: e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Citation Count"
+                        type="number"
+                        value={formData.citation_count || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            citation_count: e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        fullWidth
+                      />
+                    </Stack>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Publication Year From"
+                        type="number"
+                        value={formData.publication_year_from || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            publication_year_from: e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Publication Year To"
+                        type="number"
+                        value={formData.publication_year_to || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            publication_year_to: e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        fullWidth
+                      />
+                    </Stack>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Publications Last Year"
+                        type="number"
+                        value={formData.publication_count_last_year || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            publication_count_last_year: e.target.value
+                              ? parseInt(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Last Publication Date"
+                        type="date"
+                        value={formData.last_publication_date || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            last_publication_date: e.target.value || "",
+                          })
+                        }
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                      />
+                    </Stack>
                   </Stack>
-                  <Stack direction="row" spacing={2}>
-                    <TextField
-                      label="Avg Response Time (hours)"
-                      type="number"
-                      value={formData.average_response_time_hours || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          average_response_time_hours: e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      fullWidth
-                    />
-                    <TextField
-                      label="Last Activity Date"
-                      type="date"
-                      value={formData.last_activity_date || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          last_activity_date: e.target.value || "",
-                        })
-                      }
-                      InputLabelProps={{ shrink: true }}
-                      fullWidth
-                    />
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editMode ? "Update" : "Add"} Reviewer
-          </Button>
-        </DialogActions>
-      </Dialog>
+                </CardContent>
+              </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Delete Reviewer</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete{" "}
-            <strong>{selectedReviewer?.name}</strong>? This action cannot be
-            undone.
-          </Typography>
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            This will fail if the reviewer has existing matches or invitations.
-            Remove those first.
+              {/* Invitation Statistics */}
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={600}
+                    sx={{ mb: 2 }}
+                  >
+                    Invitation Statistics
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Total Invitations"
+                        type="number"
+                        value={formData.total_invitations}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            total_invitations: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Total Acceptances"
+                        type="number"
+                        value={formData.total_acceptances}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            total_acceptances: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Total Completions"
+                        type="number"
+                        value={formData.total_completions}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            total_completions: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        fullWidth
+                      />
+                    </Stack>
+                    <Stack direction="row" spacing={2}>
+                      <TextField
+                        label="Avg Response Time (hours)"
+                        type="number"
+                        value={formData.average_response_time_hours || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            average_response_time_hours: e.target.value
+                              ? parseFloat(e.target.value)
+                              : undefined,
+                          })
+                        }
+                        fullWidth
+                      />
+                      <TextField
+                        label="Last Activity Date"
+                        type="date"
+                        value={formData.last_activity_date || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            last_activity_date: e.target.value || "",
+                          })
+                        }
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                      />
+                    </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleSubmit} variant="contained">
+              {editMode ? "Update" : "Add"} Reviewer
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Delete Reviewer</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete{" "}
+              <strong>{selectedReviewer?.name}</strong>? This action cannot be
+              undone.
+            </Typography>
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              This will fail if the reviewer has existing matches or
+              invitations. Remove those first.
+            </Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleDelete} variant="contained" color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
+            {snackbar.message}
           </Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} variant="contained" color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+        </Snackbar>
+      </Box>
+    </RoleGuard>
   );
 }

@@ -18,7 +18,6 @@ import {
   FormControl,
   InputLabel,
   Alert,
-  CircularProgress,
   Stack,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -26,15 +25,22 @@ import PersonIcon from "@mui/icons-material/Person";
 import { createClient } from "@/utils/supabase/client";
 import { UserProfile, UserRole, ROLE_DEFINITIONS } from "@/types/roles";
 import RoleGuard from "./RoleGuard";
+import AdminLoadingState from "./AdminLoadingState";
+import { useRoleAccess } from "@/hooks/useRoles";
 
 export default function RoleManager() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const {
+    loading: permissionsLoading,
+    permissions,
+    profile: profileFromHook,
+  } = useRoleAccess();
   const supabase = createClient();
 
-  const loadProfiles = async () => {
+  const loadProfiles = React.useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -55,7 +61,7 @@ export default function RoleManager() {
     }
 
     setLoading(false);
-  };
+  }, []);
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     setError(null);
@@ -95,33 +101,39 @@ export default function RoleManager() {
   };
 
   useEffect(() => {
-    loadProfiles();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Wait for permissions to finish loading before checking
+    if (permissionsLoading) {
+      return; // Still loading permissions, don't do anything
+    }
+
+    // Only load data if user has permission
+    if (permissions.canManageUsers) {
+      loadProfiles();
+    } else {
+      // User doesn't have permission, stop loading
+      setLoading(false);
+    }
+  }, [permissionsLoading, permissions.canManageUsers, loadProfiles]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Show different messages for permissions vs data loading
+  if (permissionsLoading) {
+    return <AdminLoadingState message="Checking permissions..." />;
+  }
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <CircularProgress />
-        <Typography color="text.secondary">Loading user roles...</Typography>
-      </Box>
-    );
+    return <AdminLoadingState message="Loading user roles..." />;
   }
 
   return (
-    <RoleGuard requiredPermission="canManageUsers">
+    <RoleGuard
+      requiredPermission="canManageUsers"
+      skipCheck={true}
+      permissions={permissions}
+      profile={profileFromHook}
+    >
       <Box sx={{ p: 3 }}>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
@@ -158,93 +170,82 @@ export default function RoleManager() {
           </Alert>
         )}
 
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-            <CircularProgress />
-          </Box>
-        )}
-
-        {!loading && (
-          <Paper>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>User</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Current Role</TableCell>
-                    <TableCell>Department</TableCell>
-                    <TableCell>Joined</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {profiles.map((profile) => (
-                    <TableRow key={profile.id}>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <PersonIcon color="action" />
-                          <Box>
-                            <Typography variant="body2" fontWeight="medium">
-                              {profile.full_name || "Unnamed User"}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              ID: {profile.id.slice(0, 8)}...
-                            </Typography>
-                          </Box>
+        <Paper>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>User</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Current Role</TableCell>
+                  <TableCell>Department</TableCell>
+                  <TableCell>Joined</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {profiles.map((profile) => (
+                  <TableRow key={profile.id}>
+                    <TableCell>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <PersonIcon color="action" />
+                        <Box>
+                          <Typography variant="body2" fontWeight="medium">
+                            {profile.full_name || "Unnamed User"}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            ID: {profile.id.slice(0, 8)}...
+                          </Typography>
                         </Box>
-                      </TableCell>
-                      <TableCell>{profile.email}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={ROLE_DEFINITIONS[profile.role].name}
-                          color={ROLE_DEFINITIONS[profile.role].color}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{profile.department || "Not set"}</TableCell>
-                      <TableCell>{formatDate(profile.created_at)}</TableCell>
-                      <TableCell>
-                        <FormControl size="small" sx={{ minWidth: 140 }}>
-                          <InputLabel>Change Role</InputLabel>
-                          <Select
-                            value=""
-                            label="Change Role"
-                            onChange={(e) =>
-                              updateUserRole(
-                                profile.id,
-                                e.target.value as UserRole
-                              )
-                            }
-                          >
-                            {Object.entries(ROLE_DEFINITIONS).map(
-                              ([role, def]) => (
-                                <MenuItem
-                                  key={role}
-                                  value={role}
-                                  disabled={profile.role === role}
-                                >
-                                  {def.name}
-                                </MenuItem>
-                              )
-                            )}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
+                      </Box>
+                    </TableCell>
+                    <TableCell>{profile.email}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={ROLE_DEFINITIONS[profile.role].name}
+                        color={ROLE_DEFINITIONS[profile.role].color}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{profile.department || "Not set"}</TableCell>
+                    <TableCell>{formatDate(profile.created_at)}</TableCell>
+                    <TableCell>
+                      <FormControl size="small" sx={{ minWidth: 140 }}>
+                        <InputLabel>Change Role</InputLabel>
+                        <Select
+                          value=""
+                          label="Change Role"
+                          onChange={(e) =>
+                            updateUserRole(
+                              profile.id,
+                              e.target.value as UserRole
+                            )
+                          }
+                        >
+                          {Object.entries(ROLE_DEFINITIONS).map(
+                            ([role, def]) => (
+                              <MenuItem
+                                key={role}
+                                value={role}
+                                disabled={profile.role === role}
+                              >
+                                {def.name}
+                              </MenuItem>
+                            )
+                          )}
+                        </Select>
+                      </FormControl>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
 
-        {!loading && profiles.length === 0 && (
+        {profiles.length === 0 && (
           <Paper sx={{ p: 4, textAlign: "center" }}>
             <PersonIcon sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
             <Typography variant="h6" gutterBottom>

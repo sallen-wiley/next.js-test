@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -26,12 +26,14 @@ import {
   Stack,
   Snackbar,
   Alert,
-  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { createClient } from "@/utils/supabase/client";
+import AdminLoadingState from "./AdminLoadingState";
+import RoleGuard from "./RoleGuard";
+import { useRoleAccess } from "@/hooks/useRoles";
 
 interface Retraction {
   id: string;
@@ -51,6 +53,7 @@ export default function RetractionsManager() {
   const [retractions, setRetractions] = useState<Retraction[]>([]);
   const [reviewers, setReviewers] = useState<Reviewer[]>([]);
   const [loading, setLoading] = useState(true);
+  const { loading: permissionsLoading, permissions, profile } = useRoleAccess();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedRetraction, setSelectedRetraction] =
@@ -70,7 +73,11 @@ export default function RetractionsManager() {
 
   const supabase = createClient();
 
-  const loadData = async () => {
+  const showSnackbar = (message: string, severity: "success" | "error") => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     try {
       const [retractionsRes, reviewersRes] = await Promise.all([
@@ -99,19 +106,30 @@ export default function RetractionsManager() {
       setReviewers(reviewersRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
-      showSnackbar("Failed to load data", "error");
+      setSnackbar({
+        open: true,
+        message: "Failed to load data",
+        severity: "error",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    loadData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Wait for permissions to finish loading before checking
+    if (permissionsLoading) {
+      return; // Still loading permissions, don't do anything
+    }
 
-  const showSnackbar = (message: string, severity: "success" | "error") => {
-    setSnackbar({ open: true, message, severity });
-  };
+    // Only load data if user has permission
+    if (permissions.canManageUsers) {
+      loadData();
+    } else {
+      // User doesn't have permission, stop loading
+      setLoading(false);
+    }
+  }, [permissionsLoading, permissions.canManageUsers, loadData]);
 
   const handleOpenDialog = (retraction?: Retraction) => {
     if (retraction) {
@@ -235,210 +253,211 @@ export default function RetractionsManager() {
     }
   };
 
+  // Show different messages for permissions vs data loading
+  if (permissionsLoading) {
+    return <AdminLoadingState message="Checking permissions..." />;
+  }
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        <CircularProgress />
-        <Typography color="text.secondary">Loading retractions...</Typography>
-      </Box>
-    );
+    return <AdminLoadingState message="Loading retractions..." />;
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Reviewer Retractions
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Track retractions associated with reviewers
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Retraction
-        </Button>
-      </Stack>
+    <RoleGuard
+      requiredPermission="canManageUsers"
+      skipCheck={true}
+      permissions={permissions}
+      profile={profile}
+    >
+      <Box sx={{ p: 3 }}>
+        <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight={600}>
+              Reviewer Retractions
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Track retractions associated with reviewers
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Retraction
+          </Button>
+        </Stack>
 
-      {retractions.length === 0 && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          No retractions recorded. This table tracks reviewers with retraction
-          history.
-        </Alert>
-      )}
+        {retractions.length === 0 && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            No retractions recorded. This table tracks reviewers with retraction
+            history.
+          </Alert>
+        )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Reviewer</TableCell>
-              <TableCell>Retraction Reasons</TableCell>
-              <TableCell>Recorded Date</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {retractions.length === 0 ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  <Typography color="text.secondary">
-                    No retractions found
-                  </Typography>
-                </TableCell>
+                <TableCell>Reviewer</TableCell>
+                <TableCell>Retraction Reasons</TableCell>
+                <TableCell>Recorded Date</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            ) : (
-              retractions.map((retraction) => (
-                <TableRow key={retraction.id}>
-                  <TableCell>{retraction.reviewer_name || "Unknown"}</TableCell>
-                  <TableCell>
-                    {retraction.retraction_reasons &&
-                    retraction.retraction_reasons.length > 0 ? (
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {retraction.retraction_reasons.map((reason, idx) => (
-                          <Chip
-                            key={idx}
-                            label={reason}
-                            size="small"
-                            color="warning"
-                          />
-                        ))}
-                      </Box>
-                    ) : (
-                      <Typography variant="caption" color="text.secondary">
-                        No reasons specified
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(retraction.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpenDialog(retraction)}
-                      color="primary"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        handleDelete(retraction.id, retraction.reviewer_name)
-                      }
-                      color="error"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+            </TableHead>
+            <TableBody>
+              {retractions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center">
+                    <Typography color="text.secondary">
+                      No retractions found
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                retractions.map((retraction) => (
+                  <TableRow key={retraction.id}>
+                    <TableCell>
+                      {retraction.reviewer_name || "Unknown"}
+                    </TableCell>
+                    <TableCell>
+                      {retraction.retraction_reasons &&
+                      retraction.retraction_reasons.length > 0 ? (
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {retraction.retraction_reasons.map((reason, idx) => (
+                            <Chip
+                              key={idx}
+                              label={reason}
+                              size="small"
+                              color="warning"
+                            />
+                          ))}
+                        </Box>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          No reasons specified
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(retraction.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDialog(retraction)}
+                        color="primary"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          handleDelete(retraction.id, retraction.reviewer_name)
+                        }
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Add/Edit Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {editMode ? "Edit Retraction" : "Add New Retraction"}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            <FormControl fullWidth required>
-              <InputLabel>Reviewer</InputLabel>
-              <Select
-                value={formData.reviewer_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, reviewer_id: e.target.value })
-                }
-                label="Reviewer"
-                disabled={editMode}
-              >
-                {reviewers.map((reviewer) => (
-                  <MenuItem key={reviewer.id} value={reviewer.id}>
-                    {reviewer.name} ({reviewer.affiliation})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+        {/* Add/Edit Dialog */}
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            {editMode ? "Edit Retraction" : "Add New Retraction"}
+          </DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <FormControl fullWidth required>
+                <InputLabel>Reviewer</InputLabel>
+                <Select
+                  value={formData.reviewer_id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reviewer_id: e.target.value })
+                  }
+                  label="Reviewer"
+                  disabled={editMode}
+                >
+                  {reviewers.map((reviewer) => (
+                    <MenuItem key={reviewer.id} value={reviewer.id}>
+                      {reviewer.name} ({reviewer.affiliation})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Retraction Reasons
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                <TextField
-                  label="Add reason"
-                  value={reasonInput}
-                  onChange={(e) => setReasonInput(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddReason();
-                    }
-                  }}
-                  fullWidth
-                  size="small"
-                  helperText="Enter one or more reasons separated by commas"
-                />
-                <Button onClick={handleAddReason} variant="outlined">
-                  Add
-                </Button>
-              </Stack>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {formData.retraction_reasons.map((reason, idx) => (
-                  <Chip
-                    key={idx}
-                    label={reason}
-                    onDelete={() => handleRemoveReason(idx)}
+              <Box>
+                <Typography variant="subtitle2" gutterBottom>
+                  Retraction Reasons
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                  <TextField
+                    label="Add reason"
+                    value={reasonInput}
+                    onChange={(e) => setReasonInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddReason();
+                      }
+                    }}
+                    fullWidth
                     size="small"
-                    color="warning"
+                    helperText="Enter one or more reasons separated by commas"
                   />
-                ))}
+                  <Button onClick={handleAddReason} variant="outlined">
+                    Add
+                  </Button>
+                </Stack>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  {formData.retraction_reasons.map((reason, idx) => (
+                    <Chip
+                      key={idx}
+                      label={reason}
+                      onDelete={() => handleRemoveReason(idx)}
+                      size="small"
+                      color="warning"
+                    />
+                  ))}
+                </Box>
               </Box>
-            </Box>
 
-            <Alert severity="warning">
-              Retractions are serious records. Ensure accuracy before saving.
-            </Alert>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="warning">
-            {editMode ? "Update" : "Add"} Retraction
-          </Button>
-        </DialogActions>
-      </Dialog>
+              <Alert severity="warning">
+                Retractions are serious records. Ensure accuracy before saving.
+              </Alert>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleSubmit} variant="contained" color="warning">
+              {editMode ? "Update" : "Add"} Retraction
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+        {/* Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert severity={snackbar.severity} sx={{ width: "100%" }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </RoleGuard>
   );
 }
