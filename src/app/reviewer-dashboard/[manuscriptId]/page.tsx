@@ -54,8 +54,8 @@ export default function ArticleDetailsPage({
   const router = useRouter();
   const { user } = useAuth();
 
-  // Force Phenom theme on this page (resets on each visit, allows manual switching during session)
-  usePageTheme("phenom");
+  // Force Phenom theme with light mode on this page (resets on each visit, allows manual switching during session)
+  usePageTheme("phenom", { mode: "light" });
 
   // Unwrap params Promise (Next.js 15 requirement)
   const unwrappedParams = React.use(params);

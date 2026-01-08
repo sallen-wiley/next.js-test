@@ -83,8 +83,8 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 // Mock data removed - using real database queries
 
 export default function ReviewerInvitationDashboard() {
-  // Force Phenom theme on this page (resets on each visit, allows manual switching during session)
-  usePageTheme("phenom");
+  // Force Phenom theme with light mode on this page (resets on each visit, allows manual switching during session)
+  usePageTheme("phenom", { mode: "light" });
 
   // Authentication and user data
   const router = useRouter();

@@ -33,8 +33,8 @@ export default function ArticleListingPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // Force Phenom theme on this page (resets on each visit, allows manual switching during session)
-  usePageTheme("phenom");
+  // Force Phenom theme with light mode on this page (resets on each visit, allows manual switching during session)
+  usePageTheme("phenom", { mode: "light" });
 
   const [manuscripts, setManuscripts] = useState<ManuscriptWithUserRole[]>([]);
   const [loading, setLoading] = useState(true);
