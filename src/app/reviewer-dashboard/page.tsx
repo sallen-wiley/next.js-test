@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { usePageTheme } from "@/hooks/usePageTheme";
 import {
   getUserManuscripts,
   getManuscriptInvitationStats,
@@ -31,6 +32,9 @@ import type { ManuscriptTag } from "@/lib/supabase";
 export default function ArticleListingPage() {
   const router = useRouter();
   const { user } = useAuth();
+
+  // Force Phenom theme on this page (resets on each visit, allows manual switching during session)
+  usePageTheme("phenom");
 
   const [manuscripts, setManuscripts] = useState<ManuscriptWithUserRole[]>([]);
   const [loading, setLoading] = useState(true);

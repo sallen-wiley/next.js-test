@@ -24,6 +24,7 @@ import { useColorScheme } from "@mui/material/styles";
 import { useLogoContext } from "@/contexts/LogoContext";
 import type { TenantType } from "@/components/product/PrimaryLogo";
 import { useAuth } from "@/components/auth/AuthProvider";
+import RoleGuard from "@/components/auth/RoleGuard";
 
 // Theme metadata for better UX
 const themeMetadata: Record<
@@ -178,7 +179,7 @@ export const FabThemeSwitcher: React.FC = () => {
   };
 
   return (
-    <>
+    <RoleGuard requiredRole={["admin", "designer"]} showFallback={false}>
       <Fab
         color="primary"
         aria-label="theme settings"
@@ -422,7 +423,7 @@ export const FabThemeSwitcher: React.FC = () => {
           </MenuItem>
         )}
       </Menu>
-    </>
+    </RoleGuard>
   );
 };
 

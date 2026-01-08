@@ -3,6 +3,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { usePageTheme } from "@/hooks/usePageTheme";
 import {
   getManuscriptById,
   getManuscriptInvitations,
@@ -52,6 +53,9 @@ export default function ArticleDetailsPage({
 }) {
   const router = useRouter();
   const { user } = useAuth();
+
+  // Force Phenom theme on this page (resets on each visit, allows manual switching during session)
+  usePageTheme("phenom");
 
   // Unwrap params Promise (Next.js 15 requirement)
   const unwrappedParams = React.use(params);

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useUserProfile } from "@/hooks/useRoles";
+import { usePageTheme } from "@/hooks/usePageTheme";
 import {
   isInstitutionalEmail,
   calculateAcceptanceRate,
@@ -82,6 +83,9 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 // Mock data removed - using real database queries
 
 export default function ReviewerInvitationDashboard() {
+  // Force Phenom theme on this page (resets on each visit, allows manual switching during session)
+  usePageTheme("phenom");
+
   // Authentication and user data
   const router = useRouter();
   const searchParams = useSearchParams();
