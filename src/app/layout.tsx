@@ -7,7 +7,9 @@ import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LogoProvider } from "@/contexts/LogoContext";
 import { HeaderProvider } from "@/contexts/HeaderContext";
+import { AdminActionsProvider } from "@/contexts/AdminActionsContext";
 import FabThemeSwitcher from "@/components/app/FabThemeSwitcher";
+import AdminActionsFab from "@/components/app/AdminActionsFab";
 import GlobalHeaderWrapper from "@/components/app/GlobalHeaderWrapper";
 import AuthWrapper from "@/components/auth/AuthWrapper";
 
@@ -42,9 +44,12 @@ export default function RootLayout({
               <CssBaseline />
               <AuthWrapper>
                 <HeaderProvider>
-                  <GlobalHeaderWrapper />
-                  {children}
-                  <FabThemeSwitcher />
+                  <AdminActionsProvider>
+                    <GlobalHeaderWrapper />
+                    {children}
+                    <FabThemeSwitcher />
+                    <AdminActionsFab />
+                  </AdminActionsProvider>
                 </HeaderProvider>
               </AuthWrapper>
             </LogoProvider>

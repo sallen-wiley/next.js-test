@@ -264,6 +264,7 @@ export default function ReviewerCard({
           <Button
             size="small"
             variant="outlined"
+            color="neutral"
             onClick={() => onAddToQueue(reviewer.id)}
             disabled={conflict}
           >

@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
+import { useAdminActions } from "@/contexts/AdminActionsContext";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useUserProfile } from "@/hooks/useRoles";
 import { usePageTheme } from "@/hooks/usePageTheme";
@@ -31,6 +32,7 @@ import {
   uninvalidateReport,
   cancelReview,
   addReviewer,
+  clearManuscriptReviewers,
 } from "@/services/dataService";
 import ReviewerActionMenu from "./ReviewerActionMenu";
 import { ArticleDetailsCard } from "../ArticleDetailsCard";
@@ -81,6 +83,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ClearAllIcon from "@mui/icons-material/ClearAll";
 
 // Mock data removed - using real database queries
 
@@ -493,18 +496,17 @@ export default function ReviewerInvitationDashboard() {
     setSnackbarOpen(true);
   };
 
-  const showConfirmDialog = (
-    title: string,
-    message: string,
-    onConfirm: () => void
-  ) => {
-    setConfirmDialog({
-      open: true,
-      title,
-      message,
-      onConfirm,
-    });
-  };
+  const showConfirmDialog = React.useCallback(
+    (title: string, message: string, onConfirm: () => void) => {
+      setConfirmDialog({
+        open: true,
+        title,
+        message,
+        onConfirm,
+      });
+    },
+    []
+  );
 
   const handleInviteReviewer = async (reviewerId: string) => {
     const reviewer = potentialReviewers.find((r) => r.id === reviewerId);
@@ -1006,11 +1008,52 @@ export default function ReviewerInvitationDashboard() {
 
   // Batch add to queue removed
 
+  // Handler for clearing all invitations and queue
+  const handleClearAllReviewers = React.useCallback(async () => {
+    if (!manuscriptId) return;
+
+    showConfirmDialog(
+      "Clear All Invitations and Queue",
+      `This will remove ALL pending invitations and queued reviewers for this manuscript. This action cannot be undone. Are you sure?`,
+      async () => {
+        try {
+          const result = await clearManuscriptReviewers(manuscriptId);
+          await refreshAllReviewerData();
+          showSnackbar(
+            `Cleared ${result.removedInvitations} invitation(s) and ${result.removedQueueItems} queue item(s)`,
+            "success"
+          );
+        } catch (error) {
+          console.error("Error clearing reviewers:", error);
+          showSnackbar("Failed to clear reviewers", "error");
+        }
+      }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manuscriptId, showConfirmDialog]);
+
   // Configure header for reviewer dashboard
   useHeaderConfig({
     logoAffix: "Review",
     containerProps: { maxWidth: false },
   });
+
+  // Register admin actions for this page (memoized to prevent re-renders)
+  const adminActions = React.useMemo(
+    () => [
+      {
+        id: "clear-reviewers",
+        label: "Clear All Invitations & Queue",
+        icon: <ClearAllIcon />,
+        onClick: handleClearAllReviewers,
+        destructive: true,
+        tooltip: "Remove all pending invitations and queued reviewers",
+      },
+    ],
+    [handleClearAllReviewers]
+  );
+
+  useAdminActions(adminActions);
 
   return (
     <>

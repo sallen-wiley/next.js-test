@@ -2069,3 +2069,53 @@ export async function deleteManuscript(manuscriptId: string): Promise<void> {
     throw error;
   }
 }
+
+/**
+ * Clear all invitations and queue items for a manuscript
+ * Removes all pending/sent invitations and queued reviewer entries
+ * @param manuscriptId - The manuscript's UUID
+ * @returns Object with counts of removed invitations and queue items
+ */
+export async function clearManuscriptReviewers(manuscriptId: string): Promise<{
+  removedInvitations: number;
+  removedQueueItems: number;
+}> {
+  // Delete all invitations (regardless of status)
+  const { data: invitations, error: invitationsError } = await supabase
+    .from("review_invitations")
+    .delete()
+    .eq("manuscript_id", manuscriptId)
+    .select();
+
+  if (invitationsError) {
+    console.error("Error clearing invitations:", {
+      message: invitationsError.message,
+      details: invitationsError.details,
+      hint: invitationsError.hint,
+      code: invitationsError.code,
+    });
+    throw new Error(`Failed to clear invitations: ${invitationsError.message}`);
+  }
+
+  // Delete all queue items
+  const { data: queueItems, error: queueError } = await supabase
+    .from("invitation_queue")
+    .delete()
+    .eq("manuscript_id", manuscriptId)
+    .select();
+
+  if (queueError) {
+    console.error("Error clearing queue:", {
+      message: queueError.message,
+      details: queueError.details,
+      hint: queueError.hint,
+      code: queueError.code,
+    });
+    throw new Error(`Failed to clear queue: ${queueError.message}`);
+  }
+
+  return {
+    removedInvitations: invitations?.length || 0,
+    removedQueueItems: queueItems?.length || 0,
+  };
+}

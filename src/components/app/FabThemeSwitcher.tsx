@@ -10,7 +10,6 @@ import {
   Divider,
   Box,
   Typography,
-  Chip,
 } from "@mui/material";
 // Individual icon imports to avoid loading entire icon library
 import PaletteIcon from "@mui/icons-material/Palette";
@@ -18,12 +17,10 @@ import LightMode from "@mui/icons-material/LightMode";
 import DarkMode from "@mui/icons-material/DarkMode";
 import SettingsBrightness from "@mui/icons-material/SettingsBrightness";
 import Check from "@mui/icons-material/Check";
-import LogoutIcon from "@mui/icons-material/Logout";
 import { useThemeContext, ThemeName, ColorMode } from "@/contexts/ThemeContext";
 import { useColorScheme } from "@mui/material/styles";
 import { useLogoContext } from "@/contexts/LogoContext";
 import type { TenantType } from "@/components/product/PrimaryLogo";
-import { useAuth } from "@/components/auth/AuthProvider";
 import RoleGuard from "@/components/auth/RoleGuard";
 
 // Theme metadata for better UX
@@ -126,21 +123,11 @@ const tenantMetadata: Record<
   },
 };
 
-// Safe hook wrapper that doesn't throw
-function useSafeAuth() {
-  try {
-    return useAuth();
-  } catch {
-    return null;
-  }
-}
-
 // Main component
 export const FabThemeSwitcher: React.FC = () => {
   const { currentTheme, setTheme, availableThemes } = useThemeContext();
   const { mode, setMode, systemMode } = useColorScheme();
   const { currentTenant, setTenant, availableTenants } = useLogoContext();
-  const authContext = useSafeAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -162,20 +149,6 @@ export const FabThemeSwitcher: React.FC = () => {
 
   const handleTenantChange = (tenant: TenantType) => {
     setTenant(tenant);
-  };
-
-  const handleLogout = async () => {
-    handleClose();
-    if (authContext?.signOut) {
-      await authContext.signOut();
-    }
-  };
-
-  const getCurrentModeDescription = () => {
-    if (mode === "system") {
-      return `System (${systemMode})`;
-    }
-    return mode ? modeMetadata[mode].label : "Loading";
   };
 
   return (
@@ -207,14 +180,6 @@ export const FabThemeSwitcher: React.FC = () => {
           vertical: "center",
           horizontal: "right",
         }}
-        slotProps={{
-          paper: {
-            sx: {
-              minWidth: 280,
-              maxWidth: 320,
-            },
-          },
-        }}
       >
         {/* Theme Selection Section */}
         <Box sx={{ px: 2, py: 1 }}>
@@ -238,11 +203,7 @@ export const FabThemeSwitcher: React.FC = () => {
             <MenuItem
               key={themeName}
               onClick={() => handleThemeChange(themeName)}
-              sx={{
-                mx: 1,
-                borderRadius: 1,
-                backgroundColor: isSelected ? "action.selected" : "transparent",
-              }}
+              selected={isSelected}
             >
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <Box
@@ -285,7 +246,12 @@ export const FabThemeSwitcher: React.FC = () => {
             color="text.secondary"
             sx={{ mb: 1, display: "block" }}
           >
-            Current: {getCurrentModeDescription()}
+            Current:{" "}
+            {mode === "system"
+              ? `System (${systemMode})`
+              : mode
+              ? modeMetadata[mode].label
+              : "Loading"}
           </Typography>
         </Box>
 
@@ -297,11 +263,7 @@ export const FabThemeSwitcher: React.FC = () => {
             <MenuItem
               key={modeName}
               onClick={() => handleModeChange(modeName)}
-              sx={{
-                mx: 1,
-                borderRadius: 1,
-                backgroundColor: isSelected ? "action.selected" : "transparent",
-              }}
+              selected={isSelected}
             >
               <ListItemIcon sx={{ minWidth: 36 }}>{meta.icon}</ListItemIcon>
               <ListItemText
@@ -340,11 +302,7 @@ export const FabThemeSwitcher: React.FC = () => {
             <MenuItem
               key={tenant}
               onClick={() => handleTenantChange(tenant)}
-              sx={{
-                mx: 1,
-                borderRadius: 1,
-                backgroundColor: isSelected ? "action.selected" : "transparent",
-              }}
+              selected={isSelected}
             >
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <Box
@@ -374,54 +332,6 @@ export const FabThemeSwitcher: React.FC = () => {
             </MenuItem>
           );
         })}
-
-        <Divider sx={{ my: 1 }} />
-
-        {/* Status Information */}
-        <Box sx={{ px: 2, py: 1 }}>
-          <Typography variant="caption" color="text.secondary">
-            Active Mode:
-            <Chip
-              label={mode || "loading"}
-              size="small"
-              sx={{ ml: 1, height: 20, fontSize: "0.75rem" }}
-            />
-          </Typography>
-          {mode === "system" && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "block", mt: 0.5 }}
-            >
-              System Preference: {systemMode}
-            </Typography>
-          )}
-        </Box>
-
-        {/* Logout Option (only if user is logged in) */}
-        {authContext?.user && <Divider sx={{ my: 1 }} />}
-        {authContext?.user && (
-          <MenuItem
-            onClick={handleLogout}
-            sx={{
-              mx: 1,
-              borderRadius: 1,
-              color: "error.main",
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 36 }}>
-              <LogoutIcon color="error" />
-            </ListItemIcon>
-            <ListItemText
-              primary="Logout"
-              secondary={authContext.user.email}
-              slotProps={{
-                primary: { fontWeight: 500 },
-                secondary: { fontSize: "0.7rem" },
-              }}
-            />
-          </MenuItem>
-        )}
       </Menu>
     </RoleGuard>
   );

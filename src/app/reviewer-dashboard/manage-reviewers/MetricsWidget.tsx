@@ -35,7 +35,7 @@ export function MetricsWidget({
   queuedCount,
 }: MetricsWidgetProps) {
   return (
-    <Card sx={{ mb: 3 }}>
+    <Card>
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
         {/* Reports Section */}
         <Box
