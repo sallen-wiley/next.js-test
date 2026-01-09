@@ -185,9 +185,6 @@ async function upsertReviewer(reviewerData) {
     previous_reviewer: reviewerData.previousReviewer,
     has_publications_saved: reviewerData.hasPublicationsSaved,
     expertise_areas: reviewerData.keywords || [],
-    conflicts_of_interest: reviewerData.conflictsOfInterest
-      ? [reviewerData.conflictsOfInterest]
-      : [],
     current_review_load: reviewerData.currentlyReviewing || 0,
     // Publication stats (formerly in reviewer_metrics)
     h_index: reviewerData.publicationStats?.hIndex || null,

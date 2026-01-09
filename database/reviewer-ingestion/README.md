@@ -8,17 +8,23 @@ This directory contains Node.js scripts for managing reviewer data and exporting
 
 Ingests JSON manuscript data with reviewer suggestions and publication histories into Supabase for user testing.
 
-### 2. `export-schema.js` - Schema Metadata Export (NEW)
+### 2. `export-schema.js` - Schema Metadata Export
 
 Exports complete public schema metadata to timestamped JSON files for AI reference and documentation.
 
+### 3. `cleanup.js` - Data Deletion Script (NEW)
+
+Deletes manuscript and ALL related reviewer data (including reviewers, publications, matches, invitations, and queue entries).
+
 ## Features
 
-- ✅ **Idempotent**: Safe to run multiple times with the same or updated JSON files
+- ✅ **Idempotent ingestion**: Safe to run multiple times with the same or updated JSON files
 - ✅ **Smart deduplication**: Uses email for reviewers, system_id for manuscripts
 - ✅ **Complete data migration**: Ingests all manuscript, reviewer, match, metric, and publication data
+- ✅ **Nuclear cleanup**: Delete manuscript and ALL related data (reviewers, publications, matches, invitations)
 - ✅ **Comprehensive logging**: Detailed output for debugging
 - ✅ **Error resilient**: Continues processing if individual items fail
+- ✅ **Dry-run mode**: Preview deletions before executing
 
 ## Prerequisites
 
@@ -344,6 +350,161 @@ For issues or questions:
 3. Ensure the schema migration ran successfully (for ingestion)
 4. Ensure `pg` package is installed (for schema export)
 5. Verify DATABASE_URL is correct (for schema export)
+
+---
+
+## Data Cleanup
+
+### Overview
+
+The `cleanup.js` script provides a **nuclear delete** option that removes a manuscript and ALL related data, including:
+
+- ✅ The manuscript record
+- ✅ All reviewers matched to that manuscript (even if they're matched to other manuscripts)
+- ✅ All publications for those reviewers
+- ✅ All retractions for those reviewers
+- ✅ All reviewer-manuscript matches for those reviewers (across ALL manuscripts)
+- ✅ All review invitations for those reviewers (across ALL manuscripts)
+- ✅ All invitation queue entries for those reviewers (across ALL manuscripts)
+- ✅ All user-manuscript assignments
+
+⚠️ **WARNING**: This is an IRREVERSIBLE operation. Reviewers are deleted even if they're matched to other manuscripts you want to keep.
+
+### Usage
+
+#### Preview what will be deleted (dry run)
+
+```bash
+node database/reviewer-ingestion/cleanup.js --manuscript <identifier> --dry-run
+```
+
+#### Delete with confirmation prompt
+
+```bash
+node database/reviewer-ingestion/cleanup.js --manuscript <identifier>
+```
+
+#### Delete without confirmation (dangerous)
+
+```bash
+node database/reviewer-ingestion/cleanup.js --manuscript <identifier> --force
+```
+
+### Manuscript Identifiers
+
+You can use any of these identifiers to find the manuscript:
+
+- `system_id` (UUID) - from your editorial system
+- `submission_id` (UUID) - from ingestion JSON
+- `custom_id` (string) - human-readable ID (e.g., "7832738")
+
+### Examples
+
+```bash
+# Preview deletion for manuscript 7832738
+node database/reviewer-ingestion/cleanup.js --manuscript 7832738 --dry-run
+
+# Delete with confirmation
+node database/reviewer-ingestion/cleanup.js --manuscript 7832738
+
+# Delete using UUID without confirmation
+node database/reviewer-ingestion/cleanup.js --manuscript a1b2c3d4-e5f6-7890-abcd-ef1234567890 --force
+```
+
+### What Gets Deleted
+
+The script will show you exactly what will be deleted before executing:
+
+```
+Manuscript found:
+  ID: abc123...
+  Title: Body weight changes and associated...
+  System ID: def456...
+  Custom ID: 7832738
+
+Reviewers to be deleted (10):
+  1. Tom Deliens (tom.deliens@vub.be)
+  2. John Smith (john.smith@example.com)
+  ...
+
+Deletion Summary:
+================================================================================
+  Manuscripts: 1
+  Reviewers: 10
+  Reviewer-Manuscript Matches (all manuscripts): 15
+  Reviewer Publications: 234
+  Reviewer Retractions: 2
+  Review Invitations (all manuscripts): 8
+  Invitation Queue Entries (all manuscripts): 5
+  User-Manuscript Assignments: 2
+================================================================================
+
+⚠️  TOTAL RECORDS TO DELETE: 277
+
+⚠️  WARNING: This operation is IRREVERSIBLE and will delete data across ALL manuscripts!
+Reviewers matched to this manuscript will be deleted even if they're matched to other manuscripts.
+
+Are you sure you want to proceed with deletion? (yes/no):
+```
+
+### Deletion Order
+
+The script deletes data in the correct order to respect foreign key constraints:
+
+1. Reviewer publications
+2. Reviewer retractions
+3. Invitation queue entries (all manuscripts)
+4. Review invitations (all manuscripts)
+5. Reviewer-manuscript matches (all manuscripts)
+6. User-manuscript assignments
+7. Reviewers
+8. Manuscript
+
+### Use Cases
+
+#### Reset testing environment
+
+```bash
+# Delete test manuscript and start fresh
+node database/reviewer-ingestion/cleanup.js --manuscript 7832738
+node database/reviewer-ingestion/ingest.js ./reviewer_suggestions_7832738.json
+```
+
+#### Clean up after demo
+
+```bash
+# Preview what will be deleted
+node database/reviewer-ingestion/cleanup.js --manuscript demo-manuscript --dry-run
+
+# Delete if satisfied with preview
+node database/reviewer-ingestion/cleanup.js --manuscript demo-manuscript
+```
+
+#### Batch cleanup (careful!)
+
+```bash
+# Delete multiple manuscripts
+node database/reviewer-ingestion/cleanup.js --manuscript ms1 --force
+node database/reviewer-ingestion/cleanup.js --manuscript ms2 --force
+node database/reviewer-ingestion/cleanup.js --manuscript ms3 --force
+```
+
+### Important Notes
+
+⚠️ **Shared Reviewers**: If a reviewer appears in multiple manuscripts you've ingested, deleting ONE manuscript will delete that reviewer from ALL manuscripts. There's no way to "unshare" reviewers.
+
+⚠️ **Workflow Data**: Any invitations sent, queue entries added, or reviewer profile updates will be deleted along with the reviewer.
+
+⚠️ **No Undo**: Once deleted, data cannot be recovered. Always use `--dry-run` first.
+
+✅ **Idempotent Workflow**: You can safely delete and re-ingest the same manuscript for iterative testing:
+
+```bash
+node database/reviewer-ingestion/cleanup.js --manuscript 7832738 --force
+node database/reviewer-ingestion/ingest.js ./reviewer_suggestions_7832738.json
+```
+
+---
 
 ## License
 

@@ -16,6 +16,20 @@ import {
   Stack,
   Tooltip,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Card,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Snackbar,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EmailIcon from "@mui/icons-material/Email";
@@ -25,9 +39,13 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import EditIcon from "@mui/icons-material/Edit";
 import { PotentialReviewerWithMatch } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase";
 import { isInstitutionalEmail } from "@/utils/reviewerMetrics";
+import { useRoleAccess } from "@/hooks/useRoles";
+import { updateReviewer } from "@/services/dataService";
+import type { PotentialReviewer } from "@/lib/supabase";
 
 // Extended type with publication and retraction data
 interface ReviewerProfile extends PotentialReviewerWithMatch {
@@ -50,9 +68,37 @@ interface ReviewerProfile extends PotentialReviewerWithMatch {
     publication_date?: string;
     is_related: boolean;
   }>;
+  all_publications?: Array<{
+    id: string;
+    title: string;
+    doi?: string;
+    journal_name?: string;
+    authors?: string[];
+    publication_date?: string;
+    is_related: boolean;
+  }>;
   retractions?: {
     retraction_reasons: string[];
   };
+  // Manuscript context for strong/weak point analysis
+  manuscript_authors?: string[];
+  manuscript_journal?: string | null;
+  recent_invitations?: Array<{
+    status: string;
+    invited_date: string;
+    response_date?: string;
+  }>;
+}
+
+// Type for publication object
+interface Publication {
+  id: string;
+  title: string;
+  doi?: string;
+  journal_name?: string;
+  authors?: string[];
+  publication_date?: string;
+  is_related: boolean;
 }
 
 interface ReviewerProfileDrawerProps {
@@ -63,6 +109,13 @@ interface ReviewerProfileDrawerProps {
   onAddToQueue?: (reviewerId: string) => void;
   onInvite?: (reviewerId: string) => void;
 }
+
+const availabilityOptions = [
+  { value: "available", label: "Available" },
+  { value: "busy", label: "Busy" },
+  { value: "unavailable", label: "Unavailable" },
+  { value: "sabbatical", label: "Sabbatical" },
+] as const;
 
 export default function ReviewerProfileDrawer({
   open,
@@ -75,6 +128,72 @@ export default function ReviewerProfileDrawer({
   const [reviewer, setReviewer] = React.useState<ReviewerProfile | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [publicationsDialogOpen, setPublicationsDialogOpen] =
+    React.useState(false);
+  const [publicationEditDialogOpen, setPublicationEditDialogOpen] =
+    React.useState(false);
+  const [selectedPublication, setSelectedPublication] =
+    React.useState<Publication | null>(null);
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error" | "info",
+  });
+  const { isAdmin } = useRoleAccess();
+
+  // Form state for editing - Complete schema matching admin form
+  const [formData, setFormData] = React.useState<Partial<PotentialReviewer>>({
+    name: "",
+    email: "",
+    affiliation: "",
+    department: "",
+    expertise_areas: [],
+    current_review_load: 0,
+    max_review_capacity: 3,
+    average_review_time_days: 21,
+    availability_status: "available",
+    recent_publications: 0,
+    h_index: undefined,
+    last_review_completed: undefined,
+    is_board_member: false,
+    previous_reviewer: false,
+    has_publications_saved: false,
+    orcid_id: "",
+    profile_url: "",
+    external_id: "",
+    pkg_id: "",
+    given_names: "",
+    surname: "",
+    aff_ror_id: "",
+    reviewer_type: "",
+    number_of_reviews: 0,
+    completed_reviews: 0,
+    currently_reviewing: 0,
+    total_publications: undefined,
+    citation_count: undefined,
+    publication_year_from: undefined,
+    publication_year_to: undefined,
+    publication_count_last_year: undefined,
+    last_publication_date: undefined,
+    total_invitations: 0,
+    total_acceptances: 0,
+    total_completions: 0,
+    average_response_time_hours: undefined,
+    last_activity_date: undefined,
+  });
+  const [expertiseInput, setExpertiseInput] = React.useState("");
+
+  // Publication form state
+  const [publicationFormData, setPublicationFormData] = React.useState({
+    title: "",
+    doi: "",
+    journal_name: "",
+    authors: [] as string[],
+    publication_date: "",
+    is_related: false,
+  });
+  const [authorInput, setAuthorInput] = React.useState("");
 
   const fetchReviewerProfile = React.useCallback(
     async (id: string) => {
@@ -91,9 +210,19 @@ export default function ReviewerProfileDrawer({
 
         if (reviewerError) throw reviewerError;
 
-        // Fetch manuscript-specific conflicts if manuscriptId is provided
+        // Fetch manuscript data if manuscriptId is provided (for author/journal checks)
+        let manuscriptData: { authors: string[]; journal: string } | null =
+          null;
         let manuscriptConflicts: string | null = null;
         if (manuscriptId) {
+          const { data: manuscript } = await supabase
+            .from("manuscripts")
+            .select("authors, journal")
+            .eq("id", manuscriptId)
+            .single();
+
+          manuscriptData = manuscript;
+
           const { data: matchData, error: matchError } = await supabase
             .from("reviewer_manuscript_matches")
             .select("conflicts_of_interest")
@@ -112,13 +241,20 @@ export default function ReviewerProfileDrawer({
           manuscriptConflicts = matchData?.conflicts_of_interest || null;
         }
 
-        // Fetch publications
+        // Fetch publications (all for analysis, show top 4 in UI)
         const { data: publicationsData } = await supabase
           .from("reviewer_publications")
           .select("*")
           .eq("reviewer_id", id)
-          .order("publication_date", { ascending: false })
-          .limit(4); // Show top 4 in drawer
+          .order("publication_date", { ascending: false });
+
+        // Fetch recent invitation history (last 3 invitations)
+        const { data: recentInvitationsData } = await supabase
+          .from("review_invitations")
+          .select("status, invited_date, response_date")
+          .eq("reviewer_id", id)
+          .order("invited_date", { ascending: false })
+          .limit(3);
 
         // Fetch retractions
         const { data: retractionsData } = await supabase
@@ -160,8 +296,14 @@ export default function ReviewerProfileDrawer({
                   (1000 * 60 * 60 * 24)
               )
             : null,
-          publications: publicationsData || [],
+          publications: publicationsData?.slice(0, 4) || [],
           retractions: retractionsData || undefined,
+          // Add manuscript context for strong/weak point checks
+          manuscript_authors: manuscriptData?.authors || [],
+          manuscript_journal: manuscriptData?.journal || null,
+          recent_invitations: recentInvitationsData || [],
+          // Store all publications for analysis
+          all_publications: publicationsData || [],
         };
 
         setReviewer(profile);
@@ -182,22 +324,63 @@ export default function ReviewerProfileDrawer({
     }
   }, [open, reviewerId, fetchReviewerProfile]);
 
-  // Calculate strong and weak points
+  // Calculate strong and weak points based on Figma design checklist
   const getStrongPoints = (): string[] => {
     if (!reviewer) return [];
     const points: string[] = [];
 
+    // 1. ✓ Institutional email - NOT Gmail/Yahoo/etc.
     if (reviewer.email_is_institutional) {
       points.push("Institutional email");
     }
-    if (reviewer.acceptance_rate > 50) {
-      points.push("High acceptance rate");
+
+    // 2. ✓ Response rate < 3 days
+    if (
+      reviewer.average_response_time_hours &&
+      reviewer.average_response_time_hours < 72
+    ) {
+      const days = Math.round(reviewer.average_response_time_hours / 24);
+      points.push(`Fast response (<${days} day${days !== 1 ? "s" : ""})`);
     }
-    if (reviewer.current_review_load === 0) {
-      points.push("Available reviewer");
+
+    // 3. ✓ Sends report on average within 5 days
+    if (
+      reviewer.average_review_time_days &&
+      reviewer.average_review_time_days <= 5
+    ) {
+      points.push(`Quick reviews (≤${reviewer.average_review_time_days} days)`);
     }
-    if (reviewer.completed_reviews && reviewer.completed_reviews > 10) {
-      points.push("Active reviewer");
+
+    // 4. ✓ Published in similar scope (related publications)
+    if (
+      reviewer.related_publications_count &&
+      reviewer.related_publications_count > 0
+    ) {
+      points.push(
+        `${reviewer.related_publications_count} related publication${
+          reviewer.related_publications_count !== 1 ? "s" : ""
+        }`
+      );
+    }
+
+    // 5. ✓ Published in the last 5 years
+    if (reviewer.last_publication_date) {
+      const lastPubDate = new Date(reviewer.last_publication_date);
+      const fiveYearsAgo = new Date();
+      fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+      if (lastPubDate >= fiveYearsAgo) {
+        points.push("Recently published");
+      }
+    }
+
+    // 6. ✓ Has been an author for this journal
+    if (reviewer.manuscript_journal && reviewer.all_publications) {
+      const hasJournalPub = reviewer.all_publications.some(
+        (pub) => pub.journal_name === reviewer.manuscript_journal
+      );
+      if (hasJournalPub) {
+        points.push("Published in this journal");
+      }
     }
 
     return points;
@@ -207,24 +390,100 @@ export default function ReviewerProfileDrawer({
     if (!reviewer) return [];
     const points: string[] = [];
 
-    if (reviewer.retractions?.retraction_reasons?.length) {
-      points.push("Retracted publication(s)");
-    }
-    // Check for conflicts with proper trimming
+    console.log("Weak Points Analysis:", {
+      average_response_time_hours: reviewer.average_response_time_hours,
+      average_review_time_days: reviewer.average_review_time_days,
+      manuscript_authors: reviewer.manuscript_authors,
+      last_publication_date: reviewer.last_publication_date,
+      retractions: reviewer.retractions,
+      recent_invitations: reviewer.recent_invitations,
+    });
+
+    // 1. ⚠ Response rate > 30 days
     if (
-      reviewer.conflicts_of_interest &&
-      reviewer.conflicts_of_interest.trim().length > 0
+      reviewer.average_response_time_hours &&
+      reviewer.average_response_time_hours > 720
     ) {
-      console.log("Conflict found:", reviewer.conflicts_of_interest);
-      points.push(reviewer.conflicts_of_interest.trim());
-    }
-    if (reviewer.current_review_load >= (reviewer.max_review_capacity || 3)) {
-      points.push("At capacity");
-    }
-    if (reviewer.acceptance_rate < 30) {
-      points.push("Low acceptance rate");
+      const days = Math.round(reviewer.average_response_time_hours / 24);
+      points.push(`Slow to respond (${days}+ days)`);
     }
 
+    // 2. ⚠ Sends report on average after > 60 days
+    if (
+      reviewer.average_review_time_days &&
+      reviewer.average_review_time_days > 60
+    ) {
+      points.push(`Slow reviews (${reviewer.average_review_time_days}+ days)`);
+    }
+
+    // 3. ⚠ Is an author of this manuscript
+    if (reviewer.manuscript_authors && reviewer.manuscript_authors.length > 0) {
+      // Check if reviewer email or name matches any manuscript author
+      const isAuthor = reviewer.manuscript_authors.some(
+        (author) =>
+          author
+            .toLowerCase()
+            .includes(reviewer.email.split("@")[0].toLowerCase()) ||
+          author.toLowerCase().includes(reviewer.name.toLowerCase())
+      );
+      if (isAuthor) {
+        points.push("⚠️ Author of this manuscript");
+      }
+    }
+
+    // 4. ⚠ Has not published in the last 5 years
+    if (reviewer.last_publication_date) {
+      const lastPubDate = new Date(reviewer.last_publication_date);
+      const fiveYearsAgo = new Date();
+      fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+      if (lastPubDate < fiveYearsAgo) {
+        const years = Math.floor(
+          (Date.now() - lastPubDate.getTime()) / (1000 * 60 * 60 * 24 * 365)
+        );
+        points.push(`No recent publications (${years}+ years)`);
+      }
+    }
+
+    // 5. ⚠ Has retractions on record
+    if (reviewer.retractions?.retraction_reasons?.length) {
+      points.push(
+        `${reviewer.retractions.retraction_reasons.length} retraction${
+          reviewer.retractions.retraction_reasons.length !== 1 ? "s" : ""
+        }`
+      );
+    }
+
+    // 6. ⚠ Didn't respond to the last 3 invites
+    if (
+      reviewer.recent_invitations &&
+      reviewer.recent_invitations.length >= 3
+    ) {
+      const lastThree = reviewer.recent_invitations.slice(0, 3);
+      const allDeclined = lastThree.every(
+        (inv) => inv.status === "declined" || inv.status === "expired"
+      );
+      if (allDeclined) {
+        points.push("Declined last 3 invitations");
+      }
+    }
+
+    // 7. ⚠ Unavailable status (not from checklist, but important indicator)
+    if (
+      reviewer.availability_status &&
+      reviewer.availability_status !== "available"
+    ) {
+      const statusLabel =
+        reviewer.availability_status.charAt(0).toUpperCase() +
+        reviewer.availability_status.slice(1);
+      points.push(statusLabel);
+    }
+
+    // 8. ⚠ At or over capacity (not from checklist, but important indicator)
+    if (reviewer.current_review_load >= reviewer.max_review_capacity) {
+      points.push("At capacity");
+    }
+
+    console.log("Weak Points Result:", points);
     return points;
   };
 
@@ -244,6 +503,187 @@ export default function ReviewerProfileDrawer({
   const handleInvite = () => {
     if (reviewer && onInvite) {
       onInvite(reviewer.id);
+    }
+  };
+
+  const handleOpenEditDialog = () => {
+    if (!reviewer) return;
+
+    // Populate form with current reviewer data - complete schema
+    setFormData({
+      name: reviewer.name,
+      email: reviewer.email,
+      affiliation: reviewer.affiliation,
+      department: reviewer.department || "",
+      expertise_areas: reviewer.expertise_areas || [],
+      current_review_load: reviewer.current_review_load || 0,
+      max_review_capacity: reviewer.max_review_capacity || 3,
+      average_review_time_days: reviewer.average_review_time_days || 21,
+      availability_status: reviewer.availability_status || "available",
+      recent_publications: reviewer.recent_publications || 0,
+      h_index: reviewer.h_index,
+      last_review_completed: reviewer.last_review_completed,
+      is_board_member: reviewer.is_board_member || false,
+      previous_reviewer: reviewer.previous_reviewer || false,
+      has_publications_saved: reviewer.has_publications_saved || false,
+      orcid_id: reviewer.orcid_id || "",
+      profile_url: reviewer.profile_url || "",
+      external_id: reviewer.external_id || "",
+      pkg_id: reviewer.pkg_id || "",
+      given_names: reviewer.given_names || "",
+      surname: reviewer.surname || "",
+      aff_ror_id: reviewer.aff_ror_id || "",
+      reviewer_type: reviewer.reviewer_type || "",
+      number_of_reviews: reviewer.number_of_reviews || 0,
+      completed_reviews: reviewer.completed_reviews || 0,
+      currently_reviewing: reviewer.currently_reviewing || 0,
+      total_publications: reviewer.total_publications,
+      citation_count: reviewer.citation_count,
+      publication_year_from: reviewer.publication_year_from,
+      publication_year_to: reviewer.publication_year_to,
+      publication_count_last_year: reviewer.publication_count_last_year,
+      last_publication_date: reviewer.last_publication_date,
+      total_invitations: reviewer.total_invitations || 0,
+      total_acceptances: reviewer.total_acceptances || 0,
+      total_completions: reviewer.total_completions || 0,
+      average_response_time_hours: reviewer.average_response_time_hours,
+      last_activity_date: reviewer.last_activity_date,
+    });
+
+    setEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditDialogOpen(false);
+  };
+
+  const handleAddExpertise = () => {
+    if (
+      expertiseInput.trim() &&
+      !formData.expertise_areas?.includes(expertiseInput.trim())
+    ) {
+      setFormData({
+        ...formData,
+        expertise_areas: [
+          ...(formData.expertise_areas || []),
+          expertiseInput.trim(),
+        ],
+      });
+      setExpertiseInput("");
+    }
+  };
+
+  const handleRemoveExpertise = (index: number) => {
+    setFormData({
+      ...formData,
+      expertise_areas: formData.expertise_areas?.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleSaveReviewer = async () => {
+    if (!reviewer) return;
+
+    try {
+      await updateReviewer(reviewer.id, formData as PotentialReviewer);
+      showSnackbar("Reviewer updated successfully", "success");
+      handleCloseEditDialog();
+      // Refresh reviewer data
+      fetchReviewerProfile(reviewer.id);
+    } catch (error) {
+      console.error("Error updating reviewer:", error);
+      showSnackbar("Failed to update reviewer", "error");
+    }
+  };
+
+  const showSnackbar = (
+    message: string,
+    severity: "success" | "error" | "info"
+  ) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  // Publications management handlers
+  const handleOpenPublicationsDialog = () => {
+    setPublicationsDialogOpen(true);
+  };
+
+  const handleClosePublicationsDialog = () => {
+    setPublicationsDialogOpen(false);
+  };
+
+  const handleOpenPublicationEdit = (publication: Publication) => {
+    setSelectedPublication(publication);
+    setPublicationFormData({
+      title: publication.title,
+      doi: publication.doi || "",
+      journal_name: publication.journal_name || "",
+      authors: publication.authors || [],
+      publication_date: publication.publication_date || "",
+      is_related: publication.is_related,
+    });
+    setPublicationEditDialogOpen(true);
+  };
+
+  const handleClosePublicationEdit = () => {
+    setPublicationEditDialogOpen(false);
+    setSelectedPublication(null);
+    setAuthorInput("");
+  };
+
+  const handleAddAuthor = () => {
+    if (authorInput.trim()) {
+      const newAuthors = authorInput
+        .split(",")
+        .map((author) => author.trim())
+        .filter((author) => author.length > 0);
+
+      setPublicationFormData({
+        ...publicationFormData,
+        authors: [...publicationFormData.authors, ...newAuthors],
+      });
+      setAuthorInput("");
+    }
+  };
+
+  const handleRemoveAuthor = (index: number) => {
+    setPublicationFormData({
+      ...publicationFormData,
+      authors: publicationFormData.authors.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleSavePublication = async () => {
+    if (!selectedPublication || !reviewer) return;
+
+    try {
+      const { error } = await supabase
+        .from("reviewer_publications")
+        .update({
+          title: publicationFormData.title,
+          doi: publicationFormData.doi || null,
+          journal_name: publicationFormData.journal_name || null,
+          authors:
+            publicationFormData.authors.length > 0
+              ? publicationFormData.authors
+              : null,
+          publication_date: publicationFormData.publication_date || null,
+          is_related: publicationFormData.is_related,
+        })
+        .eq("id", selectedPublication.id);
+
+      if (error) throw error;
+
+      showSnackbar("Publication updated successfully", "success");
+      handleClosePublicationEdit();
+      // Refresh reviewer data
+      fetchReviewerProfile(reviewer.id);
+    } catch (error) {
+      console.error("Error updating publication:", error);
+      showSnackbar("Failed to update publication", "error");
     }
   };
 
@@ -279,9 +719,22 @@ export default function ReviewerProfileDrawer({
         <Typography variant="h4" sx={{ flexGrow: 1 }}>
           Reviewer Details
         </Typography>
-        <IconButton onClick={onClose} size="small" sx={{ mt: -1, mr: -1 }}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
+        <Stack direction="row" spacing={1}>
+          {isAdmin() && reviewer && (
+            <Tooltip title="Edit Reviewer">
+              <IconButton
+                onClick={handleOpenEditDialog}
+                size="small"
+                sx={{ mt: -1 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          <IconButton onClick={onClose} size="small" sx={{ mt: -1, mr: -1 }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Stack>
       </Box>
 
       {/* Content */}
@@ -593,15 +1046,28 @@ export default function ReviewerProfileDrawer({
                   <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                     Relevant Publications (Last 5 Years)
                   </Typography>
-                  {reviewer.publications.length > 4 && (
-                    <Button
-                      size="small"
-                      endIcon={<OpenInNewIcon />}
-                      sx={{ textTransform: "none" }}
-                    >
-                      See all {reviewer.publications.length}
-                    </Button>
-                  )}
+                  <Stack direction="row" spacing={1}>
+                    {isAdmin() && (
+                      <Tooltip title="Manage Publications">
+                        <IconButton
+                          size="small"
+                          onClick={handleOpenPublicationsDialog}
+                          color="primary"
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    {reviewer.publications.length > 4 && (
+                      <Button
+                        size="small"
+                        endIcon={<OpenInNewIcon />}
+                        sx={{ textTransform: "none" }}
+                      >
+                        See all {reviewer.publications.length}
+                      </Button>
+                    )}
+                  </Stack>
                 </Stack>
 
                 <Stack spacing={1}>
@@ -882,6 +1348,841 @@ export default function ReviewerProfileDrawer({
           </Button>
         </Box>
       )}
+
+      {/* Edit Reviewer Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleCloseEditDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Edit Reviewer</DialogTitle>
+        <DialogContent>
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            {/* Basic Information */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Basic Information
+                </Typography>
+                <Stack spacing={2}>
+                  <TextField
+                    label="Name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                    fullWidth
+                  />
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Given Names"
+                      value={formData.given_names}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          given_names: e.target.value,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Surname"
+                      value={formData.surname}
+                      onChange={(e) =>
+                        setFormData({ ...formData, surname: e.target.value })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="Email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    required
+                    fullWidth
+                  />
+                  <TextField
+                    label="Affiliation"
+                    value={formData.affiliation}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        affiliation: e.target.value,
+                      })
+                    }
+                    required
+                    fullWidth
+                  />
+                  <TextField
+                    label="Department"
+                    value={formData.department}
+                    onChange={(e) =>
+                      setFormData({ ...formData, department: e.target.value })
+                    }
+                    fullWidth
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Identity & External IDs */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Identity & External IDs
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="External ID"
+                      value={formData.external_id}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          external_id: e.target.value,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="PKG ID"
+                      value={formData.pkg_id}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pkg_id: e.target.value })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="ORCID ID"
+                    value={formData.orcid_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, orcid_id: e.target.value })
+                    }
+                    fullWidth
+                    helperText="e.g., 0000-0002-1825-0097"
+                  />
+                  <TextField
+                    label="ROR ID (Affiliation)"
+                    value={formData.aff_ror_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, aff_ror_id: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <TextField
+                    label="Profile URL"
+                    value={formData.profile_url}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        profile_url: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <TextField
+                    label="Reviewer Type"
+                    value={formData.reviewer_type}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        reviewer_type: e.target.value,
+                      })
+                    }
+                    fullWidth
+                    helperText="e.g., External, Editorial Board, Ad Hoc"
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Expertise */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Expertise Areas
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                  <TextField
+                    label="Add expertise area"
+                    value={expertiseInput}
+                    onChange={(e) => setExpertiseInput(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && handleAddExpertise()
+                    }
+                    size="small"
+                    fullWidth
+                  />
+                  <Button onClick={handleAddExpertise} variant="outlined">
+                    Add
+                  </Button>
+                </Stack>
+                <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                  {formData.expertise_areas?.map((area, idx) => (
+                    <Chip
+                      key={idx}
+                      label={area}
+                      onDelete={() => handleRemoveExpertise(idx)}
+                      sx={{ mb: 0.5 }}
+                    />
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Availability & Capacity */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Availability & Capacity
+                </Typography>
+                <Stack spacing={2}>
+                  <FormControl fullWidth>
+                    <InputLabel>Availability Status</InputLabel>
+                    <Select
+                      value={formData.availability_status}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          availability_status: e.target.value as
+                            | "available"
+                            | "busy"
+                            | "unavailable"
+                            | "sabbatical",
+                        })
+                      }
+                      label="Availability Status"
+                    >
+                      {availabilityOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Current Review Load"
+                      type="number"
+                      value={formData.current_review_load}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          current_review_load: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Max Review Capacity"
+                      type="number"
+                      value={formData.max_review_capacity}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          max_review_capacity: parseInt(e.target.value) || 3,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="Average Review Time (days)"
+                    type="number"
+                    value={formData.average_review_time_days}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        average_review_time_days:
+                          parseInt(e.target.value) || 21,
+                      })
+                    }
+                    fullWidth
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Status Flags */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Status & Flags
+                </Typography>
+                <Stack spacing={2}>
+                  <FormControl component="fieldset">
+                    <Stack direction="row" spacing={2}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={formData.is_board_member}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              is_board_member: e.target.checked,
+                            })
+                          }
+                        />
+                        <Typography component="span" sx={{ ml: 1 }}>
+                          Editorial Board Member
+                        </Typography>
+                      </label>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={formData.previous_reviewer}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              previous_reviewer: e.target.checked,
+                            })
+                          }
+                        />
+                        <Typography component="span" sx={{ ml: 1 }}>
+                          Previous Reviewer
+                        </Typography>
+                      </label>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={formData.has_publications_saved}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              has_publications_saved: e.target.checked,
+                            })
+                          }
+                        />
+                        <Typography component="span" sx={{ ml: 1 }}>
+                          Has Publications Saved
+                        </Typography>
+                      </label>
+                    </Stack>
+                  </FormControl>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Review Statistics */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Review Statistics
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Number of Reviews"
+                      type="number"
+                      value={formData.number_of_reviews}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          number_of_reviews: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Completed Reviews"
+                      type="number"
+                      value={formData.completed_reviews}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          completed_reviews: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Currently Reviewing"
+                      type="number"
+                      value={formData.currently_reviewing}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          currently_reviewing: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="Last Review Completed"
+                    type="date"
+                    value={formData.last_review_completed || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        last_review_completed: e.target.value || "",
+                      })
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Publication Metrics */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Publication Metrics
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Recent Publications"
+                      type="number"
+                      value={formData.recent_publications}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          recent_publications: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Total Publications"
+                      type="number"
+                      value={formData.total_publications || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_publications: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="H-Index"
+                      type="number"
+                      value={formData.h_index || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          h_index: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Citation Count"
+                      type="number"
+                      value={formData.citation_count || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          citation_count: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Publication Year From"
+                      type="number"
+                      value={formData.publication_year_from || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          publication_year_from: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Publication Year To"
+                      type="number"
+                      value={formData.publication_year_to || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          publication_year_to: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Publications Last Year"
+                      type="number"
+                      value={formData.publication_count_last_year || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          publication_count_last_year: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Last Publication Date"
+                      type="date"
+                      value={formData.last_publication_date || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          last_publication_date: e.target.value || "",
+                        })
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      fullWidth
+                    />
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Invitation Statistics */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Invitation Statistics
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Total Invitations"
+                      type="number"
+                      value={formData.total_invitations}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_invitations: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Total Acceptances"
+                      type="number"
+                      value={formData.total_acceptances}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_acceptances: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Total Completions"
+                      type="number"
+                      value={formData.total_completions}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_completions: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Avg Response Time (hours)"
+                      type="number"
+                      value={formData.average_response_time_hours || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          average_response_time_hours: e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Last Activity Date"
+                      type="date"
+                      value={formData.last_activity_date || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          last_activity_date: e.target.value || "",
+                        })
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      fullWidth
+                    />
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog}>Cancel</Button>
+          <Button
+            onClick={handleSaveReviewer}
+            variant="contained"
+            disabled={
+              !formData.name || !formData.email || !formData.affiliation
+            }
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Publications List Dialog */}
+      <Dialog
+        open={publicationsDialogOpen}
+        onClose={handleClosePublicationsDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Manage Publications - {reviewer?.name}</DialogTitle>
+        <DialogContent>
+          {reviewer?.all_publications &&
+          reviewer.all_publications.length > 0 ? (
+            <Stack spacing={1} sx={{ mt: 2 }}>
+              {reviewer.all_publications.map((pub) => (
+                <Paper
+                  key={pub.id}
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 1.5,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="body1" fontWeight={500}>
+                        {pub.title}
+                      </Typography>
+                      {pub.is_related && (
+                        <Chip
+                          label="Related"
+                          size="small"
+                          color="success"
+                          variant="outlined"
+                        />
+                      )}
+                    </Stack>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <Typography variant="caption" color="text.secondary">
+                        {pub.journal_name || "No journal"}
+                      </Typography>
+                      {pub.publication_date && (
+                        <>
+                          <Typography variant="caption" color="text.secondary">
+                            •
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(pub.publication_date).getFullYear()}
+                          </Typography>
+                        </>
+                      )}
+                    </Stack>
+                    {pub.authors && pub.authors.length > 0 && (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {pub.authors.slice(0, 3).map((author, idx) => (
+                          <Chip key={idx} label={author} size="small" />
+                        ))}
+                        {pub.authors.length > 3 && (
+                          <Chip
+                            label={`+${pub.authors.length - 3} more`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    )}
+                  </Stack>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenPublicationEdit(pub)}
+                    color="primary"
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Paper>
+              ))}
+            </Stack>
+          ) : (
+            <Typography
+              color="text.secondary"
+              sx={{ py: 4, textAlign: "center" }}
+            >
+              No publications found for this reviewer
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePublicationsDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Publication Edit Dialog */}
+      <Dialog
+        open={publicationEditDialogOpen}
+        onClose={handleClosePublicationEdit}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Edit Publication</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 2 }}>
+            <TextField
+              label="Title"
+              value={publicationFormData.title}
+              onChange={(e) =>
+                setPublicationFormData({
+                  ...publicationFormData,
+                  title: e.target.value,
+                })
+              }
+              required
+              fullWidth
+              multiline
+              rows={2}
+            />
+
+            <TextField
+              label="Journal Name"
+              value={publicationFormData.journal_name}
+              onChange={(e) =>
+                setPublicationFormData({
+                  ...publicationFormData,
+                  journal_name: e.target.value,
+                })
+              }
+              fullWidth
+            />
+
+            <TextField
+              label="DOI"
+              value={publicationFormData.doi}
+              onChange={(e) =>
+                setPublicationFormData({
+                  ...publicationFormData,
+                  doi: e.target.value,
+                })
+              }
+              fullWidth
+              helperText="e.g., 10.1234/example.doi"
+            />
+
+            <Box>
+              <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                <TextField
+                  label="Add Author"
+                  value={authorInput}
+                  onChange={(e) => setAuthorInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddAuthor();
+                    }
+                  }}
+                  fullWidth
+                  size="small"
+                  helperText="Enter one or more authors separated by commas"
+                />
+                <Button onClick={handleAddAuthor} variant="outlined">
+                  Add
+                </Button>
+              </Stack>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                {publicationFormData.authors.map((author, idx) => (
+                  <Chip
+                    key={idx}
+                    label={author}
+                    onDelete={() => handleRemoveAuthor(idx)}
+                    size="small"
+                  />
+                ))}
+              </Box>
+            </Box>
+
+            <TextField
+              label="Publication Date"
+              type="date"
+              value={publicationFormData.publication_date}
+              onChange={(e) =>
+                setPublicationFormData({
+                  ...publicationFormData,
+                  publication_date: e.target.value,
+                })
+              }
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={publicationFormData.is_related}
+                  onChange={(e) =>
+                    setPublicationFormData({
+                      ...publicationFormData,
+                      is_related: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Related to current manuscript"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePublicationEdit}>Cancel</Button>
+          <Button
+            onClick={handleSavePublication}
+            variant="contained"
+            disabled={!publicationFormData.title}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for feedback */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Drawer>
   );
 }
