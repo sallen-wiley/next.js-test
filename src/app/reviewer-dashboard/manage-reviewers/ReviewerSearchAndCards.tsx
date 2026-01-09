@@ -232,6 +232,106 @@ export function ReviewerSearchAndCards({
                 <Stack spacing={2}>
                   {/* Section 1: Demographics */}
                   <Stack spacing={2}>
+                    {/* Availability */}
+                    <Box>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mb: 0.5, fontWeight: "bold" }}
+                      >
+                        Availability
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={tempFilters.availability.includes(
+                                "available"
+                              )}
+                              onChange={(e) => {
+                                const newAvailability = e.target.checked
+                                  ? [...tempFilters.availability, "available"]
+                                  : tempFilters.availability.filter(
+                                      (a) => a !== "available"
+                                    );
+                                setTempFilters({
+                                  ...tempFilters,
+                                  availability: newAvailability,
+                                });
+                              }}
+                              size="small"
+                            />
+                          }
+                          label="Available"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={tempFilters.availability.includes(
+                                "busy"
+                              )}
+                              onChange={(e) => {
+                                const newAvailability = e.target.checked
+                                  ? [...tempFilters.availability, "busy"]
+                                  : tempFilters.availability.filter(
+                                      (a) => a !== "busy"
+                                    );
+                                setTempFilters({
+                                  ...tempFilters,
+                                  availability: newAvailability,
+                                });
+                              }}
+                              size="small"
+                            />
+                          }
+                          label="Busy"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={tempFilters.availability.includes(
+                                "unavailable"
+                              )}
+                              onChange={(e) => {
+                                const newAvailability = e.target.checked
+                                  ? [...tempFilters.availability, "unavailable"]
+                                  : tempFilters.availability.filter(
+                                      (a) => a !== "unavailable"
+                                    );
+                                setTempFilters({
+                                  ...tempFilters,
+                                  availability: newAvailability,
+                                });
+                              }}
+                              size="small"
+                            />
+                          }
+                          label="Unavailable"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={tempFilters.availability.includes(
+                                "sabbatical"
+                              )}
+                              onChange={(e) => {
+                                const newAvailability = e.target.checked
+                                  ? [...tempFilters.availability, "sabbatical"]
+                                  : tempFilters.availability.filter(
+                                      (a) => a !== "sabbatical"
+                                    );
+                                setTempFilters({
+                                  ...tempFilters,
+                                  availability: newAvailability,
+                                });
+                              }}
+                              size="small"
+                            />
+                          }
+                          label="Sabbatical"
+                        />
+                      </Stack>
+                    </Box>
+
                     {/* Institutional Email */}
                     <Box>
                       <Typography

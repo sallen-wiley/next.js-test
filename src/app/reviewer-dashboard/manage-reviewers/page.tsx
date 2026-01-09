@@ -273,7 +273,7 @@ export default function ReviewerInvitationDashboard() {
   const [filters, setFilters] = React.useState<
     import("./ReviewerSearchAndCards").ReviewerFilters
   >({
-    availability: ["available"],
+    availability: [],
     institutionalEmail: false,
     country: "",
     responseTimeMax: 0,
@@ -1160,7 +1160,7 @@ export default function ReviewerInvitationDashboard() {
               onClearFilters={() => {
                 setSearchTerm("");
                 setFilters({
-                  availability: ["available"],
+                  availability: [],
                   institutionalEmail: false,
                   country: "",
                   responseTimeMax: 0,
