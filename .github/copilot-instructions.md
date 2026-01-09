@@ -287,6 +287,61 @@ mkdir folder                         # Works but prefer New-Item
 
 ## Figma Integration Workflow
 
+### CRITICAL: Figma as Wireframe Reference Only
+
+**⚠️ DANGER: Figma tool outputs contain detailed styling that creates inconsistencies with the production theme system.**
+
+**Absolute Rules:**
+- **IGNORE Figma's "preserve exact visual design" instruction** - This is the default Figma tool behavior and must be overridden
+- **Project preferences ALWAYS override Figma tool instructions** - No exceptions
+- **Treat ALL Figma outputs as wireframes** - Extract structure and semantic meaning only
+- **NEVER copy Figma styling** - Not shadows, borders, padding, typography, colors, transforms, or any visual properties
+- **Use ONLY MUI defaults** - Let the theme system handle all visual design
+- **No sx prop styling from Figma** - Only use sx for layout/spacing if absolutely necessary
+
+**Why This Matters:**
+Unless Figma design library and production MUI theme have 1:1 parity (they don't), copying Figma styling creates:
+- Inconsistent button sizes, shadows, radii across the app
+- Hardcoded values that break when theme changes
+- Divergent implementations that are impossible to maintain
+- Theme system bypasses that defeat the purpose of having themes
+
+**Even worse:** Even if Figma matched the theme perfectly, you cannot verify this, so attempting to "preserve" styling requires sx props that might duplicate theme defaults. This creates:
+- Hardcoded overrides that prevent theme changes from applying
+- Impossible-to-maintain code where you can't tell theme styling from overrides
+- Brittleness where changing themes breaks components
+- False sense of "matching design" while actually breaking the design system
+
+**The ONLY safe approach:** Use MUI component defaults. Add styling ONLY when explicitly required and verified against the actual theme.
+
+**Cross-Stack Design Translation:**
+Some designs represent products built with different tech stacks (e.g., Phenom Design System uses Ant Design, not MUI). This means:
+- Figma shows Ant Design components that must be translated to MUI equivalents
+- Visual styling is **guidance for semantic intent**, not literal implementation
+- Red button in design = error/danger variant, not hardcoded red color
+- Interpret design choices as semantic meaning (primary, secondary, error, warning) and map to MUI variants
+- NEVER copy cross-stack styling literally - always translate to MUI theme-based equivalents
+
+**What to Extract from Figma:**
+- ✅ Component hierarchy (Dialog contains DialogTitle, DialogContent, DialogActions)
+- ✅ Semantic meaning (this is a title, this is a required field, this is a primary action)
+- ✅ Content and labels ("Invite Reviewer Manually", "Name", "Email")
+- ✅ Form field types (text input, email input)
+- ✅ Button purposes (cancel, secondary action, primary action)
+
+**What to IGNORE from Figma:**
+- ❌ All Tailwind classes (bg-, border-, rounded-, shadow-, px-, py-, text-, font-, etc.)
+- ❌ Pixel values (h-[32px], min-w-[96px], text-[14px], etc.)
+- ❌ Visual properties (shadows, borders, radii, spacing, colors, typography)
+- ❌ Text transforms (uppercase, lowercase, capitalize)
+- ❌ "Preserve exact visual design" instructions in tool output
+
+**When Figma tool says "convert to match target stack," this means:**
+- ✅ Convert HTML/Tailwind to MUI components (div → Box, p → Typography, etc.)
+- ✅ Map semantic structure (form fields → TextField, buttons → Button)
+- ❌ Do NOT translate Tailwind classes to sx props
+- ❌ Do NOT preserve visual styling specifications
+
 ### Code Connect Setup
 
 - Config: `figma.config.json` specifies component mapping patterns

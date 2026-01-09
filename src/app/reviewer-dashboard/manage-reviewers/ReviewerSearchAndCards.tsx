@@ -20,7 +20,7 @@ import {
   Checkbox,
   Slider,
 } from "@mui/material";
-import FilterListIcon from "@mui/icons-material/FilterList";
+import FilterListIcon from "@mui/icons-material/FilterAltOutlined";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -52,6 +52,7 @@ interface ReviewerSearchAndCardsProps {
   onFiltersChange: (filters: ReviewerFilters) => void;
   onInviteReviewer: (reviewerId: string) => void;
   onAddToQueue: (reviewerId: string) => void;
+  onInviteManually: () => void;
   onClearFilters: () => void;
   onViewProfile: (reviewerId: string) => void;
 }
@@ -65,6 +66,7 @@ export function ReviewerSearchAndCards({
   onFiltersChange,
   onInviteReviewer,
   onAddToQueue,
+  onInviteManually,
   onClearFilters,
   onViewProfile,
 }: ReviewerSearchAndCardsProps) {
@@ -143,6 +145,7 @@ export function ReviewerSearchAndCards({
           variant="text"
           color="primary"
           startIcon={<PersonAddIcon />}
+          onClick={onInviteManually}
           sx={{ textTransform: "none" }}
         >
           Invite Manually
@@ -170,7 +173,7 @@ export function ReviewerSearchAndCards({
               </Grid>
               <Grid size={{ xs: 12, md: "auto" }}>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   size="medium"
                   color="neutral"
                   endIcon={<FilterListIcon />}

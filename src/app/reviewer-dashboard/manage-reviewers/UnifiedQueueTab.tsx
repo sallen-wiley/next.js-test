@@ -1,28 +1,39 @@
 import React from "react";
 import {
-  Grid,
   Paper,
   Box,
   Typography,
-  FormControlLabel,
-  Switch,
+  Button,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
   IconButton,
+  Collapse,
+  Stack,
+  Divider,
 } from "@mui/material";
-import QueueIcon from "@mui/icons-material/Queue";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { ReviewerWithStatus, QueueControlState } from "@/lib/supabase";
+import { InvitedReviewerCard } from "./InvitedReviewerCard";
+import { QueuedReviewerCard } from "./QueuedReviewerCard";
 
 interface QueueInvitationsTabProps {
   reviewersWithStatus: ReviewerWithStatus[];
@@ -32,6 +43,49 @@ interface QueueInvitationsTabProps {
     event: React.MouseEvent<HTMLElement>,
     reviewer: ReviewerWithStatus
   ) => void;
+}
+
+// Sortable wrapper for queue cards
+function SortableQueueCard({
+  reviewer,
+  onActionMenuOpen,
+  onMoveUp,
+  onMoveDown,
+}: {
+  reviewer: ReviewerWithStatus;
+  onActionMenuOpen: (
+    event: React.MouseEvent<HTMLElement>,
+    reviewer: ReviewerWithStatus
+  ) => void;
+  onMoveUp: (reviewer: ReviewerWithStatus) => void;
+  onMoveDown: (reviewer: ReviewerWithStatus) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: reviewer.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Box ref={setNodeRef} style={style}>
+      <QueuedReviewerCard
+        reviewer={reviewer}
+        onActionMenuOpen={onActionMenuOpen}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </Box>
+  );
 }
 
 export default function QueueInvitationsTab({
@@ -48,377 +102,284 @@ export default function QueueInvitationsTab({
     (r) => r.invitation_status === "queued"
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "accepted":
-        return "primary";
-      case "pending":
-        return "info";
-      case "declined":
-        return "warning";
-      case "report_submitted":
-        return "success";
-      case "invalidated":
-        return "error";
-      case "revoked":
-        return "default";
-      default:
-        return "default";
+  // Collapsible section states
+  const [invitationsExpanded, setInvitationsExpanded] = React.useState(true);
+  const [queueExpanded, setQueueExpanded] = React.useState(true);
+
+  // Local state for drag-and-drop reordering
+  const [localQueue, setLocalQueue] = React.useState<ReviewerWithStatus[]>([]);
+
+  // Initialize local queue when data changes
+  React.useEffect(() => {
+    const queued = reviewersWithStatus.filter(
+      (r) => r.invitation_status === "queued"
+    );
+    const sorted = [...queued].sort(
+      (a, b) => (a.queue_position || 0) - (b.queue_position || 0)
+    );
+    setLocalQueue(sorted);
+  }, [reviewersWithStatus]);
+
+  // Drag-and-drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setLocalQueue((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+
+      // TODO: Persist the new order to the database
+      // This would require a new data service function like updateQueueOrder
     }
   };
 
+  const handleMoveUp = (reviewer: ReviewerWithStatus) => {
+    const index = localQueue.findIndex((r) => r.id === reviewer.id);
+    if (index > 0) {
+      const newQueue = arrayMove(localQueue, index, index - 1);
+      setLocalQueue(newQueue);
+      // TODO: Persist to database
+    }
+  };
+
+  const handleMoveDown = (reviewer: ReviewerWithStatus) => {
+    const index = localQueue.findIndex((r) => r.id === reviewer.id);
+    if (index < localQueue.length - 1) {
+      const newQueue = arrayMove(localQueue, index, index + 1);
+      setLocalQueue(newQueue);
+      // TODO: Persist to database
+    }
+  };
+
+  const totalInLog = sentInvitations.length + queuedInvitations.length;
+
   return (
-    <Grid container spacing={3}>
-      {/* Sent Invitations Table */}
-      <Grid size={12}>
-        <Paper sx={{ p: 2 }}>
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <MailOutlineIcon color="primary" />
-            Sent Invitations ({sentInvitations.length})
-          </Typography>
+    <Paper
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        maxHeight: "calc(100vh - 280px)",
+        overflow: "hidden",
+        border: 1,
+        borderColor: "divider",
+        borderRadius: 1.5,
+      }}
+    >
+      {/* Header: Invitation log */}
+      <Box
+        sx={{
+          p: 2,
+          borderBottom: 1,
+          borderColor: "divider",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Typography variant="body1" sx={{ fontWeight: 700 }}>
+          Invitation log ({totalInLog})
+        </Typography>
+        <Button
+          variant="text"
+          size="small"
+          startIcon={<InfoOutlinedIcon />}
+          sx={{ textTransform: "none", fontWeight: 600 }}
+        >
+          About Invitation Log
+        </Button>
+      </Box>
 
-          {sentInvitations.length > 0 ? (
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Reviewer</TableCell>
-                    <TableCell>Invited Date</TableCell>
-                    <TableCell align="center">Status</TableCell>
-                    <TableCell>Response Date</TableCell>
-                    <TableCell>Due Date</TableCell>
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sentInvitations.map((reviewer) => (
-                    <TableRow key={reviewer.id} hover>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Avatar
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              fontSize: "0.875rem",
-                            }}
-                          >
-                            {reviewer.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body2" fontWeight={500}>
-                              {reviewer.name}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {reviewer.affiliation}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
-                          {reviewer.invited_date
-                            ? new Date(
-                                reviewer.invited_date
-                              ).toLocaleDateString()
-                            : "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: "flex",
-                            gap: 0.5,
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Chip
-                            label={
-                              reviewer.invitation_status
-                                ? reviewer.invitation_status
-                                    .split("_")
-                                    .map(
-                                      (word) =>
-                                        word.charAt(0).toUpperCase() +
-                                        word.slice(1)
-                                    )
-                                    .join(" ")
-                                : "Unknown"
-                            }
-                            color={
-                              getStatusColor(
-                                reviewer.invitation_status || ""
-                              ) as
-                                | "success"
-                                | "primary"
-                                | "error"
-                                | "warning"
-                                | "info"
-                                | "default"
-                            }
-                            size="small"
-                            sx={{
-                              fontWeight: 600,
-                              fontSize: "0.6875rem",
-                              height: 20,
-                            }}
-                          />
-                          {/* Show overdue badge for accepted invitations past due date */}
-                          {reviewer.invitation_status === "accepted" &&
-                            reviewer.due_date &&
-                            new Date(reviewer.due_date) < new Date() && (
-                              <Chip
-                                label="Overdue"
-                                color="warning"
-                                size="small"
-                                sx={{
-                                  fontWeight: 600,
-                                  fontSize: "0.6875rem",
-                                  height: 20,
-                                }}
-                              />
-                            )}
-                          {/* Show expired badge for pending invitations past expiration date */}
-                          {reviewer.invitation_status === "pending" &&
-                            reviewer.invitation_expiration_date &&
-                            new Date(reviewer.invitation_expiration_date) <
-                              new Date() && (
-                              <Chip
-                                label="Expired"
-                                color="error"
-                                size="small"
-                                sx={{
-                                  fontWeight: 600,
-                                  fontSize: "0.6875rem",
-                                  height: 20,
-                                }}
-                              />
-                            )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
-                          {reviewer.response_date
-                            ? new Date(
-                                reviewer.response_date
-                              ).toLocaleDateString()
-                            : "—"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
-                          {reviewer.due_date
-                            ? new Date(reviewer.due_date).toLocaleDateString()
-                            : "—"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => onActionMenuOpen(e, reviewer)}
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Box sx={{ py: 3, textAlign: "center" }}>
-              <Typography variant="body2" color="text.secondary">
-                No invitations have been sent yet
-              </Typography>
-            </Box>
-          )}
-        </Paper>
-      </Grid>
-
-      {/* Queue Table */}
-      <Grid size={12}>
-        <Paper sx={{ p: 2 }}>
+      {/* Scrollable content area */}
+      <Box
+        sx={{
+          flex: 1,
+          overflow: "auto",
+          p: 2,
+        }}
+      >
+        {/* Invited Reviewers Section */}
+        <Box sx={{ mb: 1 }}>
+          {/* Header with collapse toggle */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              mb: 2,
+              mb: invitationsExpanded ? 1 : 0,
+              cursor: "pointer",
+              height: 24,
             }}
+            onClick={() => setInvitationsExpanded(!invitationsExpanded)}
           >
-            <Typography
-              variant="h6"
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <QueueIcon color="primary" />
-              Invitation Queue ({queuedInvitations.length})
+            <Typography variant="overline" sx={{ fontWeight: 700 }}>
+              Invited Reviewers ({sentInvitations.length})
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={queueControl?.queue_active || false}
-                    onChange={onToggleQueue}
-                    color="success"
-                    size="small"
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    {queueControl?.queue_active ? "Active" : "Paused"}
-                  </Typography>
-                }
-              />
-              <Chip
-                icon={
-                  queueControl?.queue_active ? <PlayArrowIcon /> : <PauseIcon />
-                }
-                label={queueControl?.queue_active ? "Running" : "Paused"}
-                color={queueControl?.queue_active ? "success" : "default"}
-                size="small"
-              />
-            </Box>
+            <IconButton size="small" sx={{ p: 1 }}>
+              {invitationsExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
           </Box>
 
-          {queuedInvitations.length > 0 ? (
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell width={80}>Position</TableCell>
-                    <TableCell>Reviewer</TableCell>
-                    <TableCell align="center">Match Score</TableCell>
-                    <TableCell>Scheduled Send</TableCell>
-                    <TableCell align="center">Priority</TableCell>
-                    <TableCell align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {queuedInvitations
-                    .sort(
-                      (a, b) =>
-                        (a.queue_position || 0) - (b.queue_position || 0)
-                    )
-                    .map((reviewer) => (
-                      <TableRow key={reviewer.id} hover>
-                        <TableCell>
-                          <Chip
-                            label={reviewer.queue_position}
-                            color="primary"
-                            size="small"
-                            sx={{ fontWeight: "bold" }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <Avatar
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                fontSize: "0.875rem",
-                              }}
-                            >
-                              {reviewer.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </Avatar>
-                            <Box>
-                              <Typography variant="body2" fontWeight={500}>
-                                {reviewer.name}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {reviewer.affiliation}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={
-                              reviewer.match_score === 0
-                                ? "N/A"
-                                : `${Math.round(reviewer.match_score * 100)}%`
-                            }
-                            size="small"
-                            color={
-                              reviewer.match_score === 0 ? "default" : "primary"
-                            }
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption">
-                            {reviewer.scheduled_send_date
-                              ? new Date(
-                                  reviewer.scheduled_send_date
-                                ).toLocaleDateString()
-                              : "Not scheduled"}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            label={reviewer.priority || "normal"}
-                            size="small"
-                            color={
-                              reviewer.priority === "high"
-                                ? "error"
-                                : reviewer.priority === "low"
-                                ? "default"
-                                : "warning"
-                            }
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            onClick={(e) => onActionMenuOpen(e, reviewer)}
-                          >
-                            <MoreVertIcon />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Box sx={{ py: 3, textAlign: "center" }}>
-              <HourglassEmptyIcon
-                sx={{ fontSize: 48, color: "text.secondary", mb: 1 }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                No reviewers queued for invitation
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Add reviewers from the &quot;Potential Reviewers&quot; tab
-              </Typography>
+          {/* Collapsible content */}
+          <Collapse in={invitationsExpanded}>
+            <Box sx={{ py: 1 }}>
+              {sentInvitations.length > 0 ? (
+                <Stack spacing={2}>
+                  {sentInvitations.map((reviewer) => (
+                    <InvitedReviewerCard
+                      key={reviewer.id}
+                      reviewer={reviewer}
+                      onActionMenuOpen={onActionMenuOpen}
+                    />
+                  ))}
+                </Stack>
+              ) : (
+                <Box sx={{ py: 3, textAlign: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No invitations have been sent yet
+                  </Typography>
+                </Box>
+              )}
             </Box>
-          )}
-        </Paper>
-      </Grid>
-    </Grid>
+          </Collapse>
+        </Box>
+
+        {/* Divider */}
+        <Divider sx={{ my: 1 }} />
+
+        {/* Queue Section */}
+        <Box>
+          {/* Header with collapse toggle */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: queueExpanded ? 0.5 : 0,
+              cursor: "pointer",
+              height: 24,
+            }}
+            onClick={() => setQueueExpanded(!queueExpanded)}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
+                Queued Reviewers ({queuedInvitations.length})
+              </Typography>
+              <Chip
+                label={queueControl?.queue_active ? "Active" : "Inactive"}
+                size="small"
+                sx={{
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                  fontSize: "0.6875rem",
+                  height: 16,
+                }}
+              />
+            </Box>
+            <IconButton size="small" sx={{ p: 1 }}>
+              {queueExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+
+          {/* Collapsible content with drag-and-drop */}
+          <Collapse in={queueExpanded}>
+            <Box sx={{ mt: 1 }}>
+              {localQueue.length > 0 ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={localQueue.map((r) => r.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <Stack spacing={1}>
+                      {localQueue.map((reviewer) => (
+                        <SortableQueueCard
+                          key={reviewer.id}
+                          reviewer={reviewer}
+                          onActionMenuOpen={onActionMenuOpen}
+                          onMoveUp={handleMoveUp}
+                          onMoveDown={handleMoveDown}
+                        />
+                      ))}
+                    </Stack>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <Box sx={{ py: 3, textAlign: "center" }}>
+                  <HourglassEmptyIcon
+                    sx={{ fontSize: 48, color: "text.secondary", mb: 1 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    No reviewers queued for invitation
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Add reviewers from the &quot;Potential Reviewers&quot; tab
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Collapse>
+        </Box>
+      </Box>
+
+      {/* Sticky Footer: Queue Controls */}
+      <Box
+        sx={{
+          borderTop: 1,
+          borderColor: "divider",
+          p: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          bgcolor: "background.paper",
+          boxShadow: "0px -6px 16px 0px rgba(0,0,0,0.08)",
+        }}
+      >
+        <Button
+          variant="text"
+          size="small"
+          onClick={onToggleQueue}
+          disabled={!queueControl?.queue_active}
+          sx={{
+            textTransform: "none",
+            fontWeight: 600,
+            color: queueControl?.queue_active
+              ? "text.secondary"
+              : "text.disabled",
+          }}
+        >
+          Stop Queue
+        </Button>
+        <Button
+          variant="outlined"
+          color="neutral"
+          size="small"
+          onClick={onToggleQueue}
+          disabled={queueControl?.queue_active}
+          sx={{
+            textTransform: "capitalize",
+            fontWeight: 700,
+          }}
+        >
+          Start Queue
+        </Button>
+      </Box>
+    </Paper>
   );
 }

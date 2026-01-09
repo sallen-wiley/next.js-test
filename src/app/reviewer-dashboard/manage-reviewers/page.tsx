@@ -30,11 +30,13 @@ import {
   invalidateReport,
   uninvalidateReport,
   cancelReview,
+  addReviewer,
 } from "@/services/dataService";
 import ReviewerActionMenu from "./ReviewerActionMenu";
 import { ArticleDetailsCard } from "../ArticleDetailsCard";
 import { ReviewerSearchAndCards } from "./ReviewerSearchAndCards";
 import { InvitationsAndQueuePanel } from "./InvitationsAndQueuePanel";
+import { InviteReviewerModal } from "./InviteReviewerModal";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 import ReviewerProfileDrawer from "./ReviewerProfileDrawer";
 import { useReviewerProfileDrawer } from "@/hooks/useReviewerProfileDrawer";
@@ -294,6 +296,9 @@ export default function ReviewerInvitationDashboard() {
     React.useState<null | HTMLElement>(null);
   const [selectedReviewerForAction, setSelectedReviewerForAction] =
     React.useState<ReviewerWithStatus | null>(null);
+
+  // Invite reviewer modal state
+  const [inviteModalOpen, setInviteModalOpen] = React.useState(false);
 
   // Reviewer profile drawer state
   const {
@@ -898,6 +903,107 @@ export default function ReviewerInvitationDashboard() {
 
   // Batch invite removed
 
+  // Handler to open the invite manually modal
+  const handleOpenInviteModal = () => {
+    setInviteModalOpen(true);
+  };
+
+  // Handler for inviting a manual reviewer directly
+  const handleInviteManualReviewer = async (name: string, email: string) => {
+    if (!manuscriptId) return;
+
+    try {
+      // First, add the reviewer to the database if they don't exist
+      const newReviewer = await addReviewer({
+        name: name || email.split("@")[0], // Use email prefix if name not provided
+        email,
+        affiliation: "",
+        expertise_areas: [],
+        availability_status: "available",
+        current_review_load: 0,
+        max_review_capacity: 5,
+        average_review_time_days: 0,
+        recent_publications: 0,
+      });
+
+      // Then send the invitation
+      await sendInvitation(manuscriptId, newReviewer.id);
+
+      // Refresh data to show the new invitation
+      await refreshReviewerData();
+
+      showSnackbar(`Invitation sent to ${name || email}`, "success");
+
+      // Open right panel to show the result
+      setTimeout(() => setRightPanelOpen(true), 500);
+    } catch (error) {
+      console.error("Error inviting manual reviewer:", error);
+      if (error instanceof Error && error.message.includes("already exists")) {
+        showSnackbar(
+          "Reviewer with this email already exists. Use the Find Reviewer tab to invite them.",
+          "warning"
+        );
+      } else {
+        showSnackbar("Failed to invite reviewer", "error");
+      }
+      throw error; // Re-throw to keep modal open on error
+    }
+  };
+
+  // Handler for adding a manual reviewer to queue
+  const handleAddManualReviewerToQueue = async (
+    name: string,
+    email: string
+  ) => {
+    if (!manuscriptId) return;
+
+    try {
+      // First, add the reviewer to the database if they don't exist
+      const newReviewer = await addReviewer({
+        name: name || email.split("@")[0], // Use email prefix if name not provided
+        email,
+        affiliation: "",
+        expertise_areas: [],
+        availability_status: "available",
+        current_review_load: 0,
+        max_review_capacity: 5,
+        average_review_time_days: 0,
+        recent_publications: 0,
+      });
+
+      // Then add to queue
+      const queueItem = await addToQueue(
+        manuscriptId,
+        newReviewer.id,
+        "normal"
+      );
+
+      // Refresh all data including queue
+      await refreshAllReviewerData();
+
+      showSnackbar(
+        `${name || email} added to queue${
+          queueItem ? ` (Position ${queueItem.queue_position})` : ""
+        }`,
+        "info"
+      );
+
+      // Open right panel to show the result
+      setTimeout(() => setRightPanelOpen(true), 500);
+    } catch (error) {
+      console.error("Error adding manual reviewer to queue:", error);
+      if (error instanceof Error && error.message.includes("already exists")) {
+        showSnackbar(
+          "Reviewer with this email already exists. Use the Find Reviewer tab to add them to the queue.",
+          "warning"
+        );
+      } else {
+        showSnackbar("Failed to add reviewer to queue", "error");
+      }
+      throw error; // Re-throw to keep modal open on error
+    }
+  };
+
   // Batch add to queue removed
 
   // Configure header for reviewer dashboard
@@ -1007,6 +1113,7 @@ export default function ReviewerInvitationDashboard() {
               onFiltersChange={setFilters}
               onInviteReviewer={handleInviteReviewer}
               onAddToQueue={handleAddToQueue}
+              onInviteManually={handleOpenInviteModal}
               onClearFilters={() => {
                 setSearchTerm("");
                 setFilters({
@@ -1143,6 +1250,14 @@ export default function ReviewerInvitationDashboard() {
         manuscriptId={manuscriptId}
         onAddToQueue={manuscriptId ? handleAddToQueue : undefined}
         onInvite={manuscriptId ? handleInviteReviewer : undefined}
+      />
+
+      {/* Invite Reviewer Manually Modal */}
+      <InviteReviewerModal
+        open={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        onInvite={handleInviteManualReviewer}
+        onAddToQueue={handleAddManualReviewerToQueue}
       />
     </>
   );

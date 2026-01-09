@@ -36,7 +36,15 @@ export function InvitationsAndQueuePanel({
   stats.queued = queue.length;
 
   return (
-    <Box sx={{ width: 400, pl: 3 }}>
+    <Box
+      sx={{
+        width: 486,
+        pl: 3,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
       {/* Summary Metrics */}
       <MetricsWidget
         submittedCount={stats.submitted}
@@ -50,7 +58,7 @@ export function InvitationsAndQueuePanel({
         queuedCount={stats.queued}
       />
 
-      {/* Queue & Invitations - Unified View */}
+      {/* Invitation Log Container - Unified View */}
       <UnifiedQueueTab
         reviewersWithStatus={reviewersWithStatus}
         queueControl={queueControl}
