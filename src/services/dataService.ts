@@ -253,8 +253,18 @@ export async function getManuscriptReviewers(
   // Fetch publications for all reviewers in parallel
   const { data: publications } = await supabase
     .from("reviewer_publications")
-    .select("reviewer_id, authors, publication_date, is_related")
+    .select("id, reviewer_id, authors, publication_date")
     .in("reviewer_id", reviewerIds);
+
+  // Fetch related publications for this manuscript
+  const { data: relatedPublications } = await supabase
+    .from("manuscript_publication_matches")
+    .select("publication_id")
+    .eq("manuscript_id", manuscriptId);
+
+  const relatedPublicationIds = new Set(
+    (relatedPublications || []).map((m) => m.publication_id)
+  );
 
   // Group publications by reviewer_id
   const publicationsByReviewer = new Map<
@@ -271,7 +281,7 @@ export async function getManuscriptReviewers(
     existing.push({
       authors: pub.authors,
       publication_date: pub.publication_date,
-      is_related: pub.is_related,
+      is_related: relatedPublicationIds.has(pub.id), // Check if related to this manuscript
     });
     publicationsByReviewer.set(pub.reviewer_id, existing);
   });

@@ -26,8 +26,6 @@ import {
   Stack,
   Snackbar,
   Alert,
-  Checkbox,
-  FormControlLabel,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -78,7 +76,6 @@ export default function PublicationsManager() {
     journal_name: "",
     authors: [] as string[],
     publication_date: "",
-    is_related: false,
   });
 
   const [authorInput, setAuthorInput] = useState("");
@@ -154,7 +151,6 @@ export default function PublicationsManager() {
         journal_name: publication.journal_name || "",
         authors: publication.authors || [],
         publication_date: publication.publication_date || "",
-        is_related: publication.is_related,
       });
     } else {
       setEditMode(false);
@@ -166,7 +162,6 @@ export default function PublicationsManager() {
         journal_name: "",
         authors: [],
         publication_date: "",
-        is_related: false,
       });
     }
     setDialogOpen(true);
@@ -215,7 +210,6 @@ export default function PublicationsManager() {
         journal_name: formData.journal_name || null,
         authors: formData.authors.length > 0 ? formData.authors : null,
         publication_date: formData.publication_date || null,
-        is_related: formData.is_related,
       };
 
       if (editMode && selectedPublication) {
@@ -313,14 +307,13 @@ export default function PublicationsManager() {
                 <TableCell>Authors</TableCell>
                 <TableCell>Publication Date</TableCell>
                 <TableCell>DOI</TableCell>
-                <TableCell>Related</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {publications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={7} align="center">
                     <Typography color="text.secondary">
                       No publications found
                     </Typography>
@@ -366,13 +359,6 @@ export default function PublicationsManager() {
                         <Typography variant="caption">{pub.doi}</Typography>
                       ) : (
                         "—"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {pub.is_related ? (
-                        <Chip label="Related" size="small" color="success" />
-                      ) : (
-                        <Chip label="Not Related" size="small" />
                       )}
                     </TableCell>
                     <TableCell align="right">
@@ -500,18 +486,6 @@ export default function PublicationsManager() {
                 }
                 fullWidth
                 InputLabelProps={{ shrink: true }}
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.is_related}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_related: e.target.checked })
-                    }
-                  />
-                }
-                label="Related to current manuscript"
               />
             </Stack>
           </DialogContent>

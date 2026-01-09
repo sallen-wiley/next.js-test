@@ -270,6 +270,25 @@ export default function ReviewerProfileDrawer({
           .eq("reviewer_id", id)
           .order("publication_date", { ascending: false });
 
+        // Fetch related publications for this manuscript (if manuscriptId provided)
+        let relatedPublicationIds = new Set<string>();
+        if (manuscriptId) {
+          const { data: relatedMatches } = await supabase
+            .from("manuscript_publication_matches")
+            .select("publication_id")
+            .eq("manuscript_id", manuscriptId);
+
+          relatedPublicationIds = new Set(
+            (relatedMatches || []).map((m) => m.publication_id)
+          );
+        }
+
+        // Add is_related field to publications based on manuscript context
+        const publicationsWithRelated = (publicationsData || []).map((pub) => ({
+          ...pub,
+          is_related: relatedPublicationIds.has(pub.id),
+        }));
+
         // Fetch recent invitation history (last 3 invitations)
         const { data: recentInvitationsData } = await supabase
           .from("review_invitations")
@@ -300,12 +319,12 @@ export default function ReviewerProfileDrawer({
                 )
               : 0,
           related_publications_count:
-            publicationsData?.filter((p) => p.is_related).length || 0,
+            publicationsWithRelated?.filter((p) => p.is_related).length || 0,
           solo_authored_count:
-            publicationsData?.filter((p) => p.authors?.length === 1).length ||
-            0,
+            publicationsWithRelated?.filter((p) => p.authors?.length === 1)
+              .length || 0,
           publications_last_5_years:
-            publicationsData?.filter((p) => {
+            publicationsWithRelated?.filter((p) => {
               if (!p.publication_date) return false;
               const pubYear = new Date(p.publication_date).getFullYear();
               const currentYear = new Date().getFullYear();
@@ -318,14 +337,14 @@ export default function ReviewerProfileDrawer({
                   (1000 * 60 * 60 * 24)
               )
             : null,
-          publications: publicationsData?.slice(0, 4) || [],
+          publications: publicationsWithRelated?.slice(0, 4) || [],
           retractions: retractionsData || undefined,
           // Add manuscript context for strong/weak point checks
           manuscript_authors: manuscriptData?.authors || [],
           manuscript_journal: manuscriptData?.journal || null,
           recent_invitations: recentInvitationsData || [],
           // Store all publications for analysis
-          all_publications: publicationsData || [],
+          all_publications: publicationsWithRelated || [],
         };
 
         setReviewer(profile);
@@ -751,9 +770,10 @@ export default function ReviewerProfileDrawer({
   };
 
   const handleSavePublication = async () => {
-    if (!selectedPublication || !reviewer) return;
+    if (!selectedPublication || !reviewer || !manuscriptId) return;
 
     try {
+      // Update publication metadata (no is_related column anymore)
       const { error } = await supabase
         .from("reviewer_publications")
         .update({
@@ -765,11 +785,29 @@ export default function ReviewerProfileDrawer({
               ? publicationFormData.authors
               : null,
           publication_date: publicationFormData.publication_date || null,
-          is_related: publicationFormData.is_related,
         })
         .eq("id", selectedPublication.id);
 
       if (error) throw error;
+
+      // Handle is_related via junction table
+      if (publicationFormData.is_related) {
+        // Add to manuscript_publication_matches if marked as related
+        await supabase.from("manuscript_publication_matches").upsert(
+          {
+            manuscript_id: manuscriptId,
+            publication_id: selectedPublication.id,
+          },
+          { onConflict: "manuscript_id,publication_id" }
+        );
+      } else {
+        // Remove from manuscript_publication_matches if not related
+        await supabase
+          .from("manuscript_publication_matches")
+          .delete()
+          .eq("manuscript_id", manuscriptId)
+          .eq("publication_id", selectedPublication.id);
+      }
 
       showSnackbar("Publication updated successfully", "success");
       handleClosePublicationEdit();

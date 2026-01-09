@@ -199,6 +199,7 @@ async function getDeleteStats(manuscriptId, reviewerIds) {
     reviewers: reviewerIds.length,
     reviewer_manuscript_matches: 0,
     reviewer_publications: 0,
+    manuscript_publication_matches: 0,
     reviewer_retractions: 0,
     review_invitations: 0,
     invitation_queue: 0,
@@ -219,6 +220,13 @@ async function getDeleteStats(manuscriptId, reviewerIds) {
       .select("*", { count: "exact", head: true })
       .in("reviewer_id", reviewerIds);
     stats.reviewer_publications = pubCount || 0;
+
+    // Count manuscript_publication_matches for this manuscript
+    const { count: pubMatchCount } = await supabase
+      .from("manuscript_publication_matches")
+      .select("*", { count: "exact", head: true })
+      .eq("manuscript_id", manuscriptId);
+    stats.manuscript_publication_matches = pubMatchCount || 0;
 
     // Count reviewer_retractions
     const { count: retCount } = await supabase
@@ -259,6 +267,7 @@ async function deleteData(manuscriptId, reviewerIds, dryRun = false) {
   const prefix = dryRun ? "[DRY RUN] Would delete" : "Deleting";
 
   const results = {
+    manuscript_publication_matches: 0,
     reviewer_publications: 0,
     reviewer_retractions: 0,
     invitation_queue_reviewer: 0,
@@ -278,7 +287,16 @@ async function deleteData(manuscriptId, reviewerIds, dryRun = false) {
 
   // Delete in proper order to respect foreign key constraints
 
-  // 1. Delete reviewer publications
+  // 1. Delete manuscript_publication_matches for this manuscript
+  log(`${prefix} manuscript publication matches...`);
+  const { error: matchError } = await supabase
+    .from("manuscript_publication_matches")
+    .delete()
+    .eq("manuscript_id", manuscriptId);
+  if (matchError) throw matchError;
+  results.manuscript_publication_matches = "✓";
+
+  // 2. Delete reviewer publications
   if (reviewerIds.length > 0) {
     log(`${prefix} reviewer publications...`);
     const { error } = await supabase

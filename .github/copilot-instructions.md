@@ -445,8 +445,17 @@ figma.connect(Component, "figma-url", {
 - **RLS**: Enabled - all authenticated users can read, users can update own profile, admins can update any
 
 #### reviewer_publications
-- **Purpose**: Reviewer publication history
-- **Key Fields**: id (uuid), reviewer_id (uuid FK), title (text), doi (text UNIQUE), journal_name (text), authors (text[]), publication_date (date), is_related (bool)
+- **Purpose**: Reviewer publication history catalog
+- **Key Fields**: id (uuid), reviewer_id (uuid FK), title (text), doi (text UNIQUE), journal_name (text), authors (text[]), publication_date (date)
+- **Note**: Manuscript-specific relevance is tracked in `manuscript_publication_matches` table, not on publication itself
+- **RLS**: Enabled (all authenticated users)
+
+#### manuscript_publication_matches
+- **Purpose**: Junction table linking manuscripts to related reviewer publications
+- **Key Fields**: id (uuid), manuscript_id (uuid FK), publication_id (uuid FK), created_at (timestamptz)
+- **Constraint**: Unique (manuscript_id, publication_id)
+- **Logic**: Row existence indicates publication is topically related to the manuscript
+- **Usage**: Query this table to find which publications are related to a specific manuscript
 - **RLS**: Enabled (all authenticated users)
 
 #### reviewer_retractions

@@ -175,7 +175,7 @@ export interface PotentialReviewerWithMatch extends PotentialReviewer {
   // Calculated fields
   email_is_institutional: boolean; // True if email domain is NOT a public provider (gmail, yahoo, etc.)
   acceptance_rate: number; // 0-100, calculated from total_acceptances/total_invitations
-  related_publications_count: number; // Count of publications with is_related=true
+  related_publications_count: number; // Count of publications related to a specific manuscript (from manuscript_publication_matches)
   solo_authored_count: number; // Count of publications with single author
   publications_last_5_years: number; // Count of publications from last 5 years
   days_since_last_review: number | null; // Days since last_review_completed (null if never)
