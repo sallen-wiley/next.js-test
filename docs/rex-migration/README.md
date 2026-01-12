@@ -8,65 +8,94 @@
 
 ## Current Status
 
-**Phase:** Documentation (2 of 15 screens documented) + Session Automation Complete
-**Last Updated:** 2026-01-05
-**Next Session Focus:** Continue documenting remaining 13 screens (02-Progress Board next)
+**Phase:** Vanilla MUI Implementation (15/15 placeholders ready)
+**Last Updated:** 2026-01-12
+**Next Session Focus:** Start vanilla MUI implementation (screen 01 or 03)
 
 ## Phases Overview
 
-### ✅ Phase 1: Foundation (COMPLETE)
+### ✅ Phase 1: Foundation (MOSTLY COMPLETE)
 
 - [x] Create ReX theme from Figma tokens
 - [x] Color palette (semantic colors, grayscale, brand colors)
 - [x] Typography scale (Open Sans family)
+- [x] Spacing system (5-tier: inline/component/sibling/group/layout)
 - [x] Theme registered in multi-theme system
 - [x] Storybook color & typography showcase pages
 - [x] Session management automation (start/end scripts)
 - [x] Project documentation structure (README, DECISIONS, NEXT_STEPS, SESSION_WORKFLOW)
+- [ ] **Icon system** - Export from Figma, create React components, Storybook showcase
 
 **Files Created:**
 
-- `/src/themes/rex/` - Complete theme structure
+- `/src/themes/rex/` - Complete theme structure with spacing system
 - `/src/components/tokens/RexColorPalette.stories.tsx`
 - `/src/components/tokens/RexTypography.stories.tsx`
 - `/docs/rex-migration/` - Project tracking documentation
 - `/.github/scripts/session-start.sh` - Automatic recap on folder open
 - `/.github/scripts/session-end.sh` - Validation & commit workflow
 
+**Pending:**
+
+- `/src/components/rex/icons/` - Custom SVG icon components (awaiting Figma export)
+- `/src/components/tokens/RexIcons.stories.tsx` - Icon showcase
+
 ---
 
-### 🔄 Phase 2: Screen Documentation (IN PROGRESS - 2/15)
+### ✅ Phase 2: Screen Documentation (COMPLETE - 15/15)
 
-Document all screens with Figma exports as visual reference for implementation.
+All screens now have placeholder stories in Storybook. Ready for vanilla MUI implementation.
+
+**New Approach:** 3-phase implementation strategy
+1. **Vanilla MUI** - Build with out-of-the-box MUI components
+2. **ReX Theming** - Apply ReX theme (colors, typography, spacing)
+3. **Responsive** - Adapt for mobile/tablet
 
 #### Pre-Submission Screens
 
 - [x] **00. Overview** - Landing page for flow documentation
-- [x] **01. My Submissions** - Dashboard with submission list (Desktop/Mobile, Default/Empty states)
-- [ ] **02. Progress Board** - Kanban-style submission tracking
+- [x] **01. My Submissions** - Dashboard with submission list
+- [x] **02. Progress Board** - Kanban-style submission tracking
 
 #### Submission Flow Screens
 
-- [ ] **03. Article Type Selection** - Choose manuscript type
-- [ ] **04. Upload Manuscript** - File upload interface
-- [ ] **05. Title & Abstract** - Text input forms
-- [ ] **06. Affiliation** - Institution/organization selection
-- [ ] **07. Authors** - Author list management
-- [ ] **08. Author Details** - Individual author information
-- [ ] **09. Match Organizations** - Organization matching UI
-- [ ] **10. Additional Information** - Supplementary fields
-- [ ] **11. Open Access** - License selection
+- [x] **03. Article Type** - Choose manuscript type and category
+- [x] **04. Upload Manuscript** - File upload interface with drag & drop
+- [x] **05. Title** - Enter manuscript title and subtitle
+- [x] **06. Abstract** - Provide manuscript abstract
+- [x] **07. Affiliation** - Add institutional affiliations with autocomplete
+- [x] **08. Authors** - Manage author list (add/edit/delete)
+- [x] **09. Author Details** - Individual author information form
+- [x] **10. Match Organizations** - Fuzzy matching for organization standardization
+- [x] **11. Additional Information** - Keywords, funding, declarations
+- [x] **12. Open Access** - License selection and agreements
 
 #### Review & Completion Screens
 
-- [ ] **12. Final Review** - Pre-submission summary
-- [ ] **13. Submission Overview** - Post-submission confirmation
-- [ ] **14. Confetti Screen** - Success celebration
+- [x] **13. Final Review** - Pre-submission summary with validation
+- [x] **14. Submission Overview** - Post-submission confirmation
+- [x] **15. Confetti Screen** - Success celebration with animation
 
-**Current Files:**
+**All Placeholder Stories Created:**
 
-- `/src/components/rex-flow/00-Overview.stories.tsx`
-- `/src/components/rex-flow/01-MySubmissions.stories.tsx`
+| # | Page | Storybook | Code | Status |
+|---|------|-----------|------|--------|
+| 00 | Overview | [📖 View](http://localhost:6006/?path=/story/rex-flow-00-overview--placeholder) | [📄 Code](../../src/components/rex-flow/00-Overview.stories.tsx) | Placeholder |
+| 01 | My Submissions | [📖 View](http://localhost:6006/?path=/story/rex-flow-01-my-submissions--placeholder) | [📄 Code](../../src/components/rex-flow/01-MySubmissions.stories.tsx) | Placeholder |
+| 02 | Progress Board | [📖 View](http://localhost:6006/?path=/story/rex-flow-02-progress-board--placeholder) | [📄 Code](../../src/components/rex-flow/02-ProgressBoard.stories.tsx) | Placeholder |
+| 03 | Article Type | [📖 View](http://localhost:6006/?path=/story/rex-flow-03-article-type--placeholder) | [📄 Code](../../src/components/rex-flow/03-ArticleType.stories.tsx) | Placeholder |
+| 04 | Upload Manuscript | [📖 View](http://localhost:6006/?path=/story/rex-flow-04-upload-manuscript--placeholder) | [📄 Code](../../src/components/rex-flow/04-UploadManuscript.stories.tsx) | Placeholder |
+| 05 | Title | [📖 View](http://localhost:6006/?path=/story/rex-flow-05-title--placeholder) | [📄 Code](../../src/components/rex-flow/05-Title.stories.tsx) | Placeholder |
+| 06 | Abstract | [📖 View](http://localhost:6006/?path=/story/rex-flow-06-abstract--placeholder) | [📄 Code](../../src/components/rex-flow/06-Abstract.stories.tsx) | Placeholder |
+| 07 | Affiliation | [📖 View](http://localhost:6006/?path=/story/rex-flow-07-affiliation--placeholder) | [📄 Code](../../src/components/rex-flow/07-Affiliation.stories.tsx) | Placeholder |
+| 08 | Authors | [📖 View](http://localhost:6006/?path=/story/rex-flow-08-authors--placeholder) | [📄 Code](../../src/components/rex-flow/08-Authors.stories.tsx) | Placeholder |
+| 09 | Author Details | [📖 View](http://localhost:6006/?path=/story/rex-flow-09-author-details--placeholder) | [📄 Code](../../src/components/rex-flow/09-AuthorDetails.stories.tsx) | Placeholder |
+| 10 | Match Organizations | [📖 View](http://localhost:6006/?path=/story/rex-flow-10-match-organizations--placeholder) | [📄 Code](../../src/components/rex-flow/10-MatchOrganizations.stories.tsx) | Placeholder |
+| 11 | Additional Information | [📖 View](http://localhost:6006/?path=/story/rex-flow-11-additional-information--placeholder) | [📄 Code](../../src/components/rex-flow/11-AdditionalInformation.stories.tsx) | Placeholder |
+| 12 | Open Access | [📖 View](http://localhost:6006/?path=/story/rex-flow-12-open-access--placeholder) | [📄 Code](../../src/components/rex-flow/12-OpenAccess.stories.tsx) | Placeholder |
+| 13 | Final Review | [📖 View](http://localhost:6006/?path=/story/rex-flow-13-final-review--placeholder) | [📄 Code](../../src/components/rex-flow/13-FinalReview.stories.tsx) | Placeholder |
+| 14 | Submission Overview | [📖 View](http://localhost:6006/?path=/story/rex-flow-14-submission-overview--placeholder) | [📄 Code](../../src/components/rex-flow/14-SubmissionOverview.stories.tsx) | Placeholder |
+| 15 | Confetti Screen | [📖 View](http://localhost:6006/?path=/story/rex-flow-15-confetti-screen--placeholder) | [📄 Code](../../src/components/rex-flow/15-ConfettiScreen.stories.tsx) | Placeholder |
 
 **Assets:**
 
@@ -74,26 +103,41 @@ Document all screens with Figma exports as visual reference for implementation.
 
 ---
 
-### 📋 Phase 3: Component Implementation (NOT STARTED)
+### 📋 Phase 3: Vanilla MUI Implementation (READY TO START)
 
-Build functional MUI components for each screen using ReX theme.
+Build each screen with out-of-the-box MUI components (no custom styling yet).
 
-**Priority Order (TBD):**
+**Implementation Approach:**
 
-1. My Submissions Dashboard
-2. Upload Manuscript
-3. Title & Abstract
-4. [... to be determined based on user priority]
+**Step 1: Vanilla MUI (Current Phase)**
+- Use MUI components with default styling
+- Focus on structure and layout
+- Implement functionality and data flow
+- No ReX theme application yet
 
-**Implementation Pattern:**
+**Step 2: ReX Theming (Next Phase)**
+- Apply ReX theme colors, typography, spacing
+- Match Figma visual design
+- Theme-level customization only
 
-1. Create component file in `/src/components/rex/[component-name].tsx`
-2. Create story file in `/src/components/rex/[component-name].stories.tsx`
-3. Apply ReX theme styling
-4. Match Figma visual design
-5. Add interactions/behaviors
-6. Test across all themes for compatibility
-7. Document props and usage
+**Step 3: Responsive (Final Phase)**
+- Mobile/tablet breakpoints
+- Touch-friendly interactions
+- Responsive layouts
+
+**Component Inventory:**
+- See `/docs/rex-migration/COMPONENTS.md` for complete MUI component mapping
+- Tracks which MUI components are used in each screen
+- Documents theming status per component
+
+**Priority Order:**
+
+1. **01 - My Submissions** (vanilla implementation first)
+2. **03 - Article Type** (simple form, good starting point)
+3. **05 - Title** (basic text input)
+4. **06 - Abstract** (multiline text)
+5. **04 - Upload Manuscript** (custom drag & drop)
+6. [... continue screen by screen]
 
 ---
 
@@ -116,9 +160,9 @@ Build functional MUI components for each screen using ReX theme.
 
 3. **Theme-Level Styling:** All styling handled at ReX theme level, minimal component overrides.
 
-4. **Multi-State Documentation:** Each screen documented with all states (Default, Empty, Error, Draft, Revision, etc.).
+4. **3-Phase Implementation:** Vanilla MUI → ReX Theming → Responsive (instead of building everything at once).
 
-5. **Responsive Documentation:** Desktop + Mobile layouts documented separately.
+5. **Component Inventory:** Created COMPONENTS.md to track MUI mappings and theming status.
 
 ---
 
@@ -140,37 +184,20 @@ Build functional MUI components for each screen using ReX theme.
 - body1: 14px / 400 (Text)
 - button: 14px / 600 (Button)
 
+**Spacing System:**
+
+- 1 (5px) - inline: Text elements
+- 2 (10px) - component: Within-component spacing
+- 3 (15px) - sibling: Related elements
+- 6 (30px) - group: Distinct sections
+- 12 (60px) - layout: Major divisions
+
 **Theme Features:**
 
 - ✅ Light/Dark mode support via colorSchemes
 - ✅ Custom palette colors (neutral, black, white)
 - ✅ Component overrides for Button, Chip
 - ✅ MUI Grid system compatibility
-
-### Image Display Pattern
-
-Storybook stories use `backgroundImage` to display Figma exports:
-
-```tsx
-sx={{
-  width: "100%",
-  height: "800px",
-  backgroundImage: `url(/reference/ReX steps/1 - My submissions/Desktop-Default.png)`,
-  backgroundSize: "contain",
-  backgroundPosition: "top center",
-  backgroundRepeat: "no-repeat",
-}}
-```
-
----
-
-## Questions to Answer
-
-1. **Implementation Priority:** Which screen should be built first?
-2. **Data Integration:** When to connect to Supabase vs mock data?
-3. **Navigation Flow:** How do screens connect? (React Router? Next.js pages?)
-4. **State Management:** Local state? Context API? Redux?
-5. **Validation Strategy:** Inline? On submit? Real-time?
 
 ---
 
@@ -180,6 +207,7 @@ sx={{
 - **Figma Tokens:** `/reference/Proposed.tokens.json`
 - **Design Exports:** `/reference/ReX steps/`
 - **Theme Code:** `/src/themes/rex/`
+- **Component Inventory:** `/docs/rex-migration/COMPONENTS.md`
 - **Storybook:** Run `npm run storybook` to view documentation
 
 ---

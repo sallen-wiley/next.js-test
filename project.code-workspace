@@ -1,7 +1,11 @@
 {
   "folders": [
     {
-      "path": "./"
+      "path": "./",
+      "name": "📓 storybook"
+    {
+      "path": "/Users/nfrota/Documents/literature",
+      "name": "📚 literature"
     }
   ],
   "extensions": {
@@ -48,7 +52,22 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit"
     },
-    "window.title": "📓 storybook"
+    "window.title": "📓 storybook",
+    "projectTracking": {
+      "name": "ReX Migration",
+      "docsToValidate": [
+        "docs/rex-migration/README.md",
+        "docs/rex-migration/DECISIONS.md",
+        "docs/rex-migration/NEXT_STEPS.md"
+      ],
+      "progressMetrics": {
+        "totalItems": 15,
+        "itemName": "screens",
+        "referenceFolder": "reference/ReX steps/",
+        "documentationFolder": "src/components/rex-flow/",
+        "implementationFolder": "src/components/rex/"
+      }
+    }
   },
   "tasks": {
     "version": "2.0.0",
