@@ -217,3 +217,61 @@ export interface QueueControlState {
   last_sent_date?: string; // Last time a queued invitation was sent
   next_scheduled_send?: string; // Next scheduled send from queue
 }
+
+// ============================================================================
+// PALETTE GENERATOR TYPES
+// ============================================================================
+
+// Color palette storage for HSV Palette Generator
+export interface UserPalette {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  palette_data: PaletteData; // HueSet[] array
+  is_public: boolean;
+  is_preset: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Extended palette with author information (for public library)
+export interface UserPaletteWithAuthor extends UserPalette {
+  author_name?: string; // From user_profiles.full_name
+}
+
+// The palette_data JSONB structure (matches HueSet[] from palette generator)
+export type PaletteData = HueSet[];
+
+export interface HueSet {
+  id: string;
+  name: string; // Display name (e.g., "Sage Green", "Primary")
+  muiName: string; // MUI palette key (e.g., "primary", "secondary", "blue")
+  shades: ShadeDefinition[];
+  extrapolationMode: "functional" | "functional-saturated" | "expressive";
+  shadeConfig: ShadeConfiguration[];
+}
+
+export interface ShadeDefinition {
+  id: string;
+  label: string; // Display label: "50", "100", "Lightest", "Base", etc.
+  color: string; // Hex format: #RRGGBB
+  locked: boolean;
+  hsv: HSV;
+  selectedForH: boolean;
+  selectedForS: boolean;
+  selectedForV: boolean;
+  extrapolationMethod?: "interpolated" | "linear" | "adjusted";
+  generationMode?: "functional" | "functional-saturated" | "expressive";
+}
+
+export interface ShadeConfiguration {
+  id: string; // Sequential ID: "1", "2", "3"...
+  label: string; // User-editable label: "50", "100", "Lightest", etc.
+}
+
+export interface HSV {
+  h: number; // Hue: 0-360 degrees
+  s: number; // Saturation: 0-100 percent
+  v: number; // Value (brightness): 0-100 percent
+}

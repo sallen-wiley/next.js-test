@@ -102,7 +102,7 @@ See [Test User Guide](docs/setup/TEST_USER_GUIDE.md) for complete user setup ins
 - **Home**: [http://localhost:3000](http://localhost:3000) - Main landing with theme showcase
 - **Kitchen Sink**: [http://localhost:3000/kitchen-sink](http://localhost:3000/kitchen-sink) - All MUI components
 - **Typography Demo**: [http://localhost:3000/typography-demo](http://localhost:3000/typography-demo) - Font examples
-- **Palette Generator**: [http://localhost:3000/experiments/palette-generator](http://localhost:3000/experiments/palette-generator) - HSV color tool
+- **Palette Generator**: [http://localhost:3000/palette-generator](http://localhost:3000/palette-generator) - HSV color tool
 - **Admin Panel**: [http://localhost:3000/admin](http://localhost:3000/admin) - User management (when auth enabled)
 
 ## Features to Try

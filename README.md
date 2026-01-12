@@ -44,7 +44,7 @@ src/
 │   ├── debug/              # System diagnostics and debugging
 │   ├── experiments/        # Experimental features
 │   │   ├── notifications/  # Notification system experiments
-│   │   ├── palette-generator/ # HSV color palette generator
+│   ├── palette-generator/ # HSV color palette generator
 │   │   └── workflow-builder/  # Workflow builder experiments
 │   ├── kitchen-sink/       # Component showcase
 │   ├── onboarding-demos/   # User onboarding flows
@@ -142,7 +142,7 @@ The project includes a sophisticated theming system with:
 
 - `/` - Main landing page with featured tools and demo links
 - `/kitchen-sink` - Complete MUI component library showcase
-- `/experiments/palette-generator` - HSV color palette generator
+- `/palette-generator` - HSV color palette generator
 - `/experiments/workflow-builder` - Workflow builder experiments
 - `/experiments/notifications/admin` - Notification administration
 - `/experiments/notifications/history` - Notification history

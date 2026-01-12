@@ -463,6 +463,15 @@ figma.connect(Component, "figma-url", {
 - **Key Fields**: id (uuid), reviewer_id (uuid FK), retraction_reasons (text[]), created_at (timestamptz)
 - **RLS**: Enabled (all authenticated users)
 
+#### user_palettes
+- **Purpose**: Store user-created color palettes from HSV Palette Generator
+- **Key Fields**: id (uuid), user_id (uuid FK), name (text), description (text), palette_data (jsonb), is_public (bool), is_preset (bool), created_at (timestamptz), updated_at (timestamptz)
+- **palette_data Structure**: JSONB array of HueSet objects (complete palette generator state)
+- **is_preset**: True for system-managed presets (cannot be modified by users)
+- **is_public**: True for palettes visible to all users
+- **RLS**: Enabled - users can view own palettes + public palettes, can only edit/delete own non-preset palettes
+- **Service**: Use `src/app/palette-generator/services/paletteService.ts` for CRUD operations
+
 ### TypeScript Type Patterns
 
 ```typescript

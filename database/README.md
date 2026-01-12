@@ -34,13 +34,17 @@ To **completely reset** an existing database:
 
 ### Core Setup Files (numbered)
 
-| File                   | Purpose                                    | Run Order |
-| ---------------------- | ------------------------------------------ | --------- |
-| `00_cleanup.sql`       | **⚠️ Drops all tables** - use with caution | Optional  |
-| `01_core_tables.sql`   | Creates all tables, indexes, constraints   | First     |
-| `02_rls_policies.sql`  | Sets up Row Level Security policies        | Second    |
-| `03_seed_data.sql`     | Populates sample data for testing          | Optional  |
-| `99_export_schema.sql` | Exports current schema to markdown         | Utility   |
+| File                               | Purpose                                        | Run Order |
+| ---------------------------------- | ---------------------------------------------- | --------- |
+| `00_cleanup.sql`                   | **⚠️ Drops all tables** - use with caution     | Optional  |
+| `01_core_tables.sql`               | Creates all tables, indexes, constraints       | First     |
+| `02_rls_policies.sql`              | Sets up Row Level Security policies            | Second    |
+| `03_status_model_update.sql`       | Updates manuscript status workflow             | Third     |
+| `04_move_conflicts_to_matches.sql` | Migrates conflict data                         | Fourth    |
+| `05_drop_deprecated_columns.sql`   | Removes deprecated columns                     | Fifth     |
+| `06_publication_matches.sql`       | Adds publication matching system               | Sixth     |
+| `07_palette_storage.sql`           | Adds palette storage for HSV Palette Generator | Seventh   |
+| `99_export_schema.sql`             | Exports current schema to markdown             | Utility   |
 
 ### Legacy Files (archive folder)
 
@@ -50,6 +54,8 @@ Old migration files have been moved to `archive/`. These are kept for historical
 
 ### Tables Created
 
+#### Reviewer Invitation System
+
 1. **user_profiles** - User authentication and RBAC
 2. **manuscripts** - Manuscript submissions with workflow status
 3. **potential_reviewers** - Reviewer database with expertise
@@ -57,7 +63,13 @@ Old migration files have been moved to `archive/`. These are kept for historical
 5. **reviewer_manuscript_matches** - AI-generated reviewer suggestions
 6. **invitation_queue** - Queued invitations waiting to be sent
 7. **review_invitations** - Active sent invitations with status tracking
-8. **reviewer_metrics** - Aggregated reviewer performance metrics
+8. **reviewer_publications** - Reviewer publication history
+9. **manuscript_publication_matches** - Links manuscripts to related publications
+10. **reviewer_retractions** - Track reviewer retractions
+
+#### Palette Generator
+
+11. **user_palettes** - User-created and preset color palettes from HSV Palette Generator
 
 ### Key Features
 
@@ -89,6 +101,16 @@ Old migration files have been moved to `archive/`. These are kept for historical
 4. User manages reviewers → creates invitation_queue + review_invitations
 ```
 
+### Palette Generator Flow
+
+```
+1. User creates palette in UI → user_palettes (palette_data JSONB)
+2. User saves palette → INSERT with is_public = false
+3. User loads palette → SELECT where user_id = auth.uid() OR is_public = true
+4. User loads preset → SELECT where is_preset = true AND is_public = true
+5. User shares palette → UPDATE is_public = true
+```
+
 ## Security Model
 
 ### Role-Based Access Control (RBAC)
@@ -109,6 +131,18 @@ Old migration files have been moved to `archive/`. These are kept for historical
 | View own assigned | User (own manuscripts)  | user_manuscripts            |
 | View all assigned | admin, editor           | user_manuscripts            |
 | View match scores | Public (all users)      | reviewer_manuscript_matches |
+
+**Palette Generator:**
+
+| Action         | Allowed Roles               | Table         |
+| -------------- | --------------------------- | ------------- |
+| Create palette | Authenticated users         | user_palettes |
+| View own       | User (own palettes)         | user_palettes |
+| View public    | All users                   | user_palettes |
+| View presets   | All users                   | user_palettes |
+| Edit palette   | User (own, non-preset)      | user_palettes |
+| Delete palette | User (own, non-preset)      | user_palettes |
+| Create preset  | Admin only (via direct SQL) | user_palettes |
 
 ### RLS Helper Functions
 
@@ -214,6 +248,46 @@ INSERT INTO invitation_queue (
 VALUES
   ('manuscript-uuid', 'reviewer-uuid-1', 1, NOW() + INTERVAL '1 day', 'high'),
   ('manuscript-uuid', 'reviewer-uuid-2', 2, NOW() + INTERVAL '2 days', 'normal');
+```
+
+### Save User Palette
+
+```sql
+-- Save a new palette (done via application layer - paletteService.ts)
+-- Direct SQL example:
+INSERT INTO user_palettes (user_id, name, description, palette_data, is_public)
+VALUES (
+  auth.uid(),
+  'My Sage Palette',
+  'Custom sage green palette for nature theme',
+  '[{"id":"1","name":"sage","muiName":"primary","shades":[...]}]'::jsonb,
+  false
+);
+```
+
+### Create System Preset Palette
+
+```sql
+-- Only admins can create presets (bypass RLS)
+INSERT INTO user_palettes (user_id, name, description, palette_data, is_public, is_preset)
+VALUES (
+  (SELECT id FROM user_profiles WHERE role = 'admin' LIMIT 1),
+  'Material Blue',
+  'Standard Material-UI blue palette',
+  '[{"id":"mui-blue","name":"Blue","muiName":"blue",...}]'::jsonb,
+  true,
+  true
+);
+```
+
+### Load Preset Palettes
+
+```sql
+-- Get all preset palettes
+SELECT id, name, description, palette_data
+FROM user_palettes
+WHERE is_preset = true AND is_public = true
+ORDER BY name;
 ```
 
 ## Troubleshooting

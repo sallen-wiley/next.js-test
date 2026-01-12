@@ -145,7 +145,7 @@ export default function Home() {
         <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <FeaturedCard
-              href="/experiments/palette-generator"
+              href="/palette-generator"
               icon={<PaletteIcon sx={{ fontSize: 40 }} />}
               title="HSV Palette Generator"
               description="Generate harmonious color palettes using HSV interpolation for your design system"
