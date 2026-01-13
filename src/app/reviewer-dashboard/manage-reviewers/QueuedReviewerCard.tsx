@@ -123,7 +123,7 @@ export function QueuedReviewerCard({
           </Typography>
 
           {/* Two-column stats layout */}
-          <Box sx={{ display: "flex", gap: 3 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
             {/* Left stats column */}
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
               <Typography variant="body1" color="text.secondary">

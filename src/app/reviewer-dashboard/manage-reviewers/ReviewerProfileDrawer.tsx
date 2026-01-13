@@ -92,13 +92,33 @@ export default function ReviewerProfileDrawer({
     if (!reviewer) return;
 
     try {
-      await updateReviewer(reviewer.id, formData as PotentialReviewer);
+      // Remove computed fields that shouldn't be updated
+      const updateData = { ...formData };
+      const fieldsToRemove = [
+        "id",
+        "match_score",
+        "email_is_institutional",
+        "acceptance_rate",
+        "related_publications_count",
+        "solo_authored_count",
+        "publications_last_5_years",
+        "days_since_last_review",
+      ] as const;
+
+      fieldsToRemove.forEach((field) => {
+        delete (updateData as Record<string, unknown>)[field];
+      });
+
+      await updateReviewer(reviewer.id, updateData);
       showSnackbar("Reviewer updated successfully", "success");
       handleCloseEditDialog();
       refetch();
     } catch (error) {
       console.error("Error updating reviewer:", error);
-      showSnackbar("Failed to update reviewer", "error");
+      showSnackbar(
+        error instanceof Error ? error.message : "Failed to update reviewer",
+        "error"
+      );
     }
   };
 

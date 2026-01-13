@@ -119,7 +119,7 @@ export default function EditReviewerDialog({
           .select("*")
           .eq("reviewer_id", reviewer.id)
           .eq("manuscript_id", manuscriptId)
-          .single();
+          .maybeSingle();
 
         if (error && error.code !== "PGRST116") {
           console.error("Error fetching match data:", error);
@@ -159,7 +159,29 @@ export default function EditReviewerDialog({
   };
 
   const handleSave = async () => {
+    // Save reviewer data
     await onSave(formData);
+
+    // Save match data if it exists and we have a manuscript context
+    if (matchData && manuscriptId) {
+      try {
+        const { error } = await supabase
+          .from("reviewer_manuscript_matches")
+          .update({
+            match_score: matchData.match_score,
+            conflicts_of_interest: matchData.conflicts_of_interest || null,
+            calculated_at: matchData.calculated_at,
+          })
+          .eq("manuscript_id", manuscriptId)
+          .eq("reviewer_id", reviewer.id);
+
+        if (error) {
+          console.error("Error updating match data:", error);
+        }
+      } catch (err) {
+        console.error("Error saving match data:", err);
+      }
+    }
   };
 
   return (
@@ -171,13 +193,20 @@ export default function EditReviewerDialog({
           <Tabs
             value={editDialogTab}
             onChange={(_, newValue) => setEditDialogTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
           >
-            <Tab label="Reviewer Details" />
-            <Tab label="Manuscript Match" disabled={!manuscriptId} />
+            <Tab label="Basic Info" />
+            <Tab label="Availability" />
+            <Tab label="Academic" />
+            <Tab label="Publications" />
+            <Tab label="Review History" />
+            <Tab label="Other" />
+            <Tab label="Match Score" disabled={!manuscriptId} />
           </Tabs>
         </Box>
 
-        {/* Tab Panel: Reviewer Details */}
+        {/* Tab Panel: Basic Info */}
         {editDialogTab === 0 && (
           <Stack spacing={3} sx={{ mt: 2 }}>
             {/* Basic Information */}
@@ -252,7 +281,12 @@ export default function EditReviewerDialog({
                 </Stack>
               </CardContent>
             </Card>
+          </Stack>
+        )}
 
+        {/* Tab Panel: Availability */}
+        {editDialogTab === 1 && (
+          <Stack spacing={3} sx={{ mt: 2 }}>
             {/* Availability & Capacity */}
             <Card variant="outlined">
               <CardContent>
@@ -309,6 +343,351 @@ export default function EditReviewerDialog({
                       fullWidth
                     />
                   </Stack>
+                  <TextField
+                    label="Average Review Time (days)"
+                    type="number"
+                    value={formData.average_review_time_days}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        average_review_time_days:
+                          parseInt(e.target.value) || 21,
+                      })
+                    }
+                    fullWidth
+                  />
+                  <TextField
+                    label="Average Response Time (hours)"
+                    type="number"
+                    value={formData.average_response_time_hours}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        average_response_time_hours:
+                          parseInt(e.target.value) || 0,
+                      })
+                    }
+                    fullWidth
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
+        )}
+
+        {/* Tab Panel: Academic Profile */}
+        {editDialogTab === 2 && (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            {/* Academic Profile */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Academic Profile
+                </Typography>
+                <Stack spacing={2}>
+                  <TextField
+                    label="Department"
+                    value={formData.department}
+                    onChange={(e) =>
+                      setFormData({ ...formData, department: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="H-Index"
+                      type="number"
+                      value={formData.h_index || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          h_index: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Citation Count"
+                      type="number"
+                      value={formData.citation_count || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          citation_count: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="ORCID ID"
+                    value={formData.orcid_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, orcid_id: e.target.value })
+                    }
+                    placeholder="0000-0000-0000-0000"
+                    fullWidth
+                  />
+                  <TextField
+                    label="Profile URL"
+                    value={formData.profile_url}
+                    onChange={(e) =>
+                      setFormData({ ...formData, profile_url: e.target.value })
+                    }
+                    placeholder="https://..."
+                    fullWidth
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
+        )}
+
+        {/* Tab Panel: Publications */}
+        {editDialogTab === 3 && (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            {/* Publications */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Publication Metrics
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Total Publications"
+                      type="number"
+                      value={formData.total_publications || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_publications: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Recent Publications (1yr)"
+                      type="number"
+                      value={formData.publication_count_last_year || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          publication_count_last_year: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Publication Year From"
+                      type="number"
+                      value={formData.publication_year_from || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          publication_year_from: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Publication Year To"
+                      type="number"
+                      value={formData.publication_year_to || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          publication_year_to: e.target.value
+                            ? parseInt(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="Last Publication Date"
+                    type="date"
+                    value={formData.last_publication_date || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        last_publication_date: e.target.value || undefined,
+                      })
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
+        )}
+
+        {/* Tab Panel: Review History */}
+        {editDialogTab === 4 && (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            {/* Review History */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Review History
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Total Invitations"
+                      type="number"
+                      value={formData.total_invitations}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_invitations: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Total Acceptances"
+                      type="number"
+                      value={formData.total_acceptances}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          total_acceptances: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Completed Reviews"
+                      type="number"
+                      value={formData.completed_reviews}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          completed_reviews: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Currently Reviewing"
+                      type="number"
+                      value={formData.currently_reviewing}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          currently_reviewing: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="Last Review Completed"
+                    type="date"
+                    value={formData.last_review_completed || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        last_review_completed: e.target.value || undefined,
+                      })
+                    }
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
+        )}
+
+        {/* Tab Panel: Additional Information */}
+        {editDialogTab === 5 && (
+          <Stack spacing={3} sx={{ mt: 2 }}>
+            {/* Additional Information */}
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+                  Additional Information
+                </Typography>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="Given Names"
+                      value={formData.given_names}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          given_names: e.target.value,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="Surname"
+                      value={formData.surname}
+                      onChange={(e) =>
+                        setFormData({ ...formData, surname: e.target.value })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="Affiliation ROR ID"
+                    value={formData.aff_ror_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, aff_ror_id: e.target.value })
+                    }
+                    fullWidth
+                  />
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="External ID"
+                      value={formData.external_id}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          external_id: e.target.value,
+                        })
+                      }
+                      fullWidth
+                    />
+                    <TextField
+                      label="PKG ID"
+                      value={formData.pkg_id}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pkg_id: e.target.value })
+                      }
+                      fullWidth
+                    />
+                  </Stack>
+                  <TextField
+                    label="Reviewer Type"
+                    value={formData.reviewer_type}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        reviewer_type: e.target.value,
+                      })
+                    }
+                    fullWidth
+                  />
                 </Stack>
               </CardContent>
             </Card>
@@ -316,7 +695,7 @@ export default function EditReviewerDialog({
         )}
 
         {/* Tab Panel: Manuscript Match */}
-        {editDialogTab === 1 && (
+        {editDialogTab === 6 && (
           <Stack spacing={3} sx={{ mt: 2 }}>
             {matchLoading ? (
               <Skeleton variant="rectangular" height={200} />
@@ -328,15 +707,63 @@ export default function EditReviewerDialog({
                     fontWeight={600}
                     sx={{ mb: 2 }}
                   >
-                    Match Score
+                    Manuscript Match Data
                   </Typography>
-                  <Typography variant="h3" color="primary.main">
-                    {(matchData.match_score * 100).toFixed(0)}%
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Calculated on{" "}
-                    {new Date(matchData.calculated_at).toLocaleDateString()}
-                  </Typography>
+                  <Stack spacing={2}>
+                    <TextField
+                      label="Match Score (%)"
+                      type="number"
+                      value={(matchData.match_score * 100).toFixed(0)}
+                      onChange={(e) => {
+                        const percentage = parseFloat(e.target.value) || 0;
+                        const score =
+                          Math.min(100, Math.max(0, percentage)) / 100;
+                        setMatchData({
+                          ...matchData,
+                          match_score: score,
+                        });
+                      }}
+                      inputProps={{ min: 0, max: 100, step: 1 }}
+                      helperText="Match quality score (0-100%)"
+                      fullWidth
+                    />
+                    <TextField
+                      label="Conflicts of Interest"
+                      value={matchData.conflicts_of_interest || ""}
+                      onChange={(e) =>
+                        setMatchData({
+                          ...matchData,
+                          conflicts_of_interest: e.target.value,
+                        })
+                      }
+                      multiline
+                      rows={3}
+                      placeholder="Describe any conflicts of interest for this manuscript-reviewer pairing..."
+                      fullWidth
+                    />
+                    <TextField
+                      label="Last Calculated"
+                      type="datetime-local"
+                      value={
+                        matchData.calculated_at
+                          ? new Date(matchData.calculated_at)
+                              .toISOString()
+                              .slice(0, 16)
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setMatchData({
+                          ...matchData,
+                          calculated_at: e.target.value
+                            ? new Date(e.target.value).toISOString()
+                            : new Date().toISOString(),
+                        })
+                      }
+                      InputLabelProps={{ shrink: true }}
+                      helperText="When this match score was calculated"
+                      fullWidth
+                    />
+                  </Stack>
                 </CardContent>
               </Card>
             ) : (

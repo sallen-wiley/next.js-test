@@ -51,7 +51,7 @@ export function useProfileData({
             .from("manuscripts")
             .select("authors, journal")
             .eq("id", manuscriptId)
-            .single();
+            .maybeSingle(); // Use maybeSingle to handle 0 or 1 results
 
           manuscriptData = manuscript;
 
@@ -60,7 +60,7 @@ export function useProfileData({
             .select("conflicts_of_interest")
             .eq("manuscript_id", manuscriptId)
             .eq("reviewer_id", id)
-            .single();
+            .maybeSingle(); // Use maybeSingle to handle 0 or 1 results
 
           manuscriptConflicts = matchData?.conflicts_of_interest || null;
         }
@@ -98,12 +98,12 @@ export function useProfileData({
           .order("invited_date", { ascending: false })
           .limit(3);
 
-        // Fetch retractions
+        // Fetch retractions (may not exist for all reviewers)
         const { data: retractionsData } = await supabase
           .from("reviewer_retractions")
           .select("*")
           .eq("reviewer_id", id)
-          .single();
+          .maybeSingle(); // Use maybeSingle to handle 0 or 1 results
 
         // Combine all data
         const profile: ReviewerProfile = {

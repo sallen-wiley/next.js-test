@@ -348,10 +348,26 @@ export default function ReviewerInvitationDashboard() {
         return false;
       }
 
-      // By default, only show reviewers with a match relationship (match_score > 0)
-      // When searching, include all reviewers from the database
-      if (!searchTerm && reviewer.match_score === 0) {
-        return false;
+      // Filter by search term first - if searching, bypass match_score filter
+      if (searchTerm) {
+        const search = searchTerm.toLowerCase();
+        const matchesSearch =
+          reviewer.name.toLowerCase().includes(search) ||
+          reviewer.affiliation.toLowerCase().includes(search) ||
+          reviewer.expertise_areas.some((area) =>
+            area.toLowerCase().includes(search)
+          );
+
+        // If doesn't match search, exclude immediately
+        if (!matchesSearch) {
+          return false;
+        }
+        // If matches search, continue to other filters below
+      } else {
+        // When NOT searching, only show reviewers with a match relationship (match_score > 0)
+        if (reviewer.match_score === 0) {
+          return false;
+        }
       }
 
       // Filter by availability
@@ -444,18 +460,7 @@ export default function ReviewerInvitationDashboard() {
 
       // Note: publishedInJournal and inAuthorsGroup filters are disabled (coming soon)
 
-      // Filter by search term
-      if (searchTerm) {
-        const search = searchTerm.toLowerCase();
-        return (
-          reviewer.name.toLowerCase().includes(search) ||
-          reviewer.affiliation.toLowerCase().includes(search) ||
-          reviewer.expertise_areas.some((area) =>
-            area.toLowerCase().includes(search)
-          )
-        );
-      }
-
+      // All filters passed
       return true;
     });
 

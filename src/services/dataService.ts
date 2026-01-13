@@ -1848,7 +1848,7 @@ export async function updateReviewer(
       .select("id")
       .eq("email", updates.email)
       .neq("id", reviewerId)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       throw new Error(
@@ -1857,20 +1857,47 @@ export async function updateReviewer(
     }
   }
 
-  const { error } = await supabase
+  // Ensure required fields are not set to empty strings
+  const cleanedUpdates = { ...updates };
+
+  // affiliation is NOT NULL in database, so ensure it has a value
+  if ("affiliation" in cleanedUpdates && !cleanedUpdates.affiliation) {
+    cleanedUpdates.affiliation = "Not specified";
+  }
+
+  // Remove any undefined or empty string values that would cause issues
+  Object.keys(cleanedUpdates).forEach((key) => {
+    const value = cleanedUpdates[key as keyof typeof cleanedUpdates];
+    if (value === undefined || value === "") {
+      delete cleanedUpdates[key as keyof typeof cleanedUpdates];
+    }
+  });
+
+  console.log("Updating reviewer:", { reviewerId, updates: cleanedUpdates });
+
+  const { data, error } = await supabase
     .from("potential_reviewers")
     .update({
-      ...updates,
+      ...cleanedUpdates,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", reviewerId);
+    .eq("id", reviewerId)
+    .select();
+
+  console.log("Update result:", {
+    data,
+    error: error ? JSON.stringify(error) : null,
+  });
 
   if (error) {
     console.error("Error updating reviewer:", {
+      error,
+      errorString: JSON.stringify(error),
       message: error.message,
       details: error.details,
       hint: error.hint,
       code: error.code,
+      updates: cleanedUpdates,
     });
     throw new Error(
       error.message || "Failed to update reviewer. Please check your data."

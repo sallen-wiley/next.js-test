@@ -8,7 +8,6 @@ import {
   Tooltip,
   Paper,
 } from "@mui/material";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 interface MetricsWidgetProps {
@@ -47,7 +46,9 @@ export function MetricsWidget({
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Typography variant="subtitle1">Reports</Typography>
+            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+              Reports
+            </Typography>
             <Tooltip title="Number of reviewer reports for this manuscript">
               <IconButton size="small" sx={{ p: 0.5 }}>
                 <HelpOutlineIcon fontSize="small" />
@@ -56,17 +57,16 @@ export function MetricsWidget({
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
-            <Typography variant="subtitle1">{submittedCount}</Typography>
-            <Typography variant="body1">Submitted</Typography>
-            <Tooltip title="Reports submitted by reviewers">
-              <IconButton size="small" sx={{ p: 0.5 }}>
-                <InfoOutlinedIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+              {submittedCount}
+            </Typography>
+            <Typography variant="body1">Submitted,</Typography>
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <Typography variant="subtitle1">{overdueCount}</Typography>
+            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+              {overdueCount}
+            </Typography>
             <Typography variant="body1">Overdue,</Typography>
           </Box>
 
@@ -85,7 +85,9 @@ export function MetricsWidget({
                 width: "83px",
               }}
             >
-              <Typography variant="subtitle1">{invalidatedCount}</Typography>
+              <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                {invalidatedCount}
+              </Typography>
               <Typography variant="body1">Invalidated</Typography>
             </Box>
             <Divider orientation="vertical" flexItem sx={{ height: "20px" }} />
@@ -102,15 +104,21 @@ export function MetricsWidget({
               gap: 1,
             }}
           >
-            <Typography variant="subtitle1">Invitations</Typography>
+            <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+              Invitations
+            </Typography>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <Typography variant="subtitle1">{expiredCount}</Typography>
+              <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                {expiredCount}
+              </Typography>
               <Typography variant="body1">Expired,</Typography>
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <Typography variant="subtitle1">{revokedCount}</Typography>
+              <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+                {revokedCount}
+              </Typography>
               <Typography variant="body1">Revoked</Typography>
             </Box>
           </Box>
