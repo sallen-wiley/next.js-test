@@ -24,21 +24,18 @@
 - [x] Storybook color & typography showcase pages
 - [x] Session management automation (start/end scripts)
 - [x] Project documentation structure (README, DECISIONS, NEXT_STEPS, SESSION_WORKFLOW)
-- [ ] **Icon system** - Export from Figma, create React components, Storybook showcase
+- [x] **Icon system** - Export from Figma, create React components, Storybook showcase
 
 **Files Created:**
 
 - `/src/themes/rex/` - Complete theme structure with spacing system
 - `/src/components/tokens/RexColorPalette.stories.tsx`
 - `/src/components/tokens/RexTypography.stories.tsx`
+- `/src/components/tokens/IconInventory.stories.tsx` - [📖 Icon Inventory](http://localhost:6006/?path=/story/design-tokens-icon-inventory--default)
+- `/public/icons/rex/` - 60+ SVG icons (16x16)
 - `/docs/rex-migration/` - Project tracking documentation
 - `/.github/scripts/session-start.sh` - Automatic recap on folder open
 - `/.github/scripts/session-end.sh` - Validation & commit workflow
-
-**Pending:**
-
-- `/src/components/rex/icons/` - Custom SVG icon components (awaiting Figma export)
-- `/src/components/tokens/RexIcons.stories.tsx` - Icon showcase
 
 ---
 
