@@ -24,7 +24,7 @@
 - [x] Storybook color & typography showcase pages
 - [x] Session management automation (start/end scripts)
 - [x] Project documentation structure (README, DECISIONS, NEXT_STEPS, SESSION_WORKFLOW)
-- [x] **Icon system** - Export from Figma, create React components, Storybook showcase
+- [x] **Icon system** - Migrated from [Icon Inventory](https://www.figma.com/design/S8L0BxxxYTEBiFO25QXUoI/Icon-inventory?node-id=2-137&t=1RRadEm6bbOX4K5c-1) Figma file, create React components, Storybook showcase
 
 **Files Created:**
 
