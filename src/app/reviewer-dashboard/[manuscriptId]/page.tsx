@@ -39,6 +39,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 import { ArticleDetailsCard } from "../ArticleDetailsCard";
 import { InvitedReviewerCard } from "../InvitedReviewerCard";
@@ -553,6 +554,8 @@ export default function ArticleDetailsPage({
                     <Button
                       variant="contained"
                       color="primary"
+                      size="small"
+                      endIcon={<ChevronRightIcon />}
                       onClick={handleManageReviewers}
                     >
                       Manage Reviewers

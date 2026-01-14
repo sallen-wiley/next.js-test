@@ -7,7 +7,7 @@ import { useTheme, useColorScheme } from "@mui/material/styles";
 import * as wileyColors from "../../themes/wiley/colors";
 import * as sageColors from "../../themes/sage/colors";
 import * as researchexchangeColors from "../../themes/researchexchange/brandColors";
-import * as phenomColors from "../../themes/phenom/colors";
+import { designTokens as phenomDesignTokens } from "../../themes/phenom/brandTokens";
 import * as wiley2025Colors from "../../themes/wiley2025/colors";
 import * as muiColors from "@mui/material/colors";
 
@@ -489,11 +489,13 @@ export const PhenomFullPalette: Story = {
         Phenom Theme - Full Color Palette
       </Typography>
       <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
-        Comprehensive palette with multiple blue and green variations mapped to
-        MUI color structure. Features brand-specific primary blue, dark blue,
-        green, and dark green families.
+        Comprehensive palette from design tokens with primary blue, dark blue,
+        green variants, and system colors (error, warning, success, etc.).
       </Typography>
-      <FullColorPalette colors={phenomColors} title="Phenom Theme Colors" />
+      <FullColorPalette
+        colors={phenomDesignTokens.colorPrimitives}
+        title="Phenom Theme Colors"
+      />
     </Box>
   ),
 };

@@ -21,12 +21,14 @@ import {
   Slider,
   Tooltip,
   IconButton,
+  Chip,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterAltOutlined";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import CloseIcon from "@mui/icons-material/Close";
 import type { PotentialReviewerWithMatch } from "@/lib/supabase";
 import ReviewerCard from "./ReviewerCard";
 
@@ -140,7 +142,7 @@ export function ReviewerSearchAndCards({
           px: 2,
         }}
       >
-        <Tabs value={activeTab} onChange={handleTabChange}>
+        <Tabs value={activeTab} onChange={handleTabChange} textColor="inherit">
           <Tab label="Find Reviewer" />
           <Tab label="Bookmarked Reviewers" />
         </Tabs>
@@ -190,6 +192,215 @@ export function ReviewerSearchAndCards({
               </Grid>
             </Grid>
           </Paper>
+
+          {/* Active Filter Chips */}
+          {(filters.availability.length > 0 ||
+            filters.institutionalEmail ||
+            filters.country !== "" ||
+            filters.responseTimeMax > 0 ||
+            filters.reviewsLast12Months > 0 ||
+            filters.totalReviewsMin > 0 ||
+            filters.totalReviewsMax < 1000 ||
+            filters.assignedManuscriptsMax > 0 ||
+            filters.publicationYearFrom > 0 ||
+            filters.publicationYearTo > 0 ||
+            filters.publishedArticlesMin > 0 ||
+            filters.publishedInJournal ||
+            filters.inAuthorsGroup) && (
+            <Box sx={{ mb: 3 }}>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {/* Availability chips */}
+                {filters.availability.map((status) => (
+                  <Chip
+                    key={status}
+                    label={`Availability: ${
+                      status.charAt(0).toUpperCase() + status.slice(1)
+                    }`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        availability: filters.availability.filter(
+                          (a) => a !== status
+                        ),
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                ))}
+
+                {/* Institutional Email chip */}
+                {filters.institutionalEmail && (
+                  <Chip
+                    label="Institutional Email Only"
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        institutionalEmail: false,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Country chip */}
+                {filters.country !== "" && (
+                  <Chip
+                    label={`Country: ${filters.country}`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        country: "",
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Response Time chip */}
+                {filters.responseTimeMax > 0 && (
+                  <Chip
+                    label={`Response Time: ≤${filters.responseTimeMax} days`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        responseTimeMax: 0,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Reviews Last 12 Months chip */}
+                {filters.reviewsLast12Months > 0 && (
+                  <Chip
+                    label={`Reviews (12mo): ≥${filters.reviewsLast12Months}`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        reviewsLast12Months: 0,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Total Reviews chip */}
+                {(filters.totalReviewsMin > 0 ||
+                  filters.totalReviewsMax < 1000) && (
+                  <Chip
+                    label={`Total Reviews: ${filters.totalReviewsMin}–${
+                      filters.totalReviewsMax === 1000
+                        ? "∞"
+                        : filters.totalReviewsMax
+                    }`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        totalReviewsMin: 0,
+                        totalReviewsMax: 1000,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Assigned Manuscripts chip */}
+                {filters.assignedManuscriptsMax > 0 && (
+                  <Chip
+                    label={`Currently Assigned: ≤${filters.assignedManuscriptsMax}`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        assignedManuscriptsMax: 0,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Publication Years chip */}
+                {(filters.publicationYearFrom > 0 ||
+                  filters.publicationYearTo > 0) && (
+                  <Chip
+                    label={`Publication Years: ${
+                      filters.publicationYearFrom || "—"
+                    }–${filters.publicationYearTo || "—"}`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        publicationYearFrom: 0,
+                        publicationYearTo: 0,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Published Articles chip */}
+                {filters.publishedArticlesMin > 0 && (
+                  <Chip
+                    label={`Published Articles: ≥${filters.publishedArticlesMin}`}
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        publishedArticlesMin: 0,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Published in Journal chip */}
+                {filters.publishedInJournal && (
+                  <Chip
+                    label="Published in Journal"
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        publishedInJournal: false,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* In Authors Group chip */}
+                {filters.inAuthorsGroup && (
+                  <Chip
+                    label="In Authors Group"
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        inAuthorsGroup: false,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
+                {/* Clear All button */}
+                <Chip
+                  label="Clear All Filters"
+                  onClick={onClearFilters}
+                  color="neutral"
+                  variant="filled"
+                  deleteIcon={<CloseIcon />}
+                  onDelete={onClearFilters}
+                />
+              </Stack>
+            </Box>
+          )}
 
           {/* Filter Drawer */}
           <Drawer

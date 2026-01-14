@@ -1,7 +1,6 @@
 "use client";
 import { createTheme, Theme, Palette } from "@mui/material/styles";
 import { lighten, darken } from "@mui/material/styles";
-import * as colors from "./colors";
 import { designTokens } from "./brandTokens";
 
 // Type augmentations for custom theme properties
@@ -67,62 +66,104 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: colors.lightGreen[700],
-      dark: colors.green[700],
-      light: colors.green[400],
-      contrastText: colors.common.white,
+      main: designTokens.colorPrimitives.system.successGreen[100],
+      contrastText: designTokens.colorPrimitives.neutral.white,
     },
     secondary: {
-      main: colors.blue[700],
-      dark: colors.cyan[700],
-      light: colors.blue[400],
+      main: designTokens.colorPrimitives.primary.blue[100],
     },
     error: {
-      main: designTokens.colorPrimitives.system.errorRed[100], // #d0021b from design tokens
+      main: designTokens.colorPrimitives.system.errorRed[100],
     },
     warning: {
-      main: designTokens.colorPrimitives.system.alertYellow[100], // #fcb624 from design tokens
+      main: designTokens.colorPrimitives.system.alertYellow[100],
     },
     info: {
-      main: designTokens.colorPrimitives.secondary.skyBlue[100], // #5ac4e4 from design tokens
+      main: designTokens.colorPrimitives.secondary.skyBlue[100],
     },
     success: {
-      main: designTokens.colorPrimitives.system.successGreen[100], // #81ba40 from design tokens
+      main: designTokens.colorPrimitives.system.successDarkGreen[100],
+      contrastText: designTokens.colorPrimitives.neutral.white,
     },
     neutral: {
-      main: colors.grey[800],
-      light: lighten(colors.grey[800], 0.1),
-      dark: darken(colors.grey[800], 0.1),
-      contrastText: colors.common.white,
+      main: designTokens.colorPrimitives.neutral.grey80,
+      light: lighten(designTokens.colorPrimitives.neutral.grey80, 0.1),
+      dark: darken(designTokens.colorPrimitives.neutral.grey80, 0.1),
+      contrastText: designTokens.colorPrimitives.neutral.white,
     },
     black: {
-      main: colors.common.black,
-      light: lighten(colors.common.black, 0.1),
-      dark: darken(colors.common.black, 0.1),
-      contrastText: colors.common.white,
+      main: designTokens.colorPrimitives.neutral.grey90,
+      light: lighten(designTokens.colorPrimitives.neutral.grey90, 0.1),
+      dark: darken(designTokens.colorPrimitives.neutral.grey90, 0.1),
+      contrastText: designTokens.colorPrimitives.neutral.white,
     },
     white: {
-      main: colors.common.white,
-      light: lighten(colors.common.white, 0.1),
-      dark: darken(colors.common.white, 0.1),
-      contrastText: colors.common.black,
+      main: designTokens.colorPrimitives.neutral.white,
+      light: lighten(designTokens.colorPrimitives.neutral.white, 0.1),
+      dark: darken(designTokens.colorPrimitives.neutral.white, 0.1),
+      contrastText: designTokens.colorPrimitives.neutral.grey90,
     },
     background: {
-      default: colors.grey[100],
-      paper: colors.common.white,
+      default: designTokens.colorPrimitives.neutral.grey20,
+      paper: designTokens.colorPrimitives.neutral.white,
     },
     text: {
-      primary: colors.common.black,
-      secondary: "#4f4f4f",
-      disabled: colors.grey[500],
+      primary: designTokens.colorPrimitives.neutral.grey90,
+      secondary: designTokens.colorPrimitives.neutral.grey70,
+      disabled: designTokens.colorPrimitives.neutral.grey50,
     },
   },
   colorSchemes: {
     dark: {
       palette: {
+        primary: {
+          main: designTokens.colorPrimitives.system.successGreen[80],
+          dark: designTokens.colorPrimitives.system.successGreen[100],
+          light: designTokens.colorPrimitives.system.successGreen[60],
+        },
+        secondary: {
+          main: designTokens.colorPrimitives.primary.blue[60],
+          dark: designTokens.colorPrimitives.primary.blue[80],
+          light: designTokens.colorPrimitives.primary.blue[40],
+        },
+        error: {
+          main: designTokens.colorPrimitives.system.errorRed[100],
+        },
+        warning: {
+          main: designTokens.colorPrimitives.system.alertYellow[100],
+        },
+        info: {
+          main: designTokens.colorPrimitives.secondary.skyBlue[100],
+        },
+        success: {
+          main: designTokens.colorPrimitives.system.successDarkGreen[100],
+        },
+        neutral: {
+          main: designTokens.colorPrimitives.neutral.grey40,
+          light: lighten(designTokens.colorPrimitives.neutral.grey40, 0.1),
+          dark: darken(designTokens.colorPrimitives.neutral.grey40, 0.1),
+          contrastText: designTokens.colorPrimitives.neutral.grey90,
+        },
+        black: {
+          main: designTokens.colorPrimitives.neutral.grey90,
+          light: lighten(designTokens.colorPrimitives.neutral.grey90, 0.1),
+          dark: darken(designTokens.colorPrimitives.neutral.grey90, 0.1),
+          contrastText: designTokens.colorPrimitives.neutral.white,
+        },
+        white: {
+          main: designTokens.colorPrimitives.neutral.white,
+          light: lighten(designTokens.colorPrimitives.neutral.white, 0.1),
+          dark: darken(designTokens.colorPrimitives.neutral.white, 0.1),
+          contrastText: designTokens.colorPrimitives.neutral.grey90,
+        },
         background: {
-          default: "#0A1929",
-          paper: "#132F4C",
+          default: "#121212", // MUI dark mode default
+          paper: "#1e1e1e", // Slightly lighter than default
+        },
+        text: {
+          primary: "rgba(255, 255, 255, 0.87)", // MUI dark mode default
+          secondary: "rgba(255, 255, 255, 0.6)", // MUI dark mode default
+          disabled: "rgba(255, 255, 255, 0.38)", // MUI dark mode default
         },
       },
     },
@@ -298,12 +339,12 @@ let theme = createTheme({
 
   // Custom palette with lightest shades (following MUI docs pattern)
   customPalette: {
-    primaryLightest: colors.blue[50],
-    secondaryLightest: colors.pink[50],
-    errorLightest: colors.red[50],
-    warningLightest: colors.orange[50],
-    infoLightest: colors.blue[50],
-    successLightest: colors.green[50],
+    primaryLightest: designTokens.colorPrimitives.system.successGreen[10],
+    secondaryLightest: designTokens.colorPrimitives.system.successGreen[10],
+    errorLightest: designTokens.colorPrimitives.system.errorRed[10],
+    warningLightest: designTokens.colorPrimitives.system.alertYellow[10],
+    infoLightest: designTokens.colorPrimitives.secondary.skyBlue[10],
+    successLightest: designTokens.colorPrimitives.system.successGreen[10],
   },
 });
 
@@ -348,10 +389,8 @@ theme = createTheme(theme, {
           "&.Mui-focusVisible": {
             outline: "2px solid",
             outlineOffset: "2px",
-            // Color-specific styles that change with color scheme
-            ...theme.applyStyles("light", {
-              outlineColor: theme.palette.common.black,
-            }),
+            outlineColor: theme.palette.common.black,
+
             ...theme.applyStyles("dark", {
               outlineColor: theme.palette.common.white,
             }),
@@ -367,26 +406,65 @@ theme = createTheme(theme, {
     // Theme-aware components (can access theme values)
     MuiChip: {
       styleOverrides: {
-        root: {
-          textTransform: "uppercase",
-          height: "20px",
-          fontSize: "11px",
-          lineHeight: "12px",
-          borderRadius: "2px",
+        root: ({
+          ownerState,
+        }: {
+          ownerState: { onClick?: unknown; onDelete?: unknown };
+        }) => {
+          // Detect if this is a Pill (interactive) vs Tag (display)
+          // Pills have onClick or onDelete handlers, Tags don't
+          const isPill = !!(ownerState.onClick || ownerState.onDelete);
+
+          // Base styles for Tags (non-interactive)
+          const tagStyles = {
+            textTransform: "uppercase" as const,
+            height: "20px",
+            fontSize: "11px",
+            lineHeight: "12px",
+            borderRadius: "2px",
+          };
+
+          // Pills (interactive) have different styling
+          const pillStyles = {
+            textTransform: "none" as const,
+            height: "24px",
+            fontSize: "14px",
+            lineHeight: "16px",
+            borderRadius: "12px",
+          };
+
+          return isPill ? pillStyles : tagStyles;
         },
-        label: {
-          // Chip uses same font weight as buttons
-          fontWeight: theme.typography.button.fontWeight,
-          padding: "4px 8px",
+        label: ({
+          ownerState,
+        }: {
+          ownerState: { onClick?: unknown; onDelete?: unknown };
+        }) => {
+          const isPill = !!(ownerState.onClick || ownerState.onDelete);
+
+          return {
+            // Chip uses same font weight as buttons
+            fontWeight: theme.typography.button.fontWeight,
+            padding: isPill ? "4px 12px" : "4px 8px",
+          };
         },
-        sizeSmall: {
-          height: "16px",
-          fontSize: "11px",
-          lineHeight: "12px",
-          borderRadius: "2px",
-          "& .MuiChip-label": {
-            padding: "4px",
-          },
+        sizeSmall: ({
+          ownerState,
+        }: {
+          ownerState: { onClick?: unknown; onDelete?: unknown };
+        }) => {
+          const isPill = !!(ownerState.onClick || ownerState.onDelete);
+
+          // Small tags are 16px, small pills are 20px
+          return {
+            height: isPill ? "20px" : "16px",
+            fontSize: "11px",
+            lineHeight: "12px",
+            borderRadius: isPill ? "10px" : "2px",
+            "& .MuiChip-label": {
+              padding: isPill ? "4px 8px" : "4px",
+            },
+          };
         },
       },
       variants: [
@@ -401,36 +479,181 @@ theme = createTheme(theme, {
           }) => {
             const color = ownerState.color || "default";
 
-            // Get the main color from palette
-            let mainColor: string;
-            if (color === "default") {
-              mainColor = theme.palette.action.active;
-            } else {
-              // Type-safe palette access for color variants
-              const paletteColor = theme.palette[
-                color as keyof typeof theme.palette
-              ] as { main?: string } | undefined;
-              mainColor = paletteColor?.main || theme.palette.primary.main;
-            }
+            // Get the palette colors for both modes
+            const lightPalette =
+              color === "default"
+                ? theme.palette.primary
+                : (theme.palette[color as keyof typeof theme.palette] as
+                    | { main?: string }
+                    | undefined) || theme.palette.primary;
 
-            // Create very light background by mixing main color with white (90% white blend)
-            const lightBg = lighten(mainColor, 0.9);
+            const darkPalette =
+              color === "default"
+                ? theme.colorSchemes.dark.palette.primary
+                : (theme.colorSchemes.dark.palette[
+                    color as keyof typeof theme.colorSchemes.dark.palette
+                  ] as { main?: string } | undefined) ||
+                  theme.colorSchemes.dark.palette.primary;
 
             return {
-              backgroundColor: lightBg,
-              color: mainColor,
+              // Light mode: very light background with main color text
+              backgroundColor: lighten(lightPalette.main!, 0.9),
+              color: lightPalette.main,
               border: "none",
+
               "&:hover": {
-                backgroundColor: lighten(mainColor, 0.85), // Slightly darker on hover
+                backgroundColor: lighten(lightPalette.main!, 0.85),
               },
               "&:focus": {
-                backgroundColor: lighten(mainColor, 0.85),
+                backgroundColor: lighten(lightPalette.main!, 0.85),
               },
+
+              // Dark mode: slightly darkened background with lighter text
+              ...theme.applyStyles("dark", {
+                backgroundColor: darken(darkPalette.main!, 0.6),
+                color: lighten(darkPalette.main!, 0.3),
+                "&:hover": {
+                  backgroundColor: darken(darkPalette.main!, 0.5),
+                },
+                "&:focus": {
+                  backgroundColor: darken(darkPalette.main!, 0.5),
+                },
+              }),
             };
           },
         },
       ],
     },
+
+    MuiRadio: {
+      styleOverrides: {
+        root: ({
+          theme,
+          ownerState,
+        }: {
+          theme: Theme;
+          ownerState: { color?: string };
+        }) => {
+          // Get the color from ownerState (default to 'primary')
+          const radioColor = ownerState.color || "primary";
+
+          // Get light and dark mode colors from colorSchemes
+          const lightPalette =
+            radioColor === "default"
+              ? theme.palette.primary
+              : (theme.palette[radioColor as keyof typeof theme.palette] as
+                  | {
+                      main?: string;
+                    }
+                  | undefined) || theme.palette.primary;
+
+          const darkPalette =
+            radioColor === "default"
+              ? theme.colorSchemes.dark.palette.primary
+              : (theme.colorSchemes.dark.palette[
+                  radioColor as keyof typeof theme.colorSchemes.dark.palette
+                ] as { main?: string } | undefined) ||
+                theme.colorSchemes.dark.palette.primary;
+
+          return {
+            // Phenom: Radio border uses grey colors, NOT color prop
+            // Default unchecked state (light mode default)
+            color: designTokens.colorPrimitives.neutral.grey40, // #bdbdbd
+
+            // Dark mode override
+            ...theme.applyStyles("dark", {
+              color: designTokens.colorPrimitives.neutral.grey60,
+            }),
+
+            // Hover state: darker grey border
+            "&:hover": {
+              color: designTokens.colorPrimitives.neutral.grey70, // #4f4f4f
+              backgroundColor: "transparent", // Remove hover background
+
+              ...theme.applyStyles("dark", {
+                color: designTokens.colorPrimitives.neutral.grey40,
+              }),
+            },
+
+            // Checked state: border stays grey, inner dot uses color prop
+            "&.Mui-checked": {
+              color: designTokens.colorPrimitives.neutral.grey40, // #bdbdbd - border color
+
+              ...theme.applyStyles("dark", {
+                color: designTokens.colorPrimitives.neutral.grey60,
+              }),
+
+              // The outer circle border (first SVG icon)
+              "& .MuiSvgIcon-root:first-of-type": {
+                color: designTokens.colorPrimitives.neutral.grey40, // #bdbdbd
+
+                ...theme.applyStyles("dark", {
+                  color: designTokens.colorPrimitives.neutral.grey60,
+                }),
+              },
+
+              // The inner dot (second SVG icon) - uses color prop with mode-specific values
+              "& .MuiSvgIcon-root:last-of-type": {
+                color: lightPalette.main,
+
+                ...theme.applyStyles("dark", {
+                  color: darkPalette.main,
+                }),
+              },
+
+              // Checked + hover: darker grey border
+              "&:hover": {
+                color: designTokens.colorPrimitives.neutral.grey70, // #4f4f4f
+                backgroundColor: "transparent",
+
+                ...theme.applyStyles("dark", {
+                  color: designTokens.colorPrimitives.neutral.grey40,
+                }),
+
+                // Keep outer circle grey on hover
+                "& .MuiSvgIcon-root:first-of-type": {
+                  color: designTokens.colorPrimitives.neutral.grey70, // #4f4f4f
+
+                  ...theme.applyStyles("dark", {
+                    color: designTokens.colorPrimitives.neutral.grey40,
+                  }),
+                },
+
+                // Keep inner dot colored on hover with mode-specific values
+                "& .MuiSvgIcon-root:last-of-type": {
+                  color: lightPalette.main,
+
+                  ...theme.applyStyles("dark", {
+                    color: darkPalette.main,
+                  }),
+                },
+              },
+            },
+
+            // Disabled state
+            "&.Mui-disabled": {
+              color: designTokens.colorPrimitives.neutral.grey40, // #bdbdbd
+
+              ...theme.applyStyles("dark", {
+                color: designTokens.colorPrimitives.neutral.grey60,
+              }),
+
+              // Disabled checked state - both circle and dot are grey
+              "&.Mui-checked": {
+                "& .MuiSvgIcon-root": {
+                  color: designTokens.colorPrimitives.neutral.grey40, // #bdbdbd
+
+                  ...theme.applyStyles("dark", {
+                    color: designTokens.colorPrimitives.neutral.grey60,
+                  }),
+                },
+              },
+            },
+          };
+        },
+      },
+    },
+
     MuiAlert: {
       styleOverrides: {
         standardSuccess: ({ theme }: { theme: Theme }) => ({
@@ -555,10 +778,8 @@ theme = createTheme(theme, {
           fontSize: "14px",
           lineHeight: "16px",
           fontWeight: theme.typography.fontWeightBold,
+          color: theme.palette.text.primary,
 
-          ...theme.applyStyles("light", {
-            color: theme.colorSchemes.light.palette.text.primary,
-          }),
           ...theme.applyStyles("dark", {
             color: theme.colorSchemes.dark.palette.text.primary,
           }),
@@ -567,28 +788,51 @@ theme = createTheme(theme, {
           "&.MuiInputLabel-shrink": {
             transform: "none",
           },
+
+          // Phenom: Label stays primary text color on focus (no color change)
+          "&.Mui-focused": {
+            color: theme.palette.text.primary,
+
+            ...theme.applyStyles("dark", {
+              color: theme.colorSchemes.dark.palette.text.primary,
+            }),
+          },
         }),
       },
     },
 
     MuiOutlinedInput: {
       styleOverrides: {
-        root: {
+        root: ({ theme }: { theme: Theme }) => ({
           ".MuiOutlinedInput-notchedOutline": {
             top: 0,
           },
+
+          // Phenom: Focus border turns to primary text color (black/white)
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
             borderWidth: 2,
+            borderColor: theme.palette.text.primary,
+
+            ...theme.applyStyles("dark", {
+              borderColor: theme.colorSchemes.dark.palette.text.primary,
+            }),
           },
-        },
+
+          // Phenom: Hover border turns to primary text color
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: theme.palette.text.primary,
+
+            ...theme.applyStyles("dark", {
+              borderColor: theme.colorSchemes.dark.palette.text.primary,
+            }),
+          },
+        }),
         input: {
           paddingTop: "6px",
           paddingBottom: "6px",
         },
         notchedOutline: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            borderColor: theme.palette.text.secondary,
-          }),
+          borderColor: theme.palette.text.secondary,
 
           // Remove the notch entirely since label is no longer inside
           "& legend": {
@@ -610,18 +854,61 @@ theme = createTheme(theme, {
       styleOverrides: {
         root: ({ theme }: { theme: Theme }) => ({
           fontWeight: theme.typography.button.fontWeight,
-          // Light mode custom colors, dark mode uses defaults
-          ...theme.applyStyles("light", {
-            "&.MuiPaginationItem-outlinedPrimary": {
-              color: theme.palette.primary.main,
+          "&.MuiPaginationItem-outlinedPrimary": {
+            color: theme.palette.primary.main,
+          },
+          "&.MuiPaginationItem-textPrimary": {
+            color: theme.palette.primary.main,
+            "&.Mui-selected": {
+              color: theme.palette.primary.contrastText,
             },
-            "&.MuiPaginationItem-textPrimary": {
-              color: theme.palette.primary.main,
-              "&.Mui-selected": {
-                color: theme.palette.primary.contrastText,
-              },
-            },
-          }),
+          },
+        }),
+      },
+    },
+
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          fontWeight: designTokens.font.button.link.fontWeight, // 600 (semibold)
+          cursor: "pointer",
+        },
+      },
+      defaultProps: {
+        underline: "always", // Phenom design shows always underlined
+      },
+    },
+
+    MuiBreadcrumbs: {
+      styleOverrides: {
+        root: {
+          // Breadcrumb links should use regular font weight, not semibold
+          "& .MuiLink-root": {
+            fontWeight: "400 !important", // Regular weight for breadcrumb links
+          },
+          // Ensure all breadcrumb links (regardless of color prop) use regular weight
+          "& a": {
+            fontWeight: "400 !important",
+          },
+        },
+      },
+    },
+
+    MuiTypography: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          // Only apply to Typography within breadcrumbs
+          ".MuiBreadcrumbs-root &": {
+            fontWeight: "700 !important", // Bold for current item
+            fontSize: "14px !important",
+            lineHeight: "16px !important",
+            textTransform: "uppercase !important",
+            color: designTokens.colorPrimitives.neutral.grey80,
+
+            ...theme.applyStyles("dark", {
+              color: theme.colorSchemes.dark.palette.text.primary,
+            }),
+          },
         }),
       },
     },

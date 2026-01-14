@@ -19,6 +19,8 @@ import {
   FormControl,
   FormLabel,
   FormGroup,
+  Link,
+  Breadcrumbs,
   ToggleButton,
   ToggleButtonGroup,
   ButtonGroup,
@@ -222,6 +224,179 @@ export default function Home() {
                     </Stack>
                   </Grid>
                 </Grid>
+              </Paper>
+            </Grid>
+
+            {/* Links Showcase */}
+            <Grid size={12}>
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{ mt: 4 }}
+              >
+                Links
+              </Typography>
+              <Paper sx={{ p: 3 }}>
+                <Stack spacing={3}>
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Default Links
+                    </Typography>
+                    <Stack spacing={2}>
+                      <Link href="#" color="primary">
+                        Primary Link
+                      </Link>
+                      <Link href="#" color="secondary">
+                        Secondary Link
+                      </Link>
+                      <Link href="#" color="error">
+                        Error Link
+                      </Link>
+                      <Link href="#" color="success">
+                        Success Link
+                      </Link>
+                      <Link href="#" color="text.primary">
+                        Text Primary Link
+                      </Link>
+                    </Stack>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Underline Variants
+                    </Typography>
+                    <Stack spacing={2}>
+                      <Link href="#" underline="none">
+                        No Underline
+                      </Link>
+                      <Link href="#" underline="hover">
+                        Underline on Hover
+                      </Link>
+                      <Link href="#" underline="always">
+                        Always Underlined
+                      </Link>
+                    </Stack>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Inline Links in Text
+                    </Typography>
+                    <Typography variant="body1">
+                      This is a paragraph with an{" "}
+                      <Link href="#" color="primary">
+                        inline link
+                      </Link>{" "}
+                      that demonstrates how links appear within body text. You
+                      can also have{" "}
+                      <Link href="#" color="secondary">
+                        multiple links
+                      </Link>{" "}
+                      in the same paragraph.
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Grid>
+
+            {/* Breadcrumbs Showcase */}
+            <Grid size={12}>
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{ mt: 4 }}
+              >
+                Breadcrumbs
+              </Typography>
+              <Paper sx={{ p: 3 }}>
+                <Stack spacing={3}>
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Basic Breadcrumb
+                    </Typography>
+                    <Breadcrumbs aria-label="breadcrumb">
+                      <Link underline="hover" color="inherit" href="#">
+                        Home
+                      </Link>
+                      <Link underline="hover" color="inherit" href="#">
+                        Category
+                      </Link>
+                      <Typography color="text.primary">Current Page</Typography>
+                    </Breadcrumbs>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      With Color Variants
+                    </Typography>
+                    <Stack spacing={2}>
+                      <Breadcrumbs aria-label="breadcrumb">
+                        <Link underline="hover" color="primary" href="#">
+                          Home
+                        </Link>
+                        <Link underline="hover" color="primary" href="#">
+                          Category
+                        </Link>
+                        <Typography color="text.primary">
+                          Current Page
+                        </Typography>
+                      </Breadcrumbs>
+
+                      <Breadcrumbs aria-label="breadcrumb">
+                        <Link underline="hover" color="secondary" href="#">
+                          Home
+                        </Link>
+                        <Link underline="hover" color="secondary" href="#">
+                          Category
+                        </Link>
+                        <Typography color="text.primary">
+                          Current Page
+                        </Typography>
+                      </Breadcrumbs>
+                    </Stack>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Max Items (Collapsed)
+                    </Typography>
+                    <Breadcrumbs maxItems={3} aria-label="breadcrumb">
+                      <Link underline="hover" color="inherit" href="#">
+                        Home
+                      </Link>
+                      <Link underline="hover" color="inherit" href="#">
+                        Level 1
+                      </Link>
+                      <Link underline="hover" color="inherit" href="#">
+                        Level 2
+                      </Link>
+                      <Link underline="hover" color="inherit" href="#">
+                        Level 3
+                      </Link>
+                      <Link underline="hover" color="inherit" href="#">
+                        Level 4
+                      </Link>
+                      <Typography color="text.primary">Current</Typography>
+                    </Breadcrumbs>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Custom Separator
+                    </Typography>
+                    <Breadcrumbs separator="›" aria-label="breadcrumb">
+                      <Link underline="hover" color="inherit" href="#">
+                        Home
+                      </Link>
+                      <Link underline="hover" color="inherit" href="#">
+                        Category
+                      </Link>
+                      <Typography color="text.primary">Current Page</Typography>
+                    </Breadcrumbs>
+                  </Box>
+                </Stack>
               </Paper>
             </Grid>
 
@@ -649,29 +824,71 @@ export default function Home() {
 
                       <FormControl component="fieldset">
                         <FormLabel component="legend">Radio Buttons</FormLabel>
-                        <RadioGroup defaultValue="option1">
-                          <FormControlLabel
-                            value="option1"
-                            control={<Radio />}
-                            label="Option 1"
-                          />
-                          <FormControlLabel
-                            value="option2"
-                            control={<Radio color="secondary" />}
-                            label="Option 2"
-                          />
-                          <FormControlLabel
-                            value="option3"
-                            control={<Radio color="success" />}
-                            label="Option 3"
-                          />
-                          <FormControlLabel
-                            value="disabled"
-                            disabled
-                            control={<Radio />}
-                            label="Disabled"
-                          />
-                        </RadioGroup>
+
+                        <Stack spacing={2}>
+                          <Box>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Default Colors
+                            </Typography>
+                            <RadioGroup defaultValue="primary">
+                              <FormControlLabel
+                                value="primary"
+                                control={<Radio />}
+                                label="Primary (default)"
+                              />
+                              <FormControlLabel
+                                value="secondary"
+                                control={<Radio color="secondary" />}
+                                label="Secondary"
+                              />
+                              <FormControlLabel
+                                value="error"
+                                control={<Radio color="error" />}
+                                label="Error"
+                              />
+                              <FormControlLabel
+                                value="warning"
+                                control={<Radio color="warning" />}
+                                label="Warning"
+                              />
+                              <FormControlLabel
+                                value="info"
+                                control={<Radio color="info" />}
+                                label="Info"
+                              />
+                              <FormControlLabel
+                                value="success"
+                                control={<Radio color="success" />}
+                                label="Success"
+                              />
+                            </RadioGroup>
+                          </Box>
+
+                          <Box>
+                            <Typography variant="subtitle2" gutterBottom>
+                              States
+                            </Typography>
+                            <RadioGroup defaultValue="default">
+                              <FormControlLabel
+                                value="default"
+                                control={<Radio />}
+                                label="Default state"
+                              />
+                              <FormControlLabel
+                                value="disabled-unchecked"
+                                disabled
+                                control={<Radio />}
+                                label="Disabled unchecked"
+                              />
+                              <FormControlLabel
+                                value="disabled-checked"
+                                disabled
+                                control={<Radio checked />}
+                                label="Disabled checked"
+                              />
+                            </RadioGroup>
+                          </Box>
+                        </Stack>
                       </FormControl>
                     </Stack>
                   </Paper>
