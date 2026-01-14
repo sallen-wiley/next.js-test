@@ -1,0 +1,68 @@
+export const brandColors = {
+  // Primary Heritage
+  "Primary Heritage": {
+    50: "#e8faf8",
+    100: "#a7ede4",
+    200: "#5fdcce",
+    300: "#23ccbc",
+    400: "#00BFB1",
+    500: "#00a89f",
+    600: "#008f8a",
+    700: "#007a76",
+    800: "#006663",
+    900: "#003b44",
+  },
+  // System Negative
+  "System Negative": {
+    50: "#fff1f0",
+    100: "#ffdad6",
+    200: "#ffa39e",
+    300: "#ff7875",
+    400: "#ff6966",
+    500: "#ff4d4f",
+    600: "#cf1322",
+    700: "#a8071a",
+    800: "#820014",
+    900: "#5c0011",
+  },
+  // System Positive
+  "System Positive": {
+    50: "#f6ffed",
+    100: "#e3f7d2",
+    200: "#b7eb8f",
+    300: "#95de64",
+    400: "#73d13d",
+    500: "#52c41a",
+    600: "#389e0d",
+    700: "#237804",
+    800: "#135200",
+    900: "#092b00",
+  },
+  // System Alert
+  "System Alert": {
+    50: "#fffbe6",
+    100: "#fff5cc",
+    200: "#ffe58f",
+    300: "#ffd666",
+    400: "#ffc53d",
+    500: "#faad14",
+    600: "#d48806",
+    700: "#ad6800",
+    800: "#874d00",
+    900: "#613400",
+  },
+  // Neutral (used across themes)
+  Neutral: {
+    0: "#FFFFFF",
+    50: "#f8f8f5",
+    100: "#f2f2eb",
+    200: "#ececec",
+    300: "#d7d7d2",
+    400: "#bfbfbf",
+    500: "#a6a6a1",
+    600: "#8c8c88",
+    700: "#5d5e5c",
+    800: "#302f2f",
+    900: "#000000",
+  },
+};

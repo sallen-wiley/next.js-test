@@ -25,7 +25,7 @@ git push wiley main
 
 ### Multi-Theme System
 
-- **Theme Engine**: Located in `src/themes/` with 6 themes (default, sage, wiley, wiley2025, phenom, tech)
+- **Theme Engine**: Located in `src/themes/` with 6 themes (default, sage, wiley, wiley2025, phenom, researchexchange)
 - **Color Mode Support**: Each theme supports light/dark/system modes via MUI's `useColorScheme()`
 - **Theme Context**: `src/contexts/ThemeContext.tsx` manages theme state with localStorage persistence
 - **Logo Context**: `src/contexts/LogoContext.tsx` coordinates logo switching with themes

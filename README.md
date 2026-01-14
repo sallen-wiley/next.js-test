@@ -25,7 +25,7 @@ git push wiley main     # Organization repo
 ## Features
 
 - **Material-UI v7**: Latest version with emotion styling
-- **Multiple Themes**: 6 custom themes (Default, Sage, Tech, Wiley, Wiley2025, Phenom) with dynamic switching
+- **Multiple Themes**: 6 custom themes (Default, Sage, Research Exchange, Wiley, Wiley2025, Phenom) with dynamic switching
 - **Light/Dark Mode**: Full color mode support across all themes
 - **Supabase Integration**: PostgreSQL database with authentication and RBAC (configurable)
 - **Custom Components**: Reusable UI components with theme-aware styling
@@ -124,7 +124,7 @@ Open [http://localhost:6006](http://localhost:6006) to view the Storybook interf
 The project includes a sophisticated theming system with:
 
 - **Dynamic theme switching** via FloatingActionButton (FAB)
-- **6 Brand Themes**: Default, Sage, Tech, Wiley, Wiley2025, Phenom
+- **6 Brand Themes**: Default, Sage, Research Exchange, Wiley, Wiley2025, Phenom
 - **Light/Dark/System Mode**: Full color mode support for all themes
 - **Custom color palettes** with extended neutral, black, and white variants
 - **Custom typography scales** per theme with web font integration

@@ -80,7 +80,7 @@ Create a `Default` story with:
 - Full `argTypes` configuration for all visual/UI impacting props
 - Meaningful default `args`
 - Control types: `select`, `boolean`, `text`, `number` as appropriate
-- **Test across themes**: Ensure stories work with Wiley/Sage/Tech themes and Light/Dark modes
+- **Test across themes**: Ensure stories work with Wiley/Sage/Research Exchange themes and Light/Dark modes
 
 ### 2. Error States (when applicable)
 
@@ -102,7 +102,7 @@ For components with color props, include these options:
 
 - `"primary"`, `"secondary"`, `"error"`, `"warning"`, `"info"`, `"success"`
 - **Custom theme colors** (available in Wiley theme): `"black"`, `"white"`, `"neutral"`
-- **Note**: Custom colors may not be available in all themes (Sage, Tech) - test across theme switcher
+- **Note**: Custom colors may not be available in all themes (Sage, Research Exchange) - test across theme switcher
 
 ## Props Focus
 

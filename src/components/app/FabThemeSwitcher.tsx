@@ -58,11 +58,11 @@ const themeMetadata: Record<
     color: "#0F172A",
     icon: "⚡",
   },
-  tech: {
-    label: "Tech",
-    description: "Developer-focused monospace",
-    color: "#00C853",
-    icon: "💻",
+  researchexchange: {
+    label: "Research Exchange",
+    description: "Clean, modern research platform",
+    color: "#00a89f",
+    icon: "🔬",
   },
 };
 

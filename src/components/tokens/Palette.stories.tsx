@@ -6,7 +6,7 @@ import { useTheme, useColorScheme } from "@mui/material/styles";
 // Import all theme color palettes
 import * as wileyColors from "../../themes/wiley/colors";
 import * as sageColors from "../../themes/sage/colors";
-import * as techColors from "../../themes/tech/colors";
+import * as researchexchangeColors from "../../themes/researchexchange/brandColors";
 import * as phenomColors from "../../themes/phenom/colors";
 import * as wiley2025Colors from "../../themes/wiley2025/colors";
 import * as muiColors from "@mui/material/colors";
@@ -464,17 +464,20 @@ export const SageFullPalette: Story = {
   ),
 };
 
-export const TechFullPalette: Story = {
+export const ResearchExchangeFullPalette: Story = {
   render: () => (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Tech Theme - Full Color Palette
+        Research Exchange Theme - Full Color Palette
       </Typography>
       <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
-        Modern tech palette with blue and gray color families optimized for
-        technology/development brands.
+        Clean, modern palette optimized for research and academic exchange
+        platforms.
       </Typography>
-      <FullColorPalette colors={techColors} title="Tech Theme Colors" />
+      <FullColorPalette
+        colors={researchexchangeColors}
+        title="Research Exchange Theme Colors"
+      />
     </Box>
   ),
 };

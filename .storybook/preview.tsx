@@ -10,7 +10,7 @@ import {
   wileyTheme,
   wiley2025Theme,
   phenomTheme,
-  techTheme,
+  researchexchangeTheme,
 } from "../src/themes";
 
 // Component that handles color scheme switching using MUI's useColorScheme hook
@@ -69,7 +69,7 @@ const preview: Preview = {
           { value: "wiley", title: "Wiley Theme" },
           { value: "wiley2025", title: "Wiley 2025 Theme" },
           { value: "phenom", title: "Phenom Theme" },
-          { value: "tech", title: "Tech Theme" },
+          { value: "researchexchange", title: "Research Exchange Theme" },
         ],
         dynamicTitle: true,
       },
@@ -101,7 +101,7 @@ const preview: Preview = {
         wiley: wileyTheme,
         wiley2025: wiley2025Theme,
         phenom: phenomTheme,
-        tech: techTheme,
+        researchexchange: researchexchangeTheme,
       };
 
       const selectedTheme =
