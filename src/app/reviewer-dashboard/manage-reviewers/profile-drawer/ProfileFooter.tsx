@@ -10,13 +10,13 @@ export function FeedbackWidget() {
         How accurate is this reviewer suggestion?
       </Typography>
       <Stack direction="row" spacing={1}>
-        <Button variant="outlined" size="small">
+        <Button color="neutral" variant="outlined" size="small">
           Not accurate at all
         </Button>
-        <Button variant="outlined" size="small">
+        <Button color="neutral" variant="outlined" size="small">
           Somewhat accurate
         </Button>
-        <Button variant="outlined" size="small">
+        <Button color="neutral" variant="outlined" size="small">
           Accurate
         </Button>
       </Stack>

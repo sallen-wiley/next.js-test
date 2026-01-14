@@ -180,23 +180,18 @@ export default function ReviewerCard({
                 {reviewer.expertise_areas.slice(0, 5).join("; ")}
                 {reviewer.expertise_areas.length > 5 ? ";" : ""}
               </Typography>
-              <MuiLink
-                component="button"
-                type="button"
+              <Button
+                variant="text"
+                size="small"
                 color="secondary"
-                underline="hover"
                 onClick={() => onViewProfile(reviewer.id)}
+                endIcon={<ChevronRightIcon />}
                 sx={{
-                  fontWeight: 600,
                   alignSelf: "flex-start",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
                 }}
               >
                 View Publications
-                <ChevronRightIcon sx={{ fontSize: 16 }} />
-              </MuiLink>
+              </Button>
             </Stack>
           </Grid>
 
@@ -207,22 +202,18 @@ export default function ReviewerCard({
             justifyContent={{ xs: "flex-start", md: "flex-end" }}
             alignItems="flex-start"
           >
-            <MuiLink
-              component="button"
-              type="button"
+            <Button
+              variant="text"
+              size="small"
               color="secondary"
-              underline="hover"
               onClick={() => onViewProfile(reviewer.id)}
+              endIcon={<OpenInFullIcon />}
               sx={{
                 whiteSpace: "nowrap",
-                display: "flex",
-                alignItems: "center",
-                gap: 0.5,
               }}
             >
               Open Profile
-              <OpenInFullIcon sx={{ fontSize: 16 }} />
-            </MuiLink>
+            </Button>
           </Grid>
         </Grid>
       </Box>

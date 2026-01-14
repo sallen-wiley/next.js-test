@@ -212,6 +212,7 @@ export default function ArticleDetailsPage({
         {/* Left: Back button and breadcrumb navigation */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Button
+            color="neutral"
             startIcon={<ArrowBackIcon />}
             onClick={() => router.push("/reviewer-dashboard")}
           >

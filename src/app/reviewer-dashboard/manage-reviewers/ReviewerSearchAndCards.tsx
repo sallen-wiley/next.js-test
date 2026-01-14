@@ -19,11 +19,14 @@ import {
   FormControlLabel,
   Checkbox,
   Slider,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterAltOutlined";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { PotentialReviewerWithMatch } from "@/lib/supabase";
 import ReviewerCard from "./ReviewerCard";
 
@@ -169,6 +172,9 @@ export function ReviewerSearchAndCards({
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Search by keyword, email or name..."
+                  slotProps={{
+                    input: { sx: { backgroundColor: "background.paper" } },
+                  }}
                 />
               </Grid>
               <Grid size={{ xs: 12, md: "auto" }}>
@@ -1264,17 +1270,75 @@ export function ReviewerSearchAndCards({
               )}
             </Box>
           ) : (
-            <Stack spacing={2}>
-              {filteredReviewers.map((reviewer) => (
-                <ReviewerCard
-                  key={reviewer.id}
-                  reviewer={reviewer}
-                  onInvite={onInviteReviewer}
-                  onAddToQueue={onAddToQueue}
-                  onViewProfile={onViewProfile}
-                />
-              ))}
-            </Stack>
+            <>
+              {/* Default Suggestions Title (only shown when not searching) */}
+              {!searchTerm && (
+                <Box
+                  sx={{
+                    mb: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Typography variant="h6" component="h2">
+                    Default suggestions ({filteredReviewers.length})
+                  </Typography>
+                  <Tooltip
+                    title={
+                      <Box sx={{ p: 1 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ mb: 1, fontWeight: "bold" }}
+                        >
+                          How are default suggestions created?
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                          <strong>Phase 1: Analyze Manuscript</strong>
+                          <br />
+                          We start by extracting key concepts from your
+                          manuscript&apos;s title and abstract to understand its
+                          main topics.
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                          <strong>Phase 2: Match Expertise</strong>
+                          <br />
+                          PKG compares these topics with reviewer profiles using
+                          semantic search and keyword matching, while checking
+                          for conflicts of interest and recent publications.
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Phase 3: Rank and Recommend</strong>
+                          <br />
+                          Reviewers are ranked based on topic relevance,
+                          availability, and past response behavior. You&apos;ll
+                          receive a ranked list with profiles and reasons for
+                          each suggestion.
+                        </Typography>
+                      </Box>
+                    }
+                    arrow
+                    placement="right"
+                  >
+                    <IconButton size="small" sx={{ color: "text.secondary" }}>
+                      <HelpOutlineIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              )}
+
+              <Stack spacing={2}>
+                {filteredReviewers.map((reviewer) => (
+                  <ReviewerCard
+                    key={reviewer.id}
+                    reviewer={reviewer}
+                    onInvite={onInviteReviewer}
+                    onAddToQueue={onAddToQueue}
+                    onViewProfile={onViewProfile}
+                  />
+                ))}
+              </Stack>
+            </>
           )}
         </Box>
       )}

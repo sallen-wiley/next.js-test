@@ -1074,7 +1074,11 @@ export default function ReviewerInvitationDashboard() {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Button startIcon={<ArrowBackIcon />} onClick={handleBackToArticle}>
+            <Button
+              color="neutral"
+              startIcon={<ArrowBackIcon />}
+              onClick={handleBackToArticle}
+            >
               Back
             </Button>
             <Breadcrumbs

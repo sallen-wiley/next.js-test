@@ -193,8 +193,8 @@ let theme = createTheme({
       letterSpacing: "0.01071em",
     },
     button: {
-      fontFamily: "'Inter'", // Use Inter for buttons (changed from IBM Plex Mono)
-      fontWeight: 500,
+      fontFamily: "'Inter'",
+      fontWeight: 600,
       fontSize: "0.875rem",
       lineHeight: 1.75,
       letterSpacing: "0.02857em",

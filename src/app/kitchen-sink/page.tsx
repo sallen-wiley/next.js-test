@@ -320,6 +320,74 @@ export default function Home() {
                           </Button>
                         </Stack>
                       </Box>
+
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Button Sizes
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          sx={{ gap: 1 }}
+                          alignItems="center"
+                        >
+                          <Button variant="contained" size="small">
+                            Small
+                          </Button>
+                          <Button variant="contained" size="medium">
+                            Medium
+                          </Button>
+                          <Button variant="contained" size="large">
+                            Large
+                          </Button>
+                          <Button variant="contained" size="extraLarge">
+                            Extra Large
+                          </Button>
+                        </Stack>
+                      </Box>
+
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Buttons with Icons
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          sx={{ gap: 1 }}
+                          alignItems="center"
+                        >
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<SendIcon />}
+                          >
+                            Send
+                          </Button>
+                          <Button
+                            variant="contained"
+                            size="medium"
+                            startIcon={<SendIcon />}
+                          >
+                            Send
+                          </Button>
+                          <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<SendIcon />}
+                          >
+                            Send
+                          </Button>
+                          <Button
+                            variant="contained"
+                            size="extraLarge"
+                            startIcon={<SendIcon />}
+                          >
+                            Send
+                          </Button>
+                        </Stack>
+                      </Box>
                     </Stack>
                   </Paper>
                 </Grid>

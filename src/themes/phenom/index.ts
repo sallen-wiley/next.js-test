@@ -368,6 +368,7 @@ theme = createTheme(theme, {
     MuiChip: {
       styleOverrides: {
         root: {
+          textTransform: "uppercase",
           height: "20px",
           fontSize: "11px",
           lineHeight: "12px",
@@ -580,6 +581,10 @@ theme = createTheme(theme, {
             borderWidth: 2,
           },
         },
+        input: {
+          paddingTop: "6px",
+          paddingBottom: "6px",
+        },
         notchedOutline: ({ theme }: { theme: Theme }) => ({
           ...theme.applyStyles("light", {
             borderColor: theme.palette.text.secondary,
@@ -652,8 +657,17 @@ theme = createTheme(theme, {
             },
           ],
         },
+        sizeSmall: {
+          textTransform: "none",
+          fontSize: "0.875rem",
+        },
+        outlinedNeutral: {
+          "&:not(:hover):not(:focus):not(:active):not(.Mui-focusVisible)": {
+            backgroundColor: "#fff",
+          },
+        },
         text: {
-          textDecoration: "underline",
+          // textDecoration: "underline",
           "&:hover": {
             textDecoration: "underline",
           },
