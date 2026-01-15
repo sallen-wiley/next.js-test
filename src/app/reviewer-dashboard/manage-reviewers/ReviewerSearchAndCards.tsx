@@ -1338,14 +1338,9 @@ export function ReviewerSearchAndCards({
                                 })
                               }
                               size="small"
-                              disabled
                             />
                           }
-                          label={
-                            <Typography variant="body2" color="text.secondary">
-                              Yes (coming soon)
-                            </Typography>
-                          }
+                          label={<Typography variant="body2">Yes</Typography>}
                         />
                       </Box>
 
@@ -1371,11 +1366,7 @@ export function ReviewerSearchAndCards({
                               disabled
                             />
                           }
-                          label={
-                            <Typography variant="body2" color="text.secondary">
-                              Yes (coming soon)
-                            </Typography>
-                          }
+                          label={<Typography variant="body2">Yes</Typography>}
                         />
                       </Box>
                     </Stack>
@@ -1492,7 +1483,11 @@ export function ReviewerSearchAndCards({
                     gap: 1,
                   }}
                 >
-                  <Typography variant="h6" component="h2">
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: 700 }}
+                    component="h2"
+                  >
                     Default suggestions ({filteredReviewers.length})
                   </Typography>
                   <Tooltip

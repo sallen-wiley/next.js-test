@@ -7,21 +7,29 @@ import * as React from "react";
 export function useReviewerProfileDrawer() {
   const [open, setOpen] = React.useState(false);
   const [reviewerId, setReviewerId] = React.useState<string | null>(null);
+  const [scrollToSection, setScrollToSection] = React.useState<
+    string | undefined
+  >(undefined);
 
-  const openDrawer = (id: string) => {
+  const openDrawer = (id: string, section?: string) => {
     setReviewerId(id);
+    setScrollToSection(section);
     setOpen(true);
   };
 
   const closeDrawer = () => {
     setOpen(false);
-    // Keep reviewerId until drawer close animation completes
-    setTimeout(() => setReviewerId(null), 300);
+    // Keep reviewerId and scrollToSection until drawer close animation completes
+    setTimeout(() => {
+      setReviewerId(null);
+      setScrollToSection(undefined);
+    }, 300);
   };
 
   return {
     open,
     reviewerId,
+    scrollToSection,
     openDrawer,
     closeDrawer,
   };

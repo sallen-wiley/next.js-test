@@ -33,6 +33,7 @@ interface ReviewerProfileDrawerProps {
   onClose: () => void;
   reviewerId: string | null;
   manuscriptId?: string | null;
+  scrollToSection?: string;
   onAddToQueue?: (reviewerId: string) => void;
   onInvite?: (reviewerId: string) => void;
   onReviewerUpdated?: () => void;
@@ -43,6 +44,7 @@ export default function ReviewerProfileDrawer({
   onClose,
   reviewerId,
   manuscriptId,
+  scrollToSection,
   onAddToQueue,
   onInvite,
   onReviewerUpdated,
@@ -53,6 +55,26 @@ export default function ReviewerProfileDrawer({
     reviewerId,
     manuscriptId,
   });
+
+  const publicationsSectionRef = React.useRef<HTMLDivElement>(null);
+
+  // Scroll to section when drawer opens with scrollToSection parameter
+  React.useEffect(() => {
+    if (
+      open &&
+      scrollToSection === "publications" &&
+      publicationsSectionRef.current &&
+      !loading
+    ) {
+      // Wait for drawer animation to complete before scrolling
+      setTimeout(() => {
+        publicationsSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 350);
+    }
+  }, [open, scrollToSection, loading]);
 
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [publicationsDialogOpen, setPublicationsDialogOpen] =
@@ -242,6 +264,7 @@ export default function ReviewerProfileDrawer({
               <Divider />
               <StrongWeakPoints reviewer={reviewer} />
               <PublicationsSection
+                ref={publicationsSectionRef}
                 reviewer={reviewer}
                 isAdmin={isAdmin()}
                 onManagePublications={handleOpenPublicationsDialog}

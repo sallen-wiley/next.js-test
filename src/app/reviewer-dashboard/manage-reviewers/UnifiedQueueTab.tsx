@@ -10,7 +10,6 @@ import {
   Stack,
   Divider,
 } from "@mui/material";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -247,9 +246,12 @@ export default function QueueInvitationsTab({
                   ))}
                 </Stack>
               ) : (
-                <Box sx={{ py: 3, textAlign: "center" }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No invitations have been sent yet
+                <Box sx={{ py: 1, textAlign: "center" }}>
+                  <Typography variant="h6" sx={{ mb: 0.5 }}>
+                    No reviewers invited yet.
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    Select a reviewer from the left panel.
                   </Typography>
                 </Box>
               )}
@@ -321,15 +323,12 @@ export default function QueueInvitationsTab({
                   </SortableContext>
                 </DndContext>
               ) : (
-                <Box sx={{ py: 3, textAlign: "center" }}>
-                  <HourglassEmptyIcon
-                    sx={{ fontSize: 48, color: "text.secondary", mb: 1 }}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    No reviewers queued for invitation
+                <Box sx={{ py: 1, textAlign: "center" }}>
+                  <Typography variant="h6" sx={{ mb: 0.5 }}>
+                    No reviewers queued yet.
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Add reviewers from the &quot;Potential Reviewers&quot; tab
+                  <Typography variant="body1" color="text.secondary">
+                    Select a reviewer from the left panel.
                   </Typography>
                 </Box>
               )}

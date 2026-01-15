@@ -22,17 +22,16 @@ interface PublicationsSectionProps {
   onManagePublications?: () => void;
 }
 
-export function PublicationsSection({
-  reviewer,
-  isAdmin,
-  onManagePublications,
-}: PublicationsSectionProps) {
+export const PublicationsSection = React.forwardRef<
+  HTMLDivElement,
+  PublicationsSectionProps
+>(({ reviewer, isAdmin, onManagePublications }, ref) => {
   if (!reviewer.publications || reviewer.publications.length === 0) {
     return null;
   }
 
   return (
-    <Box>
+    <Box ref={ref}>
       <Stack
         direction="row"
         justifyContent="space-between"
@@ -112,7 +111,9 @@ export function PublicationsSection({
       </Stack>
     </Box>
   );
-}
+});
+
+PublicationsSection.displayName = "PublicationsSection";
 
 interface KeywordsSection {
   expertise_areas: string[];

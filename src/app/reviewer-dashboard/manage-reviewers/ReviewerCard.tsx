@@ -34,7 +34,7 @@ type ReviewerCardProps = {
   reviewer: PotentialReviewerWithMatch;
   onInvite: (reviewerId: string) => void;
   onAddToQueue: (reviewerId: string) => void;
-  onViewProfile: (reviewerId: string) => void;
+  onViewProfile: (reviewerId: string, scrollToSection?: string) => void;
 };
 
 const getAvailabilityColor = (status: string) => {
@@ -123,7 +123,7 @@ export default function ReviewerCard({
               <Grid container spacing={2} alignItems="flex-start">
                 {/* Reviewer Details */}
                 <Grid size={{ xs: 12, md: "grow" }}>
-                  <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                  <Stack spacing={0.5} sx={{ minWidth: 0 }}>
                     <Stack
                       direction="row"
                       spacing={1}
@@ -197,7 +197,7 @@ export default function ReviewerCard({
 
                 {/* Reviewer Stats + View Publications */}
                 <Grid size={{ xs: 12, md: "grow" }}>
-                  <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                  <Stack sx={{ minWidth: 0 }}>
                     <Typography variant="body1" color="text.secondary">
                       <Box component="span" fontWeight={700}>
                         Currently reviewing:
@@ -216,18 +216,22 @@ export default function ReviewerCard({
                       </Box>{" "}
                       {reviewer.completed_reviews || 0}
                     </Typography>
-                    <Button
-                      variant="text"
-                      size="small"
-                      color="secondary"
-                      onClick={() => onViewProfile(reviewer.id)}
-                      endIcon={<ChevronRightIcon />}
-                      sx={{
-                        alignSelf: "flex-start",
-                      }}
-                    >
-                      View Publications
-                    </Button>
+                    {reviewer.related_publications_count > 0 && (
+                      <Button
+                        variant="text"
+                        size="small"
+                        color="secondary"
+                        onClick={() =>
+                          onViewProfile(reviewer.id, "publications")
+                        }
+                        endIcon={<ChevronRightIcon />}
+                        sx={{
+                          alignSelf: "flex-start",
+                        }}
+                      >
+                        View Publications
+                      </Button>
+                    )}
                   </Stack>
                 </Grid>
               </Grid>

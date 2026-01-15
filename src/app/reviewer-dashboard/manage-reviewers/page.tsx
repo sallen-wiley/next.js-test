@@ -40,6 +40,10 @@ import { ArticleDetailsCard } from "../ArticleDetailsCard";
 import { ReviewerSearchAndCards } from "./ReviewerSearchAndCards";
 import { InvitationsAndQueuePanel } from "./InvitationsAndQueuePanel";
 import { InviteReviewerModal } from "./InviteReviewerModal";
+import {
+  InvitationEmailModal,
+  type EmailCustomization,
+} from "./InvitationEmailModal";
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 import ReviewerProfileDrawer from "./ReviewerProfileDrawer";
 import { useReviewerProfileDrawer } from "@/hooks/useReviewerProfileDrawer";
@@ -318,10 +322,19 @@ export default function ReviewerInvitationDashboard() {
   // Invite reviewer modal state
   const [inviteModalOpen, setInviteModalOpen] = React.useState(false);
 
+  // Email preview modal state
+  const [emailModalOpen, setEmailModalOpen] = React.useState(false);
+  const [emailModalAction, setEmailModalAction] = React.useState<
+    "invite" | "queue"
+  >("invite");
+  const [selectedReviewerForEmail, setSelectedReviewerForEmail] =
+    React.useState<PotentialReviewerWithMatch | null>(null);
+
   // Reviewer profile drawer state
   const {
     open: profileDrawerOpen,
     reviewerId: profileReviewerId,
+    scrollToSection: profileScrollToSection,
     openDrawer: openProfileDrawer,
     closeDrawer: closeProfileDrawer,
   } = useReviewerProfileDrawer();
@@ -473,7 +486,14 @@ export default function ReviewerInvitationDashboard() {
         }
       }
 
-      // Note: publishedInJournal and inAuthorsGroup filters are disabled (coming soon)
+      // Filter by published in journal
+      if (filters.publishedInJournal) {
+        if (!reviewer.published_in_journal) {
+          return false;
+        }
+      }
+
+      // Note: inAuthorsGroup filter is disabled (coming soon)
 
       // All filters passed
       return true;
@@ -532,29 +552,58 @@ export default function ReviewerInvitationDashboard() {
     const reviewer = potentialReviewers.find((r) => r.id === reviewerId);
     if (!reviewer || !manuscriptId) return;
 
-    showConfirmDialog(
-      "Send Invitation",
-      `Send review invitation to ${reviewer.name} (${reviewer.affiliation})?`,
-      async () => {
-        try {
-          // Send the invitation to the database
-          await sendInvitation(manuscriptId, reviewerId);
-
-          // Multi-select removed; no selection to update
-
-          // Refresh the reviewers with status and invitations to show the new invitation
-          await refreshReviewerData();
-
-          showSnackbar(`Invitation sent to ${reviewer.name}`, "success");
-
-          // Open right panel to show the result
-          setTimeout(() => setRightPanelOpen(true), 1000);
-        } catch (error) {
-          console.error("Error sending invitation:", error);
-          showSnackbar("Failed to send invitation", "error");
+    // Check if email modal is already open for a different reviewer
+    if (
+      emailModalOpen &&
+      selectedReviewerForEmail &&
+      selectedReviewerForEmail.id !== reviewerId
+    ) {
+      showConfirmDialog(
+        "Discard Current Draft?",
+        `You have an unsaved email draft for ${selectedReviewerForEmail.name}. Opening a new invitation will discard your changes. Continue?`,
+        () => {
+          // User confirmed - switch to new reviewer
+          setSelectedReviewerForEmail(reviewer);
+          setEmailModalAction("invite");
+          setEmailModalOpen(true);
         }
-      }
-    );
+      );
+      return;
+    }
+
+    // Open email preview modal
+    setSelectedReviewerForEmail(reviewer);
+    setEmailModalAction("invite");
+    setEmailModalOpen(true);
+  };
+
+  const handleConfirmInvite = async (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _customization: EmailCustomization
+  ) => {
+    const reviewer = selectedReviewerForEmail;
+    if (!reviewer || !manuscriptId) return;
+
+    setEmailModalOpen(false);
+
+    try {
+      // Send the invitation to the database
+      // TODO: Pass customization data (editorComment, signature) to backend
+      await sendInvitation(manuscriptId, reviewer.id);
+
+      // Multi-select removed; no selection to update
+
+      // Refresh the reviewers with status and invitations to show the new invitation
+      await refreshReviewerData();
+
+      showSnackbar(`Invitation sent to ${reviewer.name}`, "success");
+
+      // Open right panel to show the result
+      setTimeout(() => setRightPanelOpen(true), 1000);
+    } catch (error) {
+      console.error("Error sending invitation:", error);
+      showSnackbar("Failed to send invitation", "error");
+    }
   };
 
   // New handlers for unified queue/invitations tab
@@ -807,8 +856,9 @@ export default function ReviewerInvitationDashboard() {
     );
 
   const handleViewProfile = () => {
-    // Placeholder for future implementation
-    showSnackbar("Profile view coming soon", "info");
+    if (selectedReviewerForAction?.id) {
+      openProfileDrawer(selectedReviewerForAction.id);
+    }
     handleActionMenuClose();
   };
 
@@ -915,37 +965,66 @@ export default function ReviewerInvitationDashboard() {
     const reviewer = potentialReviewers.find((r) => r.id === reviewerId);
     if (!reviewer || !manuscriptId) return;
 
-    showConfirmDialog(
-      "Add to Queue",
-      `Add ${reviewer.name} to the invitation queue?`,
-      async () => {
-        try {
-          // Add to database
-          const newQueueItem = await addToQueue(
-            manuscriptId,
-            reviewerId,
-            "normal"
-          );
-
-          if (newQueueItem) {
-            // Refresh all data including queue
-            await refreshAllReviewerData();
-
-            // Multi-select removed; no selection to update
-            showSnackbar(
-              `${reviewer.name} added to queue (Position ${newQueueItem.queue_position})`,
-              "info"
-            );
-
-            // Switch to queue tab to show the result
-            setTimeout(() => setRightPanelOpen(true), 1000);
-          }
-        } catch (error) {
-          console.error("Error adding to queue:", error);
-          showSnackbar("Failed to add reviewer to queue", "error");
+    // Check if email modal is already open for a different reviewer
+    if (
+      emailModalOpen &&
+      selectedReviewerForEmail &&
+      selectedReviewerForEmail.id !== reviewerId
+    ) {
+      showConfirmDialog(
+        "Discard Current Draft?",
+        `You have an unsaved email draft for ${selectedReviewerForEmail.name}. Opening a new invitation will discard your changes. Continue?`,
+        () => {
+          // User confirmed - switch to new reviewer
+          setSelectedReviewerForEmail(reviewer);
+          setEmailModalAction("queue");
+          setEmailModalOpen(true);
         }
+      );
+      return;
+    }
+
+    // Open email preview modal
+    setSelectedReviewerForEmail(reviewer);
+    setEmailModalAction("queue");
+    setEmailModalOpen(true);
+  };
+
+  const handleConfirmQueue = async (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _customization: EmailCustomization
+  ) => {
+    const reviewer = selectedReviewerForEmail;
+    if (!reviewer || !manuscriptId) return;
+
+    setEmailModalOpen(false);
+
+    try {
+      // Add to database
+      // TODO: Pass customization data (editorComment, signature) to backend
+      const newQueueItem = await addToQueue(
+        manuscriptId,
+        reviewer.id,
+        "normal"
+      );
+
+      if (newQueueItem) {
+        // Refresh all data including queue
+        await refreshAllReviewerData();
+
+        // Multi-select removed; no selection to update
+        showSnackbar(
+          `${reviewer.name} added to queue (Position ${newQueueItem.queue_position})`,
+          "info"
+        );
+
+        // Switch to queue tab to show the result
+        setTimeout(() => setRightPanelOpen(true), 1000);
       }
-    );
+    } catch (error) {
+      console.error("Error adding to queue:", error);
+      showSnackbar("Failed to add reviewer to queue", "error");
+    }
   };
 
   // Batch invite removed
@@ -1318,6 +1397,20 @@ export default function ReviewerInvitationDashboard() {
         </DialogActions>
       </Dialog>
 
+      {/* Email Preview Modal */}
+      <InvitationEmailModal
+        open={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        onConfirm={
+          emailModalAction === "invite"
+            ? handleConfirmInvite
+            : handleConfirmQueue
+        }
+        reviewer={selectedReviewerForEmail}
+        manuscript={manuscript}
+        action={emailModalAction}
+      />
+
       {/* Success Snackbar */}
       <Snackbar
         open={snackbarOpen}
@@ -1340,6 +1433,7 @@ export default function ReviewerInvitationDashboard() {
         onClose={closeProfileDrawer}
         reviewerId={profileReviewerId}
         manuscriptId={manuscriptId}
+        scrollToSection={profileScrollToSection}
         onAddToQueue={manuscriptId ? handleAddToQueue : undefined}
         onInvite={manuscriptId ? handleInviteReviewer : undefined}
         onReviewerUpdated={refreshReviewerLists}
