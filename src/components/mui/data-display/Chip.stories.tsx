@@ -442,7 +442,7 @@ export const StatusTags: Story = {
           <Typography variant="body2">Initial submission</Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Chip label="UNDER REVIEW" color="warning" variant="filled" />
+          <Chip label="PEER REVIEW" color="warning" variant="filled" />
           <Typography variant="body2">Currently being reviewed</Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">

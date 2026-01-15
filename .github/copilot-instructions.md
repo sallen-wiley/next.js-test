@@ -585,9 +585,15 @@ The reviewer dashboard implements a two-page workflow:
 ### Adding New Theme
 
 1. Create folder in `src/themes/[theme-name]/`
-2. Implement `index.ts`, `palette.ts`, `typography.ts`, `components.ts`
-3. Update `src/themes/index.ts` themes object
-4. Add metadata to `FabThemeSwitcher.tsx`
+2. Implement `index.ts` (all theme configuration in one file for portability)
+3. Optionally add `brandTokens.ts` or similar for design system tokens if needed
+4. Update `src/themes/index.ts` themes object (import, add to themes object, export)
+5. Add metadata to `FabThemeSwitcher.tsx`
+
+**Theme Structure Philosophy:**
+- Keep themes as portable as possible - ideally single `index.ts` file
+- Use design tokens directly in theme rather than translating to separate MUI color format files
+- Add supporting file (e.g., `brandTokens.ts`) only when design system tokens are needed
 
 ### Creating Figma-Connected Component
 

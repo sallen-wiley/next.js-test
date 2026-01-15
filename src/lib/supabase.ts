@@ -179,6 +179,7 @@ export interface PotentialReviewerWithMatch extends PotentialReviewer {
   solo_authored_count: number; // Count of publications with single author
   publications_last_5_years: number; // Count of publications from last 5 years
   days_since_last_review: number | null; // Days since last_review_completed (null if never)
+  published_in_journal: boolean; // True if reviewer has published in the manuscript's journal
 }
 
 // Combined view of reviewer with their current status in the invitation workflow

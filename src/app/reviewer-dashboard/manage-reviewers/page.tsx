@@ -33,6 +33,7 @@ import {
   cancelReview,
   addReviewer,
   clearManuscriptReviewers,
+  checkReviewersPublishedInJournal,
 } from "@/services/dataService";
 import ReviewerActionMenu from "./ReviewerActionMenu";
 import { ArticleDetailsCard } from "../ArticleDetailsCard";
@@ -190,6 +191,9 @@ export default function ReviewerInvitationDashboard() {
     []
   );
   const [invitations, setInvitations] = React.useState<ReviewInvitation[]>([]);
+  const [publishedInJournalMap, setPublishedInJournalMap] = React.useState<
+    Map<string, boolean>
+  >(new Map());
 
   // Combined reviewers list: merge suggested reviewers with match scores and all other reviewers
   const potentialReviewers = React.useMemo(() => {
@@ -223,17 +227,18 @@ export default function ReviewerInvitationDashboard() {
           days_since_last_review: daysSince(
             reviewerData.last_review_completed as string | undefined
           ),
+          published_in_journal: publishedInJournalMap.get(reviewer.id) || false,
         });
       }
     });
 
     return combined;
-  }, [allReviewers, suggestedReviewers]);
+  }, [allReviewers, suggestedReviewers, publishedInJournalMap]);
 
   // Fetch all data when manuscript is loaded
   React.useEffect(() => {
     async function fetchAllData() {
-      if (!manuscriptId) return;
+      if (!manuscriptId || !manuscript) return;
 
       setLoading(true);
       try {
@@ -255,6 +260,16 @@ export default function ReviewerInvitationDashboard() {
         setAllReviewers(allReviewersData);
         setReviewersWithStatus(statusData);
         setQueueControl(queueControlData);
+
+        // Check journal publications for all reviewers
+        if (manuscript.journal && allReviewersData.length > 0) {
+          const reviewerIds = allReviewersData.map((r) => r.id);
+          const journalMap = await checkReviewersPublishedInJournal(
+            reviewerIds,
+            manuscript.journal
+          );
+          setPublishedInJournalMap(journalMap);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
         showSnackbar("Failed to load data", "error");
@@ -264,7 +279,7 @@ export default function ReviewerInvitationDashboard() {
     }
 
     fetchAllData();
-  }, [manuscriptId]);
+  }, [manuscriptId, manuscript]);
 
   const [sortBy] = React.useState<string>("match_score");
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -585,6 +600,31 @@ export default function ReviewerInvitationDashboard() {
       refreshInvitations(),
       refreshQueue(),
     ]);
+  };
+
+  // Refresh reviewer lists when a reviewer is edited
+  const refreshReviewerLists = async () => {
+    if (!manuscriptId || !manuscript) return;
+    try {
+      const [reviewersData, allReviewersData] = await Promise.all([
+        getManuscriptReviewers(manuscriptId),
+        getAllReviewers(),
+      ]);
+      setSuggestedReviewers(reviewersData);
+      setAllReviewers(allReviewersData);
+
+      // Also refresh journal publications if needed
+      if (manuscript.journal && allReviewersData.length > 0) {
+        const reviewerIds = allReviewersData.map((r) => r.id);
+        const journalMap = await checkReviewersPublishedInJournal(
+          reviewerIds,
+          manuscript.journal
+        );
+        setPublishedInJournalMap(journalMap);
+      }
+    } catch (error) {
+      console.error("Error refreshing reviewer lists:", error);
+    }
   };
 
   const handleActionMenuOpen = (
@@ -1302,6 +1342,7 @@ export default function ReviewerInvitationDashboard() {
         manuscriptId={manuscriptId}
         onAddToQueue={manuscriptId ? handleAddToQueue : undefined}
         onInvite={manuscriptId ? handleInviteReviewer : undefined}
+        onReviewerUpdated={refreshReviewerLists}
       />
 
       {/* Invite Reviewer Manually Modal */}

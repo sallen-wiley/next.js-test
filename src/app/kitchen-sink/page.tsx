@@ -758,8 +758,14 @@ export default function Home() {
                         fullWidth
                       />
                       <TextField
-                        label="Outlined"
+                        label="Outlined (Default Size)"
                         variant="outlined"
+                        fullWidth
+                      />
+                      <TextField
+                        label="Outlined (Small Size)"
+                        variant="outlined"
+                        size="small"
                         fullWidth
                       />
                       <TextField label="Filled" variant="filled" fullWidth />
@@ -771,8 +777,15 @@ export default function Home() {
                         placeholder="Type multiple lines here..."
                       />
                       <TextField
-                        label="Number Input"
+                        label="Number Input (Default)"
                         type="number"
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                      />
+                      <TextField
+                        label="Number Input (Small)"
+                        type="number"
+                        size="small"
                         InputLabelProps={{ shrink: true }}
                         fullWidth
                       />

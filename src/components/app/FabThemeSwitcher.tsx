@@ -58,6 +58,12 @@ const themeMetadata: Record<
     color: "#0F172A",
     icon: "⚡",
   },
+  phenomXResearchExchange: {
+    label: "Phenom X Research Exchange",
+    description: "Combined Phenom and Research Exchange theme",
+    color: "#0A7388",
+    icon: "🔬⚡",
+  },
   researchexchange: {
     label: "Research Exchange",
     description: "Clean, modern research platform",

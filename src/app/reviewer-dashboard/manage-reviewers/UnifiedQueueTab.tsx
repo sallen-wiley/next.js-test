@@ -348,7 +348,8 @@ export default function QueueInvitationsTab({
           alignItems: "center",
           justifyContent: "space-between",
           bgcolor: "background.paper",
-          boxShadow: "0px -6px 16px 0px rgba(0,0,0,0.08)",
+          boxShadow: (theme) =>
+            `0px -6px 16px 0px color-mix(in srgb, ${theme.palette.neutral.main} 8%, transparent)`,
         }}
       >
         <Button

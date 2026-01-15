@@ -35,6 +35,7 @@ interface ReviewerProfileDrawerProps {
   manuscriptId?: string | null;
   onAddToQueue?: (reviewerId: string) => void;
   onInvite?: (reviewerId: string) => void;
+  onReviewerUpdated?: () => void;
 }
 
 export default function ReviewerProfileDrawer({
@@ -44,6 +45,7 @@ export default function ReviewerProfileDrawer({
   manuscriptId,
   onAddToQueue,
   onInvite,
+  onReviewerUpdated,
 }: ReviewerProfileDrawerProps) {
   const { isAdmin } = useRoleAccess();
   const { reviewer, loading, error, refetch } = useProfileData({
@@ -113,6 +115,9 @@ export default function ReviewerProfileDrawer({
       showSnackbar("Reviewer updated successfully", "success");
       handleCloseEditDialog();
       refetch();
+      if (onReviewerUpdated) {
+        onReviewerUpdated();
+      }
     } catch (error) {
       console.error("Error updating reviewer:", error);
       showSnackbar(

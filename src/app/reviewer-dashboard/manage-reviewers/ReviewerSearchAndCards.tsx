@@ -26,7 +26,7 @@ import {
 import FilterListIcon from "@mui/icons-material/FilterAltOutlined";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import EmailIcon from "@mui/icons-material/Email";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import CloseIcon from "@mui/icons-material/Close";
 import type { PotentialReviewerWithMatch } from "@/lib/supabase";
@@ -148,8 +148,8 @@ export function ReviewerSearchAndCards({
         </Tabs>
         <Button
           variant="text"
-          color="primary"
-          startIcon={<PersonAddIcon />}
+          color="neutral"
+          startIcon={<EmailIcon />}
           onClick={onInviteManually}
           sx={{ textTransform: "none" }}
         >

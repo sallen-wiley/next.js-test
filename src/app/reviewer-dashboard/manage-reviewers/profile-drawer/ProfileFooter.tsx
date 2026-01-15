@@ -44,7 +44,8 @@ export function ProfileFooter({
         p: 3,
         borderTop: 1,
         borderColor: "divider",
-        boxShadow: "0px -6px 16px rgba(0, 0, 0, 0.08)",
+        boxShadow: (theme) =>
+          `0px -6px 16px color-mix(in srgb, ${theme.palette.neutral.main} 8%, transparent)`,
       }}
     >
       <Button

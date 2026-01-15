@@ -8,7 +8,6 @@ import {
   Box,
   Tooltip,
   Button,
-  Link as MuiLink,
   Grid,
 } from "@mui/material";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
@@ -81,121 +80,161 @@ export default function ReviewerCard({
         borderColor: (theme) => (theme.vars || theme).palette.divider,
       }}
     >
-      {/* Top content as 3 columns */}
+      {/* Top content as 2 columns */}
       <Box sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="flex-start">
-          {/* Column 1: Availability, Name + ORCID, Affiliation, Email (grow) */}
+          {/* Column 1: Chips + Nested Grid (Reviewer Details + Stats) */}
           <Grid size={{ xs: 12, md: "grow" }}>
-            <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-              <Chip
-                label={reviewer.availability_status}
-                size="small"
-                variant="outlined"
-                color={
-                  getAvailabilityColor(reviewer.availability_status) as
-                    | "success"
-                    | "warning"
-                    | "error"
-                    | "info"
-                    | "default"
-                }
-                sx={{
-                  textTransform: "uppercase",
-                  alignSelf: "flex-start",
-                }}
-              />
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                sx={{ minWidth: 0 }}
-              >
-                <Typography variant="body1" fontWeight={700} noWrap>
-                  {reviewer.name}
-                </Typography>
-                {orcidId && (
-                  <Tooltip title={orcidId}>
-                    <OrcidIcon
+            <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+              {/* Row 1: Chips */}
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                {reviewer.published_in_journal && (
+                  <Tooltip title="Has published in this journal">
+                    <Chip
+                      label="Journal Author"
+                      size="small"
+                      variant="outlined"
+                      color="neutral"
                       sx={{
-                        fontSize: 16,
+                        textTransform: "uppercase",
                       }}
                     />
                   </Tooltip>
                 )}
-                <Tooltip title="Add to bookmarks">
-                  <IconButton size="small">
-                    <BookmarkBorderIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
+                <Chip
+                  label={reviewer.availability_status}
+                  size="small"
+                  variant="outlined"
+                  color={
+                    getAvailabilityColor(reviewer.availability_status) as
+                      | "success"
+                      | "warning"
+                      | "error"
+                      | "info"
+                      | "default"
+                  }
+                  sx={{
+                    textTransform: "uppercase",
+                  }}
+                />
               </Stack>
-              <Typography variant="body1" color="text.secondary" noWrap>
-                {reviewer.affiliation}
-              </Typography>
-              <Stack
-                direction="row"
-                spacing={0.75}
-                alignItems="center"
-                sx={{ minWidth: 0 }}
-              >
-                <Typography variant="body1" color="text.secondary" noWrap>
-                  {reviewer.email}
-                </Typography>
-                {reviewer.email_is_institutional && (
-                  <Tooltip title="Institutional email">
-                    <CheckCircleIcon
+
+              {/* Row 2: Nested Grid - Reviewer Details + Metrics */}
+              <Grid container spacing={2} alignItems="flex-start">
+                {/* Reviewer Details */}
+                <Grid size={{ xs: 12, md: "grow" }}>
+                  <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      sx={{ minWidth: 0 }}
+                    >
+                      <Typography variant="h6" noWrap>
+                        {reviewer.name}
+                      </Typography>
+                      {orcidId && (
+                        <Tooltip title={orcidId}>
+                          <OrcidIcon
+                            sx={{
+                              fontSize: 16,
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+                      <Tooltip title="Add to bookmarks">
+                        <IconButton size="small">
+                          <BookmarkBorderIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
                       sx={{
-                        fontSize: 16,
-                        color: (theme) =>
-                          (theme.vars || theme).palette.success.main,
+                        overflow: "hidden",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
                       }}
-                    />
-                  </Tooltip>
-                )}
-                {conflict && (
-                  <Tooltip title="Conflict of interest">
-                    <CancelIcon
+                    >
+                      {reviewer.affiliation}
+                    </Typography>
+                    <Stack
+                      direction="row"
+                      spacing={0.75}
+                      alignItems="center"
+                      sx={{ minWidth: 0 }}
+                    >
+                      <Typography variant="body1" color="text.secondary" noWrap>
+                        {reviewer.email}
+                      </Typography>
+                      {reviewer.email_is_institutional && (
+                        <Tooltip title="Institutional email">
+                          <CheckCircleIcon
+                            sx={{
+                              fontSize: 16,
+                              color: (theme) =>
+                                (theme.vars || theme).palette.success.main,
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+                      {conflict && (
+                        <Tooltip title="Conflict of interest">
+                          <CancelIcon
+                            sx={{
+                              fontSize: 16,
+                              color: (theme) =>
+                                (theme.vars || theme).palette.error.main,
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+                    </Stack>
+                  </Stack>
+                </Grid>
+
+                {/* Reviewer Stats + View Publications */}
+                <Grid size={{ xs: 12, md: "grow" }}>
+                  <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      <Box component="span" fontWeight={700}>
+                        Currently reviewing:
+                      </Box>{" "}
+                      {reviewer.currently_reviewing || 0}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      <Box component="span" fontWeight={700}>
+                        Pending invitations:
+                      </Box>{" "}
+                      {reviewer.current_review_load || 0}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      <Box component="span" fontWeight={700}>
+                        Complete reviews:
+                      </Box>{" "}
+                      {reviewer.completed_reviews || 0}
+                    </Typography>
+                    <Button
+                      variant="text"
+                      size="small"
+                      color="secondary"
+                      onClick={() => onViewProfile(reviewer.id)}
+                      endIcon={<ChevronRightIcon />}
                       sx={{
-                        fontSize: 16,
-                        color: (theme) =>
-                          (theme.vars || theme).palette.error.main,
+                        alignSelf: "flex-start",
                       }}
-                    />
-                  </Tooltip>
-                )}
-              </Stack>
+                    >
+                      View Publications
+                    </Button>
+                  </Stack>
+                </Grid>
+              </Grid>
             </Stack>
           </Grid>
 
-          {/* Column 2: Keywords (first 5) + View Publications (grow) */}
-          <Grid size={{ xs: 12, md: "grow" }}>
-            <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-              <Typography variant="body1" color="text.secondary">
-                Top keywords:
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ whiteSpace: "normal" }}
-              >
-                {reviewer.expertise_areas.slice(0, 5).join("; ")}
-                {reviewer.expertise_areas.length > 5 ? ";" : ""}
-              </Typography>
-              <Button
-                variant="text"
-                size="small"
-                color="secondary"
-                onClick={() => onViewProfile(reviewer.id)}
-                endIcon={<ChevronRightIcon />}
-                sx={{
-                  alignSelf: "flex-start",
-                }}
-              >
-                View Publications
-              </Button>
-            </Stack>
-          </Grid>
-
-          {/* Column 3: Open Profile action (auto width) */}
+          {/* Column 2: Open Profile action (auto width) */}
           <Grid
             size={{ xs: "auto", md: "auto" }}
             display="flex"
@@ -225,22 +264,22 @@ export default function ReviewerCard({
           borderTop: "1px solid",
           borderColor: (theme) => (theme.vars || theme).palette.divider,
           px: 2,
-          py: 1.5,
+          py: 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: 2,
         }}
       >
-        <MuiLink
-          component="button"
-          type="button"
-          color="secondary"
-          underline="hover"
-          sx={{ fontWeight: 600 }}
-        >
-          Rate Suggestion
-        </MuiLink>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="body1" color="text.secondary">
+            <Box component="span" fontWeight={700}>
+              Relevant keywords:
+            </Box>{" "}
+            {reviewer.expertise_areas.slice(0, 5).join("; ")}
+            {reviewer.expertise_areas.length > 5 ? ";" : ""}
+          </Typography>
+        </Box>
 
         <Stack direction="row" spacing={1} alignItems="center">
           <Button

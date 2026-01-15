@@ -227,6 +227,15 @@ export async function getUserManuscripts(
 export async function getManuscriptReviewers(
   manuscriptId: string
 ): Promise<PotentialReviewerWithMatch[]> {
+  // First, get the manuscript to know its journal
+  const { data: manuscript } = await supabase
+    .from("manuscripts")
+    .select("journal")
+    .eq("id", manuscriptId)
+    .single();
+
+  const manuscriptJournal = manuscript?.journal || "";
+
   const { data, error } = await supabase
     .from("reviewer_manuscript_matches")
     .select(
@@ -253,7 +262,7 @@ export async function getManuscriptReviewers(
   // Fetch publications for all reviewers in parallel
   const { data: publications } = await supabase
     .from("reviewer_publications")
-    .select("id, reviewer_id, authors, publication_date")
+    .select("id, reviewer_id, authors, publication_date, journal_name")
     .in("reviewer_id", reviewerIds);
 
   // Fetch related publications for this manuscript
@@ -266,7 +275,7 @@ export async function getManuscriptReviewers(
     (relatedPublications || []).map((m) => m.publication_id)
   );
 
-  // Group publications by reviewer_id
+  // Group publications by reviewer_id and track journal matches
   const publicationsByReviewer = new Map<
     string,
     Array<{
@@ -276,6 +285,8 @@ export async function getManuscriptReviewers(
     }>
   >();
 
+  const publishedInJournalByReviewer = new Map<string, boolean>();
+
   (publications || []).forEach((pub) => {
     const existing = publicationsByReviewer.get(pub.reviewer_id) || [];
     existing.push({
@@ -284,6 +295,15 @@ export async function getManuscriptReviewers(
       is_related: relatedPublicationIds.has(pub.id), // Check if related to this manuscript
     });
     publicationsByReviewer.set(pub.reviewer_id, existing);
+
+    // Check if this publication is in the same journal as the manuscript
+    if (
+      pub.journal_name &&
+      manuscriptJournal &&
+      pub.journal_name.toLowerCase() === manuscriptJournal.toLowerCase()
+    ) {
+      publishedInJournalByReviewer.set(pub.reviewer_id, true);
+    }
   });
 
   // Transform the nested structure to include match_score, conflicts, and calculated fields
@@ -305,6 +325,8 @@ export async function getManuscriptReviewers(
       solo_authored_count: countSoloAuthored(reviewerPubs),
       publications_last_5_years: countRecentPublications(reviewerPubs, 5),
       days_since_last_review: daysSince(reviewer.last_review_completed),
+      published_in_journal:
+        publishedInJournalByReviewer.get(reviewer.id) || false,
     };
   });
 }
@@ -325,6 +347,39 @@ export async function getAllReviewers(): Promise<PotentialReviewer[]> {
   }
 
   return data || [];
+}
+
+/**
+ * Check which reviewers have published in a specific journal
+ * @param reviewerIds - Array of reviewer UUIDs
+ * @param journalName - Name of the journal to check
+ * @returns Map of reviewer ID -> boolean (true if published in journal)
+ */
+export async function checkReviewersPublishedInJournal(
+  reviewerIds: string[],
+  journalName: string
+): Promise<Map<string, boolean>> {
+  if (reviewerIds.length === 0 || !journalName) {
+    return new Map();
+  }
+
+  const { data: publications } = await supabase
+    .from("reviewer_publications")
+    .select("reviewer_id, journal_name")
+    .in("reviewer_id", reviewerIds);
+
+  const publishedInJournal = new Map<string, boolean>();
+
+  (publications || []).forEach((pub) => {
+    if (
+      pub.journal_name &&
+      pub.journal_name.toLowerCase() === journalName.toLowerCase()
+    ) {
+      publishedInJournal.set(pub.reviewer_id, true);
+    }
+  });
+
+  return publishedInJournal;
 }
 
 /**

@@ -3,6 +3,7 @@ import sageTheme from "./sage";
 import wileyTheme from "./wiley";
 import wiley2025Theme from "./wiley2025";
 import phenomTheme from "./phenom";
+import phenomXResearchExchangeTheme from "./phenomXResearchExchange";
 import researchexchangeTheme from "./researchexchange";
 
 // Available themes with different typography approaches
@@ -12,6 +13,7 @@ export const themes = {
   wiley: wileyTheme,
   wiley2025: wiley2025Theme,
   phenom: phenomTheme,
+  phenomXResearchExchange: phenomXResearchExchangeTheme,
   researchexchange: researchexchangeTheme,
 };
 
@@ -29,6 +31,7 @@ export {
   wileyTheme,
   wiley2025Theme,
   phenomTheme,
+  phenomXResearchExchangeTheme,
   researchexchangeTheme,
 };
 export default themes;

@@ -56,8 +56,8 @@ export const MANUSCRIPT_STATUS_CONFIG: Record<ManuscriptStatus, StatusConfig> =
       category: "action-required",
     },
     under_review: {
-      label: "Under Review",
-      color: "primary",
+      label: "Peer Review",
+      color: "warning",
       description: "In peer review process",
       category: "in-progress",
     },

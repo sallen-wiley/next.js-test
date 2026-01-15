@@ -168,26 +168,34 @@ export default function ManuscriptManager() {
     if (manuscript) {
       setEditingManuscript(manuscript);
       setFormData({
-        title: manuscript.title,
-        authors: manuscript.authors,
-        journal: manuscript.journal,
+        title: manuscript.title || "",
+        authors: manuscript.authors || [],
+        journal: manuscript.journal || "",
         submission_date: toDateInputValue(manuscript.submission_date),
-        doi: manuscript.doi,
-        abstract: manuscript.abstract,
-        keywords: manuscript.keywords,
-        subject_area: manuscript.subject_area,
+        doi: manuscript.doi || undefined,
+        abstract: manuscript.abstract || "",
+        keywords: manuscript.keywords || [],
+        subject_area: manuscript.subject_area || "",
         status: manuscript.status,
         version: manuscript.version || 1,
         manuscript_tags: manuscript.manuscript_tags || [],
         editorIds: manuscript.assignedEditorIds || [],
-        system_id: (manuscript as unknown as Record<string, unknown>)
-          .system_id as string | undefined,
-        submission_id: (manuscript as unknown as Record<string, unknown>)
-          .submission_id as string | undefined,
-        custom_id: (manuscript as unknown as Record<string, unknown>)
-          .custom_id as string | undefined,
-        article_type: (manuscript as unknown as Record<string, unknown>)
-          .article_type as string | undefined,
+        system_id:
+          ((manuscript as unknown as Record<string, unknown>).system_id as
+            | string
+            | null) || undefined,
+        submission_id:
+          ((manuscript as unknown as Record<string, unknown>).submission_id as
+            | string
+            | null) || undefined,
+        custom_id:
+          ((manuscript as unknown as Record<string, unknown>).custom_id as
+            | string
+            | null) || undefined,
+        article_type:
+          ((manuscript as unknown as Record<string, unknown>).article_type as
+            | string
+            | null) || undefined,
       });
     } else {
       setEditingManuscript(null);

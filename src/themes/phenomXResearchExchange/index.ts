@@ -41,12 +41,8 @@ declare module "@mui/material/styles" {
 
 // Note: Button size overrides are now declared in global types.ts
 
-// Theme using Nunito with adjusted vertical metrics
-// Nunito has inherently large vertical metrics that require compensation
-// See: https://github.com/googlefonts/nunito/issues/28
-
-// Line height multiplier to compensate for Nunito's large vertical metrics
-const LINE_HEIGHT_ADJUSTMENT = 1.1; // 10% increase for better alignment
+// Theme using Inter for Phenom X Research Exchange
+// Modern, clean design with teal primary colors
 
 // Step 1: Create base theme with palette, typography, shape, etc.
 let theme = createTheme({
@@ -66,25 +62,22 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: designTokens.colorPrimitives.system.successGreen[100],
-      contrastText: designTokens.colorPrimitives.neutral.white,
+      main: designTokens.colorPrimitives.primary.teal[700],
     },
     secondary: {
-      main: designTokens.colorPrimitives.primary.blue[100],
+      main: designTokens.colorPrimitives.primary.teal[900],
     },
     error: {
-      main: designTokens.colorPrimitives.system.errorRed[100],
+      main: designTokens.colorPrimitives.system.errorRed[600],
     },
     warning: {
-      main: designTokens.colorPrimitives.system.alertDarkYellow[100],
-      contrastText: designTokens.colorPrimitives.neutral.white,
+      main: designTokens.colorPrimitives.secondary.yellow[800],
     },
     info: {
-      main: designTokens.colorPrimitives.secondary.skyBlue[100],
+      main: designTokens.colorPrimitives.primary.teal[600],
     },
     success: {
-      main: designTokens.colorPrimitives.system.successDarkGreen[100],
-      contrastText: designTokens.colorPrimitives.neutral.white,
+      main: designTokens.colorPrimitives.secondary.green[700],
     },
     neutral: {
       main: designTokens.colorPrimitives.neutral.grey80,
@@ -118,26 +111,26 @@ let theme = createTheme({
     dark: {
       palette: {
         primary: {
-          main: designTokens.colorPrimitives.system.successGreen[80],
-          dark: designTokens.colorPrimitives.system.successGreen[100],
-          light: designTokens.colorPrimitives.system.successGreen[60],
+          main: designTokens.colorPrimitives.primary.teal[500],
+          dark: designTokens.colorPrimitives.primary.teal[700],
+          light: designTokens.colorPrimitives.primary.teal[300],
         },
         secondary: {
-          main: designTokens.colorPrimitives.primary.blue[60],
-          dark: designTokens.colorPrimitives.primary.blue[80],
-          light: designTokens.colorPrimitives.primary.blue[40],
+          main: designTokens.colorPrimitives.primary.teal[700],
+          dark: designTokens.colorPrimitives.primary.teal[900],
+          light: designTokens.colorPrimitives.primary.teal[500],
         },
         error: {
-          main: designTokens.colorPrimitives.system.errorRed[100],
+          main: designTokens.colorPrimitives.system.errorRed[400],
         },
         warning: {
-          main: designTokens.colorPrimitives.system.alertYellow[100],
+          main: designTokens.colorPrimitives.secondary.yellow[500],
         },
         info: {
-          main: designTokens.colorPrimitives.secondary.skyBlue[100],
+          main: designTokens.colorPrimitives.primary.teal[400],
         },
         success: {
-          main: designTokens.colorPrimitives.system.successDarkGreen[100],
+          main: designTokens.colorPrimitives.secondary.green[500],
         },
         neutral: {
           main: designTokens.colorPrimitives.neutral.grey40,
@@ -170,7 +163,7 @@ let theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "'Nunito'",
+    fontFamily: "'Inter'",
 
     // Map design tokens to MUI typography variants
     // Using Wiley theme sizes for h1-h3 to maintain consistent layouts across themes
@@ -198,9 +191,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.title.hero.fontSize}px`,
       fontWeight: designTokens.font.title.hero.fontWeight,
       lineHeight:
-        (designTokens.font.title.hero.lineHeight /
-          designTokens.font.title.hero.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.title.hero.lineHeight /
+        designTokens.font.title.hero.fontSize,
       letterSpacing: `${designTokens.font.title.hero.letterSpacing}px`,
       textTransform:
         designTokens.font.title.hero.textCase === "uppercase"
@@ -212,9 +204,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.title.primary.fontSize}px`,
       fontWeight: designTokens.font.title.primary.fontWeight,
       lineHeight:
-        (designTokens.font.title.primary.lineHeight /
-          designTokens.font.title.primary.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.title.primary.lineHeight /
+        designTokens.font.title.primary.fontSize,
       letterSpacing: `${designTokens.font.title.primary.letterSpacing}px`,
       textTransform:
         designTokens.font.title.primary.textCase === "uppercase"
@@ -226,9 +217,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.title.small.fontSize}px`,
       fontWeight: designTokens.font.title.small.fontWeight,
       lineHeight:
-        (designTokens.font.title.small.lineHeight /
-          designTokens.font.title.small.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.title.small.lineHeight /
+        designTokens.font.title.small.fontSize,
       letterSpacing: `${designTokens.font.title.small.letterSpacing}px`,
       textTransform:
         designTokens.font.title.small.textCase === "uppercase"
@@ -240,9 +230,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.label.bold.fontSize}px`,
       fontWeight: designTokens.font.label.bold.fontWeight,
       lineHeight:
-        (designTokens.font.label.bold.lineHeight /
-          designTokens.font.label.bold.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.label.bold.lineHeight /
+        designTokens.font.label.bold.fontSize,
       letterSpacing: `${designTokens.font.label.bold.letterSpacing}px`,
       textTransform:
         designTokens.font.label.bold.textCase === "uppercase"
@@ -254,9 +243,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.label.regular.fontSize}px`,
       fontWeight: designTokens.font.label.regular.fontWeight,
       lineHeight:
-        (designTokens.font.label.regular.lineHeight /
-          designTokens.font.label.regular.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.label.regular.lineHeight /
+        designTokens.font.label.regular.fontSize,
       letterSpacing: `${designTokens.font.label.regular.letterSpacing}px`,
       textTransform:
         designTokens.font.label.regular.textCase === "uppercase"
@@ -268,9 +256,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.paragraph.primary.fontSize}px`,
       fontWeight: designTokens.font.paragraph.primary.fontWeight,
       lineHeight:
-        (designTokens.font.paragraph.primary.lineHeight /
-          designTokens.font.paragraph.primary.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.paragraph.primary.lineHeight /
+        designTokens.font.paragraph.primary.fontSize,
       letterSpacing: `${designTokens.font.paragraph.primary.letterSpacing}px`,
       textTransform:
         designTokens.font.paragraph.primary.textCase === "uppercase"
@@ -282,9 +269,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.paragraph.message.fontSize}px`,
       fontWeight: designTokens.font.paragraph.message.fontWeight,
       lineHeight:
-        (designTokens.font.paragraph.message.lineHeight /
-          designTokens.font.paragraph.message.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.paragraph.message.lineHeight /
+        designTokens.font.paragraph.message.fontSize,
       letterSpacing: `${designTokens.font.paragraph.message.letterSpacing}px`,
       textTransform:
         designTokens.font.paragraph.message.textCase === "uppercase"
@@ -296,9 +282,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.button.large.fontSize}px`,
       fontWeight: designTokens.font.button.large.fontWeight,
       lineHeight:
-        (designTokens.font.button.large.lineHeight /
-          designTokens.font.button.large.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.button.large.lineHeight /
+        designTokens.font.button.large.fontSize,
       letterSpacing: `${designTokens.font.button.large.letterSpacing}px`,
       textTransform:
         designTokens.font.button.large.textCase === "uppercase"
@@ -310,9 +295,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.indicator.small.fontSize}px`,
       fontWeight: designTokens.font.indicator.small.fontWeight,
       lineHeight:
-        (designTokens.font.indicator.small.lineHeight /
-          designTokens.font.indicator.small.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.indicator.small.lineHeight /
+        designTokens.font.indicator.small.fontSize,
       letterSpacing: `${designTokens.font.indicator.small.letterSpacing}px`,
       textTransform:
         designTokens.font.indicator.small.textCase === "uppercase"
@@ -324,9 +308,8 @@ let theme = createTheme({
       fontSize: `${designTokens.font.label.small.fontSize}px`,
       fontWeight: designTokens.font.label.small.fontWeight,
       lineHeight:
-        (designTokens.font.label.small.lineHeight /
-          designTokens.font.label.small.fontSize) *
-        LINE_HEIGHT_ADJUSTMENT,
+        designTokens.font.label.small.lineHeight /
+        designTokens.font.label.small.fontSize,
       letterSpacing: `${designTokens.font.label.small.letterSpacing}px`,
       textTransform:
         designTokens.font.label.small.textCase === "uppercase"
@@ -340,12 +323,12 @@ let theme = createTheme({
 
   // Custom palette with lightest shades (following MUI docs pattern)
   customPalette: {
-    primaryLightest: designTokens.colorPrimitives.system.successGreen[10],
-    secondaryLightest: designTokens.colorPrimitives.system.successGreen[10],
-    errorLightest: designTokens.colorPrimitives.system.errorRed[10],
-    warningLightest: designTokens.colorPrimitives.system.alertYellow[10],
-    infoLightest: designTokens.colorPrimitives.secondary.skyBlue[10],
-    successLightest: designTokens.colorPrimitives.system.successGreen[10],
+    primaryLightest: designTokens.colorPrimitives.primary.teal[50],
+    secondaryLightest: designTokens.colorPrimitives.primary.teal[50],
+    errorLightest: designTokens.colorPrimitives.system.errorRed[50],
+    warningLightest: designTokens.colorPrimitives.secondary.yellow[50],
+    infoLightest: designTokens.colorPrimitives.primary.teal[50],
+    successLightest: designTokens.colorPrimitives.secondary.green[50],
   },
 });
 
@@ -357,27 +340,19 @@ theme = createTheme(theme, {
     MuiCssBaseline: {
       styleOverrides: `
         @font-face {
-          font-family: 'Nunito';
+          font-family: 'Inter';
           font-style: normal;
           font-display: swap;
           font-weight: 100 900;
-          src: url('/fonts/Nunito/Nunito-VariableFont_wght.ttf') format('truetype');
-          /* Adjust vertical metrics to improve alignment */
-          ascent-override: 95%;
-          descent-override: 20%;
-          line-gap-override: 0%;
+          src: url('/fonts/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
         }
 
         @font-face {
-          font-family: 'Nunito';
+          font-family: 'Inter';
           font-style: italic;
           font-display: swap;
           font-weight: 100 900;
-          src: url('/fonts/Nunito/Nunito-Italic-VariableFont_wght.ttf') format('truetype');
-          /* Adjust vertical metrics to improve alignment */
-          ascent-override: 95%;
-          descent-override: 20%;
-          line-gap-override: 0%;
+          src: url('/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
         }
       `,
     },

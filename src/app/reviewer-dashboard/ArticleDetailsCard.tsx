@@ -123,7 +123,6 @@ export function ArticleDetailsCard({
             <Chip
               label={stateLabel}
               color={stateColor || "warning"}
-              size="small"
               sx={{
                 textTransform: "uppercase",
                 borderTopRightRadius: 0,
@@ -134,7 +133,6 @@ export function ArticleDetailsCard({
               label={stateCode}
               color={stateColor || "warning"}
               variant="outlined"
-              size="small"
               sx={{
                 textTransform: "uppercase",
                 borderTopLeftRadius: 0,
@@ -293,7 +291,8 @@ export function ArticleDetailsCard({
         <Box
           sx={[
             {
-              bgcolor: "rgba(0, 0, 0, 0.05)",
+              bgcolor: (theme) =>
+                `color-mix(in srgb, ${theme.palette.neutral.main} 5%, transparent)`,
               px: 2,
               py: 1.5,
               display: "flex",
@@ -303,7 +302,7 @@ export function ArticleDetailsCard({
             },
             (theme) =>
               theme.applyStyles("dark", {
-                bgcolor: "rgba(255, 255, 255, 0.05)",
+                bgcolor: `color-mix(in srgb, ${theme.palette.common.white} 5%, transparent)`,
               }),
           ]}
         >
@@ -335,13 +334,14 @@ export function ArticleDetailsCard({
         <Box
           sx={[
             {
-              bgcolor: "rgba(0, 0, 0, 0.05)",
+              bgcolor: (theme) =>
+                `color-mix(in srgb, ${theme.palette.neutral.main} 5%, transparent)`,
               px: 2,
               pb: 2,
             },
             (theme) =>
               theme.applyStyles("dark", {
-                bgcolor: "rgba(255, 255, 255, 0.05)",
+                bgcolor: `color-mix(in srgb, ${theme.palette.common.white} 5%, transparent)`,
               }),
           ]}
         >
