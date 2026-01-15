@@ -158,59 +158,69 @@ export function ArticleCard({
               </Stack>
 
               <Stack
-                direction={{ xs: "column", md: "row" }}
-                spacing={2}
-                alignItems={{ xs: "flex-start", md: "center" }}
+                direction="row"
+                alignItems="flex-start"
                 flexWrap="wrap"
+                justifyContent="space-between"
+                sx={{ gap: 2 }}
               >
+                {/* Left side: Article Type and Academic Editor */}
                 <Stack
                   direction="row"
-                  spacing={0.5}
-                  alignItems="center"
-                  minWidth={220}
+                  sx={{ minWidth: 0, flexShrink: 1, flexWrap: "wrap", gap: 2 }}
                 >
-                  <Typography variant="subtitle1" color="text.secondary">
-                    Article Type:
-                  </Typography>
-                  <Typography variant="subtitle1" color="text.secondary">
-                    {articleType}
-                  </Typography>
+                  <Stack direction="row" alignItems="center" sx={{ gap: 0.5 }}>
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
+                      fontWeight="bold"
+                    >
+                      Article Type:
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      {articleType}
+                    </Typography>
+                  </Stack>
+
+                  <Stack direction="row" alignItems="center" sx={{ gap: 0.5 }}>
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
+                      fontWeight="bold"
+                    >
+                      Academic Editor:
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary">
+                      {academicEditorLabel}
+                    </Typography>
+                  </Stack>
                 </Stack>
 
+                {/* Right side: Reviewers metrics */}
                 <Stack
                   direction="row"
-                  spacing={0.5}
-                  alignItems="center"
-                  flexGrow={1}
-                >
-                  <Typography variant="subtitle1" color="text.secondary">
-                    Academic Editor:
-                  </Typography>
-                  <Typography variant="subtitle1" color="text.secondary">
-                    {academicEditorLabel}
-                  </Typography>
-                </Stack>
-
-                <Stack
-                  direction="row"
-                  spacing={1}
                   alignItems="center"
                   flexWrap="wrap"
+                  sx={{ minWidth: 0, gap: 1 }}
                 >
-                  <Typography variant="subtitle1" color="text.secondary">
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    fontWeight="bold"
+                  >
                     Reviewers:
                   </Typography>
                   <Stack
                     direction="row"
-                    spacing={1}
                     alignItems="center"
                     flexWrap="wrap"
+                    sx={{ gap: 1 }}
                   >
                     {renderMetricStat(reviewerStats.accepted, "accepted", ",")}
                     {renderMetricStat(reviewerStats.declined, "declined", ",")}
                     {renderMetricStat(reviewerStats.pending, "pending", ",")}
                     {renderMetricStat(reviewerStats.queued, "queued")}
-                    <Typography variant="subtitle1" color="text.secondary">
+                    <Typography variant="body1" color="text.secondary">
                       |
                     </Typography>
                     {renderMetricStat(
@@ -220,7 +230,7 @@ export function ArticleCard({
                     )}
                     {renderMetricStat(reviewerStats.overdue, "overdue", ",")}
                     {renderMetricStat(reviewerStats.invalidated, "invalidated")}
-                    <Typography variant="subtitle1" color="text.secondary">
+                    <Typography variant="body1" color="text.secondary">
                       |
                     </Typography>
                     {renderMetricStat(reviewerStats.expired, "expired", ",")}
@@ -252,18 +262,26 @@ export function ArticleCard({
           ]}
         >
           <Stack direction="row" spacing={0.5} alignItems="center" flexGrow={1}>
-            <Typography variant="subtitle1" color="text.secondary">
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              fontWeight="bold"
+            >
               Journal:
             </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
+            <Typography variant="body1" color="text.secondary">
               {journal}
             </Typography>
           </Stack>
           <Stack direction="row" spacing={0.5} alignItems="center">
-            <Typography variant="subtitle1" color="text.secondary">
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              fontWeight="bold"
+            >
               Submitted on:
             </Typography>
-            <Typography variant="subtitle1" color="text.primary">
+            <Typography variant="body1" color="text.primary">
               {submittedOn}
             </Typography>
           </Stack>

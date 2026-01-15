@@ -124,7 +124,7 @@ export default function ReviewerActionMenu({
               <ListItemIcon>
                 <CheckCircleIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Force Accept</ListItemText>
+              <ListItemText>Accept on Behalf</ListItemText>
             </MenuItem>
           ),
           // Show Force Decline for accepted/pending reviewers
@@ -133,7 +133,7 @@ export default function ReviewerActionMenu({
               <ListItemIcon>
                 <CancelIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText>Force Decline</ListItemText>
+              <ListItemText>Decline on Behalf</ListItemText>
             </MenuItem>
           ),
           (isAccepted || isPending || isDeclined) && (

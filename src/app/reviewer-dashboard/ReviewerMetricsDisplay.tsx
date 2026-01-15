@@ -31,7 +31,7 @@ export function ReviewerMetricsDisplay({
 
   if (variant === "inline") {
     return (
-      <Typography variant="subtitle1" color="text.secondary">
+      <Typography variant="body1" color="text.secondary">
         <strong>{stats.agreed}</strong> accepted,{" "}
         <strong>{stats.declined}</strong> declined,{" "}
         <strong>{stats.pending}</strong> pending, <strong>{queued}</strong>{" "}
@@ -49,7 +49,7 @@ export function ReviewerMetricsDisplay({
       sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}
     >
       {/* Reports Section */}
-      <Typography variant="subtitle1" color="text.secondary">
+      <Typography variant="body1" color="text.secondary">
         {showLabels && <strong>Reports: </strong>}
         <strong>{stats.submitted}</strong> Submitted,{" "}
         <strong>{stats.overdue}</strong> Overdue,{" "}
@@ -57,14 +57,14 @@ export function ReviewerMetricsDisplay({
       </Typography>
 
       {/* Invitations Section */}
-      <Typography variant="subtitle1" color="text.secondary">
+      <Typography variant="body1" color="text.secondary">
         {showLabels && <strong>Invitations: </strong>}
         <strong>{stats.expired}</strong> Expired,{" "}
         <strong>{stats.revoked}</strong> Revoked
       </Typography>
 
       {/* Reviewers Section */}
-      <Typography variant="subtitle1" color="text.secondary">
+      <Typography variant="body1" color="text.secondary">
         {showLabels && <strong>Reviewers: </strong>}
         <strong>{stats.agreed}</strong> Accepted,{" "}
         <strong>{stats.declined}</strong> Declined,{" "}
@@ -91,10 +91,10 @@ export function renderMetricStat(
   if (value === undefined) return null;
   return (
     <Stack direction="row" spacing={0.5} alignItems="center">
-      <Typography variant="subtitle1" color="text.secondary">
+      <Typography variant="body1" color="text.secondary" fontWeight="bold">
         {value}
       </Typography>
-      <Typography variant="subtitle1" color="text.secondary">
+      <Typography variant="body1" color="text.secondary">
         {label}
         {suffix || ""}
       </Typography>
