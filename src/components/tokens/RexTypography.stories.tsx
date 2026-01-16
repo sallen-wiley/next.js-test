@@ -118,14 +118,31 @@ const RexTypographyDemo = () => {
           </Typography>
           <Box sx={{ mt: 3 }}>
             {Object.entries(rexTypography).map(([name, spec]) => (
-              <Box key={name} sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              <Box key={name} sx={{ mb: 3 }}>
+                <Typography variant="overline" color="text.secondary">
                   {name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Size: {spec.size} • Weight: {spec.weight}
+                <Typography
+                  sx={{
+                    fontFamily: spec.family,
+                    fontSize: spec.size,
+                    fontWeight: parseInt(spec.weight.match(/\d+/)?.[0] || "400"),
+                    lineHeight: 1.5,
+                    mb: 0.5,
+                  }}>
+                  The quick brown fox jumps over the lazy dog
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: "text.secondary",
+                    display: "block",
+                    fontFamily: "monospace",
+                  }}>
+                  {spec.size} • {spec.weight}
                   {"variants" in spec && ` • Variants: ${spec.variants}`}
                 </Typography>
+                <Divider sx={{ mt: 2, opacity: 0.3 }} />
               </Box>
             ))}
           </Box>
