@@ -178,7 +178,7 @@ const FlowOverview = () => {
 };
 
 const meta: Meta<typeof FlowOverview> = {
-  title: "ReX Components/Submission Flow/00 - Overview",
+  title: "ReX Flow/00 - Overview",
   component: FlowOverview,
   parameters: {
     layout: "fullscreen",

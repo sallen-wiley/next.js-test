@@ -326,8 +326,8 @@ const RexTypographyDemo = () => {
   );
 };
 
-const meta: Meta<typeof RexTypographyDemo> = {
-  title: "ReX Components/Typography Scale",
+const meta = {
+  title: "ReX Components/Design Tokens/Typography",
   component: RexTypographyDemo,
   parameters: {
     layout: "fullscreen",
@@ -338,9 +338,9 @@ const meta: Meta<typeof RexTypographyDemo> = {
       },
     },
   },
-};
+} satisfies Meta<typeof RexTypographyDemo>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const TypographyScale: Story = {};

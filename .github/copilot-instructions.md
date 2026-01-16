@@ -581,12 +581,13 @@ The reviewer dashboard implements a two-page workflow:
 
 To ensure guidance is always current across all development resources:
 
-- **Always index the contents of `.github/chatmodes/`, `.github/prompts/`, and `.github/scripts/` at runtime.**
+- **Always refer to catalog files** for the latest resource information:
+  - **Chatmodes**: Read `.github/chatmodes.md` for available chatmodes organized by category
+  - **Prompts**: Read `.github/prompts.md` for available prompts organized by category
+  - **Scripts**: Read `.github/scripts.md` for automation scripts and tools
 - **Privacy Policy**: Only files with "-live" in their filename are shared publicly. All others are private by default and for internal use only.
-- For each resource file, extract the name and summary from its frontmatter, description, or header comments.
-- List and briefly describe all available resources in the workspace, categorizing by type (chatmodes, prompts, scripts).
-- When prompted, analyze the current conversation and context to recommend the most suitable resource(s).
-- Do not use a hardcoded list—changes to resource files (additions, removals, edits) are automatically reflected.
+- **When recommending resources**: Analyze current conversation context and suggest the most relevant chatmode, prompt, or script from the catalogs.
+- **Dynamic discovery**: Catalog files are maintained to reflect current resources - always use them as the source of truth.
 
 **Example prompts:**
 

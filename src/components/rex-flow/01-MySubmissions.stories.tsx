@@ -144,7 +144,7 @@ const MySubmissions = () => {
 };
 
 const meta: Meta<typeof MySubmissions> = {
-  title: "ReX Components/Submission Flow/01 - My Submissions",
+  title: "ReX Flow/01 - My Submissions",
   component: MySubmissions,
   parameters: {
     layout: "fullscreen",
