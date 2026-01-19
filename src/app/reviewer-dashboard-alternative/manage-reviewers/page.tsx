@@ -109,21 +109,8 @@ export default function ReviewerInvitationDashboard() {
   const [manuscript, setManuscript] = React.useState<Manuscript | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  // Panel state with localStorage persistence (default open)
-  const [rightPanelOpen, setRightPanelOpen] = React.useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("reviewerPanelOpen");
-      return stored !== null ? stored === "true" : true; // default to true
-    }
-    return true;
-  });
-
-  // Persist panel state to localStorage
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("reviewerPanelOpen", String(rightPanelOpen));
-    }
-  }, [rightPanelOpen]);
+  // Panel state (default closed)
+  const [rightPanelOpen, setRightPanelOpen] = React.useState(false);
 
   // LogRocket user identification
   React.useEffect(() => {

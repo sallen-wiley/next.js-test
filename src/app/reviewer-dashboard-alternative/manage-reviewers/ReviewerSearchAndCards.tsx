@@ -3,7 +3,6 @@ import * as React from "react";
 import {
   Paper,
   Typography,
-  Grid,
   TextField,
   FormControl,
   Select,
@@ -23,7 +22,6 @@ import {
   Chip,
   Divider,
 } from "@mui/material";
-import FilterListIcon from "@mui/icons-material/FilterAltOutlined";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import EmailIcon from "@mui/icons-material/Email";
@@ -115,8 +113,6 @@ export function ReviewerSearchAndCards({
     setActiveTab(newValue);
   };
 
-  const handleFilterClick = () => {};
-
   const handleResetFilters = () => {
     onClearFilters();
   };
@@ -152,37 +148,22 @@ export function ReviewerSearchAndCards({
       {/* Tab Panel: Find Reviewer */}
       {activeTab === 0 && (
         <Box sx={{ p: 3 }}>
-          {/* Search & Filter Section */}
+          {/* Search Section */}
           <Paper
             elevation={0}
             sx={{ p: 2, mb: 3, bgcolor: "background.default" }}
           >
-            <Grid container spacing={1} alignItems="flex-end">
-              <Grid size={{ xs: 12, md: "grow" }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Search for reviewers"
-                  value={searchTerm}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="Search by keyword, email or name..."
-                  slotProps={{
-                    input: { sx: { backgroundColor: "background.paper" } },
-                  }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: "auto" }}>
-                <Button
-                  variant="outlined"
-                  size="medium"
-                  color="neutral"
-                  endIcon={<FilterListIcon />}
-                  onClick={handleFilterClick}
-                >
-                  Filter
-                </Button>
-              </Grid>
-            </Grid>
+            <TextField
+              fullWidth
+              size="small"
+              label="Search for reviewers"
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search by keyword, email or name..."
+              slotProps={{
+                input: { sx: { backgroundColor: "background.paper" } },
+              }}
+            />
           </Paper>
 
           {/* Two-Column Layout */}
@@ -437,94 +418,94 @@ export function ReviewerSearchAndCards({
                       >
                         Availability
                       </Typography>
-                      <Stack spacing={0.5}>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={filters.availability.includes(
-                                "available",
-                              )}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...filters.availability, "available"]
-                                  : filters.availability.filter(
-                                      (a) => a !== "available",
-                                    );
-                                onFiltersChange({
-                                  ...filters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Available"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={filters.availability.includes("busy")}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...filters.availability, "busy"]
-                                  : filters.availability.filter(
-                                      (a) => a !== "busy",
-                                    );
-                                onFiltersChange({
-                                  ...filters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Busy"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={filters.availability.includes(
-                                "unavailable",
-                              )}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...filters.availability, "unavailable"]
-                                  : filters.availability.filter(
-                                      (a) => a !== "unavailable",
-                                    );
-                                onFiltersChange({
-                                  ...filters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Unavailable"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={filters.availability.includes(
-                                "sabbatical",
-                              )}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...filters.availability, "sabbatical"]
-                                  : filters.availability.filter(
-                                      (a) => a !== "sabbatical",
-                                    );
-                                onFiltersChange({
-                                  ...filters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Sabbatical"
-                        />
-                      </Stack>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={filters.availability.includes("available")}
+                            onChange={(e) => {
+                              const newAvailability = e.target.checked
+                                ? [...filters.availability, "available"]
+                                : filters.availability.filter(
+                                    (a) => a !== "available",
+                                  );
+                              onFiltersChange({
+                                ...filters,
+                                availability: newAvailability,
+                              });
+                            }}
+                            size="small"
+                          />
+                        }
+                        label="Available"
+                        sx={{ display: "block" }}
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={filters.availability.includes("busy")}
+                            onChange={(e) => {
+                              const newAvailability = e.target.checked
+                                ? [...filters.availability, "busy"]
+                                : filters.availability.filter(
+                                    (a) => a !== "busy",
+                                  );
+                              onFiltersChange({
+                                ...filters,
+                                availability: newAvailability,
+                              });
+                            }}
+                            size="small"
+                          />
+                        }
+                        label="Busy"
+                        sx={{ display: "block" }}
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={filters.availability.includes(
+                              "unavailable",
+                            )}
+                            onChange={(e) => {
+                              const newAvailability = e.target.checked
+                                ? [...filters.availability, "unavailable"]
+                                : filters.availability.filter(
+                                    (a) => a !== "unavailable",
+                                  );
+                              onFiltersChange({
+                                ...filters,
+                                availability: newAvailability,
+                              });
+                            }}
+                            size="small"
+                          />
+                        }
+                        label="Unavailable"
+                        sx={{ display: "block" }}
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={filters.availability.includes(
+                              "sabbatical",
+                            )}
+                            onChange={(e) => {
+                              const newAvailability = e.target.checked
+                                ? [...filters.availability, "sabbatical"]
+                                : filters.availability.filter(
+                                    (a) => a !== "sabbatical",
+                                  );
+                              onFiltersChange({
+                                ...filters,
+                                availability: newAvailability,
+                              });
+                            }}
+                            size="small"
+                          />
+                        }
+                        label="Sabbatical"
+                        sx={{ display: "block" }}
+                      />
                     </Box>
 
                     {/* Institutional Email */}
