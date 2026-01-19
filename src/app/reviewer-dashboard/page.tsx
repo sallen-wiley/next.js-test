@@ -36,6 +36,17 @@ export default function ArticleListingPage() {
   // Force Phenom theme with light mode on this page (resets on each visit, allows manual switching during session)
   usePageTheme("phenom", { mode: "light" });
 
+  // Detect if we're in the alternative variant based on current path
+  const [basePath, setBasePath] = useState("/reviewer-dashboard");
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      if (path.includes("/reviewer-dashboard-alternative")) {
+        setBasePath("/reviewer-dashboard-alternative");
+      }
+    }
+  }, []);
+
   const [manuscripts, setManuscripts] = useState<ManuscriptWithUserRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("latest");
@@ -109,7 +120,7 @@ export default function ArticleListingPage() {
       },
       { label: "All manuscripts", value: "all", count: manuscripts.length },
     ],
-    [manuscripts.length]
+    [manuscripts.length],
   );
 
   const priorityOptions: FilterOption[] = [
@@ -162,7 +173,7 @@ export default function ArticleListingPage() {
   };
 
   const handleViewArticle = (manuscriptId: string) => {
-    router.push(`/reviewer-dashboard/${manuscriptId}`);
+    router.push(`${basePath}/${manuscriptId}`);
   };
 
   if (loading) {
@@ -281,7 +292,7 @@ export default function ArticleListingPage() {
                   submittedDate.toLocaleDateString("en-GB");
                 const academicEditors =
                   manuscript.assignedEditors?.map(
-                    (editor) => editor.full_name || editor.email
+                    (editor) => editor.full_name || editor.email,
                   ) || [];
 
                 // Get real invitation stats for this manuscript
@@ -322,7 +333,7 @@ export default function ArticleListingPage() {
               <Pagination
                 count={Math.max(
                   1,
-                  Math.ceil(filteredManuscripts.length / ITEMS_PER_PAGE)
+                  Math.ceil(filteredManuscripts.length / ITEMS_PER_PAGE),
                 )}
                 page={page}
                 onChange={(_event, value) => setPage(value)}

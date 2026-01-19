@@ -55,6 +55,17 @@ export default function ArticleDetailsPage({
   const router = useRouter();
   const { user } = useAuth();
 
+  // Detect if we're in the alternative variant based on current path
+  const [basePath, setBasePath] = React.useState("/reviewer-dashboard");
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      if (path.includes("/reviewer-dashboard-alternative")) {
+        setBasePath("/reviewer-dashboard-alternative");
+      }
+    }
+  }, []);
+
   // Force Phenom theme with light mode on this page (resets on each visit, allows manual switching during session)
   usePageTheme("phenom", { mode: "light" });
 
@@ -109,7 +120,7 @@ export default function ArticleDetailsPage({
       } catch (error) {
         console.error("Error fetching manuscript:", error);
         setError(
-          error instanceof Error ? error.message : "Failed to load manuscript"
+          error instanceof Error ? error.message : "Failed to load manuscript",
         );
       } finally {
         setLoading(false);
@@ -121,9 +132,7 @@ export default function ArticleDetailsPage({
 
   const handleManageReviewers = () => {
     if (manuscript) {
-      router.push(
-        `/reviewer-dashboard/manage-reviewers?manuscriptId=${manuscript.id}`
-      );
+      router.push(`${basePath}/manage-reviewers?manuscriptId=${manuscript.id}`);
     }
   };
 
@@ -148,7 +157,7 @@ export default function ArticleDetailsPage({
         <Alert severity="error">{error}</Alert>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => router.push("/reviewer-dashboard")}
+          onClick={() => router.push(basePath)}
           sx={{ mt: 2 }}
         >
           Back to Dashboard
@@ -165,7 +174,7 @@ export default function ArticleDetailsPage({
         </Alert>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => router.push("/reviewer-dashboard")}
+          onClick={() => router.push(basePath)}
           sx={{ mt: 2 }}
         >
           Back to Dashboard
@@ -196,7 +205,7 @@ export default function ArticleDetailsPage({
   // Get academic editors from manuscript
   const academicEditors =
     manuscript.assignedEditors?.map(
-      (editor) => editor.full_name || editor.email
+      (editor) => editor.full_name || editor.email,
     ) || [];
 
   return (
@@ -215,7 +224,7 @@ export default function ArticleDetailsPage({
           <Button
             color="neutral"
             startIcon={<ArrowBackIcon />}
-            onClick={() => router.push("/reviewer-dashboard")}
+            onClick={() => router.push(basePath)}
           >
             Back
           </Button>
@@ -223,7 +232,7 @@ export default function ArticleDetailsPage({
             aria-label="breadcrumb"
             sx={{ textTransform: "uppercase" }}
           >
-            <Link underline="hover" color="inherit" href="/reviewer-dashboard">
+            <Link underline="hover" color="inherit" href={basePath}>
               Dashboard
             </Link>
             <Typography
@@ -356,7 +365,7 @@ export default function ArticleDetailsPage({
                     sx={{ textTransform: "none" }}
                     onClick={() =>
                       router.push(
-                        `/reviewer-dashboard/manage-reviewers?manuscriptId=${manuscript?.id}&tab=queue`
+                        `${basePath}/manage-reviewers?manuscriptId=${manuscript?.id}&tab=queue`,
                       )
                     }
                   >
@@ -415,7 +424,7 @@ export default function ArticleDetailsPage({
                             invitation.invitation_expiration_date
                           ) {
                             const expirationDate = new Date(
-                              invitation.invitation_expiration_date
+                              invitation.invitation_expiration_date,
                             );
                             if (expirationDate < today) {
                               displayStatus = "expired";
@@ -438,11 +447,11 @@ export default function ArticleDetailsPage({
                             invitation.invitation_expiration_date
                           ) {
                             const expirationDate = new Date(
-                              invitation.invitation_expiration_date
+                              invitation.invitation_expiration_date,
                             );
                             daysUntilDue = Math.ceil(
                               (expirationDate.getTime() - today.getTime()) /
-                                (1000 * 60 * 60 * 24)
+                                (1000 * 60 * 60 * 24),
                             );
                             timeLeftToRespond = isExpired
                               ? "Expired"
@@ -450,7 +459,7 @@ export default function ArticleDetailsPage({
                           } else if (invitation.status === "accepted") {
                             daysUntilDue = Math.ceil(
                               (dueDate.getTime() - today.getTime()) /
-                                (1000 * 60 * 60 * 24)
+                                (1000 * 60 * 60 * 24),
                             );
                             reportSubmissionDeadline = isOverdue
                               ? "Overdue"
@@ -471,12 +480,12 @@ export default function ArticleDetailsPage({
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
-                                }
+                                },
                               )}
                               responseDate={
                                 invitation.response_date
                                   ? new Date(
-                                      invitation.response_date
+                                      invitation.response_date,
                                     ).toLocaleDateString("en-US", {
                                       month: "short",
                                       day: "numeric",
@@ -492,7 +501,7 @@ export default function ArticleDetailsPage({
                               expirationDate={
                                 invitation.invitation_expiration_date
                                   ? new Date(
-                                      invitation.invitation_expiration_date
+                                      invitation.invitation_expiration_date,
                                     ).toLocaleDateString("en-US", {
                                       month: "short",
                                       day: "numeric",
@@ -527,7 +536,7 @@ export default function ArticleDetailsPage({
                               onViewProfile={() =>
                                 console.log(
                                   "View profile",
-                                  invitation.reviewer_id
+                                  invitation.reviewer_id,
                                 )
                               }
                               onExtendDeadline={() =>

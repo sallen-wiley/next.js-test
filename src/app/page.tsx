@@ -189,6 +189,14 @@ export default function Home() {
 
           <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <ClickableCard
+              href="/reviewer-dashboard-alternative"
+              title="Reviewer Dashboard (Alternative)"
+              description="Variant B for user testing"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <ClickableCard
               href="/experiments/notifications/admin"
               title="Notifications admin"
             />
