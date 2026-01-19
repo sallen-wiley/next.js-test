@@ -83,6 +83,7 @@ import {
   IconButton,
   Breadcrumbs,
   Link,
+  Container,
 } from "@mui/material";
 
 // Icons
@@ -1170,7 +1171,7 @@ export default function ReviewerInvitationDashboard() {
 
   return (
     <>
-      <Box sx={{ width: "100%", py: 4 }}>
+      <Container fixed sx={{ pt: 3, pb: 3 }}>
         {/* Navigation Row: Back button, breadcrumbs, and panel toggle */}
         <Box
           sx={{
@@ -1375,7 +1376,7 @@ export default function ReviewerInvitationDashboard() {
             </Button>
           </Box>
         </Drawer>
-      </Box>
+      </Container>
 
       {/* Reviewer Action Menu */}
       <ReviewerActionMenu
