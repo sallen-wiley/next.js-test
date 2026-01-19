@@ -40,7 +40,7 @@ interface QueueInvitationsTabProps {
   onToggleQueue: () => void;
   onActionMenuOpen: (
     event: React.MouseEvent<HTMLElement>,
-    reviewer: ReviewerWithStatus
+    reviewer: ReviewerWithStatus,
   ) => void;
 }
 
@@ -54,7 +54,7 @@ function SortableQueueCard({
   reviewer: ReviewerWithStatus;
   onActionMenuOpen: (
     event: React.MouseEvent<HTMLElement>,
-    reviewer: ReviewerWithStatus
+    reviewer: ReviewerWithStatus,
   ) => void;
   onMoveUp: (reviewer: ReviewerWithStatus) => void;
   onMoveDown: (reviewer: ReviewerWithStatus) => void;
@@ -95,10 +95,10 @@ export default function QueueInvitationsTab({
 }: QueueInvitationsTabProps) {
   // Separate sent invitations from queued invitations
   const sentInvitations = reviewersWithStatus.filter(
-    (r) => r.invitation_status && r.invitation_status !== "queued"
+    (r) => r.invitation_status && r.invitation_status !== "queued",
   );
   const queuedInvitations = reviewersWithStatus.filter(
-    (r) => r.invitation_status === "queued"
+    (r) => r.invitation_status === "queued",
   );
 
   // Collapsible section states
@@ -111,10 +111,10 @@ export default function QueueInvitationsTab({
   // Initialize local queue when data changes
   React.useEffect(() => {
     const queued = reviewersWithStatus.filter(
-      (r) => r.invitation_status === "queued"
+      (r) => r.invitation_status === "queued",
     );
     const sorted = [...queued].sort(
-      (a, b) => (a.queue_position || 0) - (b.queue_position || 0)
+      (a, b) => (a.queue_position || 0) - (b.queue_position || 0),
     );
     setLocalQueue(sorted);
   }, [reviewersWithStatus]);
@@ -128,7 +128,7 @@ export default function QueueInvitationsTab({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -173,9 +173,6 @@ export default function QueueInvitationsTab({
         flexDirection: "column",
         maxHeight: "calc(100vh - 280px)",
         overflow: "hidden",
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 1.5,
       }}
     >
       {/* Header: Invitation log */}
@@ -195,6 +192,7 @@ export default function QueueInvitationsTab({
         <Button
           variant="text"
           size="small"
+          color="secondary"
           startIcon={<InfoOutlinedIcon />}
           sx={{ textTransform: "none", fontWeight: 600 }}
         >
