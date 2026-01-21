@@ -1,48 +1,49 @@
 "use client";
 import * as React from "react";
-import { Box, Container, Typography, Paper, Slider } from "@mui/material";
+import { Box, Container, Typography, Grid } from "@mui/material";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
+import {
+  ButtonsSection,
+  TypographySection,
+  InputsSection,
+  ControlsSection,
+  DataDisplaySection,
+  NavigationSection,
+  TableSection,
+} from "@/components/kitchen-sink";
 
 export default function KitchenSink() {
-  const [sliderValue, setSliderValue] = React.useState(30);
-
-  const handleSliderChange = React.useCallback(
-    (_event: Event, newValue: number | number[]) => {
-      setSliderValue(newValue as number);
-    },
-    [],
-  );
-
   useHeaderConfig({
     logoAffix: "Component Library",
     containerProps: { maxWidth: "lg" },
   });
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Kitchen Sink - Slider Test
-      </Typography>
-      <Typography variant="body1" gutterBottom color="text.secondary">
-        Testing slider performance with isolated state management.
-      </Typography>
+    <Box sx={{ flexGrow: 1, position: "relative" }}>
+      <Container maxWidth="lg">
+        <Grid container spacing={4} sx={{ my: 4 }}>
+          {/* Header */}
+          <Grid size={12}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Kitchen Sink - Component Showcase
+            </Typography>
+            <Typography variant="body1" gutterBottom color="text.secondary">
+              A comprehensive demonstration of Material-UI components with
+              optimized performance. Each section is isolated to prevent
+              unnecessary re-renders.
+            </Typography>
+          </Grid>
 
-      <Paper sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Slider Component
-        </Typography>
-        <Box sx={{ mt: 3 }}>
-          <Typography gutterBottom>Current Value: {sliderValue}</Typography>
-          <Slider
-            value={sliderValue}
-            onChange={handleSliderChange}
-            valueLabelDisplay="auto"
-            min={0}
-            max={100}
-            color="primary"
-          />
-        </Box>
-      </Paper>
-    </Container>
+          {/* All sections are memoized and manage their own state */}
+          <TypographySection />
+          <ButtonsSection />
+          <InputsSection />
+          <ControlsSection />
+          <DataDisplaySection />
+          <NavigationSection />
+          <TableSection />
+        </Grid>
+      </Container>
+    </Box>
   );
 }
