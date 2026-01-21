@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
  * Integrates with Supabase authentication system
  * Shows Admin button for users with admin role
  */
-const HeaderAuthActions: React.FC = () => {
+const HeaderAuthActions: React.FC = React.memo(() => {
   const { user, signOut, loading } = useAuth();
   const { profile } = useUserProfile();
   const router = useRouter();
@@ -70,6 +70,8 @@ const HeaderAuthActions: React.FC = () => {
       )}
     </Box>
   );
-};
+});
+
+HeaderAuthActions.displayName = "HeaderAuthActions";
 
 export default HeaderAuthActions;

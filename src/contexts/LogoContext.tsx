@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import type { TenantType } from "@/components/product/PrimaryLogo";
+import type { TenantType } from "@/components/product/logos/types";
 
 // Logo context interface
 interface LogoContextType {
@@ -40,14 +40,27 @@ export const LogoProvider: React.FC<LogoProviderProps> = ({
     "wiley2025",
     "sage",
     "ieee",
+    "re-light-stacked",
+    "re-bold-stacked",
+    "re-light-allcaps",
+    "re-bold-allcaps",
+    "re-bold",
     "default",
   ];
 
   // Load tenant preference from localStorage on mount
   useEffect(() => {
-    const savedTenant = localStorage.getItem("app-logo-tenant") as TenantType;
-    if (savedTenant && availableTenants.includes(savedTenant)) {
-      setCurrentTenant(savedTenant);
+    const savedTenant = localStorage.getItem("app-logo-tenant");
+
+    // Migrate old "researchexchange" value to "re-light-stacked"
+    if (savedTenant === "researchexchange") {
+      setCurrentTenant("re-light-stacked");
+      localStorage.setItem("app-logo-tenant", "re-light-stacked");
+    } else if (
+      savedTenant &&
+      availableTenants.includes(savedTenant as TenantType)
+    ) {
+      setCurrentTenant(savedTenant as TenantType);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

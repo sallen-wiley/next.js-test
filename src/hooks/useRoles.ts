@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -10,17 +10,41 @@ import {
   RolePermissions,
 } from "@/types/roles";
 
+// Module-level cache to prevent duplicate fetches across multiple hook instances
+let cachedProfile: UserProfile | null = null;
+let cachedUserId: string | null = null;
+let fetchPromise: Promise<void> | null = null;
+
 export function useUserProfile() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(cachedProfile);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
+  // Move supabase client inside useEffect to avoid dependency issues
   useEffect(() => {
+    const supabase = createClient();
     if (!user) {
       setProfile(null);
       setLoading(false);
+      cachedProfile = null;
+      cachedUserId = null;
+      return;
+    }
+
+    // If we already have cached profile for this user, use it
+    if (cachedUserId === user.id && cachedProfile) {
+      setProfile(cachedProfile);
+      setLoading(false);
+      return;
+    }
+
+    // If a fetch is already in progress, wait for it
+    if (fetchPromise) {
+      fetchPromise.then(() => {
+        setProfile(cachedProfile);
+        setLoading(false);
+      });
       return;
     }
 
@@ -93,21 +117,25 @@ export function useUserProfile() {
           }
         } else {
           setProfile(data);
+          cachedProfile = data;
+          cachedUserId = user.id;
         }
       } catch (err) {
         setError("Failed to load user profile");
         console.error("Profile error:", err);
       } finally {
         setLoading(false);
+        fetchPromise = null;
       }
     }
 
-    fetchProfile();
-  }, [user, supabase]);
+    fetchPromise = fetchProfile();
+  }, [user]); // Remove supabase from dependencies
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!profile) return false;
 
+    const supabase = createClient();
     try {
       const { error } = await supabase
         .from("user_profiles")

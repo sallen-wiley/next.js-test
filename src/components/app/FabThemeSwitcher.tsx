@@ -20,7 +20,7 @@ import Check from "@mui/icons-material/Check";
 import { useThemeContext, ThemeName, ColorMode } from "@/contexts/ThemeContext";
 import { useColorScheme } from "@mui/material/styles";
 import { useLogoContext } from "@/contexts/LogoContext";
-import type { TenantType } from "@/components/product/PrimaryLogo";
+import type { TenantType } from "@/components/product/logos/types";
 import RoleGuard from "@/components/auth/RoleGuard";
 
 // Theme metadata for better UX
@@ -120,6 +120,36 @@ const tenantMetadata: Record<
     description: "Electrical and electronics engineering",
     color: "#295FA3",
     icon: "⚡",
+  },
+  "re-light-stacked": {
+    label: "RE Light Allcaps Stacked",
+    description: "Research Exchange light variant",
+    color: "#000000",
+    icon: "🔬",
+  },
+  "re-bold-stacked": {
+    label: "RE Bold Allcaps Stacked",
+    description: "Research Exchange bold variant",
+    color: "#000000",
+    icon: "🔬",
+  },
+  "re-light-allcaps": {
+    label: "RE Light Allcaps",
+    description: "Research Exchange light allcaps",
+    color: "#000000",
+    icon: "🔬",
+  },
+  "re-bold-allcaps": {
+    label: "RE Bold Allcaps",
+    description: "Research Exchange bold allcaps",
+    color: "#000000",
+    icon: "🔬",
+  },
+  "re-bold": {
+    label: "RE Bold",
+    description: "Research Exchange bold",
+    color: "#000000",
+    icon: "🔬",
   },
   default: {
     label: "Default",
