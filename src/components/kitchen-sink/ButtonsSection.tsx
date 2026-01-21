@@ -44,32 +44,34 @@ export const ButtonsSection = React.memo(() => {
             <Typography variant="h6" gutterBottom>
               Button Colors
             </Typography>
-            <Stack spacing={2}>
-              <Stack
-                direction="row"
-                spacing={1}
-                flexWrap="wrap"
-                sx={{ gap: 1 }}
-              >
-                <Button variant="contained" color="primary">
-                  Primary
-                </Button>
-                <Button variant="contained" color="secondary">
-                  Secondary
-                </Button>
-                <Button variant="contained" color="success">
-                  Success
-                </Button>
-                <Button variant="contained" color="error">
-                  Error
-                </Button>
-                <Button variant="contained" color="warning">
-                  Warning
-                </Button>
-                <Button variant="contained" color="info">
-                  Info
-                </Button>
-              </Stack>
+            <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }}>
+              <Button variant="contained" color="primary">
+                Primary
+              </Button>
+              <Button variant="contained" color="secondary">
+                Secondary
+              </Button>
+              <Button variant="contained" color="success">
+                Success
+              </Button>
+              <Button variant="contained" color="error">
+                Error
+              </Button>
+              <Button variant="contained" color="warning">
+                Warning
+              </Button>
+              <Button variant="contained" color="info">
+                Info
+              </Button>
+              <Button variant="contained" color="neutral">
+                Neutral
+              </Button>
+              <Button variant="contained" color="black">
+                Black
+              </Button>
+              <Button variant="contained" color="white">
+                White
+              </Button>
             </Stack>
           </Paper>
         </Grid>
@@ -120,16 +122,42 @@ export const ButtonsSection = React.memo(() => {
             <Typography variant="h6" gutterBottom>
               Button Groups
             </Typography>
-            <Stack spacing={2}>
-              <ButtonGroup variant="contained">
+            <Stack spacing={2} alignItems="flex-start">
+              <ButtonGroup variant="contained" aria-label="Basic button group">
                 <Button>One</Button>
                 <Button>Two</Button>
                 <Button>Three</Button>
               </ButtonGroup>
-              <ButtonGroup variant="outlined" color="secondary">
-                <Button>Left</Button>
-                <Button>Center</Button>
-                <Button>Right</Button>
+              <ButtonGroup
+                variant="outlined"
+                aria-label="Outlined button group"
+              >
+                <Button>One</Button>
+                <Button>Two</Button>
+                <Button>Three</Button>
+              </ButtonGroup>
+              <ButtonGroup variant="text" aria-label="Text button group">
+                <Button>One</Button>
+                <Button>Two</Button>
+                <Button>Three</Button>
+              </ButtonGroup>
+              <ButtonGroup
+                size="small"
+                variant="outlined"
+                color="secondary"
+                aria-label="Small button group"
+              >
+                <Button>Small</Button>
+                <Button>Group</Button>
+              </ButtonGroup>
+              <ButtonGroup
+                orientation="vertical"
+                variant="contained"
+                aria-label="Vertical button group"
+              >
+                <Button>Top</Button>
+                <Button>Middle</Button>
+                <Button>Bottom</Button>
               </ButtonGroup>
             </Stack>
           </Paper>
