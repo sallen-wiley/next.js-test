@@ -47,6 +47,7 @@ import {
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 import ReviewerProfileDrawer from "./ReviewerProfileDrawer";
 import { useReviewerProfileDrawer } from "@/hooks/useReviewerProfileDrawer";
+import ManageReviewersVersionSwitcher from "@/components/app/ManageReviewersVersionSwitcher";
 import type {
   Manuscript,
   InvitationQueueItem,
@@ -282,7 +283,7 @@ export default function ReviewerInvitationDashboard() {
   const [filters, setFilters] = React.useState<
     import("./ReviewerSearchAndCards").ReviewerFilters
   >({
-    availability: [],
+    hideUnavailable: false,
     institutionalEmail: false,
     country: "",
     responseTimeMax: 0,
@@ -294,6 +295,7 @@ export default function ReviewerInvitationDashboard() {
     publicationYearTo: 0,
     publishedArticlesMin: 0,
     publishedInJournal: false,
+    previouslyReviewedForJournal: false,
     inAuthorsGroup: false,
   });
   // Multi-select removed; no selected reviewers state
@@ -388,10 +390,10 @@ export default function ReviewerInvitationDashboard() {
         }
       }
 
-      // Filter by availability
+      // Filter by availability (hide unavailable reviewers)
       if (
-        filters.availability.length > 0 &&
-        !filters.availability.includes(reviewer.availability_status)
+        filters.hideUnavailable &&
+        reviewer.availability_status === "unavailable"
       ) {
         return false;
       }
@@ -1147,10 +1149,18 @@ export default function ReviewerInvitationDashboard() {
   }, [manuscriptId, showConfirmDialog]);
 
   // Configure header for reviewer dashboard
-  useHeaderConfig({
-    logoAffix: "Review",
-    containerProps: { maxWidth: false },
-  });
+  const headerConfig = React.useMemo(
+    () => ({
+      logoAffix: "Review",
+      containerProps: { maxWidth: false as const },
+      rightSlotPrefix:
+        profile?.role === "admin" ? (
+          <ManageReviewersVersionSwitcher />
+        ) : undefined,
+    }),
+    [profile?.role],
+  );
+  useHeaderConfig(headerConfig);
 
   // Register admin actions for this page (memoized to prevent re-renders)
   const adminActions = React.useMemo(
@@ -1276,7 +1286,7 @@ export default function ReviewerInvitationDashboard() {
             onClearFilters={() => {
               setSearchTerm("");
               setFilters({
-                availability: [],
+                hideUnavailable: false,
                 institutionalEmail: false,
                 country: "",
                 responseTimeMax: 0,
@@ -1288,6 +1298,7 @@ export default function ReviewerInvitationDashboard() {
                 publicationYearTo: 0,
                 publishedArticlesMin: 0,
                 publishedInJournal: false,
+                previouslyReviewedForJournal: false,
                 inAuthorsGroup: false,
               });
             }}

@@ -24,6 +24,7 @@ Comprehensive documentation for the Next.js + Material-UI Demo Project.
 - **[Storybook Guide](development/storybook-guide.md)** - Component development and story creation
 - **[Theme Guide](development/theme-guide.md)** - Theme development and customization workflow
 - **[Write Operations Upgrade](development/WRITE_OPERATIONS_UPGRADE.md)** - Adding write operations to the API
+- **[MUI Best Practices](development/MUI_BEST_PRACTICES.md)** - Material-UI implementation standards
 
 ### 🎨 Component Documentation
 

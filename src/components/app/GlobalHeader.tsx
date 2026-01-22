@@ -23,6 +23,8 @@ export interface GlobalHeaderProps {
     maxWidth?: false | "xs" | "sm" | "md" | "lg" | "xl";
     fixed?: boolean;
   };
+  /** Custom content to display before auth actions */
+  rightSlotPrefix?: React.ReactNode;
   /** Custom content for the right side. If not provided, defaults to auth actions */
   rightSlot?: React.ReactNode;
   /** Callback for menu button click (typically for mobile drawer) */
@@ -33,6 +35,7 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
   logoAffix = "Publishing Platforms UX",
   fixed = false,
   containerProps = { maxWidth: false },
+  rightSlotPrefix,
   rightSlot,
   onMenuClick,
 }) => {
@@ -80,7 +83,14 @@ const GlobalHeader: React.FC<GlobalHeaderProps> = ({
             )}
             <PrimaryLogo affix={isMobile ? undefined : logoAffix} />
           </Box>
-          <Box>{rightSlot || <HeaderAuthActions />}</Box>
+          <Box>
+            {rightSlot || (
+              <Box display="flex" alignItems="center" gap={2}>
+                {rightSlotPrefix}
+                <HeaderAuthActions />
+              </Box>
+            )}
+          </Box>
         </Box>
       </Container>
       <Divider />

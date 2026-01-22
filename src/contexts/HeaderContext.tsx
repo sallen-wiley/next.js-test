@@ -13,6 +13,8 @@ interface HeaderConfig {
     maxWidth?: false | "xs" | "sm" | "md" | "lg" | "xl";
     fixed?: boolean;
   };
+  /** Custom content to display before auth actions (augments default auth actions) */
+  rightSlotPrefix?: ReactNode;
   /** Custom content to display in the right slot (replaces default auth actions) */
   rightSlot?: ReactNode;
   /** Callback for menu button click (mobile drawer trigger) */
@@ -44,7 +46,7 @@ export function HeaderProvider({
       config,
       updateConfig,
     }),
-    [config, updateConfig]
+    [config, updateConfig],
   );
 
   return (

@@ -47,6 +47,7 @@ import {
 import { getStatusLabel, getStatusColor } from "@/utils/manuscriptStatus";
 import ReviewerProfileDrawer from "./ReviewerProfileDrawer";
 import { useReviewerProfileDrawer } from "@/hooks/useReviewerProfileDrawer";
+import ManageReviewersVersionSwitcher from "@/components/app/ManageReviewersVersionSwitcher";
 import type {
   Manuscript,
   InvitationQueueItem,
@@ -63,7 +64,7 @@ declare global {
     LogRocket?: {
       identify: (
         userId: string,
-        userTraits: Record<string, string | number | boolean>
+        userTraits: Record<string, string | number | boolean>,
       ) => void;
       init: (appId: string) => void;
     };
@@ -192,7 +193,7 @@ export default function ReviewerInvitationDashboard() {
     PotentialReviewerWithMatch[]
   >([]);
   const [allReviewers, setAllReviewers] = React.useState<PotentialReviewer[]>(
-    []
+    [],
   );
   const [invitations, setInvitations] = React.useState<ReviewInvitation[]>([]);
   const [publishedInJournalMap, setPublishedInJournalMap] = React.useState<
@@ -203,7 +204,7 @@ export default function ReviewerInvitationDashboard() {
   const potentialReviewers = React.useMemo(() => {
     // Create a map of reviewer IDs from suggested reviewers (these have match scores)
     const suggestedMap = new Map(
-      suggestedReviewers.map((reviewer) => [reviewer.id, reviewer])
+      suggestedReviewers.map((reviewer) => [reviewer.id, reviewer]),
     );
 
     // Start with suggested reviewers
@@ -223,13 +224,13 @@ export default function ReviewerInvitationDashboard() {
           email_is_institutional: isInstitutionalEmail(reviewer.email),
           acceptance_rate: calculateAcceptanceRate(
             (reviewerData.total_acceptances as number) || 0,
-            (reviewerData.total_invitations as number) || 0
+            (reviewerData.total_invitations as number) || 0,
           ),
           related_publications_count: 0, // Would need to fetch publications
           solo_authored_count: 0, // Would need to fetch publications
           publications_last_5_years: 0, // Would need to fetch publications
           days_since_last_review: daysSince(
-            reviewerData.last_review_completed as string | undefined
+            reviewerData.last_review_completed as string | undefined,
           ),
           published_in_journal: publishedInJournalMap.get(reviewer.id) || false,
         });
@@ -270,7 +271,7 @@ export default function ReviewerInvitationDashboard() {
           const reviewerIds = allReviewersData.map((r) => r.id);
           const journalMap = await checkReviewersPublishedInJournal(
             reviewerIds,
-            manuscript.journal
+            manuscript.journal,
           );
           setPublishedInJournalMap(journalMap);
         }
@@ -292,7 +293,7 @@ export default function ReviewerInvitationDashboard() {
   const [filters, setFilters] = React.useState<
     import("./ReviewerSearchAndCards").ReviewerFilters
   >({
-    availability: [],
+    hideUnavailable: false,
     institutionalEmail: false,
     country: "",
     responseTimeMax: 0,
@@ -304,6 +305,7 @@ export default function ReviewerInvitationDashboard() {
     publicationYearTo: 0,
     publishedArticlesMin: 0,
     publishedInJournal: false,
+    previouslyReviewedForJournal: false,
     inAuthorsGroup: false,
   });
   // Multi-select removed; no selected reviewers state
@@ -367,7 +369,7 @@ export default function ReviewerInvitationDashboard() {
     const invitedOrQueuedIds = new Set(
       reviewersWithStatus
         .filter((r) => r.invitation_status !== null)
-        .map((r) => r.id)
+        .map((r) => r.id),
     );
 
     const filtered = potentialReviewers.filter((reviewer) => {
@@ -383,7 +385,7 @@ export default function ReviewerInvitationDashboard() {
           reviewer.name.toLowerCase().includes(search) ||
           reviewer.affiliation.toLowerCase().includes(search) ||
           reviewer.expertise_areas.some((area) =>
-            area.toLowerCase().includes(search)
+            area.toLowerCase().includes(search),
           );
 
         // If doesn't match search, exclude immediately
@@ -398,10 +400,10 @@ export default function ReviewerInvitationDashboard() {
         }
       }
 
-      // Filter by availability
+      // Filter by availability (hide unavailable reviewers)
       if (
-        filters.availability.length > 0 &&
-        !filters.availability.includes(reviewer.availability_status)
+        filters.hideUnavailable &&
+        reviewer.availability_status === "unavailable"
       ) {
         return false;
       }
@@ -529,7 +531,7 @@ export default function ReviewerInvitationDashboard() {
   // Interactive functions for demo purposes
   const showSnackbar = (
     message: string,
-    severity: "success" | "info" | "warning" | "error" = "success"
+    severity: "success" | "info" | "warning" | "error" = "success",
   ) => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
@@ -545,7 +547,7 @@ export default function ReviewerInvitationDashboard() {
         onConfirm,
       });
     },
-    []
+    [],
   );
 
   const handleInviteReviewer = async (reviewerId: string) => {
@@ -566,7 +568,7 @@ export default function ReviewerInvitationDashboard() {
           setSelectedReviewerForEmail(reviewer);
           setEmailModalAction("invite");
           setEmailModalOpen(true);
-        }
+        },
       );
       return;
     }
@@ -579,7 +581,7 @@ export default function ReviewerInvitationDashboard() {
 
   const handleConfirmInvite = async (
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _customization: EmailCustomization
+    _customization: EmailCustomization,
   ) => {
     const reviewer = selectedReviewerForEmail;
     if (!reviewer || !manuscriptId) return;
@@ -667,7 +669,7 @@ export default function ReviewerInvitationDashboard() {
         const reviewerIds = allReviewersData.map((r) => r.id);
         const journalMap = await checkReviewersPublishedInJournal(
           reviewerIds,
-          manuscript.journal
+          manuscript.journal,
         );
         setPublishedInJournalMap(journalMap);
       }
@@ -678,7 +680,7 @@ export default function ReviewerInvitationDashboard() {
 
   const handleActionMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    reviewer: ReviewerWithStatus
+    reviewer: ReviewerWithStatus,
   ) => {
     setActionMenuAnchor(event.currentTarget);
     setSelectedReviewerForAction(reviewer);
@@ -699,7 +701,7 @@ export default function ReviewerInvitationDashboard() {
     } catch (error: unknown) {
       showSnackbar(
         error instanceof Error ? error.message : "Failed to move reviewer",
-        "error"
+        "error",
       );
     }
     handleActionMenuClose();
@@ -715,7 +717,7 @@ export default function ReviewerInvitationDashboard() {
     } catch (error: unknown) {
       showSnackbar(
         error instanceof Error ? error.message : "Failed to move reviewer",
-        "error"
+        "error",
       );
     }
     handleActionMenuClose();
@@ -731,14 +733,14 @@ export default function ReviewerInvitationDashboard() {
         try {
           await revokeInvitation(
             selectedReviewerForAction.invitation_id!,
-            false
+            false,
           );
           await refreshReviewerData();
           showSnackbar("Invitation revoked", "success");
         } catch {
           showSnackbar("Failed to revoke invitation", "error");
         }
-      }
+      },
     );
     handleActionMenuClose();
   };
@@ -757,7 +759,7 @@ export default function ReviewerInvitationDashboard() {
         } catch {
           showSnackbar("Failed to remove from queue", "error");
         }
-      }
+      },
     );
     handleActionMenuClose();
   };
@@ -780,12 +782,12 @@ export default function ReviewerInvitationDashboard() {
           await refreshAllReviewerData();
           showSnackbar(
             `Invitation sent to ${selectedReviewerForAction.name}`,
-            "success"
+            "success",
           );
         } catch {
           showSnackbar("Failed to send invitation", "error");
         }
-      }
+      },
     );
     handleActionMenuClose();
   };
@@ -804,7 +806,7 @@ export default function ReviewerInvitationDashboard() {
         } catch {
           showSnackbar("Failed to remove invitation", "error");
         }
-      }
+      },
     );
     handleActionMenuClose();
   };
@@ -820,7 +822,7 @@ export default function ReviewerInvitationDashboard() {
       | "revoked",
     title: string,
     message: string,
-    successMessage: string
+    successMessage: string,
   ) => {
     if (!selectedReviewerForAction?.invitation_id) return;
 
@@ -828,7 +830,7 @@ export default function ReviewerInvitationDashboard() {
       try {
         await updateInvitationStatus(
           selectedReviewerForAction.invitation_id!,
-          status
+          status,
         );
         await refreshReviewerData();
         showSnackbar(successMessage, "success");
@@ -844,7 +846,7 @@ export default function ReviewerInvitationDashboard() {
       "accepted",
       "Force Accept Invitation",
       `Manually mark ${selectedReviewerForAction?.name}'s invitation as accepted? This will set their status to "accepted" and assign a review due date.`,
-      `${selectedReviewerForAction?.name} marked as accepted`
+      `${selectedReviewerForAction?.name} marked as accepted`,
     );
 
   const handleForceDecline = () =>
@@ -852,7 +854,7 @@ export default function ReviewerInvitationDashboard() {
       "declined",
       "Force Decline Invitation",
       `Manually mark ${selectedReviewerForAction?.name}'s invitation as declined?`,
-      `${selectedReviewerForAction?.name} marked as declined`
+      `${selectedReviewerForAction?.name} marked as declined`,
     );
 
   const handleViewProfile = () => {
@@ -892,7 +894,7 @@ export default function ReviewerInvitationDashboard() {
         try {
           await invalidateReport(
             selectedReviewerForAction.invitation_id!,
-            "Invalidated by editor"
+            "Invalidated by editor",
           );
           await refreshReviewerData();
           showSnackbar("Report invalidated", "warning");
@@ -901,7 +903,7 @@ export default function ReviewerInvitationDashboard() {
           console.error("Error invalidating report:", error);
           showSnackbar("Failed to invalidate report", "error");
         }
-      }
+      },
     );
   };
 
@@ -921,7 +923,7 @@ export default function ReviewerInvitationDashboard() {
           console.error("Error reinstating report:", error);
           showSnackbar("Failed to reinstate report", "error");
         }
-      }
+      },
     );
   };
 
@@ -941,7 +943,7 @@ export default function ReviewerInvitationDashboard() {
           console.error("Error cancelling review:", error);
           showSnackbar("Failed to cancel review", "error");
         }
-      }
+      },
     );
   };
 
@@ -954,7 +956,7 @@ export default function ReviewerInvitationDashboard() {
       setQueueControl({ ...queueControl, queue_active: newState });
       showSnackbar(
         `Queue ${newState ? "activated" : "paused"}`,
-        newState ? "success" : "info"
+        newState ? "success" : "info",
       );
     } catch {
       showSnackbar("Failed to toggle queue state", "error");
@@ -979,7 +981,7 @@ export default function ReviewerInvitationDashboard() {
           setSelectedReviewerForEmail(reviewer);
           setEmailModalAction("queue");
           setEmailModalOpen(true);
-        }
+        },
       );
       return;
     }
@@ -992,7 +994,7 @@ export default function ReviewerInvitationDashboard() {
 
   const handleConfirmQueue = async (
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _customization: EmailCustomization
+    _customization: EmailCustomization,
   ) => {
     const reviewer = selectedReviewerForEmail;
     if (!reviewer || !manuscriptId) return;
@@ -1005,7 +1007,7 @@ export default function ReviewerInvitationDashboard() {
       const newQueueItem = await addToQueue(
         manuscriptId,
         reviewer.id,
-        "normal"
+        "normal",
       );
 
       if (newQueueItem) {
@@ -1015,7 +1017,7 @@ export default function ReviewerInvitationDashboard() {
         // Multi-select removed; no selection to update
         showSnackbar(
           `${reviewer.name} added to queue (Position ${newQueueItem.queue_position})`,
-          "info"
+          "info",
         );
 
         // Switch to queue tab to show the result
@@ -1067,7 +1069,7 @@ export default function ReviewerInvitationDashboard() {
       if (error instanceof Error && error.message.includes("already exists")) {
         showSnackbar(
           "Reviewer with this email already exists. Use the Find Reviewer tab to invite them.",
-          "warning"
+          "warning",
         );
       } else {
         showSnackbar("Failed to invite reviewer", "error");
@@ -1079,7 +1081,7 @@ export default function ReviewerInvitationDashboard() {
   // Handler for adding a manual reviewer to queue
   const handleAddManualReviewerToQueue = async (
     name: string,
-    email: string
+    email: string,
   ) => {
     if (!manuscriptId) return;
 
@@ -1101,7 +1103,7 @@ export default function ReviewerInvitationDashboard() {
       const queueItem = await addToQueue(
         manuscriptId,
         newReviewer.id,
-        "normal"
+        "normal",
       );
 
       // Refresh all data including queue
@@ -1111,7 +1113,7 @@ export default function ReviewerInvitationDashboard() {
         `${name || email} added to queue${
           queueItem ? ` (Position ${queueItem.queue_position})` : ""
         }`,
-        "info"
+        "info",
       );
 
       // Open right panel to show the result
@@ -1121,7 +1123,7 @@ export default function ReviewerInvitationDashboard() {
       if (error instanceof Error && error.message.includes("already exists")) {
         showSnackbar(
           "Reviewer with this email already exists. Use the Find Reviewer tab to add them to the queue.",
-          "warning"
+          "warning",
         );
       } else {
         showSnackbar("Failed to add reviewer to queue", "error");
@@ -1145,22 +1147,30 @@ export default function ReviewerInvitationDashboard() {
           await refreshAllReviewerData();
           showSnackbar(
             `Cleared ${result.removedInvitations} invitation(s) and ${result.removedQueueItems} queue item(s)`,
-            "success"
+            "success",
           );
         } catch (error) {
           console.error("Error clearing reviewers:", error);
           showSnackbar("Failed to clear reviewers", "error");
         }
-      }
+      },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manuscriptId, showConfirmDialog]);
 
   // Configure header for reviewer dashboard
-  useHeaderConfig({
-    logoAffix: "Review",
-    containerProps: { maxWidth: false },
-  });
+  const headerConfig = React.useMemo(
+    () => ({
+      logoAffix: "Review",
+      containerProps: { maxWidth: false as const },
+      rightSlotPrefix:
+        profile?.role === "admin" ? (
+          <ManageReviewersVersionSwitcher />
+        ) : undefined,
+    }),
+    [profile?.role],
+  );
+  useHeaderConfig(headerConfig);
 
   // Register admin actions for this page (memoized to prevent re-renders)
   const adminActions = React.useMemo(
@@ -1174,7 +1184,7 @@ export default function ReviewerInvitationDashboard() {
         tooltip: "Remove all pending invitations and queued reviewers",
       },
     ],
-    [handleClearAllReviewers]
+    [handleClearAllReviewers],
   );
 
   useAdminActions(adminActions);
@@ -1262,7 +1272,7 @@ export default function ReviewerInvitationDashboard() {
                   }
                   journal={manuscript.journal}
                   submittedOn={new Date(
-                    manuscript.submission_date
+                    manuscript.submission_date,
                   ).toLocaleDateString("en-GB")}
                   stateLabel={getStatusLabel(manuscript.status)}
                   stateCode={`V${manuscript.version || 1}`}
@@ -1288,7 +1298,7 @@ export default function ReviewerInvitationDashboard() {
               onClearFilters={() => {
                 setSearchTerm("");
                 setFilters({
-                  availability: [],
+                  hideUnavailable: false,
                   institutionalEmail: false,
                   country: "",
                   responseTimeMax: 0,
@@ -1300,6 +1310,7 @@ export default function ReviewerInvitationDashboard() {
                   publicationYearTo: 0,
                   publishedArticlesMin: 0,
                   publishedInJournal: false,
+                  previouslyReviewedForJournal: false,
                   inAuthorsGroup: false,
                 });
               }}

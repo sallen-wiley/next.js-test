@@ -33,7 +33,7 @@ import type { PotentialReviewerWithMatch } from "@/lib/supabase";
 import ReviewerCard from "./ReviewerCard";
 
 export interface ReviewerFilters {
-  availability: string[];
+  hideUnavailable: boolean;
   institutionalEmail: boolean;
   country: string;
   responseTimeMax: number;
@@ -45,6 +45,7 @@ export interface ReviewerFilters {
   publicationYearTo: number;
   publishedArticlesMin: number;
   publishedInJournal: boolean;
+  previouslyReviewedForJournal: boolean;
   inAuthorsGroup: boolean;
 }
 
@@ -194,7 +195,7 @@ export function ReviewerSearchAndCards({
           </Paper>
 
           {/* Active Filter Chips */}
-          {(filters.availability.length > 0 ||
+          {(filters.hideUnavailable ||
             filters.institutionalEmail ||
             filters.country !== "" ||
             filters.responseTimeMax > 0 ||
@@ -206,28 +207,24 @@ export function ReviewerSearchAndCards({
             filters.publicationYearTo > 0 ||
             filters.publishedArticlesMin > 0 ||
             filters.publishedInJournal ||
+            filters.previouslyReviewedForJournal ||
             filters.inAuthorsGroup) && (
             <Box sx={{ mb: 3 }}>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {/* Availability chips */}
-                {filters.availability.map((status) => (
+                {/* Hide Unavailable chip */}
+                {filters.hideUnavailable && (
                   <Chip
-                    key={status}
-                    label={`Availability: ${
-                      status.charAt(0).toUpperCase() + status.slice(1)
-                    }`}
+                    label="Hide Unavailable Reviewers"
                     onDelete={() => {
                       onFiltersChange({
                         ...filters,
-                        availability: filters.availability.filter(
-                          (a) => a !== status
-                        ),
+                        hideUnavailable: false,
                       });
                     }}
                     color="neutral"
                     variant="outlined"
                   />
-                ))}
+                )}
 
                 {/* Institutional Email chip */}
                 {filters.institutionalEmail && (
@@ -374,6 +371,21 @@ export function ReviewerSearchAndCards({
                   />
                 )}
 
+                {/* Previously Reviewed for this Journal chip */}
+                {filters.previouslyReviewedForJournal && (
+                  <Chip
+                    label="Previously Reviewed for this Journal"
+                    onDelete={() => {
+                      onFiltersChange({
+                        ...filters,
+                        previouslyReviewedForJournal: false,
+                      });
+                    }}
+                    color="neutral"
+                    variant="outlined"
+                  />
+                )}
+
                 {/* In Authors Group chip */}
                 {filters.inAuthorsGroup && (
                   <Chip
@@ -449,104 +461,29 @@ export function ReviewerSearchAndCards({
                 <Stack spacing={2}>
                   {/* Section 1: Demographics */}
                   <Stack spacing={2}>
-                    {/* Availability */}
+                    {/* Hide Unavailable */}
                     <Box>
                       <Typography
                         variant="subtitle2"
                         sx={{ mb: 0.5, fontWeight: "bold" }}
                       >
-                        Availability
+                        Hide unavailable reviewers
                       </Typography>
-                      <Stack spacing={0.5}>
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={tempFilters.availability.includes(
-                                "available"
-                              )}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...tempFilters.availability, "available"]
-                                  : tempFilters.availability.filter(
-                                      (a) => a !== "available"
-                                    );
-                                setTempFilters({
-                                  ...tempFilters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Available"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={tempFilters.availability.includes(
-                                "busy"
-                              )}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...tempFilters.availability, "busy"]
-                                  : tempFilters.availability.filter(
-                                      (a) => a !== "busy"
-                                    );
-                                setTempFilters({
-                                  ...tempFilters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Busy"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={tempFilters.availability.includes(
-                                "unavailable"
-                              )}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...tempFilters.availability, "unavailable"]
-                                  : tempFilters.availability.filter(
-                                      (a) => a !== "unavailable"
-                                    );
-                                setTempFilters({
-                                  ...tempFilters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Unavailable"
-                        />
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              checked={tempFilters.availability.includes(
-                                "sabbatical"
-                              )}
-                              onChange={(e) => {
-                                const newAvailability = e.target.checked
-                                  ? [...tempFilters.availability, "sabbatical"]
-                                  : tempFilters.availability.filter(
-                                      (a) => a !== "sabbatical"
-                                    );
-                                setTempFilters({
-                                  ...tempFilters,
-                                  availability: newAvailability,
-                                });
-                              }}
-                              size="small"
-                            />
-                          }
-                          label="Sabbatical"
-                        />
-                      </Stack>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={tempFilters.hideUnavailable}
+                            onChange={(e) =>
+                              setTempFilters({
+                                ...tempFilters,
+                                hideUnavailable: e.target.checked,
+                              })
+                            }
+                            size="small"
+                          />
+                        }
+                        label="Yes"
+                      />
                     </Box>
 
                     {/* Institutional Email */}
@@ -748,7 +685,7 @@ export function ReviewerSearchAndCards({
                                   "number"
                                     ? Math.max(
                                         0,
-                                        tempFilters.reviewsLast12Months
+                                        tempFilters.reviewsLast12Months,
                                       )
                                     : 0
                                 }
@@ -887,7 +824,7 @@ export function ReviewerSearchAndCards({
                                     Math.max(0, tempFilters.totalReviewsMin),
                                     Math.min(
                                       1000,
-                                      Math.max(0, tempFilters.totalReviewsMax)
+                                      Math.max(0, tempFilters.totalReviewsMax),
                                     ),
                                   ]}
                                   onChange={(_, value) => {
@@ -897,11 +834,11 @@ export function ReviewerSearchAndCards({
                                         ...tempFilters,
                                         totalReviewsMin: Math.max(
                                           0,
-                                          Math.min(1000, min)
+                                          Math.min(1000, min),
                                         ),
                                         totalReviewsMax: Math.max(
                                           0,
-                                          Math.min(1000, max)
+                                          Math.min(1000, max),
                                         ),
                                       });
                                     }
@@ -999,7 +936,7 @@ export function ReviewerSearchAndCards({
                                   "number"
                                     ? Math.max(
                                         0,
-                                        tempFilters.assignedManuscriptsMax
+                                        tempFilters.assignedManuscriptsMax,
                                       )
                                     : 0
                                 }
@@ -1143,14 +1080,14 @@ export function ReviewerSearchAndCards({
                                   value={[
                                     Math.max(
                                       1900,
-                                      tempFilters.publicationYearFrom
+                                      tempFilters.publicationYearFrom,
                                     ),
                                     Math.min(
                                       2025,
                                       Math.max(
                                         1900,
-                                        tempFilters.publicationYearTo
-                                      )
+                                        tempFilters.publicationYearTo,
+                                      ),
                                     ),
                                   ]}
                                   onChange={(_, value) => {
@@ -1160,11 +1097,11 @@ export function ReviewerSearchAndCards({
                                         ...tempFilters,
                                         publicationYearFrom: Math.max(
                                           1900,
-                                          Math.min(2025, from)
+                                          Math.min(2025, from),
                                         ),
                                         publicationYearTo: Math.max(
                                           1900,
-                                          Math.min(2025, to)
+                                          Math.min(2025, to),
                                         ),
                                       });
                                     }
@@ -1262,7 +1199,7 @@ export function ReviewerSearchAndCards({
                                   "number"
                                     ? Math.max(
                                         0,
-                                        tempFilters.publishedArticlesMin
+                                        tempFilters.publishedArticlesMin,
                                       )
                                     : 0
                                 }
@@ -1340,7 +1277,34 @@ export function ReviewerSearchAndCards({
                               size="small"
                             />
                           }
-                          label={<Typography variant="body2">Yes</Typography>}
+                          label="Yes"
+                        />
+                      </Box>
+
+                      {/* Previously Reviewed for this Journal */}
+                      <Box>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ mb: 0.5, fontWeight: "bold" }}
+                        >
+                          Previously reviewed for this journal
+                        </Typography>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={tempFilters.previouslyReviewedForJournal}
+                              onChange={(e) =>
+                                setTempFilters({
+                                  ...tempFilters,
+                                  previouslyReviewedForJournal:
+                                    e.target.checked,
+                                })
+                              }
+                              size="small"
+                              disabled
+                            />
+                          }
+                          label="Yes"
                         />
                       </Box>
 
@@ -1366,7 +1330,7 @@ export function ReviewerSearchAndCards({
                               disabled
                             />
                           }
-                          label={<Typography variant="body2">Yes</Typography>}
+                          label="Yes"
                         />
                       </Box>
                     </Stack>
