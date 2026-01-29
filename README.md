@@ -222,3 +222,16 @@ This project can be deployed to any platform that supports Node.js:
 ## License
 
 This project is for demonstration purposes and internal development.
+
+---
+
+> 🤖
+>
+> - [README](./README.md) - Our project
+> - [CHANGELOG](./backstage/CHANGELOG.md) — What we did
+> - [ROADMAP](./backstage/ROADMAP.md) — What we wanna do
+> - [POLICY](./backstage/POLICY.md) — How we do it
+> - [HEALTH](./backstage/HEALTH.md) — What we accept
+> - [/backstage-start](./.github/prompts/backstage-start.prompt.md) — The prompt that keeps us sane
+>
+> 🤖

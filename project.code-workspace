@@ -18,6 +18,7 @@
   },
   "settings": {
     "editor.formatOnSave": true,
+    "window.title": "🎨 Storybook",
     "files.associations": {
       "*.stories.tsx": "typescriptreact"
     },
@@ -47,7 +48,7 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit"
     },
-    "window.title": "📓 storybook",
+    "window.title": "📓 Storybook",
     "projectTracking": {
       "name": "ReX Migration",
       "docsToValidate": [
