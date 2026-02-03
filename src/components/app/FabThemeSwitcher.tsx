@@ -70,6 +70,12 @@ const themeMetadata: Record<
     color: "#00a89f",
     icon: "🔬",
   },
+  rpm: {
+    label: "RPM",
+    description: "Research & Publishing Management",
+    color: "#0056B6",
+    icon: "📊",
+  },
 };
 
 const modeMetadata: Record<

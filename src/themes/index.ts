@@ -5,6 +5,7 @@ import wiley2025Theme from "./wiley2025";
 import phenomTheme from "./phenom";
 import phenomXResearchExchangeTheme from "./phenomXResearchExchange";
 import researchexchangeTheme from "./researchexchange";
+import rpmTheme from "./rpm";
 
 // Available themes with different typography approaches
 export const themes = {
@@ -15,6 +16,7 @@ export const themes = {
   phenom: phenomTheme,
   phenomXResearchExchange: phenomXResearchExchangeTheme,
   researchexchange: researchexchangeTheme,
+  rpm: rpmTheme,
 };
 
 // Helper to get theme by name with fallback
@@ -33,5 +35,6 @@ export {
   phenomTheme,
   phenomXResearchExchangeTheme,
   researchexchangeTheme,
+  rpmTheme,
 };
 export default themes;

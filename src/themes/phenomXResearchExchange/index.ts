@@ -74,7 +74,7 @@ let theme = createTheme({
       main: designTokens.colorPrimitives.secondary.yellow[800],
     },
     info: {
-      main: designTokens.colorPrimitives.primary.teal[600],
+      main: designTokens.colorPrimitives.primary.teal[700],
     },
     success: {
       main: designTokens.colorPrimitives.secondary.green[700],
