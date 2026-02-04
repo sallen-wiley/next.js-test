@@ -58,3 +58,4 @@ localStorage.json*
 
 # Exclude sensitive reviewer data
 database/reviewer-ingestion/reviewer_suggestions_*.json
+database/reviewer-ingestion/reviewer_suggestions/

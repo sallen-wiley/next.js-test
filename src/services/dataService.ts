@@ -45,7 +45,7 @@ async function isUserAdmin(userId: string): Promise<boolean> {
  * Editors are users with role "editor" in user_manuscripts.
  */
 async function getEditorsForManuscripts(
-  manuscriptIds: string[]
+  manuscriptIds: string[],
 ): Promise<Map<string, UserProfile[]>> {
   if (manuscriptIds.length === 0) return new Map();
 
@@ -55,7 +55,7 @@ async function getEditorsForManuscripts(
       `
       manuscript_id,
       user_profiles (*)
-    `
+    `,
     )
     .eq("role", "editor")
     .eq("is_active", true)
@@ -83,10 +83,10 @@ async function getEditorsForManuscripts(
  * Attach editor assignments (users) to manuscripts as assignedEditors / assignedEditorIds.
  */
 async function enrichManuscriptsWithEditors<T extends Manuscript>(
-  manuscripts: T[]
+  manuscripts: T[],
 ): Promise<T[]> {
   const editorMap = await getEditorsForManuscripts(
-    manuscripts.map((m) => m.id)
+    manuscripts.map((m) => m.id),
   );
 
   return manuscripts.map((manuscript) => {
@@ -114,7 +114,7 @@ async function enrichManuscriptsWithEditors<T extends Manuscript>(
  */
 export async function getUserManuscripts(
   userId: string,
-  activeOnly: boolean = true
+  activeOnly: boolean = true,
 ): Promise<ManuscriptWithUserRole[]> {
   // Check if user is admin - admins see ALL manuscripts
   const isAdmin = await isUserAdmin(userId);
@@ -157,7 +157,7 @@ export async function getUserManuscripts(
       (assignments || []).map((a) => [
         a.manuscript_id,
         { role: a.role, assigned_date: a.assigned_date },
-      ])
+      ]),
     );
 
     // 4. Merge: Use explicit role if exists, otherwise implicit 'admin' role
@@ -194,7 +194,7 @@ export async function getUserManuscripts(
       role,
       assigned_date,
       manuscripts (*)
-    `
+    `,
     )
     .eq("user_id", userId);
 
@@ -225,7 +225,7 @@ export async function getUserManuscripts(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getManuscriptReviewers(
-  manuscriptId: string
+  manuscriptId: string,
 ): Promise<PotentialReviewerWithMatch[]> {
   // First, get the manuscript to know its journal
   const { data: manuscript } = await supabase
@@ -243,7 +243,7 @@ export async function getManuscriptReviewers(
       match_score,
       conflicts_of_interest,
       potential_reviewers (*)
-    `
+    `,
     )
     .eq("manuscript_id", manuscriptId)
     .order("match_score", { ascending: false });
@@ -256,7 +256,7 @@ export async function getManuscriptReviewers(
   // Get unique reviewer IDs
   const reviewerIds = (data || []).map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (item: any) => item.potential_reviewers.id
+    (item: any) => item.potential_reviewers.id,
   );
 
   // Fetch publications for all reviewers in parallel
@@ -272,7 +272,7 @@ export async function getManuscriptReviewers(
     .eq("manuscript_id", manuscriptId);
 
   const relatedPublicationIds = new Set(
-    (relatedPublications || []).map((m) => m.publication_id)
+    (relatedPublications || []).map((m) => m.publication_id),
   );
 
   // Group publications by reviewer_id and track journal matches
@@ -319,7 +319,7 @@ export async function getManuscriptReviewers(
       email_is_institutional: isInstitutionalEmail(reviewer.email),
       acceptance_rate: calculateAcceptanceRate(
         reviewer.total_acceptances || 0,
-        reviewer.total_invitations || 0
+        reviewer.total_invitations || 0,
       ),
       related_publications_count: countRelatedPublications(reviewerPubs),
       solo_authored_count: countSoloAuthored(reviewerPubs),
@@ -357,7 +357,7 @@ export async function getAllReviewers(): Promise<PotentialReviewer[]> {
  */
 export async function checkReviewersPublishedInJournal(
   reviewerIds: string[],
-  journalName: string
+  journalName: string,
 ): Promise<Map<string, boolean>> {
   if (reviewerIds.length === 0 || !journalName) {
     return new Map();
@@ -387,7 +387,7 @@ export async function checkReviewersPublishedInJournal(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getManuscriptInvitations(
-  manuscriptId: string
+  manuscriptId: string,
 ): Promise<ReviewInvitationWithReviewer[]> {
   // Fetch invitations without join
   const { data, error } = await supabase
@@ -454,7 +454,7 @@ export async function getManuscriptInvitations(
  * @param manuscriptIds - Array of manuscript UUIDs
  */
 export async function getManuscriptInvitationStats(
-  manuscriptIds: string[]
+  manuscriptIds: string[],
 ): Promise<Map<string, import("@/utils/reviewerStats").ReviewerStats>> {
   if (manuscriptIds.length === 0) {
     return new Map();
@@ -525,7 +525,7 @@ export async function getManuscriptInvitationStats(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getManuscriptById(
-  manuscriptId: string
+  manuscriptId: string,
 ): Promise<Manuscript | null> {
   const { data, error } = await supabase
     .from("manuscripts")
@@ -552,7 +552,7 @@ export async function getManuscriptById(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getManuscriptQueue(
-  manuscriptId: string
+  manuscriptId: string,
 ): Promise<InvitationQueueItem[]> {
   // Fetch queue items without join
   const { data, error } = await supabase
@@ -616,7 +616,7 @@ export async function getManuscriptQueue(
 export async function addToQueue(
   manuscriptId: string,
   reviewerId: string,
-  priority: "high" | "normal" | "low" = "normal"
+  priority: "high" | "normal" | "low" = "normal",
 ): Promise<InvitationQueueItem | null> {
   // Check if reviewer already has an invitation
   const { data: existingInvitation } = await supabase
@@ -628,7 +628,7 @@ export async function addToQueue(
 
   if (existingInvitation) {
     throw new Error(
-      "Cannot add to queue: Reviewer already has an invitation for this manuscript"
+      "Cannot add to queue: Reviewer already has an invitation for this manuscript",
     );
   }
 
@@ -682,7 +682,7 @@ export async function addToQueue(
       fullError: error,
     });
     throw new Error(
-      `Failed to add to queue: ${error.message || JSON.stringify(error)}`
+      `Failed to add to queue: ${error.message || JSON.stringify(error)}`,
     );
   }
 
@@ -780,11 +780,11 @@ export async function removeInvitation(invitationId: string): Promise<void> {
  * @param updates - Array of {id, newPosition} objects
  */
 export async function updateQueuePositions(
-  updates: Array<{ id: string; queue_position: number }>
+  updates: Array<{ id: string; queue_position: number }>,
 ): Promise<void> {
   // Update each item's position
   const promises = updates.map(({ id, queue_position }) =>
-    supabase.from("invitation_queue").update({ queue_position }).eq("id", id)
+    supabase.from("invitation_queue").update({ queue_position }).eq("id", id),
   );
 
   const results = await Promise.all(promises);
@@ -802,7 +802,7 @@ export async function updateQueuePositions(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getReviewersWithStatus(
-  manuscriptId: string
+  manuscriptId: string,
 ): Promise<import("@/lib/supabase").ReviewerWithStatus[]> {
   // Get all potential reviewers with match scores
   const { data: matchedReviewers, error: matchError } = await supabase
@@ -811,7 +811,7 @@ export async function getReviewersWithStatus(
       `
       match_score,
       potential_reviewers (*)
-    `
+    `,
     )
     .eq("manuscript_id", manuscriptId);
 
@@ -851,12 +851,12 @@ export async function getReviewersWithStatus(
   // Get reviewer IDs from matches
   const matchedReviewerIds = new Set(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (matchedReviewers || []).map((m: any) => m.potential_reviewers.id)
+    (matchedReviewers || []).map((m: any) => m.potential_reviewers.id),
   );
 
   // Find reviewer IDs that are in workflow but not in matches
   const unmatchedReviewerIds = Array.from(reviewerIdsInWorkflow).filter(
-    (id) => !matchedReviewerIds.has(id)
+    (id) => !matchedReviewerIds.has(id),
   );
 
   // Fetch unmatched reviewers from potential_reviewers table
@@ -872,7 +872,7 @@ export async function getReviewersWithStatus(
   // Build lookup maps
   const queueMap = new Map((queueItems || []).map((q) => [q.reviewer_id, q]));
   const invitationMap = new Map(
-    (invitations || []).map((i) => [i.reviewer_id, i])
+    (invitations || []).map((i) => [i.reviewer_id, i]),
   );
 
   // Process matched reviewers
@@ -913,7 +913,7 @@ export async function getReviewersWithStatus(
         invitation_status,
         ...additionalFields,
       };
-    }
+    },
   );
 
   // Process unmatched reviewers (those in queue/invitations but not in matches)
@@ -964,7 +964,7 @@ export async function getReviewersWithStatus(
  */
 export async function updateInvitationStatus(
   invitationId: string,
-  status: import("@/lib/supabase").ReviewInvitation["status"]
+  status: import("@/lib/supabase").ReviewInvitation["status"],
 ): Promise<void> {
   const { error } = await supabase
     .from("review_invitations")
@@ -988,7 +988,7 @@ export async function updateInvitationStatus(
  */
 export async function revokeInvitation(
   invitationId: string,
-  addBackToQueue: boolean = false
+  addBackToQueue: boolean = false,
 ): Promise<void> {
   // Get the invitation details first
   const { data: invitation, error: fetchError } = await supabase
@@ -1022,7 +1022,7 @@ export async function revokeInvitation(
     await addToQueue(
       invitation.manuscript_id,
       invitation.reviewer_id,
-      "normal"
+      "normal",
     );
   }
 }
@@ -1055,7 +1055,7 @@ export async function submitReport(invitationId: string): Promise<void> {
  */
 export async function invalidateReport(
   invitationId: string,
-  reason?: string
+  reason?: string,
 ): Promise<void> {
   const now = new Date().toISOString();
 
@@ -1144,7 +1144,7 @@ export async function cancelReview(invitationId: string): Promise<void> {
  */
 export async function setInvitationExpiration(
   invitationId: string,
-  expirationDate?: string
+  expirationDate?: string,
 ): Promise<void> {
   const expiration =
     expirationDate ||
@@ -1171,7 +1171,7 @@ export async function setInvitationExpiration(
  */
 export async function moveInQueue(
   queueItemId: string,
-  direction: "up" | "down"
+  direction: "up" | "down",
 ): Promise<void> {
   // Get the current item
   const { data: currentItem, error: fetchError } = await supabase
@@ -1210,7 +1210,7 @@ export async function moveInQueue(
 
   if (!targetItem) {
     throw new Error(
-      `Cannot move ${direction} - no item at position ${newPosition}`
+      `Cannot move ${direction} - no item at position ${newPosition}`,
     );
   }
 
@@ -1227,7 +1227,7 @@ export async function moveInQueue(
  * @param manuscriptId - The manuscript UUID
  */
 export async function getQueueControlState(
-  manuscriptId: string
+  manuscriptId: string,
 ): Promise<import("@/lib/supabase").QueueControlState> {
   // TODO: When queue_active is added to manuscripts table, fetch from there
   // For now, return demo data based on queue existence
@@ -1254,13 +1254,13 @@ export async function getQueueControlState(
  */
 export async function toggleQueueActive(
   manuscriptId: string,
-  active: boolean
+  active: boolean,
 ): Promise<void> {
   // TODO: When queue_active is added to manuscripts table, update it here
   console.log(
     `Demo: Queue for manuscript ${manuscriptId} set to ${
       active ? "active" : "paused"
-    }`
+    }`,
   );
 
   // For now, this is just a demo function
@@ -1277,7 +1277,7 @@ export async function toggleQueueActive(
  */
 export async function sendInvitation(
   manuscriptId: string,
-  reviewerId: string
+  reviewerId: string,
 ): Promise<ReviewInvitation> {
   // Check if reviewer is already in queue
   const { data: existingQueueItem } = await supabase
@@ -1289,7 +1289,7 @@ export async function sendInvitation(
 
   if (existingQueueItem) {
     throw new Error(
-      "Cannot send invitation: Reviewer is already in the queue for this manuscript"
+      "Cannot send invitation: Reviewer is already in the queue for this manuscript",
     );
   }
 
@@ -1376,7 +1376,7 @@ export async function getAllReviewerMatches(): Promise<any[]> {
         subject_area,
         status
       )
-    `
+    `,
     )
     .order("calculated_at", { ascending: false });
 
@@ -1393,7 +1393,7 @@ export async function getAllReviewerMatches(): Promise<any[]> {
  * @param manuscriptId - The manuscript UUID
  */
 export async function getMatchesForManuscript(
-  manuscriptId: string
+  manuscriptId: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any[]> {
   const { data, error } = await supabase
@@ -1410,7 +1410,7 @@ export async function getMatchesForManuscript(
         affiliation,
         expertise_areas
       )
-    `
+    `,
     )
     .eq("manuscript_id", manuscriptId)
     .order("match_score", { ascending: false });
@@ -1436,7 +1436,7 @@ export async function addReviewerMatch(
   reviewerId: string,
   matchScore: number,
   isInitialSuggestion: boolean = false,
-  conflictsOfInterest: string = ""
+  conflictsOfInterest: string = "",
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   // Validate match score
@@ -1454,7 +1454,7 @@ export async function addReviewerMatch(
 
   if (existing) {
     throw new Error(
-      `Match already exists with score ${existing.match_score}. Use update instead.`
+      `Match already exists with score ${existing.match_score}. Use update instead.`,
     );
   }
 
@@ -1482,7 +1482,7 @@ export async function addReviewerMatch(
     throw new Error(
       error.message ||
         error.hint ||
-        `Failed to add reviewer match: ${JSON.stringify(error)}`
+        `Failed to add reviewer match: ${JSON.stringify(error)}`,
     );
   }
 
@@ -1500,7 +1500,7 @@ export async function updateReviewerMatch(
   matchId: string,
   matchScore: number,
   isInitialSuggestion?: boolean,
-  conflictsOfInterest?: string
+  conflictsOfInterest?: string,
 ): Promise<void> {
   // Validate match score
   if (matchScore < 0 || matchScore > 1) {
@@ -1541,7 +1541,7 @@ export async function updateReviewerMatch(
  */
 export async function updateReviewerMatchScore(
   matchId: string,
-  matchScore: number
+  matchScore: number,
 ): Promise<void> {
   return updateReviewerMatch(matchId, matchScore);
 }
@@ -1571,7 +1571,7 @@ export async function removeReviewerMatch(matchId: string): Promise<void> {
 export async function bulkAddReviewerMatches(
   manuscriptId: string,
   reviewerIds: string[],
-  baseScore: number = 95
+  baseScore: number = 95,
 ): Promise<void> {
   const matches = reviewerIds.map((reviewerId, index) => ({
     manuscript_id: manuscriptId,
@@ -1652,10 +1652,11 @@ export async function getAllUserManuscriptAssignments(): Promise<any[]> {
       ),
       manuscripts (
         title,
+        custom_id,
         journal,
         status
       )
-    `
+    `,
     )
     .order("assigned_date", { ascending: false });
 
@@ -1677,7 +1678,7 @@ export async function getAllUserManuscriptAssignments(): Promise<any[]> {
 export async function addUserToManuscript(
   userId: string,
   manuscriptId: string,
-  role: "editor" | "author" | "collaborator" | "reviewer" = "editor"
+  role: "editor" | "author" | "collaborator" | "reviewer" = "editor",
 ): Promise<UserManuscript> {
   // Check if assignment already exists
   const { data: existing } = await supabase
@@ -1741,7 +1742,7 @@ export async function addUserToManuscript(
  */
 export async function removeUserFromManuscript(
   userId: string,
-  manuscriptId: string
+  manuscriptId: string,
 ): Promise<void> {
   const { error } = await supabase
     .from("user_manuscripts")
@@ -1764,7 +1765,7 @@ export async function removeUserFromManuscript(
 export async function updateUserManuscriptRole(
   userId: string,
   manuscriptId: string,
-  role: "editor" | "author" | "collaborator" | "reviewer"
+  role: "editor" | "author" | "collaborator" | "reviewer",
 ): Promise<void> {
   const { error } = await supabase
     .from("user_manuscripts")
@@ -1784,7 +1785,7 @@ export async function updateUserManuscriptRole(
  */
 export async function syncManuscriptEditors(
   manuscriptId: string,
-  editorIds: string[]
+  editorIds: string[],
 ): Promise<UserProfile[]> {
   const desiredEditors = Array.from(new Set(editorIds.filter(Boolean)));
 
@@ -1800,7 +1801,7 @@ export async function syncManuscriptEditors(
   }
 
   const toDeactivate = (existingEditors || []).filter(
-    (row) => row.is_active && !desiredEditors.includes(row.user_id)
+    (row) => row.is_active && !desiredEditors.includes(row.user_id),
   );
 
   if (toDeactivate.length > 0) {
@@ -1809,7 +1810,7 @@ export async function syncManuscriptEditors(
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .in(
         "id",
-        toDeactivate.map((row) => row.id)
+        toDeactivate.map((row) => row.id),
       );
 
     if (deactivateError) {
@@ -1821,8 +1822,8 @@ export async function syncManuscriptEditors(
   const toAdd = desiredEditors.filter(
     (editorId) =>
       !(existingEditors || []).some(
-        (row) => row.user_id === editorId && row.is_active
-      )
+        (row) => row.user_id === editorId && row.is_active,
+      ),
   );
 
   for (const editorId of toAdd) {
@@ -1843,7 +1844,7 @@ export async function syncManuscriptEditors(
  * @returns The created reviewer
  */
 export async function addReviewer(
-  reviewer: Omit<PotentialReviewer, "id" | "match_score">
+  reviewer: Omit<PotentialReviewer, "id" | "match_score">,
 ): Promise<PotentialReviewer> {
   // Check if reviewer with this email already exists
   const { data: existing } = await supabase
@@ -1880,7 +1881,7 @@ export async function addReviewer(
       code: error.code,
     });
     throw new Error(
-      error.message || "Failed to add reviewer. Please check your data."
+      error.message || "Failed to add reviewer. Please check your data.",
     );
   }
 
@@ -1894,7 +1895,7 @@ export async function addReviewer(
  */
 export async function updateReviewer(
   reviewerId: string,
-  updates: Partial<Omit<PotentialReviewer, "id" | "match_score">>
+  updates: Partial<Omit<PotentialReviewer, "id" | "match_score">>,
 ): Promise<void> {
   // If email is being updated, check for duplicates
   if (updates.email) {
@@ -1907,7 +1908,7 @@ export async function updateReviewer(
 
     if (existing) {
       throw new Error(
-        `Another reviewer with email ${updates.email} already exists`
+        `Another reviewer with email ${updates.email} already exists`,
       );
     }
   }
@@ -1955,7 +1956,7 @@ export async function updateReviewer(
       updates: cleanedUpdates,
     });
     throw new Error(
-      error.message || "Failed to update reviewer. Please check your data."
+      error.message || "Failed to update reviewer. Please check your data.",
     );
   }
 }
@@ -1982,7 +1983,7 @@ export async function deleteReviewer(reviewerId: string): Promise<void> {
     // Provide user-friendly error message for foreign key constraint
     if (error.code === "23503") {
       throw new Error(
-        "Cannot delete reviewer: they have existing matches or invitations. Remove those first."
+        "Cannot delete reviewer: they have existing matches or invitations. Remove those first.",
       );
     }
 
@@ -2000,7 +2001,7 @@ export async function createManuscript(
     "id" | "assignedEditors" | "assignedEditorIds"
   > & {
     editorIds?: string[];
-  }
+  },
 ): Promise<Manuscript> {
   const { editorIds = [], ...insertData } = manuscript;
 
@@ -2020,20 +2021,20 @@ export async function createManuscript(
 
     if (error.code === "42501") {
       throw new Error(
-        "Permission denied: You must be an admin or designer to create manuscripts."
+        "Permission denied: You must be an admin or designer to create manuscripts.",
       );
     }
 
     if (error.code === "23502" && error.message?.includes("editor_id")) {
       throw new Error(
-        "Database still requires manuscripts.editor_id. Apply migration database/remove_editor_id_from_manuscripts.sql or make editor_id nullable."
+        "Database still requires manuscripts.editor_id. Apply migration database/remove_editor_id_from_manuscripts.sql or make editor_id nullable.",
       );
     }
 
     throw new Error(
       `Failed to create manuscript: ${
         error.message || error.code || "Unknown error"
-      }`
+      }`,
     );
   }
 
@@ -2063,7 +2064,7 @@ export async function updateManuscript(
     Omit<Manuscript, "assignedEditors" | "assignedEditorIds"> & {
       editorIds?: string[];
     }
-  >
+  >,
 ): Promise<Manuscript> {
   // Strip non-column fields from updates
   const {
@@ -2091,20 +2092,20 @@ export async function updateManuscript(
 
     if (error.code === "42501") {
       throw new Error(
-        "Permission denied: You must be an admin or designer to update manuscripts."
+        "Permission denied: You must be an admin or designer to update manuscripts.",
       );
     }
 
     if (error.code === "23502" && error.message?.includes("editor_id")) {
       throw new Error(
-        "Database still requires manuscripts.editor_id. Apply migration database/remove_editor_id_from_manuscripts.sql or make editor_id nullable."
+        "Database still requires manuscripts.editor_id. Apply migration database/remove_editor_id_from_manuscripts.sql or make editor_id nullable.",
       );
     }
 
     throw new Error(
       `Failed to update manuscript: ${
         error.message || error.code || "Unknown error"
-      }`
+      }`,
     );
   }
   if (!data) {
@@ -2148,13 +2149,13 @@ export async function deleteManuscript(manuscriptId: string): Promise<void> {
     // Provide user-friendly error message for foreign key constraint
     if (error.code === "23503") {
       throw new Error(
-        "Cannot delete manuscript: it has existing matches, invitations, or assignments. Remove those first."
+        "Cannot delete manuscript: it has existing matches, invitations, or assignments. Remove those first.",
       );
     }
 
     if (error.code === "42501") {
       throw new Error(
-        "Permission denied: You must be an admin or designer to delete manuscripts."
+        "Permission denied: You must be an admin or designer to delete manuscripts.",
       );
     }
 

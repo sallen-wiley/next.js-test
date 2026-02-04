@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Box,
   Paper,
@@ -25,6 +26,9 @@ import {
   IconButton,
   Tooltip,
   Stack,
+  Autocomplete,
+  TextField,
+  createFilterOptions,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -62,6 +66,7 @@ interface Assignment {
   };
   manuscripts: {
     title: string;
+    custom_id?: string;
     journal: string;
     status: string;
   };
@@ -92,7 +97,7 @@ export default function ManuscriptUserManager() {
     "editor" | "author" | "collaborator" | "reviewer"
   >("editor");
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(
-    null
+    null,
   );
 
   const loadData = React.useCallback(async () => {
@@ -145,7 +150,7 @@ export default function ManuscriptUserManager() {
       await addUserToManuscript(
         selectedUserId,
         selectedManuscriptId,
-        selectedRole
+        selectedRole,
       );
       setSuccess("User successfully assigned to manuscript");
       setDialogOpen(false);
@@ -163,11 +168,11 @@ export default function ManuscriptUserManager() {
     userId: string,
     manuscriptId: string,
     userName: string,
-    manuscriptTitle: string
+    manuscriptTitle: string,
   ) => {
     if (
       !confirm(
-        `Are you sure you want to remove ${userName} from "${manuscriptTitle}"?`
+        `Are you sure you want to remove ${userName} from "${manuscriptTitle}"?`,
       )
     ) {
       return;
@@ -183,7 +188,7 @@ export default function ManuscriptUserManager() {
     } catch (err: unknown) {
       console.error("Error removing assignment:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to remove assignment"
+        err instanceof Error ? err.message : "Failed to remove assignment",
       );
     }
   };
@@ -204,7 +209,7 @@ export default function ManuscriptUserManager() {
       await updateUserManuscriptRole(
         editingAssignment.user_id,
         editingAssignment.manuscript_id,
-        selectedRole
+        selectedRole,
       );
       setSuccess("Role updated successfully");
       setEditDialogOpen(false);
@@ -217,7 +222,7 @@ export default function ManuscriptUserManager() {
   };
 
   const getRoleColor = (
-    role: string
+    role: string,
   ): "primary" | "secondary" | "info" | "success" => {
     const roleConfig = MANUSCRIPT_ROLES.find((r) => r.value === role);
     return roleConfig?.color || "primary";
@@ -279,6 +284,7 @@ export default function ManuscriptUserManager() {
               <TableRow>
                 <TableCell>User</TableCell>
                 <TableCell>Manuscript</TableCell>
+                <TableCell>Custom ID</TableCell>
                 <TableCell>Journal</TableCell>
                 <TableCell>Role</TableCell>
                 <TableCell>Status</TableCell>
@@ -289,7 +295,7 @@ export default function ManuscriptUserManager() {
             <TableBody>
               {assignments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={8} align="center">
                     <Typography color="text.secondary" sx={{ py: 3 }}>
                       No assignments found. Click &quot;Add Assignment&quot; to
                       get started.
@@ -313,13 +319,49 @@ export default function ManuscriptUserManager() {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Typography
-                          variant="body2"
-                          noWrap
-                          sx={{ maxWidth: 300 }}
+                        <Link
+                          href={`/reviewer-dashboard/${assignment.manuscript_id}`}
+                          style={{ textDecoration: "none" }}
                         >
-                          {assignment.manuscripts.title}
-                        </Typography>
+                          <Typography
+                            variant="body2"
+                            noWrap
+                            sx={{
+                              maxWidth: 300,
+                              color: "primary.main",
+                              "&:hover": {
+                                textDecoration: "underline",
+                              },
+                            }}
+                          >
+                            {assignment.manuscripts.title}
+                          </Typography>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {assignment.manuscripts.custom_id ? (
+                          <Link
+                            href={`/reviewer-dashboard/${assignment.manuscript_id}`}
+                            style={{ textDecoration: "none" }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "primary.main",
+                                fontFamily: "monospace",
+                                "&:hover": {
+                                  textDecoration: "underline",
+                                },
+                              }}
+                            >
+                              {assignment.manuscripts.custom_id}
+                            </Typography>
+                          </Link>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            —
+                          </Typography>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
@@ -342,7 +384,7 @@ export default function ManuscriptUserManager() {
                       </TableCell>
                       <TableCell>
                         {new Date(
-                          assignment.assigned_date
+                          assignment.assigned_date,
                         ).toLocaleDateString()}
                       </TableCell>
                       <TableCell align="right">
@@ -364,7 +406,7 @@ export default function ManuscriptUserManager() {
                                 assignment.manuscript_id,
                                 assignment.user_profiles.full_name ||
                                   assignment.user_profiles.email,
-                                assignment.manuscripts.title
+                                assignment.manuscripts.title,
                               )
                             }
                           >
@@ -391,35 +433,78 @@ export default function ManuscriptUserManager() {
             <Box
               sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
             >
-              <FormControl fullWidth>
-                <InputLabel>User</InputLabel>
-                <Select
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                  label="User"
-                >
-                  {users.map((user) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.full_name || user.email} ({user.email})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={users}
+                getOptionLabel={(option) => option.full_name || option.email}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                value={users.find((u) => u.id === selectedUserId) || null}
+                onChange={(_, newValue) =>
+                  setSelectedUserId(newValue?.id || "")
+                }
+                renderOption={(props, option) => {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const { key, ...otherProps } = props as React.HTMLAttributes<HTMLLIElement> & { key: string };
+                  return (
+                    <li key={option.id} {...otherProps}>
+                      <Box>
+                        <Typography variant="body2">
+                          {option.full_name || option.email}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {option.email} • {option.role}
+                        </Typography>
+                      </Box>
+                    </li>
+                  );
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="User"
+                    placeholder="Search users..."
+                  />
+                )}
+                fullWidth
+              />
 
-              <FormControl fullWidth>
-                <InputLabel>Manuscript</InputLabel>
-                <Select
-                  value={selectedManuscriptId}
-                  onChange={(e) => setSelectedManuscriptId(e.target.value)}
-                  label="Manuscript"
-                >
-                  {manuscripts.map((manuscript) => (
-                    <MenuItem key={manuscript.id} value={manuscript.id}>
-                      {manuscript.title}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={manuscripts}
+                getOptionLabel={(option) => option.title}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                value={
+                  manuscripts.find((m) => m.id === selectedManuscriptId) || null
+                }
+                onChange={(_, newValue) =>
+                  setSelectedManuscriptId(newValue?.id || "")
+                }
+                filterOptions={createFilterOptions({
+                  stringify: (option) =>
+                    `${option.title} ${option.custom_id || ""}`,
+                })}
+                renderOption={(props, option) => {
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const { key, ...otherProps } = props as React.HTMLAttributes<HTMLLIElement> & { key: string };
+                  return (
+                    <li key={option.id} {...otherProps}>
+                      <Box>
+                        <Typography variant="body2">{option.title}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {option.custom_id && `${option.custom_id} • `}
+                          {option.journal} • {option.status}
+                        </Typography>
+                      </Box>
+                    </li>
+                  );
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Manuscript"
+                    placeholder="Search by title or ID..."
+                  />
+                )}
+                fullWidth
+              />
 
               <FormControl fullWidth>
                 <InputLabel>Role</InputLabel>
@@ -431,7 +516,7 @@ export default function ManuscriptUserManager() {
                         | "editor"
                         | "author"
                         | "collaborator"
-                        | "reviewer"
+                        | "reviewer",
                     )
                   }
                   label="Role"
@@ -487,7 +572,7 @@ export default function ManuscriptUserManager() {
                           | "editor"
                           | "author"
                           | "collaborator"
-                          | "reviewer"
+                          | "reviewer",
                       )
                     }
                     label="Role"

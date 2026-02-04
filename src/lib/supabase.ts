@@ -18,6 +18,7 @@ export type ManuscriptTag =
 export interface Manuscript {
   id: string;
   title: string;
+  custom_id?: string;
   authors: string[];
   journal: string;
   submission_date: string;

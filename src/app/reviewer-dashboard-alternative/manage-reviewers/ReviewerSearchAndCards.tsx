@@ -33,6 +33,7 @@ export interface ReviewerFilters {
   hideUnavailable: boolean;
   institutionalEmail: boolean;
   country: string;
+  role: string;
   responseTimeMax: number;
   reviewsLast12Months: number;
   totalReviewsMin: number;
@@ -186,6 +187,7 @@ export function ReviewerSearchAndCards({
                 {(filters.hideUnavailable ||
                   filters.institutionalEmail ||
                   filters.country !== "" ||
+                  filters.role !== "" ||
                   filters.responseTimeMax > 0 ||
                   filters.reviewsLast12Months > 0 ||
                   filters.totalReviewsMin > 0 ||
@@ -263,6 +265,21 @@ export function ReviewerSearchAndCards({
                           onFiltersChange({
                             ...filters,
                             country: "",
+                          });
+                        }}
+                        color="neutral"
+                        variant="outlined"
+                      />
+                    )}
+
+                    {/* Role chip */}
+                    {filters.role !== "" && (
+                      <Chip
+                        label={`Role: ${filters.role}`}
+                        onDelete={() => {
+                          onFiltersChange({
+                            ...filters,
+                            role: "",
                           });
                         }}
                         color="neutral"
@@ -498,6 +515,36 @@ export function ReviewerSearchAndCards({
                           <MenuItem value="Canada">Canada</MenuItem>
                           <MenuItem value="Germany">Germany</MenuItem>
                           <MenuItem value="Australia">Australia</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+
+                    {/* Role */}
+                    <Box>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mb: 0.5, fontWeight: "bold" }}
+                      >
+                        Role
+                      </Typography>
+                      <FormControl fullWidth size="small">
+                        <Select
+                          value={filters.role}
+                          onChange={(e) =>
+                            onFiltersChange({
+                              ...filters,
+                              role: e.target.value as string,
+                            })
+                          }
+                          displayEmpty
+                        >
+                          <MenuItem value="">All Roles</MenuItem>
+                          <MenuItem value="Role A" disabled>
+                            Role A
+                          </MenuItem>
+                          <MenuItem value="Role B" disabled>
+                            Role B
+                          </MenuItem>
                         </Select>
                       </FormControl>
                     </Box>
