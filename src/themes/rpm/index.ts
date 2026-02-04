@@ -566,7 +566,7 @@ let theme = createTheme({
   shape: {
     borderRadius: 0,
   },
-  typography: typography as any,
+  typography: typography as unknown as Record<string, CSSProperties>,
   palette: {
     contrastThreshold: 4.5,
     // Required global colors
@@ -661,7 +661,7 @@ let theme = createTheme({
 });
 
 // Step 2: Extend theme with component overrides that can access theme values
-theme = createTheme(theme as any, {
+theme = createTheme(theme, {
   components: {
     MuiCssBaseline: {
       styleOverrides: `
@@ -832,7 +832,15 @@ theme = createTheme(theme as any, {
         },
       ],
       styleOverrides: {
-        root: ({ ownerState }: { ownerState: any }) => ({
+        root: ({
+          ownerState,
+        }: {
+          ownerState: {
+            size?: "small" | "medium" | "large";
+            variant?: string;
+            color?: string;
+          };
+        }) => ({
           textTransform: "none",
           ...defaultText,
           fontWeight: 600,
@@ -914,7 +922,11 @@ theme = createTheme(theme as any, {
     },
     MuiInputBase: {
       styleOverrides: {
-        root: ({ ownerState }: { ownerState: any }) => ({
+        root: ({
+          ownerState,
+        }: {
+          ownerState: { size?: "small" | "medium" };
+        }) => ({
           ...typography["form-data"],
 
           ...(ownerState.size === "medium" && {
@@ -946,7 +958,11 @@ theme = createTheme(theme as any, {
               borderColor: red[100],
             },
         }),
-        multiline: ({ ownerState }: { ownerState: any }) => ({
+        multiline: ({
+          ownerState,
+        }: {
+          ownerState: { size?: "small" | "medium" };
+        }) => ({
           ...(ownerState.size === "medium" && {
             padding: "10px 8px !important",
             minHeight: 40,
@@ -984,7 +1000,11 @@ theme = createTheme(theme as any, {
           minWidth: 100,
           paddingRight: "26px !important",
         },
-        root: ({ ownerState }: { ownerState: any }) => ({
+        root: ({
+          ownerState,
+        }: {
+          ownerState: { size?: "small" | "medium" };
+        }) => ({
           height: "unset",
           ".MuiSelect-icon": {
             right: 8,
