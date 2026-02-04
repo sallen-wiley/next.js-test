@@ -78,7 +78,7 @@ const AdminSidebar = memo(
             Admin Tools
           </Typography>
         </Box>
-        <List component="nav">
+        <List component="nav" aria-label="admin navigation">
           <ListItemButton
             selected={activeTab === 0}
             onClick={() => onTabChange(0)}

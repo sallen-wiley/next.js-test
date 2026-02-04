@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   IconButton,
   Paper,
@@ -104,7 +105,7 @@ export default function ManuscriptManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingManuscript, setEditingManuscript] = useState<Manuscript | null>(
-    null
+    null,
   );
   const [deletingManuscript, setDeletingManuscript] =
     useState<Manuscript | null>(null);
@@ -363,7 +364,7 @@ export default function ManuscriptManager() {
         </Stack>
 
         <TableContainer component={Paper}>
-          <Table>
+          <Table aria-label="manuscripts table">
             <TableHead>
               <TableRow>
                 <TableCell>Title</TableCell>
@@ -466,7 +467,7 @@ export default function ManuscriptManager() {
                     </TableCell>
                     <TableCell>
                       {new Date(
-                        manuscript.submission_date
+                        manuscript.submission_date,
                       ).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
@@ -499,12 +500,22 @@ export default function ManuscriptManager() {
           onClose={handleCloseDialog}
           maxWidth="md"
           fullWidth
+          aria-labelledby="manuscript-dialog-title"
+          aria-describedby="manuscript-dialog-description"
         >
           <form onSubmit={handleSubmit}>
-            <DialogTitle>
+            <DialogTitle id="manuscript-dialog-title">
               {editingManuscript ? "Edit Manuscript" : "Add New Manuscript"}
             </DialogTitle>
             <DialogContent>
+              <DialogContentText
+                id="manuscript-dialog-description"
+                sx={{ pb: 1 }}
+              >
+                {editingManuscript
+                  ? "Update the manuscript information below."
+                  : "Enter the manuscript information below."}
+              </DialogContentText>
               <Box
                 sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}
               >
@@ -656,7 +667,7 @@ export default function ManuscriptManager() {
                       }
                       return selected
                         .map(
-                          (tag) => tag.charAt(0).toUpperCase() + tag.slice(1)
+                          (tag) => tag.charAt(0).toUpperCase() + tag.slice(1),
                         )
                         .join(", ");
                     }}
@@ -806,10 +817,15 @@ export default function ManuscriptManager() {
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
-          <DialogTitle>Confirm Delete</DialogTitle>
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleCloseDeleteDialog}
+          aria-labelledby="delete-dialog-title"
+          aria-describedby="delete-dialog-description"
+        >
+          <DialogTitle id="delete-dialog-title">Confirm Delete</DialogTitle>
           <DialogContent>
-            <Typography>
+            <Typography id="delete-dialog-description">
               Are you sure you want to delete the manuscript &quot;
               {deletingManuscript?.title}&quot;?
             </Typography>

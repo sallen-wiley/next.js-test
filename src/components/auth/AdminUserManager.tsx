@@ -86,7 +86,7 @@ export default function AdminUserManager() {
     }
 
     setLoading(false);
-  }, []);
+  }, [supabase]);
 
   const createUser = async () => {
     if (!newUserEmail || !newUserPassword) {
@@ -107,7 +107,7 @@ export default function AdminUserManager() {
         setError(`Failed to create user: ${error.message}`);
       } else {
         setSuccess(
-          `User created: ${newUserEmail} with password: ${newUserPassword}`
+          `User created: ${newUserEmail} with password: ${newUserPassword}`,
         );
         setNewUserEmail("");
         setNewUserPassword("");
@@ -206,65 +206,63 @@ export default function AdminUserManager() {
             {success}
           </Alert>
         )}
-        <Paper sx={{ mt: 2 }}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="body2" fontWeight="medium">
-                          {user.email}
+        <TableContainer component={Paper} sx={{ mt: 2 }}>
+          <Table aria-label="user management table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Created</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {user.email}
+                      </Typography>
+                      {user.full_name && (
+                        <Typography variant="caption" color="text.secondary">
+                          {user.full_name}
                         </Typography>
-                        {user.full_name && (
-                          <Typography variant="caption" color="text.secondary">
-                            {user.full_name}
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={user.role || "guest"}
-                        color={
-                          user.role === "admin"
-                            ? "error"
-                            : user.role === "editor"
-                            ? "primary"
-                            : "default"
-                        }
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={user.is_active ? "Active" : "Inactive"}
-                        color={user.is_active ? "success" : "warning"}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{formatDate(user.created_at)}</TableCell>
-                    <TableCell>
-                      <IconButton size="small" color="error">
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.role || "guest"}
+                      color={
+                        user.role === "admin"
+                          ? "error"
+                          : user.role === "editor"
+                          ? "primary"
+                          : "default"
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={user.is_active ? "Active" : "Inactive"}
+                      color={user.is_active ? "success" : "warning"}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{formatDate(user.created_at)}</TableCell>
+                  <TableCell>
+                    <IconButton size="small" color="error">
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
         <Dialog
           open={createDialogOpen}
           onClose={() => setCreateDialogOpen(false)}

@@ -443,7 +443,10 @@ export default function ManuscriptUserManager() {
                 }
                 renderOption={(props, option) => {
                   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const { key, ...otherProps } = props as React.HTMLAttributes<HTMLLIElement> & { key: string };
+                  const { key, ...otherProps } =
+                    props as React.HTMLAttributes<HTMLLIElement> & {
+                      key: string;
+                    };
                   return (
                     <li key={option.id} {...otherProps}>
                       <Box>
@@ -483,7 +486,10 @@ export default function ManuscriptUserManager() {
                 })}
                 renderOption={(props, option) => {
                   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                  const { key, ...otherProps } = props as React.HTMLAttributes<HTMLLIElement> & { key: string };
+                  const { key, ...otherProps } =
+                    props as React.HTMLAttributes<HTMLLIElement> & {
+                      key: string;
+                    };
                   return (
                     <li key={option.id} {...otherProps}>
                       <Box>

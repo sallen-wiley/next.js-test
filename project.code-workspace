@@ -47,6 +47,13 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit"
     },
-    "window.title": "📓 storybook"
+    "window.title": "📓 storybook",
+    "mcpServers": {
+      "mui-mcp": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@mui/mcp@latest"]
+      }
+    }
   }
 }
