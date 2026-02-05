@@ -15,6 +15,7 @@ import {
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import ColorizeIcon from "@mui/icons-material/Colorize";
+import ContrastIcon from "@mui/icons-material/Contrast";
 import type { ShadeDefinition } from "../types";
 import { hexToHsv } from "../utils/colorConversions";
 import { calculateContrast } from "../utils/contrastCalculations";
@@ -22,10 +23,11 @@ import { calculateContrast } from "../utils/contrastCalculations";
 export interface ShadeCardProps {
   shade: ShadeDefinition;
   onUpdate: (updates: Partial<ShadeDefinition>) => void;
+  contrastTargetColor?: string | null;
 }
 
 const ShadeCard = React.memo(
-  function ShadeCard({ shade, onUpdate }: ShadeCardProps) {
+  function ShadeCard({ shade, onUpdate, contrastTargetColor }: ShadeCardProps) {
     const colorInputRef = React.useRef<HTMLInputElement>(null);
     const [hexInput, setHexInput] = React.useState(shade.color);
 
@@ -36,19 +38,24 @@ const ShadeCard = React.memo(
 
     const contrastWhite = useMemo(
       () => calculateContrast(shade.color, "#ffffff"),
-      [shade.color]
+      [shade.color],
     );
     const contrastBlack = useMemo(
       () => calculateContrast(shade.color, "#000000"),
-      [shade.color]
+      [shade.color],
+    );
+    const contrastCustom = useMemo(
+      () =>
+        contrastTargetColor
+          ? calculateContrast(shade.color, contrastTargetColor)
+          : null,
+      [shade.color, contrastTargetColor],
     );
 
-    const { passesAA, passesAAA, textColor, isAchromatic } = useMemo(() => {
+    const { textColor, isAchromatic } = useMemo(() => {
       const cWhite = contrastWhite;
       const cBlack = contrastBlack;
       return {
-        passesAA: cWhite >= 4.5 || cBlack >= 4.5,
-        passesAAA: cWhite >= 7 || cBlack >= 7,
         textColor: cWhite > cBlack ? "#fff" : "#000",
         isAchromatic: shade.hsv.s < 1,
       };
@@ -76,7 +83,7 @@ const ShadeCard = React.memo(
           });
         }
       },
-      [shade.hsv.h, onUpdate]
+      [shade.hsv.h, onUpdate],
     );
 
     // Note: shade.hsv.h is a primitive value, safe to use in dependencies
@@ -272,37 +279,75 @@ const ShadeCard = React.memo(
         </CardContent>
 
         <CardContent sx={{ pt: 0 }}>
-          <Box sx={{ mb: 1 }}>
-            <Typography
-              variant="caption"
-              sx={{ color: textColor, opacity: 0.8, display: "block" }}
-            >
-              White: {contrastWhite.toFixed(2)}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ color: textColor, opacity: 0.8, display: "block" }}
-            >
-              Black: {contrastBlack.toFixed(2)}
-            </Typography>
-            <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
-              {passesAAA && (
+          <Stack spacing={0.5} sx={{ mb: 1 }}>
+            {/* White contrast line */}
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Typography
+                variant="caption"
+                sx={{ color: textColor, opacity: 0.8, minWidth: 80 }}
+              >
+                White: {contrastWhite.toFixed(2)}
+              </Typography>
+              {contrastWhite >= 7 && (
                 <Tooltip title="Meets WCAG AAA standard (7:1 contrast ratio) - excellent for all text">
                   <Chip label="AAA" size="small" color="success" />
                 </Tooltip>
               )}
-              {passesAA && (
+              {contrastWhite >= 4.5 && contrastWhite < 7 && (
                 <Tooltip title="Meets WCAG AA standard (4.5:1 contrast ratio) - good for normal text">
                   <Chip label="AA" size="small" color="primary" />
                 </Tooltip>
               )}
-              {!passesAA && (
-                <Tooltip title="Fails WCAG standards - insufficient contrast for text accessibility">
-                  <Chip label="Fails" size="small" color="error" />
+            </Stack>
+
+            {/* Black contrast line */}
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Typography
+                variant="caption"
+                sx={{ color: textColor, opacity: 0.8, minWidth: 80 }}
+              >
+                Black: {contrastBlack.toFixed(2)}
+              </Typography>
+              {contrastBlack >= 7 && (
+                <Tooltip title="Meets WCAG AAA standard (7:1 contrast ratio) - excellent for all text">
+                  <Chip label="AAA" size="small" color="success" />
+                </Tooltip>
+              )}
+              {contrastBlack >= 4.5 && contrastBlack < 7 && (
+                <Tooltip title="Meets WCAG AA standard (4.5:1 contrast ratio) - good for normal text">
+                  <Chip label="AA" size="small" color="primary" />
                 </Tooltip>
               )}
             </Stack>
-          </Box>
+
+            {/* Custom contrast line (only if custom color is set) */}
+            {contrastTargetColor && contrastCustom !== null && (
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <ContrastIcon
+                  sx={{
+                    fontSize: "0.875rem",
+                    color: contrastTargetColor,
+                  }}
+                />
+                <Typography
+                  variant="caption"
+                  sx={{ color: textColor, opacity: 0.8, minWidth: 80 }}
+                >
+                  {contrastTargetColor}: {contrastCustom.toFixed(2)}
+                </Typography>
+                {contrastCustom >= 7 && (
+                  <Tooltip title="Meets WCAG AAA standard (7:1 contrast ratio) - excellent for all text">
+                    <Chip label="AAA" size="small" color="success" />
+                  </Tooltip>
+                )}
+                {contrastCustom >= 4.5 && contrastCustom < 7 && (
+                  <Tooltip title="Meets WCAG AA standard (4.5:1 contrast ratio) - good for normal text">
+                    <Chip label="AA" size="small" color="primary" />
+                  </Tooltip>
+                )}
+              </Stack>
+            )}
+          </Stack>
 
           <Button
             fullWidth
@@ -347,9 +392,10 @@ const ShadeCard = React.memo(
       prev.generationMode === next.generationMode &&
       prev.hsv.h === next.hsv.h &&
       prev.hsv.s === next.hsv.s &&
-      prev.hsv.v === next.hsv.v
+      prev.hsv.v === next.hsv.v &&
+      prevProps.contrastTargetColor === nextProps.contrastTargetColor
     );
-  }
+  },
 );
 
 export default ShadeCard;

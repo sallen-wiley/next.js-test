@@ -42,6 +42,7 @@ export default function HueEditor({
   onUpdate,
   onRemove,
   canRemove,
+  contrastTargetColor,
 }: HueEditorProps) {
   const [anchorDialogOpen, setAnchorDialogOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
@@ -69,7 +70,7 @@ export default function HueEditor({
   const suggestedColorName = useMemo(
     () => getColorName(medianShade?.hsv || { h: 0, s: 0, v: 50 }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [medianShade?.color] // Use color as dependency since it's always synced from HSV
+    [medianShade?.color], // Use color as dependency since it's always synced from HSV
   );
 
   const updateShade = React.useCallback(
@@ -77,11 +78,11 @@ export default function HueEditor({
       // Use functional update to get current state and avoid stale closures
       onUpdate((currentHue) => ({
         shades: currentHue.shades.map((shade) =>
-          shade.id === shadeId ? { ...shade, ...updates } : shade
+          shade.id === shadeId ? { ...shade, ...updates } : shade,
         ),
       }));
     },
-    [onUpdate]
+    [onUpdate],
   );
 
   const handleConfigChange = (newConfig: ShadeConfiguration[]) => {
@@ -90,7 +91,7 @@ export default function HueEditor({
       // Try to find corresponding old shade by proportional index
       const oldIndex = Math.round(
         (newIndex / Math.max(1, newConfig.length - 1)) *
-          Math.max(1, hue.shades.length - 1)
+          Math.max(1, hue.shades.length - 1),
       );
       const oldShade = hue.shades[oldIndex];
 
@@ -122,7 +123,7 @@ export default function HueEditor({
     const hPoints = lockedShades
       .filter(
         (s: ShadeDefinition & { index: number }) =>
-          s.selectedForH && s.hsv.s > 1
+          s.selectedForH && s.hsv.s > 1,
       )
       .map((s: ShadeDefinition & { index: number }) => ({
         x: s.index,
@@ -260,6 +261,9 @@ export default function HueEditor({
                 onUpdate({ muiName: e.target.value });
               }}
             >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
               {MUI_PALETTE_KEYS.map((key) => (
                 <MenuItem key={key} value={key}>
                   {key}
@@ -353,7 +357,11 @@ export default function HueEditor({
         </Paper>
       </Box>
 
-      <ShadeGrid shades={hue.shades} onShadeUpdate={updateShade} />
+      <ShadeGrid
+        shades={hue.shades}
+        onShadeUpdate={updateShade}
+        contrastTargetColor={contrastTargetColor}
+      />
 
       {/* Anchor Warning Dialog */}
       <Dialog

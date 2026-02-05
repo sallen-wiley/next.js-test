@@ -12,7 +12,7 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
-import { savePalette } from "../services/paletteService";
+import { savePalette, loadPalette } from "../services/paletteService";
 import { supabase } from "@/lib/supabase";
 import { useRoleAccess } from "@/hooks/useRoles";
 import type { HueSet } from "../types";
@@ -52,10 +52,26 @@ export default function PaletteSaveDialog({
       // If editing existing, pre-fill with current name
       setName(currentPaletteName || "");
       setDescription("");
-      setIsPublic(false);
       setError(null);
+
+      // Load existing palette's is_public state
+      if (currentPaletteId) {
+        loadPalette(currentPaletteId)
+          .then((palette) => {
+            if (palette) {
+              setIsPublic(palette.is_public);
+              setDescription(palette.description || "");
+            }
+          })
+          .catch(() => {
+            // If load fails, default to false
+            setIsPublic(false);
+          });
+      } else {
+        setIsPublic(false);
+      }
     }
-  }, [open, currentPaletteName]);
+  }, [open, currentPaletteName, currentPaletteId]);
 
   const handleSave = async (saveAsNew: boolean = false) => {
     if (!name.trim()) {

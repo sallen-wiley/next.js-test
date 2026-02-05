@@ -74,7 +74,7 @@ export const MUI_PALETTE_KEYS = [
 export const DEFAULT_HUE: HueSet = {
   id: "1",
   name: "primary",
-  muiName: "primary",
+  muiName: "",
   extrapolationMode: "functional",
   shadeConfig: DEFAULT_SHADE_CONFIG,
   shades: DEFAULT_SHADE_CONFIG.map((config) => {

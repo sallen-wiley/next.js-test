@@ -94,8 +94,8 @@ export default function AdminActionsFab() {
             <ListItemText
               primary={action.label}
               secondary={action.tooltip}
-              secondaryTypographyProps={{
-                variant: "caption",
+              slotProps={{
+                secondary: { variant: "caption" },
               }}
             />
           </MenuItem>
@@ -111,8 +111,8 @@ export default function AdminActionsFab() {
             <ListItemText
               primary="Logout"
               secondary={user.email}
-              secondaryTypographyProps={{
-                variant: "caption",
+              slotProps={{
+                secondary: { variant: "caption" },
               }}
             />
           </MenuItem>

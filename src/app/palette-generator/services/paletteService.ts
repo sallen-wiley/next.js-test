@@ -83,7 +83,7 @@ export function generateFullExport(
     version?: string;
     name?: string;
     description?: string;
-  }
+  },
 ): {
   version: string;
   generatedAt: string;
@@ -102,6 +102,52 @@ export function generateFullExport(
     muiTheme: generateMuiThemeExport(data),
     fullData: data,
   };
+}
+
+/**
+ * Generate CSS custom properties (CSS variables) from palette data
+ * Converts HueSet[] to :root { --{hueName}-{label}: {color}; } format
+ * Uses muiName if set, otherwise falls back to name
+ * @param data - Palette data (HueSet[] array)
+ * @returns CSS string with :root declaration
+ */
+export function generateCssVariablesExport(data: PaletteData): string {
+  let cssVars = ":root {\n";
+
+  data.forEach((hue) => {
+    const hueName = (hue.muiName || hue.name)
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+    hue.shades.forEach((shade) => {
+      cssVars += `  --${hueName}-${shade.label}: ${shade.color};\n`;
+    });
+  });
+
+  cssVars += "}\n";
+  return cssVars;
+}
+
+/**
+ * Download CSS variables as a .css file
+ * @param data - Palette data (HueSet[] array)
+ * @param filename - Optional filename (defaults to palette name or timestamp)
+ */
+export function downloadCssVariables(
+  data: PaletteData,
+  filename?: string,
+): void {
+  const cssContent = generateCssVariablesExport(data);
+  const blob = new Blob([cssContent], { type: "text/css" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download =
+    filename || `palette-${new Date().toISOString().split("T")[0]}.css`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 // ============================================================================
@@ -124,7 +170,7 @@ export async function savePalette(
     description?: string;
     isPublic?: boolean;
     paletteId?: string; // If provided, updates existing palette
-  } = {}
+  } = {},
 ): Promise<UserPalette> {
   const { description, isPublic = false, paletteId } = options;
 
@@ -149,14 +195,14 @@ export async function savePalette(
         throw new PaletteServiceError(
           `Failed to update palette: ${error.message}`,
           error.code,
-          error.details
+          error.details,
         );
       }
 
       if (!data) {
         throw new PaletteServiceError(
           "Palette not found or you don't have permission to update it",
-          "NOT_FOUND"
+          "NOT_FOUND",
         );
       }
 
@@ -181,7 +227,7 @@ export async function savePalette(
       throw new PaletteServiceError(
         `Failed to create palette: ${error.message}`,
         error.code,
-        error.details
+        error.details,
       );
     }
 
@@ -193,7 +239,7 @@ export async function savePalette(
     throw new PaletteServiceError(
       `Unexpected error saving palette: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }
@@ -205,7 +251,7 @@ export async function savePalette(
  * @returns Palette record or null if not found/no access
  */
 export async function loadPalette(
-  paletteId: string
+  paletteId: string,
 ): Promise<UserPalette | null> {
   try {
     const { data, error } = await supabase
@@ -222,7 +268,7 @@ export async function loadPalette(
       throw new PaletteServiceError(
         `Failed to load palette: ${error.message}`,
         error.code,
-        error.details
+        error.details,
       );
     }
 
@@ -238,7 +284,7 @@ export async function loadPalette(
     throw new PaletteServiceError(
       `Unexpected error loading palette: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }
@@ -255,7 +301,7 @@ export async function listUserPalettes(
     includePublic?: boolean; // Include public palettes from other users
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ): Promise<UserPalette[]> {
   const { includePublic = false, limit = 50, offset = 0 } = options;
 
@@ -269,7 +315,7 @@ export async function listUserPalettes(
     if (includePublic) {
       // Get user's palettes OR public palettes (but not presets)
       query = query.or(
-        `user_id.eq.${userId},and(is_public.eq.true,is_preset.eq.false)`
+        `user_id.eq.${userId},and(is_public.eq.true,is_preset.eq.false)`,
       );
     } else {
       // Only user's own palettes
@@ -282,7 +328,7 @@ export async function listUserPalettes(
       throw new PaletteServiceError(
         `Failed to list palettes: ${error.message}`,
         error.code,
-        error.details
+        error.details,
       );
     }
 
@@ -302,7 +348,7 @@ export async function listUserPalettes(
     throw new PaletteServiceError(
       `Unexpected error listing palettes: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }
@@ -317,7 +363,7 @@ export async function listPublicPalettes(
     excludePresets?: boolean; // Exclude system presets
     limit?: number;
     offset?: number;
-  } = {}
+  } = {},
 ): Promise<UserPalette[]> {
   const { excludePresets = true, limit = 50, offset = 0 } = options;
 
@@ -340,7 +386,7 @@ export async function listPublicPalettes(
       throw new PaletteServiceError(
         `Failed to list public palettes: ${palettesError.message}`,
         palettesError.code,
-        palettesError.details
+        palettesError.details,
       );
     }
 
@@ -364,7 +410,7 @@ export async function listPublicPalettes(
 
     // Create a map of user_id to full_name
     const profileMap = new Map(
-      (profiles || []).map((p) => [p.id, p.full_name])
+      (profiles || []).map((p) => [p.id, p.full_name]),
     );
 
     // Ensure palette_data is properly typed and add author_name
@@ -384,7 +430,7 @@ export async function listPublicPalettes(
     throw new PaletteServiceError(
       `Unexpected error listing public palettes: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }
@@ -406,7 +452,7 @@ export async function listPresetPalettes(): Promise<UserPalette[]> {
       throw new PaletteServiceError(
         `Failed to list preset palettes: ${error.message}`,
         error.code,
-        error.details
+        error.details,
       );
     }
 
@@ -426,7 +472,7 @@ export async function listPresetPalettes(): Promise<UserPalette[]> {
     throw new PaletteServiceError(
       `Unexpected error listing preset palettes: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }
@@ -439,7 +485,7 @@ export async function listPresetPalettes(): Promise<UserPalette[]> {
  */
 export async function deletePalette(
   paletteId: string,
-  userId: string
+  userId: string,
 ): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -452,7 +498,7 @@ export async function deletePalette(
       throw new PaletteServiceError(
         `Failed to delete palette: ${error.message}`,
         error.code,
-        error.details
+        error.details,
       );
     }
 
@@ -464,7 +510,7 @@ export async function deletePalette(
     throw new PaletteServiceError(
       `Unexpected error deleting palette: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }
@@ -479,7 +525,7 @@ export async function deletePalette(
 export async function duplicatePalette(
   paletteId: string,
   userId: string,
-  newName: string
+  newName: string,
 ): Promise<UserPalette> {
   try {
     // Load source palette
@@ -487,7 +533,7 @@ export async function duplicatePalette(
     if (!sourcePalette) {
       throw new PaletteServiceError(
         "Source palette not found or you don't have access",
-        "NOT_FOUND"
+        "NOT_FOUND",
       );
     }
 
@@ -505,7 +551,7 @@ export async function duplicatePalette(
     throw new PaletteServiceError(
       `Unexpected error duplicating palette: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }
@@ -518,7 +564,7 @@ export async function duplicatePalette(
  */
 export async function searchPalettes(
   searchTerm: string,
-  userId?: string
+  userId?: string,
 ): Promise<UserPalette[]> {
   try {
     let query = supabase
@@ -542,7 +588,7 @@ export async function searchPalettes(
       throw new PaletteServiceError(
         `Failed to search palettes: ${error.message}`,
         error.code,
-        error.details
+        error.details,
       );
     }
 
@@ -554,7 +600,7 @@ export async function searchPalettes(
     throw new PaletteServiceError(
       `Unexpected error searching palettes: ${error}`,
       "UNKNOWN_ERROR",
-      error
+      error,
     );
   }
 }

@@ -51,7 +51,7 @@ interface CurveVisualizationProps {
 const hsvToRgb = (
   h: number,
   s: number,
-  v: number
+  v: number,
 ): { r: number; g: number; b: number } => {
   s = s / 100;
   v = v / 100;
@@ -154,7 +154,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         }, 66); // 15fps (~66ms)
       }
     },
-    [onUpdate]
+    [onUpdate],
   );
 
   // Curve visibility settings
@@ -168,7 +168,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
   // Chart dimensions - make responsive
   const margin = useMemo(
     () => ({ top: 20, right: 0, bottom: 20, left: 20 }),
-    []
+    [],
   );
   const [dimensions, setDimensions] = useState({ width: 800, height: 300 });
   const width = dimensions.width - margin.left - margin.right;
@@ -204,6 +204,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     if (!dragBehaviorsRef.current.h) {
       dragBehaviorsRef.current.h = d3
         .drag<SVGCircleElement, ShadeDefinition>()
+        .touchable(true) // Use passive touch listeners for better scroll performance
         .filter(function (event) {
           // Only handle primary button (left click) or touch events
           return !event.ctrlKey && !event.button;
@@ -212,6 +213,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     if (!dragBehaviorsRef.current.s) {
       dragBehaviorsRef.current.s = d3
         .drag<SVGCircleElement, ShadeDefinition>()
+        .touchable(true)
         .filter(function (event) {
           return !event.ctrlKey && !event.button;
         });
@@ -219,6 +221,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     if (!dragBehaviorsRef.current.v) {
       dragBehaviorsRef.current.v = d3
         .drag<SVGCircleElement, ShadeDefinition>()
+        .touchable(true)
         .filter(function (event) {
           return !event.ctrlKey && !event.button;
         });
@@ -273,7 +276,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       targetIndex: number,
       newValue: number,
       originalValue: number,
-      channel: "h" | "s" | "v"
+      channel: "h" | "s" | "v",
     ) => {
       if (!curveSettings.smoothMode) return null;
 
@@ -315,12 +318,12 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           if (channel === "h") {
             adjustedValue = Math.max(
               0,
-              Math.min(360, currentValue + adjustedChange)
+              Math.min(360, currentValue + adjustedChange),
             );
             const rgb = hsvToRgb(
               adjustedValue,
               newShades[i].hsv.s,
-              newShades[i].hsv.v
+              newShades[i].hsv.v,
             );
             newShades[i] = {
               ...newShades[i],
@@ -330,13 +333,13 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           } else {
             adjustedValue = Math.max(
               0,
-              Math.min(100, currentValue + adjustedChange)
+              Math.min(100, currentValue + adjustedChange),
             );
             if (channel === "s") {
               const rgb = hsvToRgb(
                 newShades[i].hsv.h,
                 adjustedValue,
-                newShades[i].hsv.v
+                newShades[i].hsv.v,
               );
               newShades[i] = {
                 ...newShades[i],
@@ -347,7 +350,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
               const rgb = hsvToRgb(
                 newShades[i].hsv.h,
                 newShades[i].hsv.s,
-                adjustedValue
+                adjustedValue,
               );
               newShades[i] = {
                 ...newShades[i],
@@ -361,13 +364,13 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
       return newShades;
     },
-    [curveSettings.smoothMode, shades]
+    [curveSettings.smoothMode, shades],
   );
 
   // Handle drag events with requestAnimationFrame for smooth performance
   const handleDrag = useCallback(
     (
-      event: d3.D3DragEvent<SVGCircleElement, ShadeDefinition, ShadeDefinition>
+      event: d3.D3DragEvent<SVGCircleElement, ShadeDefinition, ShadeDefinition>,
     ) => {
       if (!svgRef.current || !dragStateRef.current) return;
 
@@ -430,7 +433,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         // If all strategies failed, abort this frame
         if (y === null || !Number.isFinite(y)) {
           console.warn(
-            "Could not determine valid y coordinate, skipping frame"
+            "Could not determine valid y coordinate, skipping frame",
           );
           return;
         }
@@ -441,7 +444,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           // Validate inverted value before clamping
           if (!Number.isFinite(inverted)) {
             console.warn(
-              "Invalid hue value from scale inversion, skipping frame"
+              "Invalid hue value from scale inversion, skipping frame",
             );
             return;
           }
@@ -451,7 +454,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           // Validate inverted value before clamping
           if (!Number.isFinite(inverted)) {
             console.warn(
-              "Invalid S/V value from scale inversion, skipping frame"
+              "Invalid S/V value from scale inversion, skipping frame",
             );
             return;
           }
@@ -481,7 +484,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           dragStateRef.current.pointIndex,
           newValue,
           dragStateRef.current.originalValue,
-          dragStateRef.current.channel
+          dragStateRef.current.channel,
         );
 
         const finalShades = smoothShades
@@ -530,7 +533,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
       lineH,
       lineS,
       lineV,
-    ]
+    ],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -625,7 +628,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           .axisBottom(xScale)
           .tickValues(shades.map((_, i) => i)) // Use indices for tick positions
           .tickSize(-height)
-          .tickFormat(() => "")
+          .tickFormat(() => ""),
       );
 
     xGrid
@@ -642,7 +645,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         d3
           .axisLeft(yScale)
           .tickSize(-width)
-          .tickFormat(() => "")
+          .tickFormat(() => ""),
       );
 
     yGrid
@@ -664,7 +667,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           .tickFormat((d) => {
             const index = d as number;
             return shades[index]?.label || "";
-          })
+          }),
       );
 
     xAxis
@@ -763,6 +766,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         .attr("stroke", color)
         .attr("stroke-width", 2)
         .style("cursor", "pointer")
+        .style("touch-action", "none") // Declare that touch events will be handled, prevents passive listener warning
         .on("click", function (event, d) {
           const index = shades.indexOf(d);
           if (index === -1) return; // Safety: shade not found in array
@@ -845,7 +849,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     const updatePoints = (
       channel: "h" | "s" | "v",
       scale: d3.ScaleLinear<number, number>,
-      color: string
+      color: string,
     ) => {
       if (!curveSettings[`show${channel.toUpperCase() as "H" | "S" | "V"}`])
         return;

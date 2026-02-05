@@ -68,10 +68,11 @@ export interface InterpolationPoint {
 export interface HueEditorProps {
   hue: HueSet;
   onUpdate: (
-    updates: Partial<HueSet> | ((current: HueSet) => Partial<HueSet>)
+    updates: Partial<HueSet> | ((current: HueSet) => Partial<HueSet>),
   ) => void;
   onRemove: () => void;
   canRemove: boolean;
+  contrastTargetColor?: string | null;
 }
 
 export interface ShadeGridProps {
