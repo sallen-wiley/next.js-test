@@ -344,7 +344,7 @@ export default function ManuscriptManager() {
       permissions={permissions}
       profile={profile}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>

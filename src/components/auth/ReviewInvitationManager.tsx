@@ -120,7 +120,7 @@ export default function ReviewInvitationManager() {
       // Join invitation data with reviewer info
       const enrichedInvitations = (invitationsData || []).map((inv) => {
         const reviewer = (reviewersData || []).find(
-          (r) => r.id === inv.reviewer_id
+          (r) => r.id === inv.reviewer_id,
         );
         return {
           ...inv,
@@ -196,7 +196,7 @@ export default function ReviewInvitationManager() {
         reminder_count: 0,
         estimated_completion_date: "",
         invitation_expiration_date: new Date(
-          Date.now() + 14 * 24 * 60 * 60 * 1000
+          Date.now() + 14 * 24 * 60 * 60 * 1000,
         )
           .toISOString()
           .split("T")[0],
@@ -309,7 +309,7 @@ export default function ReviewInvitationManager() {
       permissions={permissions}
       profile={profile}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>
@@ -350,7 +350,7 @@ export default function ReviewInvitationManager() {
             <TableBody>
               {invitations.map((invitation) => {
                 const manuscript = manuscripts.find(
-                  (m) => m.id === invitation.manuscript_id
+                  (m) => m.id === invitation.manuscript_id,
                 );
                 return (
                   <TableRow key={invitation.id}>
@@ -368,7 +368,7 @@ export default function ReviewInvitationManager() {
                         }}
                         onClick={() =>
                           router.push(
-                            `/reviewer-dashboard/manage-reviewers?manuscriptId=${invitation.manuscript_id}`
+                            `/reviewer-dashboard/manage-reviewers?manuscriptId=${invitation.manuscript_id}`,
                           )
                         }
                       >
@@ -396,7 +396,7 @@ export default function ReviewInvitationManager() {
                     <TableCell>
                       {invitation.response_date
                         ? new Date(
-                            invitation.response_date
+                            invitation.response_date,
                           ).toLocaleDateString()
                         : "—"}
                     </TableCell>

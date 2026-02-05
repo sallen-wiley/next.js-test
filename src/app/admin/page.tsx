@@ -24,8 +24,11 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import QueueIcon from "@mui/icons-material/Queue";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import { useRoleAccess } from "@/hooks/useRoles";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
+import Link from "next/link";
 
 // Lazy load manager components for better performance
 const UserManagement = lazy(() => import("@/components/auth/UserManagement"));
@@ -162,6 +165,19 @@ const AdminSidebar = memo(
               <ReportProblemIcon />
             </ListItemIcon>
             <ListItemText primary="Retractions" />
+          </ListItemButton>
+          <Divider sx={{ my: 1 }} />
+          <ListItemButton component={Link} href="/admin/data-ingestion">
+            <ListItemIcon>
+              <UploadFileIcon />
+            </ListItemIcon>
+            <ListItemText primary="Data Ingestion" />
+          </ListItemButton>
+          <ListItemButton component={Link} href="/admin/data-cleanup">
+            <ListItemIcon>
+              <DeleteSweepIcon />
+            </ListItemIcon>
+            <ListItemText primary="Data Cleanup" />
           </ListItemButton>
         </List>
       </Paper>

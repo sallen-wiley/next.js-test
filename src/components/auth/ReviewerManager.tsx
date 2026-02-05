@@ -149,7 +149,7 @@ export default function ReviewerManager() {
 
   const showSnackbar = (
     message: string,
-    severity: "success" | "error" | "info" = "success"
+    severity: "success" | "error" | "info" = "success",
   ) => {
     setSnackbar({ open: true, message, severity });
   };
@@ -305,7 +305,7 @@ export default function ReviewerManager() {
       console.error("Error saving reviewer:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to save reviewer",
-        "error"
+        "error",
       );
     }
   };
@@ -327,13 +327,13 @@ export default function ReviewerManager() {
       console.error("Error deleting reviewer:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to delete reviewer",
-        "error"
+        "error",
       );
     }
   };
 
   const getStatusColor = (
-    status: string
+    status: string,
   ): "success" | "warning" | "error" | "default" => {
     switch (status) {
       case "available":
@@ -363,7 +363,7 @@ export default function ReviewerManager() {
       permissions={permissions}
       profile={profile}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>

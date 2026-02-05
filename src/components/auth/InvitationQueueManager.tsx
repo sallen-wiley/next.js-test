@@ -117,10 +117,10 @@ export default function InvitationQueueManager() {
       // Enrich queue items with manuscript and reviewer names
       const enrichedQueue = (queueRes.data || []).map((item) => {
         const manuscript = manuscriptRes.data?.find(
-          (m) => m.id === item.manuscript_id
+          (m) => m.id === item.manuscript_id,
         );
         const reviewer = reviewerRes.data?.find(
-          (r) => r.id === item.reviewer_id
+          (r) => r.id === item.reviewer_id,
         );
         return {
           ...item,
@@ -142,7 +142,7 @@ export default function InvitationQueueManager() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     // Wait for permissions to finish loading before checking
@@ -211,7 +211,7 @@ export default function InvitationQueueManager() {
         reviewer_id: formData.reviewer_id,
         queue_position: formData.queue_position,
         scheduled_send_date: new Date(
-          formData.scheduled_send_date
+          formData.scheduled_send_date,
         ).toISOString(),
         priority: formData.priority,
         notes: formData.notes || null,
@@ -241,7 +241,7 @@ export default function InvitationQueueManager() {
       console.error("Error saving queue item:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to save queue item",
-        "error"
+        "error",
       );
     }
   };
@@ -251,7 +251,7 @@ export default function InvitationQueueManager() {
       !confirm(
         `Are you sure you want to remove ${
           reviewerName || "this item"
-        } from the queue?`
+        } from the queue?`,
       )
     ) {
       return;
@@ -270,7 +270,7 @@ export default function InvitationQueueManager() {
       console.error("Error deleting queue item:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to delete queue item",
-        "error"
+        "error",
       );
     }
   };
@@ -290,7 +290,7 @@ export default function InvitationQueueManager() {
       permissions={permissions}
       profile={profile}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>
@@ -361,7 +361,7 @@ export default function InvitationQueueManager() {
                       {item.sent ? (
                         <Chip
                           label={`Sent ${new Date(
-                            item.sent_at!
+                            item.sent_at!,
                           ).toLocaleDateString()}`}
                           size="small"
                           color="success"

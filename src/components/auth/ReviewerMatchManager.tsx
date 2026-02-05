@@ -154,12 +154,12 @@ export default function ReviewerMatchManager() {
         selectedReviewerId,
         matchScore, // Already in 0-1 scale
         isInitialSuggestion,
-        conflictsOfInterest
+        conflictsOfInterest,
       );
       setSuccess(
         `Reviewer match added with score ${Math.round(
-          matchScore * 100
-        )}%. This reviewer will now appear in the "Suggested Reviewers" tab.`
+          matchScore * 100,
+        )}%. This reviewer will now appear in the "Suggested Reviewers" tab.`,
       );
       setDialogOpen(false);
       setSelectedManuscriptId("");
@@ -177,11 +177,11 @@ export default function ReviewerMatchManager() {
   const handleRemoveMatch = async (
     matchId: string,
     reviewerName: string,
-    manuscriptTitle: string
+    manuscriptTitle: string,
   ) => {
     if (
       !confirm(
-        `Are you sure you want to remove the match between ${reviewerName} and "${manuscriptTitle}"?`
+        `Are you sure you want to remove the match between ${reviewerName} and "${manuscriptTitle}"?`,
       )
     ) {
       return;
@@ -220,7 +220,7 @@ export default function ReviewerMatchManager() {
         editingMatch.id,
         matchScore,
         isInitialSuggestion,
-        conflictsOfInterest
+        conflictsOfInterest,
       );
       setSuccess("Match updated successfully");
       setEditDialogOpen(false);
@@ -247,7 +247,7 @@ export default function ReviewerMatchManager() {
       permissions={permissions}
       profile={profile}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>
@@ -429,7 +429,7 @@ export default function ReviewerMatchManager() {
                             handleRemoveMatch(
                               match.id,
                               match.potential_reviewers.name,
-                              match.manuscripts.title
+                              match.manuscripts.title,
                             )
                           }
                         >

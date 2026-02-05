@@ -311,7 +311,7 @@ export default function ArticleListingPage() {
                 return (
                   <ArticleCard
                     key={manuscript.id}
-                    id={manuscript.id.split("-")[0]}
+                    id={manuscript.custom_id || manuscript.id.split("-")[0]}
                     title={manuscript.title}
                     authors={manuscript.authors}
                     articleType={manuscript.article_type ?? "undefined"}

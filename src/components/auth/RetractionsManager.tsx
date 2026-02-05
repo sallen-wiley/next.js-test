@@ -94,7 +94,7 @@ export default function RetractionsManager() {
       // Enrich retractions with reviewer names
       const enrichedRetractions = (retractionsRes.data || []).map((ret) => {
         const reviewer = reviewersRes.data?.find(
-          (r) => r.id === ret.reviewer_id
+          (r) => r.id === ret.reviewer_id,
         );
         return {
           ...ret,
@@ -114,7 +114,7 @@ export default function RetractionsManager() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     // Wait for permissions to finish loading before checking
@@ -176,7 +176,7 @@ export default function RetractionsManager() {
     setFormData({
       ...formData,
       retraction_reasons: formData.retraction_reasons.filter(
-        (_, i) => i !== index
+        (_, i) => i !== index,
       ),
     });
   };
@@ -219,7 +219,7 @@ export default function RetractionsManager() {
       console.error("Error saving retraction:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to save retraction",
-        "error"
+        "error",
       );
     }
   };
@@ -229,7 +229,7 @@ export default function RetractionsManager() {
       !confirm(
         `Are you sure you want to delete the retraction for ${
           reviewerName || "this reviewer"
-        }?`
+        }?`,
       )
     ) {
       return;
@@ -248,7 +248,7 @@ export default function RetractionsManager() {
       console.error("Error deleting retraction:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to delete retraction",
-        "error"
+        "error",
       );
     }
   };
@@ -268,7 +268,7 @@ export default function RetractionsManager() {
       permissions={permissions}
       profile={profile}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>

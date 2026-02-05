@@ -99,7 +99,7 @@ export default function PublicationsManager() {
       // Enrich publications with reviewer names
       const enrichedPublications = (publicationsRes.data || []).map((pub) => {
         const reviewer = reviewersRes.data?.find(
-          (r) => r.id === pub.reviewer_id
+          (r) => r.id === pub.reviewer_id,
         );
         return {
           ...pub,
@@ -119,7 +119,7 @@ export default function PublicationsManager() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     // Wait for permissions to finish loading before checking
@@ -235,7 +235,7 @@ export default function PublicationsManager() {
       console.error("Error saving publication:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to save publication",
-        "error"
+        "error",
       );
     }
   };
@@ -258,7 +258,7 @@ export default function PublicationsManager() {
       console.error("Error deleting publication:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to delete publication",
-        "error"
+        "error",
       );
     }
   };
@@ -278,7 +278,7 @@ export default function PublicationsManager() {
       permissions={permissions}
       profile={profile}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>

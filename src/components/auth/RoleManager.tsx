@@ -61,7 +61,7 @@ export default function RoleManager() {
     }
 
     setLoading(false);
-  }, []);
+  }, [supabase]);
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     setError(null);

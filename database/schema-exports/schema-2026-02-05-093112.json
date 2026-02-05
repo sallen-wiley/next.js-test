@@ -1,0 +1,1671 @@
+{
+  "schema": "public",
+  "tables": [
+    {
+      "name": "invitation_queue",
+      "rows": 3,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "manuscript_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 2
+        },
+        {
+          "name": "reviewer_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 3
+        },
+        {
+          "name": "queue_position",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 4
+        },
+        {
+          "name": "created_date",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 5
+        },
+        {
+          "name": "scheduled_send_date",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 6
+        },
+        {
+          "name": "priority",
+          "checks": [
+            {
+              "check_name": "invitation_queue_priority_check",
+              "definition": "CHECK ((priority = ANY (ARRAY['high'::text, 'normal'::text, 'low'::text])))"
+            }
+          ],
+          "default": "'normal'::text",
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "notes",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 8
+        },
+        {
+          "name": "sent",
+          "checks": null,
+          "default": "false",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 9
+        },
+        {
+          "name": "sent_at",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 10
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "manuscript_id"
+          ],
+          "constraint_name": "invitation_queue_manuscript_id_fkey",
+          "referenced_table": "public.manuscripts",
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "source_columns": [
+            "reviewer_id"
+          ],
+          "constraint_name": "invitation_queue_reviewer_id_fkey",
+          "referenced_table": "public.potential_reviewers",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "manuscript_publication_matches",
+      "rows": -1,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "manuscript_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 2
+        },
+        {
+          "name": "publication_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 3
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 4
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "manuscript_id"
+          ],
+          "constraint_name": "manuscript_publication_matches_manuscript_id_fkey",
+          "referenced_table": "public.manuscripts",
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "source_columns": [
+            "publication_id"
+          ],
+          "constraint_name": "manuscript_publication_matches_publication_id_fkey",
+          "referenced_table": "public.reviewer_publications",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "manuscripts",
+      "rows": 26,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "title",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 2
+        },
+        {
+          "name": "authors",
+          "checks": null,
+          "default": "'{}'::text[]",
+          "data_type": "text[]",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 3
+        },
+        {
+          "name": "journal",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 4
+        },
+        {
+          "name": "submission_date",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 5
+        },
+        {
+          "name": "doi",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "abstract",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "keywords",
+          "checks": null,
+          "default": "'{}'::text[]",
+          "data_type": "text[]",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 8
+        },
+        {
+          "name": "subject_area",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 9
+        },
+        {
+          "name": "status",
+          "checks": [
+            {
+              "check_name": "manuscripts_status_check",
+              "definition": "CHECK ((status = ANY (ARRAY['submitted'::text, 'pending_editor_assignment'::text, 'awaiting_reviewers'::text, 'under_review'::text, 'reviews_in_progress'::text, 'reviews_complete'::text, 'revision_required'::text, 'minor_revision'::text, 'major_revision'::text, 'conditionally_accepted'::text, 'accepted'::text, 'rejected'::text, 'desk_rejected'::text, 'withdrawn'::text])))"
+            }
+          ],
+          "default": "'submitted'::text",
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 10
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 12
+        },
+        {
+          "name": "updated_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 13
+        },
+        {
+          "name": "version",
+          "checks": [
+            {
+              "check_name": "manuscripts_version_check",
+              "definition": "CHECK ((version > 0))"
+            }
+          ],
+          "default": "1",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 14
+        },
+        {
+          "name": "manuscript_tags",
+          "checks": null,
+          "default": "'{}'::text[]",
+          "data_type": "text[]",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 15
+        },
+        {
+          "name": "system_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 16
+        },
+        {
+          "name": "submission_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 17
+        },
+        {
+          "name": "custom_id",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 18
+        },
+        {
+          "name": "article_type",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 19
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": null,
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "potential_reviewers",
+      "rows": 39,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "name",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 2
+        },
+        {
+          "name": "email",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 3
+        },
+        {
+          "name": "affiliation",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 4
+        },
+        {
+          "name": "department",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 5
+        },
+        {
+          "name": "expertise_areas",
+          "checks": null,
+          "default": "'{}'::text[]",
+          "data_type": "text[]",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "current_review_load",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "max_review_capacity",
+          "checks": null,
+          "default": "3",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 8
+        },
+        {
+          "name": "average_review_time_days",
+          "checks": null,
+          "default": "21",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 9
+        },
+        {
+          "name": "recent_publications",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 10
+        },
+        {
+          "name": "h_index",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 11
+        },
+        {
+          "name": "last_review_completed",
+          "checks": null,
+          "default": null,
+          "data_type": "date",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 12
+        },
+        {
+          "name": "availability_status",
+          "checks": [
+            {
+              "check_name": "potential_reviewers_availability_status_check",
+              "definition": "CHECK ((availability_status = ANY (ARRAY['available'::text, 'busy'::text, 'unavailable'::text, 'sabbatical'::text])))"
+            }
+          ],
+          "default": "'available'::text",
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 13
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 17
+        },
+        {
+          "name": "updated_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 18
+        },
+        {
+          "name": "external_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 19
+        },
+        {
+          "name": "pkg_id",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 20
+        },
+        {
+          "name": "given_names",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 21
+        },
+        {
+          "name": "surname",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 22
+        },
+        {
+          "name": "aff_ror_id",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 23
+        },
+        {
+          "name": "orcid_id",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 24
+        },
+        {
+          "name": "profile_url",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 25
+        },
+        {
+          "name": "reviewer_type",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 26
+        },
+        {
+          "name": "is_board_member",
+          "checks": null,
+          "default": "false",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 27
+        },
+        {
+          "name": "previous_reviewer",
+          "checks": null,
+          "default": "false",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 28
+        },
+        {
+          "name": "has_publications_saved",
+          "checks": null,
+          "default": "false",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 29
+        },
+        {
+          "name": "number_of_reviews",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 30
+        },
+        {
+          "name": "completed_reviews",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 31
+        },
+        {
+          "name": "currently_reviewing",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 32
+        },
+        {
+          "name": "total_publications",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 33
+        },
+        {
+          "name": "citation_count",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 34
+        },
+        {
+          "name": "publication_year_from",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 35
+        },
+        {
+          "name": "publication_year_to",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 36
+        },
+        {
+          "name": "publication_count_last_year",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 37
+        },
+        {
+          "name": "last_publication_date",
+          "checks": null,
+          "default": null,
+          "data_type": "date",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 38
+        },
+        {
+          "name": "total_invitations",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 39
+        },
+        {
+          "name": "total_acceptances",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 40
+        },
+        {
+          "name": "total_completions",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 41
+        },
+        {
+          "name": "average_response_time_hours",
+          "checks": null,
+          "default": "0.0",
+          "data_type": "numeric",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 42
+        },
+        {
+          "name": "last_activity_date",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 43
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": null,
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "review_invitations",
+      "rows": 11,
+      "columns": [
+        {
+          "name": "id",
+          "checks": [
+            {
+              "check_name": "review_invitations_status_check",
+              "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text, 'declined'::text, 'report_submitted'::text, 'invalidated'::text, 'revoked'::text])))"
+            }
+          ],
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "manuscript_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 2
+        },
+        {
+          "name": "reviewer_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 3
+        },
+        {
+          "name": "invited_date",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 4
+        },
+        {
+          "name": "due_date",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 5
+        },
+        {
+          "name": "status",
+          "checks": [
+            {
+              "check_name": "review_invitations_status_check",
+              "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'accepted'::text, 'declined'::text, 'report_submitted'::text, 'invalidated'::text, 'revoked'::text])))"
+            }
+          ],
+          "default": "'pending'::text",
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "response_date",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "queue_position",
+          "checks": null,
+          "default": null,
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 8
+        },
+        {
+          "name": "invitation_round",
+          "checks": null,
+          "default": "1",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 9
+        },
+        {
+          "name": "notes",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 10
+        },
+        {
+          "name": "reminder_count",
+          "checks": null,
+          "default": "0",
+          "data_type": "integer",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 11
+        },
+        {
+          "name": "estimated_completion_date",
+          "checks": null,
+          "default": null,
+          "data_type": "date",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 12
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 13
+        },
+        {
+          "name": "updated_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 14
+        },
+        {
+          "name": "invitation_expiration_date",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 15
+        },
+        {
+          "name": "report_invalidated_date",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 16
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "manuscript_id"
+          ],
+          "constraint_name": "review_invitations_manuscript_id_fkey",
+          "referenced_table": "public.manuscripts",
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "source_columns": [
+            "reviewer_id"
+          ],
+          "constraint_name": "review_invitations_reviewer_id_fkey",
+          "referenced_table": "public.potential_reviewers",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "reviewer_manuscript_matches",
+      "rows": 16,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "manuscript_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 2
+        },
+        {
+          "name": "reviewer_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 3
+        },
+        {
+          "name": "match_score",
+          "checks": [
+            {
+              "check_name": "reviewer_match_score_between_0_and_1",
+              "definition": "CHECK (((match_score IS NULL) OR ((match_score >= (0)::numeric) AND (match_score <= (1)::numeric))))"
+            }
+          ],
+          "default": null,
+          "data_type": "numeric(5,2)",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 4
+        },
+        {
+          "name": "calculated_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 5
+        },
+        {
+          "name": "is_initial_suggestion",
+          "checks": null,
+          "default": "false",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "conflicts_of_interest",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "manuscript_id"
+          ],
+          "constraint_name": "reviewer_manuscript_matches_manuscript_id_fkey",
+          "referenced_table": "public.manuscripts",
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "source_columns": [
+            "reviewer_id"
+          ],
+          "constraint_name": "reviewer_manuscript_matches_reviewer_id_fkey",
+          "referenced_table": "public.potential_reviewers",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "reviewer_publications",
+      "rows": 692,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "reviewer_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 2
+        },
+        {
+          "name": "title",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 3
+        },
+        {
+          "name": "doi",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 4
+        },
+        {
+          "name": "journal_name",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 5
+        },
+        {
+          "name": "authors",
+          "checks": null,
+          "default": null,
+          "data_type": "text[]",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "publication_date",
+          "checks": null,
+          "default": null,
+          "data_type": "date",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 9
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "reviewer_id"
+          ],
+          "constraint_name": "reviewer_publications_reviewer_id_fkey",
+          "referenced_table": "public.potential_reviewers",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "reviewer_retractions",
+      "rows": -1,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "reviewer_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 2
+        },
+        {
+          "name": "retraction_reasons",
+          "checks": null,
+          "default": null,
+          "data_type": "text[]",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 3
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 4
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "reviewer_id"
+          ],
+          "constraint_name": "reviewer_retractions_reviewer_id_fkey",
+          "referenced_table": "public.potential_reviewers",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "user_manuscripts",
+      "rows": -1,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "user_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 2
+        },
+        {
+          "name": "manuscript_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 3
+        },
+        {
+          "name": "assigned_date",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 4
+        },
+        {
+          "name": "role",
+          "checks": [
+            {
+              "check_name": "user_manuscripts_role_check",
+              "definition": "CHECK ((role = ANY (ARRAY['editor'::text, 'author'::text, 'collaborator'::text, 'reviewer'::text])))"
+            }
+          ],
+          "default": "'editor'::text",
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 5
+        },
+        {
+          "name": "is_active",
+          "checks": null,
+          "default": "true",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "updated_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 8
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "manuscript_id"
+          ],
+          "constraint_name": "user_manuscripts_manuscript_id_fkey",
+          "referenced_table": "public.manuscripts",
+          "referenced_columns": [
+            "id"
+          ]
+        },
+        {
+          "source_columns": [
+            "user_id"
+          ],
+          "constraint_name": "user_manuscripts_user_id_fkey",
+          "referenced_table": "public.user_profiles",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "user_palettes",
+      "rows": -1,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": "gen_random_uuid()",
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "user_id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 2
+        },
+        {
+          "name": "name",
+          "checks": [
+            {
+              "check_name": "name_not_empty",
+              "definition": "CHECK ((char_length(name) > 0))"
+            }
+          ],
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 3
+        },
+        {
+          "name": "description",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 4
+        },
+        {
+          "name": "palette_data",
+          "checks": [
+            {
+              "check_name": "palette_data_is_array",
+              "definition": "CHECK ((jsonb_typeof(palette_data) = 'array'::text))"
+            }
+          ],
+          "default": null,
+          "data_type": "jsonb",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 5
+        },
+        {
+          "name": "is_public",
+          "checks": null,
+          "default": "false",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "is_preset",
+          "checks": null,
+          "default": "false",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 8
+        },
+        {
+          "name": "updated_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 9
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "user_id"
+          ],
+          "constraint_name": "user_palettes_user_id_fkey",
+          "referenced_table": "auth.users",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    },
+    {
+      "name": "user_profiles",
+      "rows": 16,
+      "columns": [
+        {
+          "name": "id",
+          "checks": null,
+          "default": null,
+          "data_type": "uuid",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 1
+        },
+        {
+          "name": "email",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": true,
+          "is_identity": false,
+          "is_nullable": false,
+          "ordinal_position": 2
+        },
+        {
+          "name": "full_name",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 3
+        },
+        {
+          "name": "role",
+          "checks": [
+            {
+              "check_name": "user_profiles_role_check",
+              "definition": "CHECK ((role = ANY (ARRAY['admin'::text, 'editor'::text, 'designer'::text, 'product_manager'::text, 'reviewer'::text, 'guest'::text])))"
+            }
+          ],
+          "default": "'guest'::text",
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 4
+        },
+        {
+          "name": "department",
+          "checks": null,
+          "default": null,
+          "data_type": "text",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 5
+        },
+        {
+          "name": "permissions",
+          "checks": null,
+          "default": "'{}'::text[]",
+          "data_type": "text[]",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 6
+        },
+        {
+          "name": "is_active",
+          "checks": null,
+          "default": "true",
+          "data_type": "boolean",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 7
+        },
+        {
+          "name": "last_login",
+          "checks": null,
+          "default": null,
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 8
+        },
+        {
+          "name": "created_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 9
+        },
+        {
+          "name": "updated_at",
+          "checks": null,
+          "default": "now()",
+          "data_type": "timestamp with time zone",
+          "is_unique": null,
+          "is_identity": false,
+          "is_nullable": true,
+          "ordinal_position": 10
+        }
+      ],
+      "rls_enabled": true,
+      "foreign_keys": [
+        {
+          "source_columns": [
+            "id"
+          ],
+          "constraint_name": "user_profiles_id_fkey",
+          "referenced_table": "auth.users",
+          "referenced_columns": [
+            "id"
+          ]
+        }
+      ],
+      "primary_keys": [
+        "id"
+      ]
+    }
+  ],
+  "generated_at": "2026-02-05T09:31:12.546327+00:00"
+}

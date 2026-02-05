@@ -1244,7 +1244,7 @@ export default function ReviewerInvitationDashboard() {
           {manuscript && (
             <Box sx={{ mb: 3 }}>
               <ArticleDetailsCard
-                id={manuscript.id.split("-")[0]}
+                id={manuscript.custom_id || manuscript.id.split("-")[0]}
                 title={manuscript.title}
                 authors={manuscript.authors || []}
                 abstract={manuscript.abstract}

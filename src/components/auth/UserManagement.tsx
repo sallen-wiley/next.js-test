@@ -90,9 +90,11 @@ export default function UserManagement() {
       } else if (!data || data.length === 0) {
         setError("No rows were updated. Check permissions or policies.");
       } else {
-        setSuccess(`Role updated successfully to ${ROLE_DEFINITIONS[newRole].name}`);
+        setSuccess(
+          `Role updated successfully to ${ROLE_DEFINITIONS[newRole].name}`,
+        );
         setProfiles(
-          profiles.map((p) => (p.id === userId ? { ...p, role: newRole } : p))
+          profiles.map((p) => (p.id === userId ? { ...p, role: newRole } : p)),
         );
       }
     } catch (err) {
@@ -100,7 +102,7 @@ export default function UserManagement() {
       setError(
         `Failed to update role: ${
           err instanceof Error ? err.message : "Unknown error"
-        }`
+        }`,
       );
     }
   };
@@ -124,7 +126,7 @@ export default function UserManagement() {
         setError(`Failed to create user: ${error.message}`);
       } else {
         setSuccess(
-          `User created: ${newUserEmail} with password: ${newUserPassword}`
+          `User created: ${newUserEmail} with password: ${newUserPassword}`,
         );
         setNewUserEmail("");
         setNewUserPassword("");
@@ -178,7 +180,7 @@ export default function UserManagement() {
       permissions={permissions}
       profile={profileFromHook}
     >
-      <Box sx={{ p: 3 }}>
+      <Box>
         <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
           <Box>
             <Typography variant="h5" fontWeight={600}>
@@ -241,12 +243,15 @@ export default function UserManagement() {
                   <TableRow>
                     <TableCell colSpan={7} align="center">
                       <Box sx={{ py: 4, textAlign: "center" }}>
-                        <PersonIcon sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+                        <PersonIcon
+                          sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                        />
                         <Typography variant="h6" gutterBottom>
                           No User Profiles Found
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          User profiles will appear here when users sign up, or you can create test users.
+                          User profiles will appear here when users sign up, or
+                          you can create test users.
                         </Typography>
                       </Box>
                     </TableCell>
@@ -263,7 +268,10 @@ export default function UserManagement() {
                             <Typography variant="body2" fontWeight="medium">
                               {profile.full_name || "Unnamed User"}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               ID: {profile.id.slice(0, 8)}...
                             </Typography>
                           </Box>
@@ -295,7 +303,7 @@ export default function UserManagement() {
                             onChange={(e) =>
                               updateUserRole(
                                 profile.id,
-                                e.target.value as UserRole
+                                e.target.value as UserRole,
                               )
                             }
                           >
@@ -308,11 +316,15 @@ export default function UserManagement() {
                                 >
                                   {def.name}
                                 </MenuItem>
-                              )
+                              ),
                             )}
                           </Select>
                         </FormControl>
-                        <IconButton size="small" color="error" title="Delete user">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          title="Delete user"
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </TableCell>
@@ -375,7 +387,15 @@ export default function UserManagement() {
 
         {/* Info Boxes */}
         <Box sx={{ mt: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
-          <Box sx={{ flex: 1, minWidth: 300, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 300,
+              p: 2,
+              bgcolor: "background.paper",
+              borderRadius: 1,
+            }}
+          >
             <Typography variant="h6" gutterBottom>
               Role Definitions
             </Typography>
@@ -392,7 +412,15 @@ export default function UserManagement() {
             </Box>
           </Box>
 
-          <Box sx={{ flex: 1, minWidth: 300, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: 300,
+              p: 2,
+              bgcolor: "background.paper",
+              borderRadius: 1,
+            }}
+          >
             <Typography variant="h6" gutterBottom>
               Quick Test Accounts
             </Typography>
