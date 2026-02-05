@@ -141,6 +141,7 @@ export function parseDate(
 export async function upsertManuscript(
   supabase: SupabaseClient,
   manuscriptData: ManuscriptData,
+  status?: string,
 ): Promise<string> {
   const manuscriptRecord = {
     system_id: manuscriptData.systemId,
@@ -153,7 +154,7 @@ export async function upsertManuscript(
     submission_date: manuscriptData.submittedDate,
     authors: manuscriptData.authors.map((a) => `${a.givenNames} ${a.surname}`),
     keywords: manuscriptData.keywords || [],
-    status: "submitted",
+    status: status || "submitted",
     version: 1,
   };
 
@@ -481,6 +482,7 @@ export async function ingestReviewerData(
   supabase: SupabaseClient,
   data: IngestionData,
   onProgress?: ProgressCallback,
+  status?: string,
 ): Promise<IngestionStats> {
   const stats: IngestionStats = {
     manuscriptId: "",
@@ -499,7 +501,11 @@ export async function ingestReviewerData(
       message: `Processing manuscript: ${data.manuscriptData.title}`,
     });
 
-    const manuscriptId = await upsertManuscript(supabase, data.manuscriptData);
+    const manuscriptId = await upsertManuscript(
+      supabase,
+      data.manuscriptData,
+      status,
+    );
     stats.manuscriptId = manuscriptId;
     stats.manuscriptsProcessed = 1;
 

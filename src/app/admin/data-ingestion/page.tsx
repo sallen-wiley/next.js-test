@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Button,
@@ -14,6 +14,13 @@ import {
   ListItemText,
   Divider,
   Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -28,6 +35,9 @@ import {
   type IngestionProgress,
 } from "@/lib/ingestion/reviewerIngestion";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
+import { getAllUsers } from "@/services/dataService";
+import type { UserProfile } from "@/types/roles";
+import type { Manuscript } from "@/lib/supabase";
 import Link from "next/link";
 
 export default function DataIngestionPage() {
@@ -41,7 +51,27 @@ export default function DataIngestionPage() {
   const [progress, setProgress] = useState<IngestionProgress | null>(null);
   const [stats, setStats] = useState<IngestionStats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] =
+    useState<Manuscript["status"]>("submitted");
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load users on mount
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const allUsers = await getAllUsers();
+        setUsers(allUsers);
+      } catch (err) {
+        console.error("Failed to load users:", err);
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+    loadUsers();
+  }, []);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -103,17 +133,59 @@ export default function DataIngestionPage() {
       // Get Supabase client (uses user's auth token + RLS)
       const supabase = createClient();
 
-      // Ingest data with progress callback
+      // Ingest data with progress callback (pass selected status)
       const result = await ingestReviewerData(
         supabase,
         data as IngestionData,
         (progress) => {
           setProgress(progress);
         },
+        selectedStatus, // Pass the selected status
       );
+
+      // If user selected, assign manuscript to user
+      if (selectedUserId && result.manuscriptId) {
+        try {
+          // Check if assignment already exists
+          const { data: existing } = await supabase
+            .from("user_manuscripts")
+            .select("id, is_active")
+            .eq("user_id", selectedUserId)
+            .eq("manuscript_id", result.manuscriptId)
+            .maybeSingle();
+
+          if (existing?.is_active) {
+            console.log("User already assigned to this manuscript");
+          } else if (existing && !existing.is_active) {
+            // Reactivate existing assignment
+            await supabase
+              .from("user_manuscripts")
+              .update({
+                is_active: true,
+                role: "editor",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", existing.id);
+          } else {
+            // Create new assignment
+            await supabase.from("user_manuscripts").insert({
+              user_id: selectedUserId,
+              manuscript_id: result.manuscriptId,
+              role: "editor",
+              assigned_date: new Date().toISOString(),
+              is_active: true,
+            });
+          }
+        } catch (assignErr) {
+          console.error("Failed to assign user to manuscript:", assignErr);
+          // Don't fail the whole operation if assignment fails
+        }
+      }
 
       setStats(result);
       setSelectedFile(null);
+      setSelectedUserId(""); // Reset user selection
+      setSelectedStatus("submitted"); // Reset status
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -199,6 +271,91 @@ export default function DataIngestionPage() {
           </>
         )}
       </Paper>
+
+      {/* Configuration Options */}
+      {selectedFile && !isProcessing && (
+        <Stack spacing={2} sx={{ mt: 3 }}>
+          <FormControl fullWidth>
+            <InputLabel id="status-select-label">Manuscript Status</InputLabel>
+            <Select
+              labelId="status-select-label"
+              id="status-select"
+              value={selectedStatus}
+              label="Manuscript Status"
+              onChange={(e) =>
+                setSelectedStatus(e.target.value as Manuscript["status"])
+              }
+            >
+              <MenuItem value="submitted">Submitted</MenuItem>
+              <MenuItem value="pending_editor_assignment">
+                Pending Editor Assignment
+              </MenuItem>
+              <MenuItem value="awaiting_reviewers">Awaiting Reviewers</MenuItem>
+              <MenuItem value="under_review">Under Review</MenuItem>
+              <MenuItem value="reviews_in_progress">
+                Reviews In Progress
+              </MenuItem>
+              <MenuItem value="reviews_complete">Reviews Complete</MenuItem>
+              <MenuItem value="revision_required">Revision Required</MenuItem>
+              <MenuItem value="minor_revision">Minor Revision</MenuItem>
+              <MenuItem value="major_revision">Major Revision</MenuItem>
+              <MenuItem value="conditionally_accepted">
+                Conditionally Accepted
+              </MenuItem>
+              <MenuItem value="accepted">Accepted</MenuItem>
+              <MenuItem value="rejected">Rejected</MenuItem>
+              <MenuItem value="desk_rejected">Desk Rejected</MenuItem>
+              <MenuItem value="withdrawn">Withdrawn</MenuItem>
+            </Select>
+            <FormHelperText>
+              Set the initial status for the manuscript
+            </FormHelperText>
+          </FormControl>
+
+          <Autocomplete
+            options={users}
+            getOptionLabel={(option) => option.full_name || option.email}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            value={users.find((u) => u.id === selectedUserId) || null}
+            onChange={(_, newValue) => setSelectedUserId(newValue?.id || "")}
+            disabled={isLoadingUsers}
+            renderOption={(props, option) => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { key, ...otherProps } =
+                props as React.HTMLAttributes<HTMLLIElement> & {
+                  key: string;
+                };
+              return (
+                <li key={option.id} {...otherProps}>
+                  <Box>
+                    <Typography variant="body2">
+                      {option.full_name || option.email}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.email} • {option.role}
+                    </Typography>
+                  </Box>
+                </li>
+              );
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Assign to User (Optional)"
+                placeholder={
+                  isLoadingUsers ? "Loading users..." : "Search users..."
+                }
+                helperText={
+                  isLoadingUsers
+                    ? "Loading users..."
+                    : "Assign manuscript to a user as editor"
+                }
+              />
+            )}
+            fullWidth
+          />
+        </Stack>
+      )}
 
       {/* Upload Button */}
       {selectedFile && !isProcessing && (
