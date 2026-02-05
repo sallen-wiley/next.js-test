@@ -87,7 +87,7 @@ export default function RoleManager() {
         setSuccess(`Role updated successfully to ${newRole}`);
         // Only update local state if database update succeeded
         setProfiles(
-          profiles.map((p) => (p.id === userId ? { ...p, role: newRole } : p))
+          profiles.map((p) => (p.id === userId ? { ...p, role: newRole } : p)),
         );
       }
     } catch (err) {
@@ -95,7 +95,7 @@ export default function RoleManager() {
       setError(
         `Failed to update role: ${
           err instanceof Error ? err.message : "Unknown error"
-        }`
+        }`,
       );
     }
   };
@@ -220,7 +220,7 @@ export default function RoleManager() {
                           onChange={(e) =>
                             updateUserRole(
                               profile.id,
-                              e.target.value as UserRole
+                              e.target.value as UserRole,
                             )
                           }
                         >
@@ -233,7 +233,7 @@ export default function RoleManager() {
                               >
                                 {def.name}
                               </MenuItem>
-                            )
+                            ),
                           )}
                         </Select>
                       </FormControl>

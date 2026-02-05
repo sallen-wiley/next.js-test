@@ -156,11 +156,17 @@ async function getMatchedReviewers(
 
   if (error) throw error;
 
-  // Supabase returns potential_reviewers as an array when using nested select
+  // Supabase nested select can return arrays or single objects depending on the relationship
+  // Cast through unknown to handle TypeScript's strict type checking
   return (data || [])
-    .filter((match) => match.potential_reviewers && match.potential_reviewers.length > 0)
+    .filter((match) => match.potential_reviewers)
     .map((match) => {
-      const reviewer = match.potential_reviewers[0];
+      const reviewer = match.potential_reviewers as unknown as {
+        id: string;
+        name: string;
+        email: string;
+        affiliation?: string;
+      };
       return {
         id: match.reviewer_id,
         name: reviewer.name,
@@ -230,8 +236,12 @@ async function getSharedReviewers(
         email: reviewer.email,
         affiliation: reviewer.affiliation,
         otherManuscripts: otherMatches.map((m) => {
-          // Supabase returns manuscripts as an array
-          const manuscript = m.manuscripts[0];
+          // Supabase nested select - cast through unknown for type safety
+          const manuscript = m.manuscripts as unknown as {
+            id: string;
+            title: string;
+            custom_id?: string;
+          };
           return {
             id: manuscript.id,
             title: manuscript.title,
