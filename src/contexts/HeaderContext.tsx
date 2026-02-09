@@ -81,8 +81,10 @@ export function useHeaderConfig(config: HeaderConfig) {
     config.fixed,
     config.containerProps?.maxWidth,
     config.containerProps?.fixed,
+    config.rightSlotPrefix,
     // Note: config.rightSlot and config.onMenuClick are excluded
     // as they would cause infinite re-renders due to new objects/functions
     // on every render. The config will still update with these values.
+    // rightSlotPrefix is included because it needs to update when auth state changes
   ]);
 }

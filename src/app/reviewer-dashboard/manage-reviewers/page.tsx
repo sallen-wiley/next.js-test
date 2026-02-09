@@ -1160,16 +1160,19 @@ export default function ReviewerInvitationDashboard() {
   }, [manuscriptId, showConfirmDialog]);
 
   // Configure header for reviewer dashboard
+  // Memoize the version switcher component to prevent re-creation on every render
+  const versionSwitcher = React.useMemo(
+    () => <ManageReviewersVersionSwitcher />,
+    [],
+  );
+
   const headerConfig = React.useMemo(
     () => ({
       logoAffix: "Review",
       containerProps: { maxWidth: false as const },
-      rightSlotPrefix:
-        profile?.role === "admin" ? (
-          <ManageReviewersVersionSwitcher />
-        ) : undefined,
+      rightSlotPrefix: versionSwitcher,
     }),
-    [profile?.role],
+    [versionSwitcher],
   );
   useHeaderConfig(headerConfig);
 
