@@ -50,7 +50,7 @@ import {
   updateManuscript,
   deleteManuscript,
   getAllUsers,
-} from "@/services/dataService";
+} from "@/services";
 
 interface FormData {
   title: string;

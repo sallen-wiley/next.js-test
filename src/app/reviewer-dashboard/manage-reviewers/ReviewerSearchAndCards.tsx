@@ -11,58 +11,26 @@ import {
   Button,
   Stack,
   Box,
-  Skeleton,
-  Card,
   Tabs,
   Tab,
   Drawer,
   FormControlLabel,
   Checkbox,
   Slider,
-  Tooltip,
-  IconButton,
-  Chip,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterAltOutlined";
-import SearchOffIcon from "@mui/icons-material/SearchOff";
-import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import EmailIcon from "@mui/icons-material/Email";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import CloseIcon from "@mui/icons-material/Close";
-import type { PotentialReviewerWithMatch } from "@/lib/supabase";
+import type {
+  ReviewerFilters,
+  ReviewerSearchAndCardsProps,
+} from "@/components/reviewer-dashboard/types";
+import { useSearchDebounce } from "@/hooks/useSearchDebounce";
+import { ActiveFilterChips } from "@/components/reviewer-dashboard/ActiveFilterChips";
+import { ReviewerCardList } from "@/components/reviewer-dashboard/ReviewerCardList";
+import { DefaultSuggestionsHeader } from "@/components/reviewer-dashboard/DefaultSuggestionsHeader";
 import ReviewerCard from "./ReviewerCard";
 
-export interface ReviewerFilters {
-  hideUnavailable: boolean;
-  institutionalEmail: boolean;
-  country: string;
-  role: string;
-  responseTimeMax: number;
-  reviewsLast12Months: number;
-  totalReviewsMin: number;
-  totalReviewsMax: number;
-  assignedManuscriptsMax: number;
-  publicationYearFrom: number;
-  publicationYearTo: number;
-  publishedArticlesMin: number;
-  publishedInJournal: boolean;
-  previouslyReviewedForJournal: boolean;
-  inAuthorsGroup: boolean;
-}
-
-interface ReviewerSearchAndCardsProps {
-  filteredReviewers: PotentialReviewerWithMatch[];
-  searchTerm: string;
-  filters: ReviewerFilters;
-  loading: boolean;
-  onSearchChange: (value: string) => void;
-  onFiltersChange: (filters: ReviewerFilters) => void;
-  onInviteReviewer: (reviewerId: string) => void;
-  onAddToQueue: (reviewerId: string) => void;
-  onInviteManually: () => void;
-  onClearFilters: () => void;
-  onViewProfile: (reviewerId: string) => void;
-}
+export type { ReviewerFilters } from "@/components/reviewer-dashboard/types";
 
 export function ReviewerSearchAndCards({
   filteredReviewers,
@@ -81,39 +49,19 @@ export function ReviewerSearchAndCards({
   const [filterDrawerOpen, setFilterDrawerOpen] = React.useState(false);
   const [tempFilters, setTempFilters] =
     React.useState<ReviewerFilters>(filters);
-
-  // Local state for immediate input feedback
-  const [localSearchTerm, setLocalSearchTerm] = React.useState(searchTerm);
-  const [isFiltering, setIsFiltering] = React.useState(false);
   const [displayLimit, setDisplayLimit] = React.useState(50);
+
+  // Use shared debounce hook
+  const { localSearchTerm, setLocalSearchTerm, isFiltering } =
+    useSearchDebounce({
+      initialSearchTerm: searchTerm,
+      onSearchChange,
+    });
 
   // Reset display limit when search term or filters change
   React.useEffect(() => {
     setDisplayLimit(50);
   }, [searchTerm, filters]);
-
-  // Sync local state when parent searchTerm changes externally
-  React.useEffect(() => {
-    setLocalSearchTerm(searchTerm);
-  }, [searchTerm]);
-
-  // Debounce search to parent (150ms for snappy feel)
-  React.useEffect(() => {
-    // Show filtering indicator immediately when typing
-    if (localSearchTerm !== searchTerm) {
-      setIsFiltering(true);
-    }
-
-    const timer = setTimeout(() => {
-      if (localSearchTerm !== searchTerm) {
-        onSearchChange(localSearchTerm);
-        // Clear filtering indicator after search completes
-        setTimeout(() => setIsFiltering(false), 50);
-      }
-    }, 150);
-
-    return () => clearTimeout(timer);
-  }, [localSearchTerm, searchTerm, onSearchChange]);
 
   // Track which filters are actively enabled (to prevent unmounting during interaction)
   const [activeFilters, setActiveFilters] = React.useState({
@@ -229,240 +177,11 @@ export function ReviewerSearchAndCards({
           </Paper>
 
           {/* Active Filter Chips */}
-          {(filters.hideUnavailable ||
-            filters.institutionalEmail ||
-            filters.country !== "" ||
-            filters.role !== "" ||
-            filters.responseTimeMax > 0 ||
-            filters.reviewsLast12Months > 0 ||
-            filters.totalReviewsMin > 0 ||
-            filters.totalReviewsMax < 1000 ||
-            filters.assignedManuscriptsMax > 0 ||
-            filters.publicationYearFrom > 0 ||
-            filters.publicationYearTo > 0 ||
-            filters.publishedArticlesMin > 0 ||
-            filters.publishedInJournal ||
-            filters.previouslyReviewedForJournal ||
-            filters.inAuthorsGroup) && (
-            <Box sx={{ mb: 3 }}>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {/* Hide Unavailable chip */}
-                {filters.hideUnavailable && (
-                  <Chip
-                    label="Hide Unavailable Reviewers"
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        hideUnavailable: false,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Institutional Email chip */}
-                {filters.institutionalEmail && (
-                  <Chip
-                    label="Institutional Email Only"
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        institutionalEmail: false,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Country chip */}
-                {filters.country !== "" && (
-                  <Chip
-                    label={`Country: ${filters.country}`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        country: "",
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Role chip */}
-                {filters.role !== "" && (
-                  <Chip
-                    label={`Role: ${filters.role}`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        role: "",
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Response Time chip */}
-                {filters.responseTimeMax > 0 && (
-                  <Chip
-                    label={`Response Time: ≤${filters.responseTimeMax} days`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        responseTimeMax: 0,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Reviews Last 12 Months chip */}
-                {filters.reviewsLast12Months > 0 && (
-                  <Chip
-                    label={`Reviews (12mo): ≥${filters.reviewsLast12Months}`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        reviewsLast12Months: 0,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Total Reviews chip */}
-                {(filters.totalReviewsMin > 0 ||
-                  filters.totalReviewsMax < 1000) && (
-                  <Chip
-                    label={`Total Reviews: ${filters.totalReviewsMin}–${
-                      filters.totalReviewsMax === 1000
-                        ? "∞"
-                        : filters.totalReviewsMax
-                    }`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        totalReviewsMin: 0,
-                        totalReviewsMax: 1000,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Assigned Manuscripts chip */}
-                {filters.assignedManuscriptsMax > 0 && (
-                  <Chip
-                    label={`Currently Assigned: ≤${filters.assignedManuscriptsMax}`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        assignedManuscriptsMax: 0,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Publication Years chip */}
-                {(filters.publicationYearFrom > 0 ||
-                  filters.publicationYearTo > 0) && (
-                  <Chip
-                    label={`Publication Years: ${
-                      filters.publicationYearFrom || "—"
-                    }–${filters.publicationYearTo || "—"}`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        publicationYearFrom: 0,
-                        publicationYearTo: 0,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Published Articles chip */}
-                {filters.publishedArticlesMin > 0 && (
-                  <Chip
-                    label={`Published Articles: ≥${filters.publishedArticlesMin}`}
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        publishedArticlesMin: 0,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Published in Journal chip */}
-                {filters.publishedInJournal && (
-                  <Chip
-                    label="Published in Journal"
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        publishedInJournal: false,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Previously Reviewed for this Journal chip */}
-                {filters.previouslyReviewedForJournal && (
-                  <Chip
-                    label="Previously Reviewed for this Journal"
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        previouslyReviewedForJournal: false,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* In Authors Group chip */}
-                {filters.inAuthorsGroup && (
-                  <Chip
-                    label="In Authors Group"
-                    onDelete={() => {
-                      onFiltersChange({
-                        ...filters,
-                        inAuthorsGroup: false,
-                      });
-                    }}
-                    color="neutral"
-                    variant="outlined"
-                  />
-                )}
-
-                {/* Clear All button */}
-                <Chip
-                  label="Clear All Filters"
-                  onClick={onClearFilters}
-                  color="neutral"
-                  variant="filled"
-                  deleteIcon={<CloseIcon />}
-                  onDelete={onClearFilters}
-                />
-              </Stack>
-            </Box>
-          )}
+          <ActiveFilterChips
+            filters={filters}
+            onFiltersChange={onFiltersChange}
+            onClearAll={onClearFilters}
+          />
 
           {/* Filter Drawer */}
           <Drawer
@@ -1450,160 +1169,23 @@ export function ReviewerSearchAndCards({
             </Box>
           </Drawer>
 
-          {/* Card List (stacked, horizontal cards) */}
-          {loading || isFiltering ? (
-            <Stack spacing={2}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} variant="outlined" sx={{ p: 2 }}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Skeleton variant="rectangular" width={24} height={24} />
-                    <Box sx={{ flex: 1 }}>
-                      <Skeleton width="30%" />
-                      <Skeleton width="50%" />
-                    </Box>
-                    <Skeleton variant="rectangular" width={90} height={32} />
-                  </Stack>
-                </Card>
-              ))}
-            </Stack>
-          ) : filteredReviewers.length === 0 ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                py: 8,
-                px: 3,
-              }}
-            >
-              {searchTerm ? (
-                <>
-                  <SearchOffIcon
-                    sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
-                  />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No reviewers match your search
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 3, textAlign: "center" }}
-                  >
-                    Try adjusting your search term or filters to find more
-                    reviewers
-                  </Typography>
-                  <Button variant="outlined" onClick={onClearFilters}>
-                    Clear Filters
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <PersonSearchIcon
-                    sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
-                  />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No reviewers available
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ textAlign: "center" }}
-                  >
-                    All matching reviewers have been invited or queued
-                  </Typography>
-                </>
-              )}
-            </Box>
-          ) : (
-            <>
-              {/* Default Suggestions Title (only shown when not searching) */}
-              {!searchTerm && (
-                <Box
-                  sx={{
-                    mb: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <Typography
-                    variant="body1"
-                    sx={{ fontWeight: 700 }}
-                    component="h2"
-                  >
-                    Default suggestions ({filteredReviewers.length})
-                  </Typography>
-                  <Tooltip
-                    title={
-                      <Box sx={{ p: 1 }}>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ mb: 1, fontWeight: "bold" }}
-                        >
-                          How are default suggestions created?
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 1 }}>
-                          <strong>Phase 1: Analyze Manuscript</strong>
-                          <br />
-                          We start by extracting key concepts from your
-                          manuscript&apos;s title and abstract to understand its
-                          main topics.
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 1 }}>
-                          <strong>Phase 2: Match Expertise</strong>
-                          <br />
-                          PKG compares these topics with reviewer profiles using
-                          semantic search and keyword matching, while checking
-                          for conflicts of interest and recent publications.
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Phase 3: Rank and Recommend</strong>
-                          <br />
-                          Reviewers are ranked based on topic relevance,
-                          availability, and past response behavior. You&apos;ll
-                          receive a ranked list with profiles and reasons for
-                          each suggestion.
-                        </Typography>
-                      </Box>
-                    }
-                    arrow
-                    placement="right"
-                  >
-                    <IconButton size="small" sx={{ color: "text.secondary" }}>
-                      <HelpOutlineIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              )}
-
-              <Stack spacing={2}>
-                {filteredReviewers.slice(0, displayLimit).map((reviewer) => (
-                  <ReviewerCard
-                    key={reviewer.id}
-                    reviewer={reviewer}
-                    onInvite={onInviteReviewer}
-                    onAddToQueue={onAddToQueue}
-                    onViewProfile={onViewProfile}
-                  />
-                ))}
-              </Stack>
-
-              {/* Load More Button */}
-              {filteredReviewers.length > displayLimit && (
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-                  <Button
-                    variant="outlined"
-                    color="neutral"
-                    onClick={() => setDisplayLimit((prev) => prev + 50)}
-                  >
-                    Load More ({filteredReviewers.length - displayLimit}{" "}
-                    remaining)
-                  </Button>
-                </Box>
-              )}
-            </>
+          {/* Reviewer Card List */}
+          {!searchTerm && (
+            <DefaultSuggestionsHeader count={filteredReviewers.length} />
           )}
+          <ReviewerCardList
+            reviewers={filteredReviewers}
+            loading={loading}
+            isFiltering={isFiltering}
+            displayLimit={displayLimit}
+            searchTerm={searchTerm}
+            onInvite={onInviteReviewer}
+            onAddToQueue={onAddToQueue}
+            onViewProfile={onViewProfile}
+            onLoadMore={() => setDisplayLimit((prev) => prev + 50)}
+            onClearFilters={onClearFilters}
+            ReviewerCardComponent={ReviewerCard}
+          />
         </Box>
       )}
 

@@ -5,10 +5,7 @@ import { useRouter } from "next/navigation";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { usePageTheme } from "@/hooks/usePageTheme";
-import {
-  getUserManuscripts,
-  getManuscriptInvitationStats,
-} from "@/services/dataService";
+import { getUserManuscripts, getManuscriptInvitationStats } from "@/services";
 import type { ManuscriptWithUserRole } from "@/lib/supabase";
 import {
   Alert,

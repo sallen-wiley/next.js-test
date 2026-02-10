@@ -8,7 +8,7 @@ import {
   getManuscriptById,
   getManuscriptInvitations,
   getManuscriptQueue,
-} from "@/services/dataService";
+} from "@/services";
 import type {
   Manuscript,
   ReviewInvitationWithReviewer,

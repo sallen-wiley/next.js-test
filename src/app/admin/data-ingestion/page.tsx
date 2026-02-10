@@ -35,7 +35,7 @@ import {
   type IngestionProgress,
 } from "@/lib/ingestion/reviewerIngestion";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
-import { getAllUsers } from "@/services/dataService";
+import { getAllUsers } from "@/services";
 import type { UserProfile } from "@/types/roles";
 import type { Manuscript } from "@/lib/supabase";
 import Link from "next/link";

@@ -41,7 +41,7 @@ import {
   getAllReviewerMatches,
   addReviewerMatch,
   removeReviewerMatch,
-} from "@/services/dataService";
+} from "@/services";
 import type { Manuscript, PotentialReviewer } from "@/lib/supabase";
 import AdminLoadingState from "./AdminLoadingState";
 import RoleGuard from "./RoleGuard";
@@ -215,7 +215,7 @@ export default function ReviewerMatchManager() {
     setSuccess(null);
 
     try {
-      const { updateReviewerMatch } = await import("@/services/dataService");
+      const { updateReviewerMatch } = await import("@/services");
       await updateReviewerMatch(
         editingMatch.id,
         matchScore,

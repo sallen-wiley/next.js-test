@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Drawer, Box, Stack, Divider, Alert, Snackbar } from "@mui/material";
 import { useRoleAccess } from "@/hooks/useRoles";
-import { updateReviewer } from "@/services/dataService";
+import { updateReviewer } from "@/services";
 import { supabase } from "@/lib/supabase";
 import type { PotentialReviewer } from "@/lib/supabase";
 
@@ -144,7 +144,7 @@ export default function ReviewerProfileDrawer({
       console.error("Error updating reviewer:", error);
       showSnackbar(
         error instanceof Error ? error.message : "Failed to update reviewer",
-        "error"
+        "error",
       );
     }
   };
@@ -193,7 +193,7 @@ export default function ReviewerProfileDrawer({
             manuscript_id: manuscriptId,
             publication_id: publicationData.id,
           },
-          { onConflict: "manuscript_id,publication_id" }
+          { onConflict: "manuscript_id,publication_id" },
         );
       } else {
         await supabase
@@ -213,7 +213,7 @@ export default function ReviewerProfileDrawer({
 
   const showSnackbar = (
     message: string,
-    severity: "success" | "error" | "info"
+    severity: "success" | "error" | "info",
   ) => {
     setSnackbar({ open: true, message, severity });
   };

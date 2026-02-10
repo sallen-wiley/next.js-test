@@ -34,7 +34,7 @@ import {
   addReviewer,
   clearManuscriptReviewers,
   checkReviewersPublishedInJournal,
-} from "@/services/dataService";
+} from "@/services";
 import ReviewerActionMenu from "./ReviewerActionMenu";
 import { ArticleDetailsCard } from "../../reviewer-dashboard/ArticleDetailsCard";
 import { ReviewerSearchAndCards } from "./ReviewerSearchAndCards";

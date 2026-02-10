@@ -36,7 +36,7 @@ import {
   addReviewer,
   updateReviewer,
   deleteReviewer,
-} from "@/services/dataService";
+} from "@/services";
 import type { PotentialReviewer } from "@/lib/supabase";
 import AdminLoadingState from "./AdminLoadingState";
 import RoleGuard from "./RoleGuard";

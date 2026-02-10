@@ -40,7 +40,7 @@ import {
   addUserToManuscript,
   removeUserFromManuscript,
   updateUserManuscriptRole,
-} from "@/services/dataService";
+} from "@/services";
 import type { Manuscript } from "@/lib/supabase";
 import AdminLoadingState from "./AdminLoadingState";
 import RoleGuard from "./RoleGuard";
