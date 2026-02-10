@@ -274,8 +274,6 @@ export default function ArticleDetailsPage({
           authors={manuscript.authors}
           abstract={manuscript.abstract}
           articleType={manuscript.article_type ?? "undefined"}
-          section="{{Physical, Chemical and Earth Sciences}}"
-          specialIssue="{{Advanced PHWR Safety Technology: PHWR Challenging Issues for Safe Operation and Long-Term Sustainability}}"
           academicEditor={
             academicEditors.length > 0
               ? academicEditors.join(", ")
