@@ -76,6 +76,39 @@ export function ReviewerSearchAndCards({
 }: ReviewerSearchAndCardsProps) {
   const [activeTab, setActiveTab] = React.useState(0);
 
+  // Local state for immediate input feedback
+  const [localSearchTerm, setLocalSearchTerm] = React.useState(searchTerm);
+  const [isFiltering, setIsFiltering] = React.useState(false);
+  const [displayLimit, setDisplayLimit] = React.useState(50);
+
+  // Reset display limit when search term or filters change
+  React.useEffect(() => {
+    setDisplayLimit(50);
+  }, [searchTerm, filters]);
+
+  // Sync local state when parent searchTerm changes externally
+  React.useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  // Debounce search to parent (150ms for snappy feel)
+  React.useEffect(() => {
+    // Show filtering indicator immediately when typing
+    if (localSearchTerm !== searchTerm) {
+      setIsFiltering(true);
+    }
+
+    const timer = setTimeout(() => {
+      if (localSearchTerm !== searchTerm) {
+        onSearchChange(localSearchTerm);
+        // Clear filtering indicator after search completes
+        setTimeout(() => setIsFiltering(false), 50);
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, searchTerm, onSearchChange]);
+
   // Local temp state for slider values (before applying)
   const [tempResponseTime, setTempResponseTime] = React.useState(7);
   const [tempReviewsLast12Months, setTempReviewsLast12Months] =
@@ -159,8 +192,8 @@ export function ReviewerSearchAndCards({
               fullWidth
               size="small"
               label="Search for reviewers"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
               placeholder="Search by keyword, email or name..."
               slotProps={{
                 input: { sx: { backgroundColor: "background.paper" } },
@@ -1288,7 +1321,7 @@ export function ReviewerSearchAndCards({
             {/* Right Column - Reviewer Cards */}
             <Box sx={{ flex: 1, minWidth: 0, pl: 3 }}>
               {/* Card List (stacked, horizontal cards) */}
-              {loading ? (
+              {loading || isFiltering ? (
                 <Stack spacing={2}>
                   {Array.from({ length: 6 }).map((_, i) => (
                     <Card key={i} variant="outlined" sx={{ p: 2 }}>
@@ -1435,16 +1468,34 @@ export function ReviewerSearchAndCards({
                   )}
 
                   <Stack spacing={2}>
-                    {filteredReviewers.map((reviewer) => (
-                      <ReviewerCard
-                        key={reviewer.id}
-                        reviewer={reviewer}
-                        onInvite={onInviteReviewer}
-                        onAddToQueue={onAddToQueue}
-                        onViewProfile={onViewProfile}
-                      />
-                    ))}
+                    {filteredReviewers
+                      .slice(0, displayLimit)
+                      .map((reviewer) => (
+                        <ReviewerCard
+                          key={reviewer.id}
+                          reviewer={reviewer}
+                          onInvite={onInviteReviewer}
+                          onAddToQueue={onAddToQueue}
+                          onViewProfile={onViewProfile}
+                        />
+                      ))}
                   </Stack>
+
+                  {/* Load More Button */}
+                  {filteredReviewers.length > displayLimit && (
+                    <Box
+                      sx={{ display: "flex", justifyContent: "center", mt: 3 }}
+                    >
+                      <Button
+                        variant="outlined"
+                        color="neutral"
+                        onClick={() => setDisplayLimit((prev) => prev + 50)}
+                      >
+                        Load More ({filteredReviewers.length - displayLimit}{" "}
+                        remaining)
+                      </Button>
+                    </Box>
+                  )}
                 </>
               )}
             </Box>

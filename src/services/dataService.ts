@@ -363,14 +363,29 @@ export async function checkReviewersPublishedInJournal(
     return new Map();
   }
 
-  const { data: publications } = await supabase
-    .from("reviewer_publications")
-    .select("reviewer_id, journal_name")
-    .in("reviewer_id", reviewerIds);
-
   const publishedInJournal = new Map<string, boolean>();
 
-  (publications || []).forEach((pub) => {
+  // Batch requests to avoid URL length limits (max ~100 UUIDs per request)
+  const BATCH_SIZE = 100;
+  const batches = [];
+
+  for (let i = 0; i < reviewerIds.length; i += BATCH_SIZE) {
+    batches.push(reviewerIds.slice(i, i + BATCH_SIZE));
+  }
+
+  // Process batches in parallel
+  const results = await Promise.all(
+    batches.map(async (batch) => {
+      const { data } = await supabase
+        .from("reviewer_publications")
+        .select("reviewer_id, journal_name")
+        .in("reviewer_id", batch);
+      return data || [];
+    }),
+  );
+
+  // Flatten results and build map
+  results.flat().forEach((pub) => {
     if (
       pub.journal_name &&
       pub.journal_name.toLowerCase() === journalName.toLowerCase()

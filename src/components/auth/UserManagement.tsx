@@ -30,14 +30,22 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import PersonIcon from "@mui/icons-material/Person";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { createClient } from "@/utils/supabase/client";
 import AdminLoadingState from "./AdminLoadingState";
 import RoleGuard from "./RoleGuard";
 import { useRoleAccess } from "@/hooks/useRoles";
 import { UserProfile, UserRole, ROLE_DEFINITIONS } from "@/types/roles";
 
+interface UserProfileWithAuth extends UserProfile {
+  email_confirmed_at?: string | null;
+  last_sign_in_at?: string | null;
+}
+
 export default function UserManagement() {
-  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [profiles, setProfiles] = useState<UserProfileWithAuth[]>([]);
+  const [hasAdminAccess, setHasAdminAccess] = useState<boolean>(true); // Email verification features
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -56,23 +64,43 @@ export default function UserManagement() {
     setError(null);
 
     try {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Fetch from admin API to get email confirmation status
+      const response = await fetch("/api/admin/users");
 
-      if (error) {
-        setError(`Failed to load user profiles: ${error.message}`);
-      } else {
-        setProfiles(data || []);
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 401) {
+          setError("Session expired. Please sign out and sign back in.");
+        } else {
+          setError(
+            `Failed to load users: ${errorData.error || response.statusText}`,
+          );
+        }
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError("Failed to load user profiles");
+
+      const { users: userData, hasAdminAccess: adminAccess } =
+        await response.json();
+      setProfiles(userData || []);
+      setHasAdminAccess(adminAccess !== false); // Default to true for backward compatibility
+    } catch (err: unknown) {
+      if (
+        err instanceof Error &&
+        (err.message.includes("refresh token") ||
+          err.message.includes("Invalid Refresh Token"))
+      ) {
+        setError(
+          "Session expired. Please sign out and sign back in to continue.",
+        );
+      } else {
+        setError("Failed to load user profiles");
+      }
       console.error("Error loading profiles:", err);
     }
 
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     setError(null);
@@ -143,6 +171,39 @@ export default function UserManagement() {
     // Simple password for testing: "test" + 4 random digits
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
     setNewUserPassword(`test${randomDigits}`);
+  };
+
+  const toggleEmailConfirmation = async (
+    userId: string,
+    currentStatus: boolean,
+  ) => {
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          emailConfirmed: !currentStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(`Failed to update email confirmation: ${errorData.error}`);
+      } else {
+        const result = await response.json();
+        setSuccess(result.message);
+        loadProfiles(); // Reload to show updated status
+      }
+    } catch (err) {
+      setError("Failed to update email confirmation");
+      console.error("Error updating email confirmation:", err);
+    }
   };
 
   useEffect(() => {
@@ -234,6 +295,7 @@ export default function UserManagement() {
                   <TableCell>Role</TableCell>
                   <TableCell>Department</TableCell>
                   <TableCell>Status</TableCell>
+                  {hasAdminAccess && <TableCell>Email Verified</TableCell>}
                   <TableCell>Joined</TableCell>
                   <TableCell>Actions</TableCell>
                 </TableRow>
@@ -241,7 +303,7 @@ export default function UserManagement() {
               <TableBody>
                 {profiles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
+                    <TableCell colSpan={hasAdminAccess ? 8 : 7} align="center">
                       <Box sx={{ py: 4, textAlign: "center" }}>
                         <PersonIcon
                           sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
@@ -293,6 +355,56 @@ export default function UserManagement() {
                           size="small"
                         />
                       </TableCell>
+                      {hasAdminAccess && (
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            {profile.email_confirmed_at ? (
+                              <>
+                                <CheckCircleIcon
+                                  color="success"
+                                  fontSize="small"
+                                />
+                                <Typography
+                                  variant="body2"
+                                  color="success.main"
+                                >
+                                  Verified
+                                </Typography>
+                              </>
+                            ) : (
+                              <>
+                                <CancelIcon color="warning" fontSize="small" />
+                                <Typography
+                                  variant="body2"
+                                  color="warning.main"
+                                >
+                                  Unverified
+                                </Typography>
+                              </>
+                            )}
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() =>
+                                toggleEmailConfirmation(
+                                  profile.id,
+                                  !!profile.email_confirmed_at,
+                                )
+                              }
+                            >
+                              {profile.email_confirmed_at
+                                ? "Unverify"
+                                : "Verify"}
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      )}
                       <TableCell>{formatDate(profile.created_at)}</TableCell>
                       <TableCell>
                         <FormControl size="small" sx={{ minWidth: 140, mr: 1 }}>

@@ -353,15 +353,20 @@ export default function ReviewerInvitationDashboard() {
     InvitationQueueItem[]
   >([]);
 
-  // Filter and sort reviewers
-  const filteredReviewers = React.useMemo(() => {
-    // Create a Set of reviewer IDs that are already invited or queued
-    // Only exclude reviewers who have an actual invitation_status
-    const invitedOrQueuedIds = new Set(
+  // Memoize the invited/queued IDs set for better performance
+  const invitedOrQueuedIds = React.useMemo(() => {
+    return new Set(
       reviewersWithStatus
         .filter((r) => r.invitation_status !== null)
         .map((r) => r.id),
     );
+  }, [reviewersWithStatus]);
+
+  // Filter and sort reviewers
+  const filteredReviewers = React.useMemo(() => {
+    // Pre-lowercase the search term once
+    const search = searchTerm.toLowerCase();
+    const hasSearchTerm = search.length > 0;
 
     const filtered = potentialReviewers.filter((reviewer) => {
       // Exclude reviewers who are already invited or queued
@@ -370,11 +375,14 @@ export default function ReviewerInvitationDashboard() {
       }
 
       // Filter by search term first - if searching, bypass match_score filter
-      if (searchTerm) {
-        const search = searchTerm.toLowerCase();
+      if (hasSearchTerm) {
+        // Pre-lowercase reviewer fields for comparison
+        const nameLower = reviewer.name.toLowerCase();
+        const affiliationLower = reviewer.affiliation.toLowerCase();
+
         const matchesSearch =
-          reviewer.name.toLowerCase().includes(search) ||
-          reviewer.affiliation.toLowerCase().includes(search) ||
+          nameLower.includes(search) ||
+          affiliationLower.includes(search) ||
           reviewer.expertise_areas.some((area) =>
             area.toLowerCase().includes(search),
           );
@@ -507,7 +515,7 @@ export default function ReviewerInvitationDashboard() {
     });
 
     return filtered;
-  }, [potentialReviewers, reviewersWithStatus, sortBy, filters, searchTerm]);
+  }, [potentialReviewers, invitedOrQueuedIds, sortBy, filters, searchTerm]);
 
   const handleBackToArticle = () => {
     if (manuscriptId) {

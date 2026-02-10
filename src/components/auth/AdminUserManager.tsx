@@ -25,6 +25,8 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import { createClient } from "@/utils/supabase/client";
 import AdminLoadingState from "./AdminLoadingState";
 import RoleGuard from "./RoleGuard";
@@ -58,35 +60,44 @@ export default function AdminUserManager() {
     setError(null);
 
     try {
-      // Use user_profiles table instead of admin API
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Fetch users from admin API which includes email confirmation status
+      const response = await fetch("/api/admin/users");
 
-      if (error) {
-        setError(`Failed to load users: ${error.message}`);
-      } else {
-        // Convert user_profiles to TestUser format
-        const users: TestUser[] = data.map((profile) => ({
-          id: profile.id,
-          email: profile.email,
-          created_at: profile.created_at,
-          email_confirmed_at: profile.created_at, // We don't have email confirmation in profiles
-          last_sign_in_at: profile.last_login,
-          role: profile.role,
-          full_name: profile.full_name,
-          is_active: profile.is_active,
-        }));
-        setUsers(users);
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        // Handle auth errors specially
+        if (response.status === 401) {
+          setError("Session expired. Please sign out and sign back in.");
+        } else {
+          setError(
+            `Failed to load users: ${errorData.error || response.statusText}`,
+          );
+        }
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError("Failed to load users");
+
+      const { users: userData } = await response.json();
+      setUsers(userData);
+    } catch (err: unknown) {
+      // Check for auth-related errors
+      if (
+        err instanceof Error &&
+        (err.message.includes("refresh token") ||
+          err.message.includes("Invalid Refresh Token"))
+      ) {
+        setError(
+          "Session expired. Please sign out and sign back in to continue.",
+        );
+      } else {
+        setError("Failed to load users");
+      }
       console.error("Error loading users:", err);
     }
 
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   const createUser = async () => {
     if (!newUserEmail || !newUserPassword) {
@@ -126,6 +137,41 @@ export default function AdminUserManager() {
     // Simple password for testing: "test" + 4 random digits
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
     setNewUserPassword(`test${randomDigits}`);
+  };
+
+  const toggleEmailConfirmation = async (
+    userId: string,
+    currentStatus: boolean,
+  ) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          emailConfirmed: !currentStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(`Failed to update email confirmation: ${errorData.error}`);
+      } else {
+        const result = await response.json();
+        setSuccess(result.message);
+        loadUsers(); // Reload users to show updated status
+      }
+    } catch (err) {
+      setError("Failed to update email confirmation");
+      console.error("Error updating email confirmation:", err);
+    }
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -213,6 +259,7 @@ export default function AdminUserManager() {
                 <TableCell>Email</TableCell>
                 <TableCell>Role</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell>Email Verified</TableCell>
                 <TableCell>Created</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -251,6 +298,38 @@ export default function AdminUserManager() {
                       color={user.is_active ? "success" : "warning"}
                       size="small"
                     />
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      {user.email_confirmed_at ? (
+                        <>
+                          <CheckCircleIcon color="success" fontSize="small" />
+                          <Typography variant="body2" color="success.main">
+                            Verified
+                          </Typography>
+                        </>
+                      ) : (
+                        <>
+                          <CancelIcon color="warning" fontSize="small" />
+                          <Typography variant="body2" color="warning.main">
+                            Unverified
+                          </Typography>
+                        </>
+                      )}
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() =>
+                          toggleEmailConfirmation(
+                            user.id,
+                            !!user.email_confirmed_at,
+                          )
+                        }
+                        disabled={loading}
+                      >
+                        {user.email_confirmed_at ? "Unverify" : "Verify"}
+                      </Button>
+                    </Box>
                   </TableCell>
                   <TableCell>{formatDate(user.created_at)}</TableCell>
                   <TableCell>

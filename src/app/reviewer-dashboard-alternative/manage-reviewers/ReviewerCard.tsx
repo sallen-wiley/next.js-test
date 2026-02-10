@@ -58,7 +58,7 @@ const hasConflicts = (conflicts?: string | string[]) => {
   return conflicts.length > 0;
 };
 
-export default function ReviewerCard({
+function ReviewerCard({
   reviewer,
   onInvite,
   onAddToQueue,
@@ -309,3 +309,5 @@ export default function ReviewerCard({
     </Card>
   );
 }
+
+export default React.memo(ReviewerCard);
