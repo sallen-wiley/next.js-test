@@ -125,8 +125,7 @@ JSON file structure:
 
    - Upsert reviewer (deduplicate by email)
    - Create reviewer-manuscript match (with score)
-   - Insert publications (deduplicate by `reviewer_id + DOI`)
-   - Create publication-manuscript links (for related publications)
+   - Insert publications (deduplicate by `reviewer_id + DOI`) - publications are part of reviewer's bibliography
    - Insert retractions (if any)
 
 3. **Statistics**
@@ -142,8 +141,7 @@ JSON file structure:
 - `manuscripts` - Manuscript submissions
 - `potential_reviewers` - Reviewer database
 - `reviewer_manuscript_matches` - AI-generated match scores
-- `reviewer_publications` - Publication catalog
-- `manuscript_publication_matches` - Related publications junction table
+- `reviewer_publications` - Reviewer publication bibliography
 - `reviewer_retractions` - Retraction data
 
 ## Error Handling
@@ -161,7 +159,7 @@ JSON file structure:
 - Deduplicates on unique keys:
   - Manuscripts: `system_id`
   - Reviewers: `email`
-  - Publications: `reviewer_id + DOI`
+  - Publications: `reviewer_id + DOI` (publications belong to reviewer only)
   - Matches: `manuscript_id + reviewer_id`
 
 ### Error Recovery
@@ -232,6 +230,36 @@ node database/reviewer-ingestion/ingest.js ./database/reviewer-ingestion/reviewe
 4. Verify progress and results
 
 ## Troubleshooting
+
+### Data Format Compatibility
+
+The ingestion system supports **two publication export formats**:
+
+**Old Format (Flattened):**
+
+```json
+{
+  "relatedPublications": [...],
+  "otherPublications": [...],
+  "publications": {
+    "relatedPublications": [...],  // Duplicate
+    "otherPublications": [...]     // Duplicate
+  }
+}
+```
+
+**New Format (Nested):**
+
+```json
+{
+  "publications": {
+    "relatedPublications": [...],
+    "otherPublications": [...]
+  }
+}
+```
+
+Both formats are automatically detected and handled correctly.
 
 ### "Missing required environment variables"
 

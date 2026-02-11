@@ -376,12 +376,20 @@ async function upsertReviewerMatch(manuscriptId, reviewerId, reviewerData) {
 
 /**
  * Insert publications for a reviewer
+ * Publications are part of the reviewer's bibliography and are not linked to specific manuscripts
  */
-async function insertPublications(reviewerId, reviewerData, manuscriptId) {
-  const relatedPubs = reviewerData.relatedPublications || [];
-  const otherPubs = reviewerData.otherPublications || [];
+async function insertPublications(reviewerId, reviewerData) {
+  // Handle both old format (top-level) and new format (nested under publications)
+  const relatedPubs =
+    reviewerData.relatedPublications ||
+    reviewerData.publications?.relatedPublications ||
+    [];
+  const otherPubs =
+    reviewerData.otherPublications ||
+    reviewerData.publications?.otherPublications ||
+    [];
 
-  // Combine all publications (we no longer store is_related on the publication itself)
+  // Combine all publications (reviewer bibliography)
   const allPubs = [...relatedPubs, ...otherPubs];
 
   if (allPubs.length === 0) {
@@ -417,91 +425,28 @@ async function insertPublications(reviewerId, reviewerData, manuscriptId) {
     log("Batch insert failed, trying individual inserts...", "WARN");
     let successCount = 0;
     let skipCount = 0;
-    const insertedPublications = [];
 
-    for (let i = 0; i < publicationRecords.length; i++) {
-      const record = publicationRecords[i];
-      const { data: pubData, error: insertError } = await supabase
+    for (const record of publicationRecords) {
+      const { error: insertError } = await supabase
         .from("reviewer_publications")
         .upsert(record, {
           onConflict: "reviewer_id,doi",
           ignoreDuplicates: true,
-        })
-        .select()
-        .single();
+        });
 
       if (insertError) {
         skipCount++;
         log(`Skipped duplicate publication: ${record.title}`, "WARN");
       } else {
         successCount++;
-        // Track if this was a related publication
-        if (i < relatedPubs.length && pubData) {
-          insertedPublications.push(pubData.id);
-        }
       }
     }
 
     log(
       `Inserted ${successCount} publications, skipped ${skipCount} duplicates`,
     );
-
-    // Create manuscript_publication_matches for related publications
-    await createPublicationMatches(
-      manuscriptId,
-      insertedPublications,
-      reviewerId,
-    );
   } else {
     log(`Inserted ${data.length} publications`);
-
-    // Create manuscript_publication_matches for related publications
-    const relatedPublicationIds = data
-      .slice(0, relatedPubs.length)
-      .map((p) => p.id);
-    await createPublicationMatches(
-      manuscriptId,
-      relatedPublicationIds,
-      reviewerId,
-    );
-  }
-}
-
-/**
- * Create manuscript_publication_matches for related publications
- */
-async function createPublicationMatches(
-  manuscriptId,
-  publicationIds,
-  reviewerId,
-) {
-  if (publicationIds.length === 0) {
-    return;
-  }
-
-  log(
-    `Creating ${publicationIds.length} manuscript-publication matches for reviewer ${reviewerId}`,
-  );
-
-  const matchRecords = publicationIds.map((publicationId) => ({
-    manuscript_id: manuscriptId,
-    publication_id: publicationId,
-  }));
-
-  const { error } = await supabase
-    .from("manuscript_publication_matches")
-    .upsert(matchRecords, {
-      onConflict: "manuscript_id,publication_id",
-      ignoreDuplicates: true,
-    });
-
-  if (error) {
-    log(
-      `Warning: Failed to create some publication matches: ${error.message}`,
-      "WARN",
-    );
-  } else {
-    log(`Created ${publicationIds.length} publication matches`);
   }
 }
 
@@ -596,7 +541,7 @@ async function ingestData(jsonFilePath) {
         stats.matchesCreated++;
 
         // Insert publications
-        await insertPublications(reviewerId, reviewer, manuscriptId);
+        await insertPublications(reviewerId, reviewer);
         const pubCount =
           (reviewer.relatedPublications?.length || 0) +
           (reviewer.otherPublications?.length || 0);

@@ -108,14 +108,15 @@ The script processes:
    - Review activity (number of reviews, completions, currently reviewing)
    - Publication statistics (citation count, year range, recent publications)
 
-5. **Publications** → `reviewer_publications` table (catalog only)
-6. **Related Publications** → `manuscript_publication_matches` table (manuscript-specific relevance)
+5. **Publications** → `reviewer_publications` table (reviewer bibliography)
 
-   - Related publications (matching the manuscript topic)
+   - Related publications (matching the manuscript topic, for reference)
    - Other publications (full bibliography)
    - DOI, journal, authors, publication dates
+   - **Note**: Publications are part of the reviewer's bibliography and are not linked to specific manuscripts
+   - **Format Support**: Handles both old format (flattened) and new format (nested under `publications` object)
 
-7. **Retractions** → `reviewer_retractions` table (if any)
+6. **Retractions** → `reviewer_retractions` table (if any)
 
 ## Output
 

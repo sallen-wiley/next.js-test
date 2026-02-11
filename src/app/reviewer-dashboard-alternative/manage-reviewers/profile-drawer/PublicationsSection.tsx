@@ -30,6 +30,11 @@ export const PublicationsSection = React.forwardRef<
     return null;
   }
 
+  const totalPubs =
+    reviewer.all_publications?.length || reviewer.publications.length;
+  const relatedCount =
+    reviewer.all_publications?.filter((p) => p.is_related).length || 0;
+
   return (
     <Box ref={ref}>
       <Stack
@@ -38,9 +43,19 @@ export const PublicationsSection = React.forwardRef<
         alignItems="center"
         sx={{ mb: 1 }}
       >
-        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-          Relevant Publications (Last 5 Years)
-        </Typography>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+            Recent Publications
+          </Typography>
+          {relatedCount > 0 && (
+            <Chip
+              label={`${relatedCount} related to manuscript`}
+              size="small"
+              color="primary"
+              variant="outlined"
+            />
+          )}
+        </Stack>
         <Stack direction="row" spacing={1}>
           {isAdmin && onManagePublications && (
             <Tooltip title="Manage Publications">
@@ -53,13 +68,14 @@ export const PublicationsSection = React.forwardRef<
               </IconButton>
             </Tooltip>
           )}
-          {reviewer.publications.length > 4 && (
+          {totalPubs > 4 && onManagePublications && (
             <Button
               size="small"
+              onClick={onManagePublications}
               endIcon={<OpenInNewIcon />}
               sx={{ textTransform: "none" }}
             >
-              See all {reviewer.publications.length}
+              See all {totalPubs}
             </Button>
           )}
         </Stack>
@@ -77,14 +93,14 @@ export const PublicationsSection = React.forwardRef<
                 <Typography variant="body1">{pub.title}</Typography>
                 {pub.is_related && (
                   <Chip
-                    label="CO-AUTHOR"
+                    label="RELATED"
                     size="small"
                     color="success"
                     variant="outlined"
                   />
                 )}
                 {reviewer.retractions?.retraction_reasons.some(() =>
-                  pub.title.toLowerCase().includes("retract")
+                  pub.title.toLowerCase().includes("retract"),
                 ) && (
                   <Chip
                     label="RETRACTED"

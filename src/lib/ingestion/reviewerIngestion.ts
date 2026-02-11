@@ -63,8 +63,13 @@ export interface ReviewerData {
     publicationCountInLastYear?: number;
     lastPublicationDate?: string;
   };
+  // Publications can be at top level (old format) or nested (new format)
   relatedPublications?: Publication[];
   otherPublications?: Publication[];
+  publications?: {
+    relatedPublications?: Publication[];
+    otherPublications?: Publication[];
+  };
   retractions?: {
     retractionReasons: string[];
   };
@@ -327,15 +332,22 @@ export async function upsertReviewerMatch(
 
 /**
  * Insert publications for a reviewer
+ * Publications are part of the reviewer's bibliography and are not linked to specific manuscripts
  */
 export async function insertPublications(
   supabase: SupabaseClient,
   reviewerId: string,
   reviewerData: ReviewerData,
-  manuscriptId: string,
 ): Promise<number> {
-  const relatedPubs = reviewerData.relatedPublications || [];
-  const otherPubs = reviewerData.otherPublications || [];
+  // Handle both old format (top-level) and new format (nested under publications)
+  const relatedPubs =
+    reviewerData.relatedPublications ||
+    reviewerData.publications?.relatedPublications ||
+    [];
+  const otherPubs =
+    reviewerData.otherPublications ||
+    reviewerData.publications?.otherPublications ||
+    [];
   const allPubs = [...relatedPubs, ...otherPubs];
 
   if (allPubs.length === 0) {
@@ -363,70 +375,24 @@ export async function insertPublications(
   if (error) {
     // Try inserting one by one and skip duplicates
     let successCount = 0;
-    const insertedPublications: string[] = [];
 
-    for (let i = 0; i < publicationRecords.length; i++) {
-      const record = publicationRecords[i];
-      const { data: pubData, error: insertError } = await supabase
+    for (const record of publicationRecords) {
+      const { error: insertError } = await supabase
         .from("reviewer_publications")
         .upsert(record, {
           onConflict: "reviewer_id,doi",
           ignoreDuplicates: true,
-        })
-        .select()
-        .single();
+        });
 
-      if (!insertError && pubData) {
+      if (!insertError) {
         successCount++;
-        // Track if this was a related publication
-        if (i < relatedPubs.length) {
-          insertedPublications.push(pubData.id);
-        }
       }
     }
 
-    // Create manuscript_publication_matches for related publications
-    await createPublicationMatches(
-      supabase,
-      manuscriptId,
-      insertedPublications,
-    );
     return successCount;
   } else {
-    // Create manuscript_publication_matches for related publications
-    const relatedPublicationIds = data
-      .slice(0, relatedPubs.length)
-      .map((p) => p.id);
-    await createPublicationMatches(
-      supabase,
-      manuscriptId,
-      relatedPublicationIds,
-    );
     return data.length;
   }
-}
-
-/**
- * Create manuscript_publication_matches for related publications
- */
-async function createPublicationMatches(
-  supabase: SupabaseClient,
-  manuscriptId: string,
-  publicationIds: string[],
-): Promise<void> {
-  if (publicationIds.length === 0) {
-    return;
-  }
-
-  const matchRecords = publicationIds.map((publicationId) => ({
-    manuscript_id: manuscriptId,
-    publication_id: publicationId,
-  }));
-
-  await supabase.from("manuscript_publication_matches").upsert(matchRecords, {
-    onConflict: "manuscript_id,publication_id",
-    ignoreDuplicates: true,
-  });
 }
 
 /**
@@ -545,7 +511,6 @@ export async function ingestReviewerData(
           supabase,
           reviewerId,
           reviewer,
-          manuscriptId,
         );
         stats.publicationsInserted += pubCount;
 
