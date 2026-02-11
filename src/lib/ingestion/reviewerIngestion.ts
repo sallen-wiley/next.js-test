@@ -289,7 +289,7 @@ export async function upsertReviewerMatch(
   const matchRecord = {
     manuscript_id: manuscriptId,
     reviewer_id: reviewerId,
-    match_score: reviewerData.score,
+    match_score: reviewerData.score ?? 0.5, // Default to 0.5 (neutral) if no score provided
     is_initial_suggestion: reviewerData.initialSuggestion,
     conflicts_of_interest: reviewerData.conflictsOfInterest || null,
   };
@@ -524,9 +524,41 @@ export async function ingestReviewerData(
           stats.retractionsInserted++;
         }
       } catch (error) {
+        // Handle different error types (Error, Supabase error, unknown)
+        let errorMessage: string;
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (
+          error &&
+          typeof error === "object" &&
+          "message" in error &&
+          typeof error.message === "string"
+        ) {
+          // Supabase-style error with nested properties
+          errorMessage = error.message;
+          if ("details" in error && error.details) {
+            errorMessage += ` (Details: ${error.details})`;
+          }
+          if ("hint" in error && error.hint) {
+            errorMessage += ` (Hint: ${error.hint})`;
+          }
+          if ("code" in error && error.code) {
+            errorMessage += ` [${error.code}]`;
+          }
+        } else if (error && typeof error === "object") {
+          // Generic object - try to JSON stringify
+          try {
+            errorMessage = JSON.stringify(error);
+          } catch {
+            errorMessage = String(error);
+          }
+        } else {
+          errorMessage = String(error);
+        }
+
         stats.errors.push({
           reviewer: reviewerName,
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMessage,
         });
       }
     }

@@ -52,6 +52,10 @@ export default function UserManagement() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserProfileWithAuth | null>(
+    null,
+  );
   const {
     loading: permissionsLoading,
     permissions,
@@ -204,6 +208,54 @@ export default function UserManagement() {
       setError("Failed to update email confirmation");
       console.error("Error updating email confirmation:", err);
     }
+  };
+
+  const handleDeleteClick = (profile: UserProfileWithAuth) => {
+    // Prevent deleting your own account
+    if (profileFromHook && profile.id === profileFromHook.id) {
+      setError("You cannot delete your own account");
+      return;
+    }
+    setUserToDelete(profile);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) return;
+
+    setError(null);
+    setSuccess(null);
+    setDeleteDialogOpen(false);
+
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userToDelete.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to delete user");
+        return;
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        setSuccess(`User ${userToDelete.email} deleted successfully`);
+        setProfiles(profiles.filter((p) => p.id !== userToDelete.id));
+      }
+    } catch (err) {
+      setError("Failed to delete user");
+      console.error("Error deleting user:", err);
+    } finally {
+      setUserToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setUserToDelete(null);
   };
 
   useEffect(() => {
@@ -436,6 +488,8 @@ export default function UserManagement() {
                           size="small"
                           color="error"
                           title="Delete user"
+                          onClick={() => handleDeleteClick(profile)}
+                          disabled={profileFromHook?.id === profile.id}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -447,6 +501,61 @@ export default function UserManagement() {
             </Table>
           </TableContainer>
         </Paper>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleDeleteCancel}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Delete User Account</DialogTitle>
+          <DialogContent>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              This action cannot be undone. The user account and all associated
+              data will be permanently deleted.
+            </Alert>
+            {userToDelete && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1" gutterBottom>
+                  Are you sure you want to delete this user?
+                </Typography>
+                <Box
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    bgcolor: "background.default",
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant="body2" fontWeight="medium">
+                    {userToDelete.full_name || "Unnamed User"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {userToDelete.email}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mt: 1 }}
+                  >
+                    Role: {ROLE_DEFINITIONS[userToDelete.role].name}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              variant="contained"
+              color="error"
+            >
+              Delete User
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Create User Dialog */}
         <Dialog

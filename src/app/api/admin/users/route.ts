@@ -194,3 +194,86 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+/**
+ * DELETE /api/admin/users
+ * Deletes a user account
+ * Requires admin role and prevents self-deletion
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    // Verify admin access
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Parse request body
+    const body = await request.json();
+    const { userId } = body;
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 },
+      );
+    }
+
+    // Prevent self-deletion
+    if (userId === user.id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own account" },
+        { status: 400 },
+      );
+    }
+
+    // Use admin client to delete user
+    const adminClient = createAdminClient();
+
+    if (!adminClient) {
+      return NextResponse.json(
+        {
+          error:
+            "Admin features unavailable. Configure SUPABASE_SERVICE_ROLE_KEY.",
+        },
+        { status: 503 },
+      );
+    }
+
+    // Delete from auth.users (this will cascade delete the profile due to FK constraint)
+    const { error } = await adminClient.auth.admin.deleteUser(userId);
+
+    if (error) {
+      console.error("Error deleting user:", error);
+      return NextResponse.json(
+        { error: "Failed to delete user" },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("API Error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
