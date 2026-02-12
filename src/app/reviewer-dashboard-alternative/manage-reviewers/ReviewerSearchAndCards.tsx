@@ -389,12 +389,13 @@ export function ReviewerSearchAndCards({
                                     setTempResponseTime(30);
                                   }
                                 }}
-                                sx={{ width: 60 }}
-                                inputProps={{
-                                  min: 1,
-                                  max: 30,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 1,
+                                    max: 30,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                             </Box>
@@ -490,12 +491,13 @@ export function ReviewerSearchAndCards({
                                     setTempReviewsLast12Months(20);
                                   }
                                 }}
-                                sx={{ width: 60 }}
-                                inputProps={{
-                                  min: 0,
-                                  max: 20,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 0,
+                                    max: 20,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                             </Box>
@@ -582,12 +584,13 @@ export function ReviewerSearchAndCards({
                                     setTempTotalReviewsMin(1000);
                                   }
                                 }}
-                                sx={{ width: 70 }}
-                                inputProps={{
-                                  min: 0,
-                                  max: 1000,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 0,
+                                    max: 1000,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                               <Box sx={{ display: "flex", flex: 1 }}>
@@ -633,12 +636,13 @@ export function ReviewerSearchAndCards({
                                     setTempTotalReviewsMax(1000);
                                   }
                                 }}
-                                sx={{ width: 70 }}
-                                inputProps={{
-                                  min: 0,
-                                  max: 1000,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 0,
+                                    max: 1000,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                             </Box>
@@ -690,7 +694,7 @@ export function ReviewerSearchAndCards({
                               variant="subtitle2"
                               sx={{ fontWeight: "bold" }}
                             >
-                              Current review load (currently reviewing)
+                              Currently reviewing
                             </Typography>
                           }
                         />
@@ -735,12 +739,13 @@ export function ReviewerSearchAndCards({
                                     setTempAssignedManuscripts(10);
                                   }
                                 }}
-                                sx={{ width: 60 }}
-                                inputProps={{
-                                  min: 0,
-                                  max: 10,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 0,
+                                    max: 10,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                             </Box>
@@ -824,10 +829,12 @@ export function ReviewerSearchAndCards({
                                     Number(e.target.value),
                                   )
                                 }
-                                inputProps={{
-                                  min: 1900,
-                                  max: 2024,
-                                  type: "number",
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 1900,
+                                    max: 2024,
+                                    type: "number",
+                                  },
                                 }}
                                 sx={{ flex: 1 }}
                               />
@@ -840,10 +847,12 @@ export function ReviewerSearchAndCards({
                                     Number(e.target.value),
                                   )
                                 }
-                                inputProps={{
-                                  min: 1900,
-                                  max: 2024,
-                                  type: "number",
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 1900,
+                                    max: 2024,
+                                    type: "number",
+                                  },
                                 }}
                                 sx={{ flex: 1 }}
                               />
@@ -934,12 +943,13 @@ export function ReviewerSearchAndCards({
                                       : Number(e.target.value),
                                   )
                                 }
-                                sx={{ width: 60 }}
-                                inputProps={{
-                                  min: 0,
-                                  max: 100,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 0,
+                                    max: 100,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                             </Box>
