@@ -8,6 +8,23 @@
 import { supabase } from "@/lib/supabase";
 import type { UserPalette, PaletteData } from "@/lib/supabase";
 
+type ExportTokenNamingMode = "mui-key" | "hue-name";
+
+function getExportTokenKey(
+  hue: PaletteData[number],
+  namingMode: ExportTokenNamingMode,
+  index: number,
+): string {
+  const hueName = hue.name.trim();
+  const muiKey = hue.muiName.trim();
+
+  if (namingMode === "hue-name") {
+    return hueName || muiKey || `hue-${index + 1}`;
+  }
+
+  return muiKey || hueName || `hue-${index + 1}`;
+}
+
 // ============================================================================
 // ERROR TYPES
 // ============================================================================
@@ -62,12 +79,12 @@ export function generateMuiThemeExport(data: PaletteData): {
 } {
   const palette: Record<string, Record<string, string>> = {};
 
-  data.forEach((hue) => {
+  data.forEach((hue, index) => {
     const colorSet: Record<string, string> = {};
     hue.shades.forEach((shade) => {
       colorSet[shade.label] = shade.color;
     });
-    palette[hue.muiName || hue.name] = colorSet;
+    palette[getExportTokenKey(hue, "mui-key", index)] = colorSet;
   });
 
   return { palette };
@@ -107,15 +124,18 @@ export function generateFullExport(
 /**
  * Generate CSS custom properties (CSS variables) from palette data
  * Converts HueSet[] to :root { --{hueName}-{label}: {color}; } format
- * Uses muiName if set, otherwise falls back to name
+ * Uses selected naming mode with fallback to alternate key
  * @param data - Palette data (HueSet[] array)
  * @returns CSS string with :root declaration
  */
-export function generateCssVariablesExport(data: PaletteData): string {
+export function generateCssVariablesExport(
+  data: PaletteData,
+  namingMode: ExportTokenNamingMode = "mui-key",
+): string {
   let cssVars = ":root {\n";
 
-  data.forEach((hue) => {
-    const hueName = (hue.muiName || hue.name)
+  data.forEach((hue, index) => {
+    const hueName = getExportTokenKey(hue, namingMode, index)
       .replace(/\s+/g, "-")
       .toLowerCase();
     hue.shades.forEach((shade) => {
@@ -135,8 +155,9 @@ export function generateCssVariablesExport(data: PaletteData): string {
 export function downloadCssVariables(
   data: PaletteData,
   filename?: string,
+  namingMode: ExportTokenNamingMode = "mui-key",
 ): void {
-  const cssContent = generateCssVariablesExport(data);
+  const cssContent = generateCssVariablesExport(data, namingMode);
   const blob = new Blob([cssContent], { type: "text/css" });
   const url = URL.createObjectURL(blob);
 

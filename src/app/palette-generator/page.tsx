@@ -14,6 +14,16 @@ import {
   Chip,
   Drawer,
   IconButton,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  Radio,
+  FormControlLabel,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import AddIcon from "@mui/icons-material/Add";
@@ -32,8 +42,12 @@ import HueEditor from "./components/HueEditor";
 import PaletteSaveDialog from "./components/PaletteSaveDialog";
 import PaletteLoadDialog from "./components/PaletteLoadDialog";
 import PaletteSidebar from "./components/PaletteSidebar";
+import { downloadCssVariables } from "./services/paletteService";
 
 const CONTRAST_COLOR_STORAGE_KEY = "paletteGenerator.contrastTargetColor";
+
+type ExportTokenNamingMode = "mui-key" | "hue-name";
+type ExportFormat = "json" | "css";
 
 function PaletteGenerator() {
   const [hues, setHues] = useState<HueSet[]>(() => {
@@ -52,6 +66,11 @@ function PaletteGenerator() {
     null,
   );
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportTokenNamingMode, setExportTokenNamingMode] =
+    useState<ExportTokenNamingMode>("mui-key");
+  const [pendingExportFormat, setPendingExportFormat] =
+    useState<ExportFormat>("json");
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
@@ -122,23 +141,40 @@ function PaletteGenerator() {
     );
   };
 
-  const exportPalette = () => {
+  const getExportTokenKey = (
+    hue: HueSet,
+    namingMode: ExportTokenNamingMode,
+    index: number,
+  ) => {
+    const hueName = hue.name.trim();
+    const muiKey = hue.muiName.trim();
+
+    if (namingMode === "hue-name") {
+      return hueName || muiKey || `hue-${index + 1}`;
+    }
+
+    return muiKey || hueName || `hue-${index + 1}`;
+  };
+
+  const exportPalette = (namingMode: ExportTokenNamingMode) => {
     const muiTheme: { palette: Record<string, Record<string, string>> } = {
       palette: {},
     };
 
-    hues.forEach((hue) => {
+    hues.forEach((hue, index) => {
       const colorSet: Record<string, string> = {};
       hue.shades.forEach((shade) => {
         colorSet[shade.label] = shade.color;
       });
-      muiTheme.palette[hue.muiName || hue.name] = colorSet;
+      const tokenKey = getExportTokenKey(hue, namingMode, index);
+      muiTheme.palette[tokenKey] = colorSet;
     });
 
     const exportData = {
       version: "1.0",
       generatedAt: new Date().toISOString(),
       colorSpace: "hsv",
+      tokenNamingMode: namingMode,
       muiTheme,
       fullData: hues,
     };
@@ -152,6 +188,28 @@ function PaletteGenerator() {
     a.download = "palette.json";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportCssPalette = (namingMode: ExportTokenNamingMode) => {
+    const filename = currentPaletteName
+      ? `${currentPaletteName.replace(/\s+/g, "-").toLowerCase()}.css`
+      : undefined;
+
+    downloadCssVariables(hues, filename, namingMode);
+  };
+
+  const handleExportRequest = (format: ExportFormat) => {
+    setPendingExportFormat(format);
+    setExportDialogOpen(true);
+  };
+
+  const handleConfirmExportJson = () => {
+    if (pendingExportFormat === "json") {
+      exportPalette(exportTokenNamingMode);
+    } else {
+      exportCssPalette(exportTokenNamingMode);
+    }
+    setExportDialogOpen(false);
   };
 
   const handleLoadPalette = (
@@ -326,7 +384,7 @@ function PaletteGenerator() {
                   onContrastColorChange={setContrastTargetColor}
                   onSaveSuccess={handleSaveSuccess}
                   onLoad={handleLoadPalette}
-                  onExportJson={exportPalette}
+                  onExport={handleExportRequest}
                 />
               </Box>
             </Grid>
@@ -388,10 +446,56 @@ function PaletteGenerator() {
             onContrastColorChange={setContrastTargetColor}
             onSaveSuccess={handleSaveSuccess}
             onLoad={handleLoadPalette}
-            onExportJson={exportPalette}
+            onExport={handleExportRequest}
           />
         </Box>
       </Drawer>
+
+      <Dialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {pendingExportFormat === "json"
+            ? "Export JSON Tokens"
+            : "Export CSS Variables"}
+        </DialogTitle>
+        <DialogContent>
+          <FormControl sx={{ mt: 1 }}>
+            <FormLabel id="json-token-naming-mode-label">
+              Token naming strategy
+            </FormLabel>
+            <RadioGroup
+              aria-labelledby="json-token-naming-mode-label"
+              value={exportTokenNamingMode}
+              onChange={(event) =>
+                setExportTokenNamingMode(
+                  event.target.value as ExportTokenNamingMode,
+                )
+              }
+            >
+              <FormControlLabel
+                value="mui-key"
+                control={<Radio />}
+                label="Use MUI palette key (fallback to hue name)"
+              />
+              <FormControlLabel
+                value="hue-name"
+                control={<Radio />}
+                label="Use hue name (fallback to MUI palette key)"
+              />
+            </RadioGroup>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExportDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleConfirmExportJson}>
+            {pendingExportFormat === "json" ? "Export JSON" : "Export CSS"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Legacy Save Dialog (for backward compatibility - can be removed) */}
       <PaletteSaveDialog
