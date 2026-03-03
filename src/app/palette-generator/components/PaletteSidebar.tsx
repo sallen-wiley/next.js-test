@@ -46,7 +46,6 @@ import {
   listUserPalettes,
   listPublicPalettes,
   deletePalette,
-  downloadCssVariables,
 } from "../services/paletteService";
 import { PRESET_PALETTES } from "../presets";
 import type { UserPalette, UserPaletteWithAuthor } from "@/lib/supabase";
@@ -61,7 +60,7 @@ interface PaletteSidebarProps {
   onContrastColorChange: (color: string | null) => void;
   onSaveSuccess: (paletteId: string, paletteName: string) => void;
   onLoad: (palette: HueSet[], paletteId?: string, paletteName?: string) => void;
-  onExportJson: () => void;
+  onExport: (format: ExportFormat) => void;
 }
 
 type LoadTabValue = "my-palettes" | "presets" | "public";
@@ -75,7 +74,7 @@ export default function PaletteSidebar({
   onContrastColorChange,
   onSaveSuccess,
   onLoad,
-  onExportJson,
+  onExport,
 }: PaletteSidebarProps) {
   // Contrast picker state (top of sidebar)
   // This is passed through props
@@ -280,14 +279,7 @@ export default function PaletteSidebar({
 
   const handleExport = (format: ExportFormat) => {
     setExportMenuAnchor(null);
-    if (format === "json") {
-      onExportJson();
-    } else if (format === "css") {
-      const filename = currentPaletteName
-        ? `${currentPaletteName.replace(/\s+/g, "-").toLowerCase()}.css`
-        : undefined;
-      downloadCssVariables(hues, filename);
-    }
+    onExport(format);
   };
 
   return (

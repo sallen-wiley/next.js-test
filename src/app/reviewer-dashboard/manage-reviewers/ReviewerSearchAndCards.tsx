@@ -427,12 +427,13 @@ export function ReviewerSearchAndCards({
                                   });
                                 }
                               }}
-                              sx={{ width: 60 }}
-                              inputProps={{
-                                min: 1,
-                                max: 30,
-                                type: "number",
-                                step: 1,
+                              slotProps={{
+                                htmlInput: {
+                                  min: 1,
+                                  max: 30,
+                                  type: "number",
+                                  step: 1,
+                                },
                               }}
                             />
                           </Box>
@@ -529,12 +530,13 @@ export function ReviewerSearchAndCards({
                                   });
                                 }
                               }}
-                              sx={{ width: 60 }}
-                              inputProps={{
-                                min: 0,
-                                max: 20,
-                                type: "number",
-                                step: 1,
+                              slotProps={{
+                                htmlInput: {
+                                  min: 0,
+                                  max: 20,
+                                  type: "number",
+                                  step: 1,
+                                },
                               }}
                             />
                           </Box>
@@ -609,12 +611,13 @@ export function ReviewerSearchAndCards({
                                     });
                                   }
                                 }}
-                                sx={{ width: 70 }}
-                                inputProps={{
-                                  min: 0,
-                                  max: 1000,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 0,
+                                    max: 1000,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                               <Box sx={{ display: "flex", flex: 1 }}>
@@ -675,12 +678,13 @@ export function ReviewerSearchAndCards({
                                     });
                                   }
                                 }}
-                                sx={{ width: 70 }}
-                                inputProps={{
-                                  min: 0,
-                                  max: 1000,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 0,
+                                    max: 1000,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
                               />
                             </Box>
@@ -702,7 +706,7 @@ export function ReviewerSearchAndCards({
                                 setTempFilters({
                                   ...tempFilters,
                                   assignedManuscriptsMax: e.target.checked
-                                    ? 2
+                                    ? 3
                                     : 0,
                                 });
                               }}
@@ -714,7 +718,7 @@ export function ReviewerSearchAndCards({
                               variant="subtitle2"
                               sx={{ fontWeight: "bold" }}
                             >
-                              Assigned manuscripts
+                              Currently reviewing
                             </Typography>
                           }
                         />
@@ -780,12 +784,13 @@ export function ReviewerSearchAndCards({
                                   });
                                 }
                               }}
-                              sx={{ width: 60 }}
-                              inputProps={{
-                                min: 0,
-                                max: 10,
-                                type: "number",
-                                step: 1,
+                              slotProps={{
+                                htmlInput: {
+                                  min: 0,
+                                  max: 10,
+                                  type: "number",
+                                  step: 1,
+                                },
                               }}
                             />
                           </Box>
@@ -810,10 +815,10 @@ export function ReviewerSearchAndCards({
                                 setTempFilters({
                                   ...tempFilters,
                                   publicationYearFrom: e.target.checked
-                                    ? 2020
+                                    ? 2019
                                     : 0,
                                   publicationYearTo: e.target.checked
-                                    ? 2025
+                                    ? 2024
                                     : 0,
                                 });
                               }}
@@ -830,17 +835,17 @@ export function ReviewerSearchAndCards({
                           }
                         />
                         {activeFilters.publicationRecency && (
-                          <Box sx={{ mt: 1 }}>
+                          <Box sx={{ mt: 1, px: 1 }}>
                             <Box
                               sx={{
                                 display: "flex",
                                 gap: 1,
                                 alignItems: "center",
-                                px: 1,
                               }}
                             >
                               <TextField
                                 size="small"
+                                label="From"
                                 value={tempFilters.publicationYearFrom}
                                 onChange={(e) =>
                                   setTempFilters({
@@ -858,68 +863,34 @@ export function ReviewerSearchAndCards({
                                       publicationYearFrom: 1900,
                                     });
                                   } else if (
-                                    tempFilters.publicationYearFrom > 2025
+                                    tempFilters.publicationYearFrom > 2024
                                   ) {
                                     setTempFilters({
                                       ...tempFilters,
-                                      publicationYearFrom: 2025,
+                                      publicationYearFrom: 2024,
                                     });
                                   }
                                 }}
-                                sx={{ width: 70 }}
-                                inputProps={{
-                                  min: 1900,
-                                  max: 2025,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 1900,
+                                    max: 2024,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
+                                sx={{ flex: 1 }}
                               />
-                              <Box sx={{ flex: 1, display: "flex" }}>
-                                <Slider
-                                  value={[
-                                    Math.max(
-                                      1900,
-                                      tempFilters.publicationYearFrom,
-                                    ),
-                                    Math.min(
-                                      2025,
-                                      Math.max(
-                                        1900,
-                                        tempFilters.publicationYearTo,
-                                      ),
-                                    ),
-                                  ]}
-                                  onChange={(_, value) => {
-                                    if (Array.isArray(value)) {
-                                      const [from, to] = value;
-                                      setTempFilters({
-                                        ...tempFilters,
-                                        publicationYearFrom: Math.max(
-                                          1900,
-                                          Math.min(2025, from),
-                                        ),
-                                        publicationYearTo: Math.max(
-                                          1900,
-                                          Math.min(2025, to),
-                                        ),
-                                      });
-                                    }
-                                  }}
-                                  min={1900}
-                                  max={2025}
-                                  disableSwap
-                                  size="small"
-                                />
-                              </Box>
                               <TextField
                                 size="small"
+                                label="To"
                                 value={tempFilters.publicationYearTo}
                                 onChange={(e) =>
                                   setTempFilters({
                                     ...tempFilters,
                                     publicationYearTo:
                                       e.target.value === ""
-                                        ? 2025
+                                        ? 2024
                                         : Number(e.target.value),
                                   })
                                 }
@@ -930,21 +901,23 @@ export function ReviewerSearchAndCards({
                                       publicationYearTo: 1900,
                                     });
                                   } else if (
-                                    tempFilters.publicationYearTo > 2025
+                                    tempFilters.publicationYearTo > 2024
                                   ) {
                                     setTempFilters({
                                       ...tempFilters,
-                                      publicationYearTo: 2025,
+                                      publicationYearTo: 2024,
                                     });
                                   }
                                 }}
-                                sx={{ width: 70 }}
-                                inputProps={{
-                                  min: 1900,
-                                  max: 2025,
-                                  type: "number",
-                                  step: 1,
+                                slotProps={{
+                                  htmlInput: {
+                                    min: 1900,
+                                    max: 2024,
+                                    type: "number",
+                                    step: 1,
+                                  },
                                 }}
+                                sx={{ flex: 1 }}
                               />
                             </Box>
                           </Box>
@@ -965,7 +938,7 @@ export function ReviewerSearchAndCards({
                                 setTempFilters({
                                   ...tempFilters,
                                   publishedArticlesMin: e.target.checked
-                                    ? 5
+                                    ? 10
                                     : 0,
                                 });
                               }}
@@ -1043,12 +1016,13 @@ export function ReviewerSearchAndCards({
                                   });
                                 }
                               }}
-                              sx={{ width: 60 }}
-                              inputProps={{
-                                min: 0,
-                                max: 100,
-                                type: "number",
-                                step: 1,
+                              slotProps={{
+                                htmlInput: {
+                                  min: 0,
+                                  max: 100,
+                                  type: "number",
+                                  step: 1,
+                                },
                               }}
                             />
                           </Box>
