@@ -61,10 +61,10 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: brandColors.brandColors["Primary Heritage"][700],
+      main: brandColors.brandColors["Primary Heritage"][800],
     },
     secondary: {
-      main: brandColors.brandColors["Primary Heritage"][900],
+      main: brandColors.brandColors.Neutral[800],
     },
     error: {
       main: brandColors.brandColors["System Negative"][600],
@@ -73,7 +73,7 @@ let theme = createTheme({
       main: brandColors.brandColors["System Alert"][800],
     },
     info: {
-      main: brandColors.brandColors["Primary Heritage"][700],
+      main: brandColors.brandColors["System Info"][700],
     },
     success: {
       main: brandColors.brandColors["System Positive"][700],
@@ -103,8 +103,8 @@ let theme = createTheme({
       disabled: brandColors.brandColors.Neutral[700],
     },
     background: {
-      default: "#ffffff",
-      paper: brandColors.brandColors.Neutral[50],
+      default: brandColors.brandColors.Neutral[50],
+      paper: "#FFFFFF",
     },
   },
   colorSchemes: {
@@ -221,19 +221,14 @@ let theme = createTheme({
   // Custom palette with lightest shades (following MUI docs pattern)
   customPalette: {
     primaryLightest: brandColors.brandColors["Primary Heritage"][50],
-    secondaryLightest: brandColors.brandColors["Primary Heritage"][50],
+    secondaryLightest: brandColors.brandColors.Neutral[50],
     errorLightest: brandColors.brandColors["System Negative"][50],
     warningLightest: brandColors.brandColors["System Alert"][50],
-    infoLightest: brandColors.brandColors["Primary Heritage"][50],
+    infoLightest: brandColors.brandColors["System Info"][50],
     successLightest: brandColors.brandColors["System Positive"][50],
   },
 });
-
-// Step 2: Extend theme with component overrides that can access theme values
-// supporting variables to help with calculations
-// const SHRUNK_LABEL_SCALE = 0.875; // MUI default is 0.75 - which is too small for this design system
-// const SHRUNK_LABEL_LINEHEIGHT = 1.5; // The line height of the shrunk label - we use this to translate the label and ensure it is vertically aligned with teh outlined input border. We need a lineheight larger than the font-size to prevent decenders from being hidden in the overflow
-
+// Step 2: Extend the base theme with component overrides that can access theme values for dynamic styling based on light/dark mode, etc.
 theme = createTheme(theme, {
   components: {
     // Static components (no theme access needed)
