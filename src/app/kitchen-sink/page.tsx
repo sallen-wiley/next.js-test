@@ -5,6 +5,7 @@ import { useHeaderConfig } from "@/contexts/HeaderContext";
 import {
   ButtonsSection,
   TypographySection,
+  SpacingSection,
   InputsSection,
   ControlsSection,
   DataDisplaySection,
@@ -24,7 +25,12 @@ export default function KitchenSink() {
         <Grid container spacing={4} sx={{ my: 4 }}>
           {/* Header */}
           <Grid size={12}>
-            <Typography variant="h4" component="h1" gutterBottom>
+            <Typography
+              variant="h4"
+              component="h1"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Kitchen Sink - Component Showcase
             </Typography>
             <Typography variant="body1" gutterBottom color="text.secondary">
@@ -36,6 +42,7 @@ export default function KitchenSink() {
 
           {/* All sections are memoized and manage their own state */}
           <TypographySection />
+          <SpacingSection />
           <ButtonsSection />
           <InputsSection />
           <ControlsSection />

@@ -68,7 +68,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <MuiThemeProvider theme={theme} defaultMode="system">
+      <MuiThemeProvider theme={theme} defaultMode="light">
         {children}
       </MuiThemeProvider>
     </ThemeContext.Provider>

@@ -25,13 +25,22 @@ export const DataDisplaySection = React.memo(() => {
 
   return (
     <Grid size={12}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4 }}>
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        sx={{ typography: "mono" as const, mt: 4 }}
+      >
         Data Display
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} alignItems="flex-start">
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Alerts
             </Typography>
             <Stack spacing={2}>
@@ -57,12 +66,20 @@ export const DataDisplaySection = React.memo(() => {
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Chips & Avatars
             </Typography>
             <Stack spacing={3}>
               <Box>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  sx={{ typography: "mono" as const }}
+                >
                   Chip Colors
                 </Typography>
                 <Stack
@@ -82,7 +99,11 @@ export const DataDisplaySection = React.memo(() => {
               </Box>
 
               <Box>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  sx={{ typography: "mono" as const }}
+                >
                   Interactive Chips
                 </Typography>
                 <Stack
@@ -107,7 +128,11 @@ export const DataDisplaySection = React.memo(() => {
               </Box>
 
               <Box>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  sx={{ typography: "mono" as const }}
+                >
                   Avatar Group
                 </Typography>
                 <AvatarGroup max={4}>
@@ -130,7 +155,11 @@ export const DataDisplaySection = React.memo(() => {
               </Box>
 
               <Box>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  sx={{ typography: "mono" as const }}
+                >
                   Rating
                 </Typography>
                 <Rating
@@ -141,7 +170,11 @@ export const DataDisplaySection = React.memo(() => {
               </Box>
 
               <Box>
-                <Typography variant="subtitle2" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  gutterBottom
+                  sx={{ typography: "mono" as const }}
+                >
                   Progress
                 </Typography>
                 <LinearProgress variant="determinate" value={65} />

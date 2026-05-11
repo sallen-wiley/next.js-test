@@ -33,7 +33,12 @@ export const TableSection = React.memo(() => {
 
   return (
     <Grid size={12}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4 }}>
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        sx={{ typography: "mono" as const, mt: 4 }}
+      >
         Tables
       </Typography>
       <TableContainer component={Paper}>

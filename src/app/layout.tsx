@@ -37,7 +37,7 @@ export default function RootLayout({
           {`window.LogRocket && window.LogRocket.init('p5tsjd/ppux-test');`}
         </Script> */}
 
-        <InitColorSchemeScript attribute="data" />
+        <InitColorSchemeScript attribute="data" defaultMode="light" />
         <AppRouterCacheProvider>
           <ThemeProvider defaultTheme="researchexchange">
             <LogoProvider defaultTenant="wiley2025">

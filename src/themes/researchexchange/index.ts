@@ -1,5 +1,6 @@
 "use client";
 import { createTheme, Theme, Palette } from "@mui/material/styles";
+import type { CSSProperties } from "react";
 import * as brandColors from "./brandColors";
 
 // Type augmentations for custom theme properties
@@ -36,12 +37,30 @@ declare module "@mui/material/styles" {
       successLightest?: string;
     };
   }
+
+  interface TypographyVariants {
+    sans: CSSProperties;
+    serif: CSSProperties;
+    mono: CSSProperties;
+  }
+
+  interface TypographyVariantsOptions {
+    sans?: CSSProperties;
+    serif?: CSSProperties;
+    mono?: CSSProperties;
+  }
 }
 
 // Note: Button size overrides are now declared in global types.ts
 
 // Theme using Inter for a modern, clean Research Exchange look
 // Using MUI's official theme composition pattern for theme-aware components
+
+const fontStacks = {
+  sans: "'Inter', sans-serif",
+  serif: "'Times New Roman', Georgia, serif",
+  mono: "'IBM Plex Mono', monospace",
+} as const;
 
 // Step 1: Create base theme with palette, typography, shape, etc.
 let theme = createTheme({
@@ -98,7 +117,7 @@ let theme = createTheme({
       contrastText: brandColors.brandColors.Neutral[900],
     },
     text: {
-      primary: brandColors.brandColors.Neutral[900],
+      primary: "#000000",
       secondary: brandColors.brandColors.Neutral[800],
       disabled: brandColors.brandColors.Neutral[700],
     },
@@ -131,7 +150,7 @@ let theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "'Inter'", // Use Inter for Research Exchange
+    fontFamily: fontStacks.sans, // Use Inter for Research Exchange
     h1: {
       fontSize: "3rem",
       fontWeight: 700,
@@ -193,12 +212,12 @@ let theme = createTheme({
       letterSpacing: "0.01071em",
     },
     button: {
-      fontFamily: "'Inter'",
+      fontFamily: fontStacks.sans,
       fontWeight: 600,
       fontSize: "0.875rem",
       lineHeight: 1.75,
       letterSpacing: "0.02857em",
-      textTransform: "uppercase",
+      textTransform: "none",
     },
     caption: {
       fontWeight: 400,
@@ -212,6 +231,16 @@ let theme = createTheme({
       lineHeight: 2.66,
       letterSpacing: "0.08333em",
       textTransform: "uppercase",
+    },
+    // Sx shorthand: sx={{ typography: "mono" | "sans" | "serif" }}
+    sans: {
+      fontFamily: fontStacks.sans,
+    },
+    serif: {
+      fontFamily: fontStacks.serif,
+    },
+    mono: {
+      fontFamily: fontStacks.mono,
     },
   },
   shape: {
@@ -249,6 +278,34 @@ theme = createTheme(theme, {
           font-weight: 100 900;
           src: url('/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
         }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 500;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-Medium.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 600;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-SemiBold.ttf') format('truetype');
+        }
+
+        code, pre, kbd, samp, tt {
+          font-family: 'IBM Plex Mono', monospace;
+        }
       `,
     },
     MuiButtonBase: {
@@ -282,6 +339,19 @@ theme = createTheme(theme, {
         label: {
           // Chip uses same font weight as buttons
           fontWeight: theme.typography.button.fontWeight,
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          // Keep inline links in typography content consistently underlined.
+          "& a, & .MuiLink-root": {
+            textDecoration: "underline",
+            "&:hover": {
+              textDecoration: "underline",
+            },
+          },
         },
       },
     },
@@ -475,15 +545,17 @@ theme = createTheme(theme, {
           fontWeight: theme.typography.button.fontWeight,
           // Light mode custom colors, dark mode uses defaults
           ...theme.applyStyles("light", {
-            "&.MuiPaginationItem-outlinedPrimary": {
-              color: theme.palette.primary.main,
-            },
-            "&.MuiPaginationItem-textPrimary": {
-              color: theme.palette.primary.main,
-              "&.Mui-selected": {
-                color: theme.palette.primary.contrastText,
+            "&.MuiPaginationItem-outlinedPrimary:not(.MuiPaginationItem-ellipsis)":
+              {
+                color: theme.palette.primary.main,
               },
-            },
+            "&.MuiPaginationItem-textPrimary:not(.MuiPaginationItem-ellipsis)":
+              {
+                color: theme.palette.primary.main,
+                "&.Mui-selected": {
+                  color: theme.palette.primary.contrastText,
+                },
+              },
           }),
         }),
       },
@@ -491,6 +563,9 @@ theme = createTheme(theme, {
 
     MuiButton: {
       styleOverrides: {
+        sizeLarge: {
+          textTransform: "uppercase",
+        },
         root: {
           // Variants for custom sizes
           variants: [

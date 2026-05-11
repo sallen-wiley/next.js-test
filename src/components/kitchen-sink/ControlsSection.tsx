@@ -39,13 +39,22 @@ export const ControlsSection = React.memo(() => {
 
   return (
     <Grid size={12}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4 }}>
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        sx={{ typography: "mono" as const, mt: 4 }}
+      >
         Selection Controls
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} alignItems="flex-start">
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Checkboxes
             </Typography>
             <FormControl component="fieldset">
@@ -124,7 +133,11 @@ export const ControlsSection = React.memo(() => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Radio Buttons
             </Typography>
             <FormControl component="fieldset">
@@ -165,7 +178,11 @@ export const ControlsSection = React.memo(() => {
 
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Switches & Sliders
             </Typography>
             <Stack spacing={3}>

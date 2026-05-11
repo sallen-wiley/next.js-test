@@ -4,10 +4,8 @@ import { Paper, Typography, TextField, Stack, Grid } from "@mui/material";
 
 export const InputsSection = React.memo(() => {
   const [formValues, setFormValues] = React.useState({
-    standard: "",
     outlined: "",
     outlinedSmall: "",
-    filled: "",
     multiline: "",
     number: "",
     numberSmall: "",
@@ -21,23 +19,25 @@ export const InputsSection = React.memo(() => {
 
   return (
     <Grid size={12}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4 }}>
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        sx={{ typography: "mono" as const, mt: 4 }}
+      >
         Form Inputs
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} alignItems="flex-start">
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Text Inputs
             </Typography>
             <Stack spacing={2}>
-              <TextField
-                label="Standard"
-                variant="standard"
-                fullWidth
-                value={formValues.standard}
-                onChange={handleChange("standard")}
-              />
               <TextField
                 label="Outlined (Default Size)"
                 variant="outlined"
@@ -53,20 +53,17 @@ export const InputsSection = React.memo(() => {
                 value={formValues.outlinedSmall}
                 onChange={handleChange("outlinedSmall")}
               />
-              <TextField
-                label="Filled"
-                variant="filled"
-                fullWidth
-                value={formValues.filled}
-                onChange={handleChange("filled")}
-              />
             </Stack>
           </Paper>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
               Special Inputs
             </Typography>
             <Stack spacing={2}>
