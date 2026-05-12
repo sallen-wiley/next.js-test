@@ -174,7 +174,7 @@ export default function WorkflowBuilder() {
   });
 
   const handleEditorialModelNameChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -193,7 +193,7 @@ export default function WorkflowBuilder() {
 
   const handleArticleTypesChange = (
     event: React.SyntheticEvent,
-    newValue: string[]
+    newValue: string[],
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -204,7 +204,7 @@ export default function WorkflowBuilder() {
   const handleResponsibleRoleChange = (
     stepId: string,
     subStepId: string,
-    newValue: string[]
+    newValue: string[],
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -215,10 +215,10 @@ export default function WorkflowBuilder() {
               subSteps: step.subSteps.map((subStep) =>
                 subStep.id === subStepId
                   ? { ...subStep, responsibleRole: newValue }
-                  : subStep
+                  : subStep,
               ),
             }
-          : step
+          : step,
       ),
     }));
   };
@@ -226,7 +226,7 @@ export default function WorkflowBuilder() {
   const handleDecisionChange = (
     stepId: string,
     subStepId: string,
-    newValue: string[]
+    newValue: string[],
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -237,22 +237,24 @@ export default function WorkflowBuilder() {
               subSteps: step.subSteps.map((subStep) =>
                 subStep.id === subStepId
                   ? { ...subStep, decisions: newValue }
-                  : subStep
+                  : subStep,
               ),
             }
-          : step
+          : step,
       ),
     }));
   };
 
   const handleStepResponsibleRoleChange = (
     stepId: string,
-    newValue: string | null
+    newValue: string | null,
   ) => {
     setFormData((prev) => ({
       ...prev,
       workflow: prev.workflow.map((step) =>
-        step.id === stepId ? { ...step, responsibleRole: newValue || "" } : step
+        step.id === stepId
+          ? { ...step, responsibleRole: newValue || "" }
+          : step,
       ),
     }));
   };
@@ -261,7 +263,7 @@ export default function WorkflowBuilder() {
     setFormData((prev) => ({
       ...prev,
       workflow: prev.workflow.map((step) =>
-        step.id === stepId ? { ...step, enabled: !step.enabled } : step
+        step.id === stepId ? { ...step, enabled: !step.enabled } : step,
       ),
     }));
   };
@@ -270,7 +272,7 @@ export default function WorkflowBuilder() {
     setFormData((prev) => ({
       ...prev,
       workflow: prev.workflow.map((step) =>
-        step.id === stepId ? { ...step, name: newName } : step
+        step.id === stepId ? { ...step, name: newName } : step,
       ),
     }));
   };
@@ -278,7 +280,7 @@ export default function WorkflowBuilder() {
   const handleSubStepNameChange = (
     stepId: string,
     subStepId: string,
-    newName: string
+    newName: string,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -289,10 +291,10 @@ export default function WorkflowBuilder() {
               subSteps: step.subSteps.map((subStep) =>
                 subStep.id === subStepId
                   ? { ...subStep, name: newName }
-                  : subStep
+                  : subStep,
               ),
             }
-          : step
+          : step,
       ),
     }));
   };
@@ -316,7 +318,7 @@ export default function WorkflowBuilder() {
                 },
               ],
             }
-          : step
+          : step,
       ),
     }));
   };
@@ -329,10 +331,10 @@ export default function WorkflowBuilder() {
           ? {
               ...step,
               subSteps: step.subSteps.filter(
-                (subStep) => subStep.id !== subStepId
+                (subStep) => subStep.id !== subStepId,
               ),
             }
-          : step
+          : step,
       ),
     }));
   };
@@ -498,7 +500,7 @@ export default function WorkflowBuilder() {
                               onChange={(e) =>
                                 handleStepNameChange(step.id, e.target.value)
                               }
-                              variant="standard"
+                              variant="outlined"
                               size="small"
                               sx={{ fontWeight: "bold" }}
                             />
@@ -617,10 +619,10 @@ export default function WorkflowBuilder() {
                                           handleSubStepNameChange(
                                             step.id,
                                             subStep.id,
-                                            e.target.value
+                                            e.target.value,
                                           )
                                         }
-                                        variant="standard"
+                                        variant="outlined"
                                         size="small"
                                         sx={{ fontWeight: "bold" }}
                                       />
@@ -659,7 +661,7 @@ export default function WorkflowBuilder() {
                                             handleResponsibleRoleChange(
                                               step.id,
                                               subStep.id,
-                                              newValue
+                                              newValue,
                                             )
                                           }
                                           renderTags={(value, getTagProps) =>
@@ -740,7 +742,7 @@ export default function WorkflowBuilder() {
                                             handleDecisionChange(
                                               step.id,
                                               subStep.id,
-                                              newValue
+                                              newValue,
                                             )
                                           }
                                           renderTags={(value, getTagProps) =>

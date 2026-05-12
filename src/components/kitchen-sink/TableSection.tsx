@@ -15,6 +15,8 @@ import {
   Rating,
   IconButton,
   Box,
+  Link,
+  Stack,
   Grid,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -33,9 +35,34 @@ export const TableSection = React.memo(() => {
 
   return (
     <Grid size={12}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4 }}>
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        sx={{ typography: "mono" as const, mt: 4 }}
+      >
         Tables
       </Typography>
+
+      <Stack spacing={0.5} sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Docs-based table patterns for tabular records with status cells,
+          actions, and pagination controls.
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Reference:{" "}
+          <Link
+            href="https://mui.com/material-ui/react-table/"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+            official MUI Table docs
+          </Link>
+          .
+        </Typography>
+      </Stack>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>

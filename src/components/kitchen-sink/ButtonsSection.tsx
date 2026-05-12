@@ -4,161 +4,157 @@ import {
   Paper,
   Typography,
   Button,
+  IconButton,
+  Link,
   Stack,
-  ButtonGroup,
   Grid,
 } from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
-import DeleteIcon from "@mui/icons-material/Delete";
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import AddIcon from "@mui/icons-material/Add";
 
 export const ButtonsSection = React.memo(() => {
+  const buttonSizes = ["small", "medium", "large"] as const;
+
+  const buttonShowcase = [
+    {
+      label: "Primary Contained",
+      variant: "contained" as const,
+      color: "primary" as const,
+    },
+    {
+      label: "Primary Outlined",
+      variant: "outlined" as const,
+      color: "primary" as const,
+    },
+    {
+      label: "Primary Text",
+      variant: "text" as const,
+      color: "primary" as const,
+    },
+    {
+      label: "Error Contained",
+      variant: "contained" as const,
+      color: "error" as const,
+    },
+  ];
+
   return (
     <Grid size={12}>
-      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4 }}>
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        sx={{ typography: "mono" as const, mt: 4 }}
+      >
         Buttons
       </Typography>
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
+
+      <Stack spacing={0.5} sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Docs-based button patterns using accepted variants, sizes, and icon
+          button usage.
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Reference:{" "}
+          <Link
+            href="https://mui.com/material-ui/react-button/"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+            official MUI Button docs
+          </Link>
+          .
+        </Typography>
+      </Stack>
+
+      <Grid container spacing={3} alignItems="flex-start">
+        <Grid size={12}>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Button Variants
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{ typography: "mono" as const }}
+            >
+              Allowed Variations
             </Typography>
             <Stack spacing={2}>
+              {buttonShowcase.map(({ label, variant, color }) => (
+                <Stack
+                  key={label}
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  sx={{ gap: 1 }}
+                >
+                  <Typography variant="body2" sx={{ minWidth: 180 }}>
+                    {label}
+                  </Typography>
+                  {buttonSizes.map((size) => (
+                    <Button
+                      key={`${label}-${size}`}
+                      variant={variant}
+                      color={color}
+                      size={size}
+                      startIcon={<KeyboardArrowLeftIcon />}
+                      endIcon={<KeyboardArrowRightIcon />}
+                    >
+                      {size}
+                    </Button>
+                  ))}
+                </Stack>
+              ))}
+
+              <Typography
+                variant="h6"
+                sx={{ typography: "mono" as const, mt: 2 }}
+              >
+                Icon Buttons
+              </Typography>
+
               <Stack
                 direction="row"
                 spacing={2}
-                flexWrap="wrap"
-                sx={{ gap: 2 }}
-              >
-                <Button variant="text">Text</Button>
-                <Button variant="contained">Contained</Button>
-                <Button variant="outlined">Outlined</Button>
-              </Stack>
-            </Stack>
-          </Paper>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Button Colors
-            </Typography>
-            <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }}>
-              <Button variant="contained" color="primary">
-                Primary
-              </Button>
-              <Button variant="contained" color="secondary">
-                Secondary
-              </Button>
-              <Button variant="contained" color="success">
-                Success
-              </Button>
-              <Button variant="contained" color="error">
-                Error
-              </Button>
-              <Button variant="contained" color="warning">
-                Warning
-              </Button>
-              <Button variant="contained" color="info">
-                Info
-              </Button>
-              <Button variant="contained" color="neutral">
-                Neutral
-              </Button>
-              <Button variant="contained" color="black">
-                Black
-              </Button>
-              <Button variant="contained" color="white">
-                White
-              </Button>
-            </Stack>
-          </Paper>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Button Sizes & Icons
-            </Typography>
-            <Stack spacing={2}>
-              <Stack
-                direction="row"
-                spacing={1}
                 alignItems="center"
                 flexWrap="wrap"
                 sx={{ gap: 1 }}
               >
-                <Button size="small">Small</Button>
-                <Button size="medium">Medium</Button>
-                <Button size="large">Large</Button>
+                <Typography variant="body2" sx={{ minWidth: 180 }}>
+                  Primary IconButton
+                </Typography>
+                {buttonSizes.map((size) => (
+                  <IconButton
+                    key={`primary-icon-${size}`}
+                    color="primary"
+                    size={size}
+                  >
+                    <AddIcon fontSize="inherit" />
+                  </IconButton>
+                ))}
               </Stack>
+
               <Stack
                 direction="row"
-                spacing={1}
+                spacing={2}
+                alignItems="center"
                 flexWrap="wrap"
                 sx={{ gap: 1 }}
               >
-                <Button variant="contained" startIcon={<SendIcon />}>
-                  Send
-                </Button>
-                <Button variant="contained" endIcon={<AddIcon />}>
-                  Add
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<DeleteIcon />}
-                  color="error"
-                >
-                  Delete
-                </Button>
+                <Typography variant="body2" sx={{ minWidth: 180 }}>
+                  Secondary IconButton
+                </Typography>
+                {buttonSizes.map((size) => (
+                  <IconButton
+                    key={`secondary-icon-${size}`}
+                    color="secondary"
+                    size={size}
+                  >
+                    <AddIcon fontSize="inherit" />
+                  </IconButton>
+                ))}
               </Stack>
-            </Stack>
-          </Paper>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Button Groups
-            </Typography>
-            <Stack spacing={2} alignItems="flex-start">
-              <ButtonGroup variant="contained" aria-label="Basic button group">
-                <Button>One</Button>
-                <Button>Two</Button>
-                <Button>Three</Button>
-              </ButtonGroup>
-              <ButtonGroup
-                variant="outlined"
-                aria-label="Outlined button group"
-              >
-                <Button>One</Button>
-                <Button>Two</Button>
-                <Button>Three</Button>
-              </ButtonGroup>
-              <ButtonGroup variant="text" aria-label="Text button group">
-                <Button>One</Button>
-                <Button>Two</Button>
-                <Button>Three</Button>
-              </ButtonGroup>
-              <ButtonGroup
-                size="small"
-                variant="outlined"
-                color="secondary"
-                aria-label="Small button group"
-              >
-                <Button>Small</Button>
-                <Button>Group</Button>
-              </ButtonGroup>
-              <ButtonGroup
-                orientation="vertical"
-                variant="contained"
-                aria-label="Vertical button group"
-              >
-                <Button>Top</Button>
-                <Button>Middle</Button>
-                <Button>Bottom</Button>
-              </ButtonGroup>
             </Stack>
           </Paper>
         </Grid>

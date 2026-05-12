@@ -1,5 +1,6 @@
 "use client";
 import { createTheme, Theme, Palette } from "@mui/material/styles";
+import type { CSSProperties } from "react";
 import * as brandColors from "./brandColors";
 
 // Type augmentations for custom theme properties
@@ -36,12 +37,30 @@ declare module "@mui/material/styles" {
       successLightest?: string;
     };
   }
+
+  interface TypographyVariants {
+    sans: CSSProperties;
+    serif: CSSProperties;
+    mono: CSSProperties;
+  }
+
+  interface TypographyVariantsOptions {
+    sans?: CSSProperties;
+    serif?: CSSProperties;
+    mono?: CSSProperties;
+  }
 }
 
 // Note: Button size overrides are now declared in global types.ts
 
 // Theme using Inter for a modern, clean Research Exchange look
 // Using MUI's official theme composition pattern for theme-aware components
+
+const fontStacks = {
+  sans: "'Inter', sans-serif",
+  serif: "'Times New Roman', Georgia, serif",
+  mono: "'IBM Plex Mono', monospace",
+} as const;
 
 // Step 1: Create base theme with palette, typography, shape, etc.
 let theme = createTheme({
@@ -61,10 +80,10 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: brandColors.brandColors["Primary Heritage"][700],
+      main: brandColors.brandColors["Primary Heritage"][800],
     },
     secondary: {
-      main: brandColors.brandColors["Primary Heritage"][900],
+      main: brandColors.brandColors.Neutral[800],
     },
     error: {
       main: brandColors.brandColors["System Negative"][600],
@@ -73,7 +92,7 @@ let theme = createTheme({
       main: brandColors.brandColors["System Alert"][800],
     },
     info: {
-      main: brandColors.brandColors["Primary Heritage"][700],
+      main: brandColors.brandColors["System Info"][700],
     },
     success: {
       main: brandColors.brandColors["System Positive"][700],
@@ -98,13 +117,13 @@ let theme = createTheme({
       contrastText: brandColors.brandColors.Neutral[900],
     },
     text: {
-      primary: brandColors.brandColors.Neutral[900],
+      primary: "#000000",
       secondary: brandColors.brandColors.Neutral[800],
       disabled: brandColors.brandColors.Neutral[700],
     },
     background: {
-      default: "#ffffff",
-      paper: brandColors.brandColors.Neutral[50],
+      default: brandColors.brandColors.Neutral[50],
+      paper: "#FFFFFF",
     },
   },
   colorSchemes: {
@@ -131,7 +150,7 @@ let theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "'Inter'", // Use Inter for Research Exchange
+    fontFamily: fontStacks.sans, // Use Inter for Research Exchange
     h1: {
       fontSize: "3rem",
       fontWeight: 700,
@@ -193,12 +212,12 @@ let theme = createTheme({
       letterSpacing: "0.01071em",
     },
     button: {
-      fontFamily: "'Inter'",
+      fontFamily: fontStacks.sans,
       fontWeight: 600,
       fontSize: "0.875rem",
       lineHeight: 1.75,
       letterSpacing: "0.02857em",
-      textTransform: "uppercase",
+      textTransform: "none",
     },
     caption: {
       fontWeight: 400,
@@ -213,6 +232,16 @@ let theme = createTheme({
       letterSpacing: "0.08333em",
       textTransform: "uppercase",
     },
+    // Sx shorthand: sx={{ typography: "mono" | "sans" | "serif" }}
+    sans: {
+      fontFamily: fontStacks.sans,
+    },
+    serif: {
+      fontFamily: fontStacks.serif,
+    },
+    mono: {
+      fontFamily: fontStacks.mono,
+    },
   },
   shape: {
     borderRadius: 4,
@@ -221,19 +250,14 @@ let theme = createTheme({
   // Custom palette with lightest shades (following MUI docs pattern)
   customPalette: {
     primaryLightest: brandColors.brandColors["Primary Heritage"][50],
-    secondaryLightest: brandColors.brandColors["Primary Heritage"][50],
+    secondaryLightest: brandColors.brandColors.Neutral[50],
     errorLightest: brandColors.brandColors["System Negative"][50],
     warningLightest: brandColors.brandColors["System Alert"][50],
-    infoLightest: brandColors.brandColors["Primary Heritage"][50],
+    infoLightest: brandColors.brandColors["System Info"][50],
     successLightest: brandColors.brandColors["System Positive"][50],
   },
 });
-
-// Step 2: Extend theme with component overrides that can access theme values
-// supporting variables to help with calculations
-// const SHRUNK_LABEL_SCALE = 0.875; // MUI default is 0.75 - which is too small for this design system
-// const SHRUNK_LABEL_LINEHEIGHT = 1.5; // The line height of the shrunk label - we use this to translate the label and ensure it is vertically aligned with teh outlined input border. We need a lineheight larger than the font-size to prevent decenders from being hidden in the overflow
-
+// Step 2: Extend the base theme with component overrides that can access theme values for dynamic styling based on light/dark mode, etc.
 theme = createTheme(theme, {
   components: {
     // Static components (no theme access needed)
@@ -253,6 +277,34 @@ theme = createTheme(theme, {
           font-display: swap;
           font-weight: 100 900;
           src: url('/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 400;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 500;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-Medium.ttf') format('truetype');
+        }
+
+        @font-face {
+          font-family: 'IBM Plex Mono';
+          font-style: normal;
+          font-display: swap;
+          font-weight: 600;
+          src: url('/fonts/IBM_Plex_Mono/IBMPlexMono-SemiBold.ttf') format('truetype');
+        }
+
+        code, pre, kbd, samp, tt {
+          font-family: 'IBM Plex Mono', monospace;
         }
       `,
     },
@@ -287,6 +339,19 @@ theme = createTheme(theme, {
         label: {
           // Chip uses same font weight as buttons
           fontWeight: theme.typography.button.fontWeight,
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          // Keep inline links in typography content consistently underlined.
+          "& a, & .MuiLink-root": {
+            textDecoration: "underline",
+            "&:hover": {
+              textDecoration: "underline",
+            },
+          },
         },
       },
     },
@@ -340,6 +405,40 @@ theme = createTheme(theme, {
             borderColor: theme.palette.warning.main,
             color: theme.palette.warning.main,
           }),
+        }),
+      },
+    },
+
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          paddingTop: theme.spacing(4),
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+        }),
+      },
+    },
+
+    MuiDialogContent: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+        }),
+        dividers: ({ theme }: { theme: Theme }) => ({
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+        }),
+      },
+    },
+
+    MuiDialogActions: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          paddingTop: theme.spacing(2),
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+          paddingBottom: theme.spacing(4),
         }),
       },
     },
@@ -480,15 +579,17 @@ theme = createTheme(theme, {
           fontWeight: theme.typography.button.fontWeight,
           // Light mode custom colors, dark mode uses defaults
           ...theme.applyStyles("light", {
-            "&.MuiPaginationItem-outlinedPrimary": {
-              color: theme.palette.primary.main,
-            },
-            "&.MuiPaginationItem-textPrimary": {
-              color: theme.palette.primary.main,
-              "&.Mui-selected": {
-                color: theme.palette.primary.contrastText,
+            "&.MuiPaginationItem-outlinedPrimary:not(.MuiPaginationItem-ellipsis)":
+              {
+                color: theme.palette.primary.main,
               },
-            },
+            "&.MuiPaginationItem-textPrimary:not(.MuiPaginationItem-ellipsis)":
+              {
+                color: theme.palette.primary.main,
+                "&.Mui-selected": {
+                  color: theme.palette.primary.contrastText,
+                },
+              },
           }),
         }),
       },
@@ -496,6 +597,9 @@ theme = createTheme(theme, {
 
     MuiButton: {
       styleOverrides: {
+        sizeLarge: {
+          textTransform: "uppercase",
+        },
         root: {
           // Variants for custom sizes
           variants: [

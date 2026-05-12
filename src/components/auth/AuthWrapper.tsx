@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { AuthProvider, useAuth } from "./AuthProvider";
 import SupabaseAuth from "./SupabaseAuth";
 import FullPageLoader from "../app/FullPageLoader";
@@ -8,9 +9,32 @@ interface AuthWrapperProps {
   children: React.ReactNode;
 }
 
+const PUBLIC_EXACT_PATHS = new Set([
+  "/",
+  "/kitchen-sink",
+  "/experiments/workflow-builder",
+  "/reset-password",
+]);
+
+const PUBLIC_PREFIX_PATHS = ["/onboarding-demos", "/woaa"];
+
+function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_EXACT_PATHS.has(pathname)) {
+    return true;
+  }
+
+  return PUBLIC_PREFIX_PATHS.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 // Component that shows auth UI or children based on auth state
-function AuthContent({ children }: AuthWrapperProps) {
+function AuthContent({
+  children,
+  enableAuth,
+}: AuthWrapperProps & { enableAuth: boolean }) {
   const { user, loading } = useAuth();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -20,6 +44,18 @@ function AuthContent({ children }: AuthWrapperProps) {
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
     return null;
+  }
+
+  // When auth is disabled, always render app content.
+  if (!enableAuth) {
+    return <>{children}</>;
+  }
+
+  const routePath = pathname || "/";
+
+  // Public routes remain accessible without authentication.
+  if (isPublicPath(routePath)) {
+    return <>{children}</>;
   }
 
   if (loading) {
@@ -37,11 +73,10 @@ function AuthContent({ children }: AuthWrapperProps) {
 
 // Main auth wrapper that conditionally enables authentication
 export default function AuthWrapper({ children }: AuthWrapperProps) {
-  const [enableAuth, setEnableAuth] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const enableAuth = process.env.NEXT_PUBLIC_ENABLE_AUTH === "true";
 
   useEffect(() => {
-    setEnableAuth(process.env.NEXT_PUBLIC_ENABLE_AUTH === "true");
     setMounted(true);
   }, []);
 
@@ -50,15 +85,10 @@ export default function AuthWrapper({ children }: AuthWrapperProps) {
     return null;
   }
 
-  // If auth is disabled, just render children
-  if (!enableAuth) {
-    return <>{children}</>;
-  }
-
-  // Auth is enabled, wrap with provider and auth logic
+  // Always mount AuthProvider so auth/role hooks remain safe in public routes.
   return (
     <AuthProvider>
-      <AuthContent>{children}</AuthContent>
+      <AuthContent enableAuth={enableAuth}>{children}</AuthContent>
     </AuthProvider>
   );
 }
