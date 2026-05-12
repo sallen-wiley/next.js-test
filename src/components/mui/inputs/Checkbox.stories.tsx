@@ -210,7 +210,7 @@ export const Group: Story = {
     const error = [gilad, jason, antoine].filter((v) => v).length !== 2;
     return (
       <Box sx={{ display: "flex" }}>
-        <FormControl sx={{ m: 3 }} component="fieldset" variant="standard">
+        <FormControl sx={{ m: 3 }} component="fieldset">
           <FormLabel component="legend">Assign responsibility</FormLabel>
           <FormGroup>
             <FormControlLabel
@@ -246,13 +246,7 @@ export const Group: Story = {
           </FormGroup>
           <FormHelperText>Be careful</FormHelperText>
         </FormControl>
-        <FormControl
-          required
-          error={error}
-          component="fieldset"
-          sx={{ m: 3 }}
-          variant="standard"
-        >
+        <FormControl required error={error} component="fieldset" sx={{ m: 3 }}>
           <FormLabel component="legend">Pick two</FormLabel>
           <FormGroup>
             <FormControlLabel

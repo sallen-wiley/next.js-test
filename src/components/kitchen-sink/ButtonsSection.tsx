@@ -5,6 +5,7 @@ import {
   Typography,
   Button,
   IconButton,
+  Link,
   Stack,
   Grid,
 } from "@mui/material";
@@ -22,19 +23,9 @@ export const ButtonsSection = React.memo(() => {
       color: "primary" as const,
     },
     {
-      label: "Secondary Contained",
-      variant: "contained" as const,
-      color: "secondary" as const,
-    },
-    {
-      label: "Secondary Outlined",
+      label: "Primary Outlined",
       variant: "outlined" as const,
-      color: "secondary" as const,
-    },
-    {
-      label: "Error Contained",
-      variant: "contained" as const,
-      color: "error" as const,
+      color: "primary" as const,
     },
     {
       label: "Primary Text",
@@ -42,9 +33,9 @@ export const ButtonsSection = React.memo(() => {
       color: "primary" as const,
     },
     {
-      label: "Secondary Text",
-      variant: "text" as const,
-      color: "secondary" as const,
+      label: "Error Contained",
+      variant: "contained" as const,
+      color: "error" as const,
     },
   ];
 
@@ -58,6 +49,26 @@ export const ButtonsSection = React.memo(() => {
       >
         Buttons
       </Typography>
+
+      <Stack spacing={0.5} sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Docs-based button patterns using accepted variants, sizes, and icon
+          button usage.
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Reference:{" "}
+          <Link
+            href="https://mui.com/material-ui/react-button/"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+            official MUI Button docs
+          </Link>
+          .
+        </Typography>
+      </Stack>
+
       <Grid container spacing={3} alignItems="flex-start">
         <Grid size={12}>
           <Paper sx={{ p: 3 }}>

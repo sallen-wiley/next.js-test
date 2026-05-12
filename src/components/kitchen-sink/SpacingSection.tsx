@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Paper, Typography, Grid, Stack } from "@mui/material";
+import { Paper, Typography, Grid, Link, Stack } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
 const spacingValues = [
@@ -98,6 +98,18 @@ export const SpacingSection = React.memo(() => {
             ? `${spacingBasePx}px`
             : "non-pixel spacing function"}{" "}
           (theme.spacing(1) = {theme.spacing(1)})
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Reference:{" "}
+          <Link
+            href="https://mui.com/material-ui/customization/spacing/"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+            official MUI spacing docs
+          </Link>
+          .
         </Typography>
       </Stack>
 

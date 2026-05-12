@@ -5,7 +5,6 @@ export const Default: Story = {
   args: {
     label: "Journal",
     value: "",
-    variant: "outlined",
     size: "medium",
     color: "primary",
     disabled: false,
@@ -24,7 +23,6 @@ export const TruncatedMenuItems: Story = {
     <div style={{ width: 500 }}>
       <Box sx={{ minWidth: 120 }}>
         <FormControl
-          variant={args.variant}
           size={args.size}
           color={
             [
@@ -92,7 +90,6 @@ export const WrappedMenuItems: Story = {
     <div style={{ width: 500 }}>
       <Box sx={{ minWidth: 120 }}>
         <FormControl
-          variant={args.variant}
           size={args.size}
           color={
             [
@@ -196,7 +193,6 @@ const OPTIONS = [
 interface SelectStoryProps {
   label: string;
   value: string | number;
-  variant: "outlined" | "filled" | "standard";
   size: "small" | "medium";
   color:
     | "primary"
@@ -220,7 +216,6 @@ interface SelectStoryProps {
 const SelectDemo: React.FC<SelectStoryProps> = ({
   label,
   value,
-  variant,
   size,
   color,
   disabled,
@@ -242,7 +237,6 @@ const SelectDemo: React.FC<SelectStoryProps> = ({
     <div style={{ width: 500 }}>
       <Box sx={{ minWidth: 120 }}>
         <FormControl
-          variant={variant}
           size={size}
           color={
             [
@@ -319,12 +313,6 @@ const meta: Meta<typeof SelectDemo> = {
       description: "Selected value.",
       defaultValue: "",
     },
-    variant: {
-      control: { type: "select" },
-      options: ["outlined", "filled", "standard"],
-      description: "The variant to use.",
-      defaultValue: "outlined",
-    },
     size: {
       control: { type: "select" },
       options: ["medium", "small"],
@@ -390,7 +378,6 @@ const meta: Meta<typeof SelectDemo> = {
   args: {
     label: "Journal",
     value: "",
-    variant: "outlined",
     size: "medium",
     color: "primary",
     disabled: false,
@@ -415,29 +402,6 @@ export const ErrorState: Story = {
     docs: {
       description: {
         story: "Demonstrates the Select component in an error state.",
-      },
-    },
-  },
-};
-
-export const AllVariants: Story = {
-  render: (args) => (
-    <Box sx={{ display: "flex", gap: 2 }}>
-      {(["outlined", "filled", "standard"] as const).map((variant) => (
-        <SelectDemo
-          key={variant}
-          {...args}
-          variant={variant}
-          label={`Journal (${variant})`}
-        />
-      ))}
-    </Box>
-  ),
-  parameters: {
-    controls: { disable: true },
-    docs: {
-      description: {
-        story: "Shows all Select variants side by side.",
       },
     },
   },

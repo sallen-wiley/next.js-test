@@ -409,6 +409,40 @@ theme = createTheme(theme, {
       },
     },
 
+    MuiDialogTitle: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          paddingTop: theme.spacing(4),
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+        }),
+      },
+    },
+
+    MuiDialogContent: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+        }),
+        dividers: ({ theme }: { theme: Theme }) => ({
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+        }),
+      },
+    },
+
+    MuiDialogActions: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          paddingTop: theme.spacing(2),
+          paddingLeft: theme.spacing(4),
+          paddingRight: theme.spacing(4),
+          paddingBottom: theme.spacing(4),
+        }),
+      },
+    },
+
     MuiContainer: {
       styleOverrides: {
         root: ({ theme }: { theme: Theme }) => ({

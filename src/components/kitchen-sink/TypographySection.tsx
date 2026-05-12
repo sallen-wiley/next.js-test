@@ -24,6 +24,18 @@ export const TypographySection = React.memo(() => {
           fewer heading levels, some may need more, and heading sizes may be
           larger or smaller depending on context.
         </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Reference:{" "}
+          <Link
+            href="https://mui.com/material-ui/react-typography/"
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+            official MUI Typography docs
+          </Link>
+          .
+        </Typography>
       </Stack>
 
       <Paper sx={{ p: 3 }}>
