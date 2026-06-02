@@ -12,6 +12,7 @@ interface AuthWrapperProps {
 const PUBLIC_EXACT_PATHS = new Set([
   "/",
   "/kitchen-sink",
+  "/wiley-copyeditor",
   "/experiments/workflow-builder",
   "/reset-password",
 ]);

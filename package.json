@@ -7,7 +7,7 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev",
+    "dev": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

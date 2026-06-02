@@ -37,6 +37,24 @@ export const ButtonsSection = React.memo(() => {
       variant: "contained" as const,
       color: "error" as const,
     },
+    {
+      label: "Primary Contained Disabled",
+      variant: "contained" as const,
+      color: "primary" as const,
+      disabled: true,
+    },
+    {
+      label: "Primary Outlined Disabled",
+      variant: "outlined" as const,
+      color: "primary" as const,
+      disabled: true,
+    },
+    {
+      label: "Primary Text Disabled",
+      variant: "text" as const,
+      color: "primary" as const,
+      disabled: true,
+    },
   ];
 
   return (
@@ -80,7 +98,7 @@ export const ButtonsSection = React.memo(() => {
               Allowed Variations
             </Typography>
             <Stack spacing={2}>
-              {buttonShowcase.map(({ label, variant, color }) => (
+              {buttonShowcase.map(({ label, variant, color, disabled }) => (
                 <Stack
                   key={label}
                   direction="row"
@@ -97,6 +115,7 @@ export const ButtonsSection = React.memo(() => {
                       key={`${label}-${size}`}
                       variant={variant}
                       color={color}
+                      disabled={disabled}
                       size={size}
                       startIcon={<KeyboardArrowLeftIcon />}
                       endIcon={<KeyboardArrowRightIcon />}
@@ -149,6 +168,28 @@ export const ButtonsSection = React.memo(() => {
                   <IconButton
                     key={`secondary-icon-${size}`}
                     color="secondary"
+                    size={size}
+                  >
+                    <AddIcon fontSize="inherit" />
+                  </IconButton>
+                ))}
+              </Stack>
+
+              <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                flexWrap="wrap"
+                sx={{ gap: 1 }}
+              >
+                <Typography variant="body2" sx={{ minWidth: 180 }}>
+                  Disabled IconButton
+                </Typography>
+                {buttonSizes.map((size) => (
+                  <IconButton
+                    key={`disabled-icon-${size}`}
+                    color="primary"
+                    disabled
                     size={size}
                   >
                     <AddIcon fontSize="inherit" />
