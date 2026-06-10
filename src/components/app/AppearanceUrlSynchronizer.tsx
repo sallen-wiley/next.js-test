@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useThemeContext } from "@/contexts/ThemeContext";
 import { useLogoContext } from "@/contexts/LogoContext";
 import { useAppearanceUrlSync } from "@/contexts/AppearanceUrlSyncContext";
+import { useAppearanceController } from "@/hooks/useAppearanceController";
 import {
   appearanceQueryParamKeys,
   parseAppearanceUrlParams,
@@ -22,43 +23,28 @@ export default function AppearanceUrlSynchronizer() {
     [searchParamsString],
   );
 
-  const { currentTheme, setTheme } = useThemeContext();
-  const { currentTenant, setTenant } = useLogoContext();
-  const { mode, setMode } = useColorScheme();
-  const { pinned, pinParams } = useAppearanceUrlSync();
+  const { currentTheme } = useThemeContext();
+  const { currentTenant } = useLogoContext();
+  const { mode } = useColorScheme();
+  const { pinned } = useAppearanceUrlSync();
+  const { applyAppearance } = useAppearanceController();
 
   useEffect(() => {
-    if (parsedParams.theme) {
-      pinParams({ theme: true });
-      if (currentTheme !== parsedParams.theme) {
-        setTheme(parsedParams.theme);
-      }
-    }
-
-    if (parsedParams.mode) {
-      pinParams({ mode: true });
-      if (mode !== parsedParams.mode) {
-        setMode(parsedParams.mode);
-      }
-    }
-
-    if (parsedParams.logo) {
-      pinParams({ logo: true });
-      if (currentTenant !== parsedParams.logo) {
-        setTenant(parsedParams.logo);
-      }
+    if (parsedParams.theme || parsedParams.mode || parsedParams.logo) {
+      applyAppearance(
+        {
+          theme: parsedParams.theme,
+          mode: parsedParams.mode,
+          logo: parsedParams.logo,
+        },
+        { pinParams: true },
+      );
     }
   }, [
-    currentTenant,
-    currentTheme,
-    mode,
+    applyAppearance,
     parsedParams.logo,
     parsedParams.mode,
     parsedParams.theme,
-    pinParams,
-    setMode,
-    setTenant,
-    setTheme,
   ]);
 
   useEffect(() => {
@@ -67,9 +53,11 @@ export default function AppearanceUrlSynchronizer() {
     }
 
     const nextParams = new URLSearchParams(searchParamsString);
-    const targetTheme = parsedParams.theme ?? (pinned.theme ? currentTheme : undefined);
+    const targetTheme =
+      parsedParams.theme ?? (pinned.theme ? currentTheme : undefined);
     const targetMode = parsedParams.mode ?? (pinned.mode ? mode : undefined);
-    const targetLogo = parsedParams.logo ?? (pinned.logo ? currentTenant : undefined);
+    const targetLogo =
+      parsedParams.logo ?? (pinned.logo ? currentTenant : undefined);
     let changed = false;
 
     if (targetTheme) {
@@ -110,7 +98,9 @@ export default function AppearanceUrlSynchronizer() {
     const currentUrl = searchParamsString
       ? `${pathname}?${searchParamsString}`
       : pathname;
-    const nextUrl = nextSearchString ? `${pathname}?${nextSearchString}` : pathname;
+    const nextUrl = nextSearchString
+      ? `${pathname}?${nextSearchString}`
+      : pathname;
 
     if (nextUrl !== currentUrl) {
       router.replace(nextUrl, { scroll: false });

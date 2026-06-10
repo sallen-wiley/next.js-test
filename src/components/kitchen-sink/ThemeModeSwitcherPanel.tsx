@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { useColorScheme } from "@mui/material/styles";
 import { ColorMode, ThemeName, useThemeContext } from "@/contexts/ThemeContext";
-import { useAppearanceSearchParams } from "@/hooks/useAppearanceSearchParams";
+import { useAppearanceController } from "@/hooks/useAppearanceController";
 
 type ThemeMeta = {
   label: string;
@@ -103,9 +103,9 @@ function getThemeMeta(themeName: ThemeName): ThemeMeta {
 }
 
 export const ThemeModeSwitcherPanel = React.memo(() => {
-  const { currentTheme, setTheme, availableThemes } = useThemeContext();
-  const { mode, setMode, systemMode } = useColorScheme();
-  const { updateAppearanceParams } = useAppearanceSearchParams();
+  const { currentTheme, availableThemes } = useThemeContext();
+  const { mode, systemMode } = useColorScheme();
+  const { applyAppearance } = useAppearanceController();
 
   const [themeAnchorEl, setThemeAnchorEl] = React.useState<HTMLElement | null>(
     null,
@@ -168,8 +168,10 @@ export const ThemeModeSwitcherPanel = React.memo(() => {
             <MenuItem
               key={themeName}
               onClick={() => {
-                setTheme(themeName);
-                updateAppearanceParams({ theme: themeName });
+                applyAppearance(
+                  { theme: themeName },
+                  { syncUrl: true, pinParams: true },
+                );
                 setThemeAnchorEl(null);
               }}
               selected={isSelected}
@@ -210,8 +212,10 @@ export const ThemeModeSwitcherPanel = React.memo(() => {
             <MenuItem
               key={modeName}
               onClick={() => {
-                setMode(modeName);
-                updateAppearanceParams({ mode: modeName });
+                applyAppearance(
+                  { mode: modeName },
+                  { syncUrl: true, pinParams: true },
+                );
                 setModeAnchorEl(null);
               }}
               selected={isSelected}

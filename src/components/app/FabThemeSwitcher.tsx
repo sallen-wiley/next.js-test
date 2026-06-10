@@ -21,7 +21,7 @@ import { useThemeContext, ThemeName, ColorMode } from "@/contexts/ThemeContext";
 import { useColorScheme } from "@mui/material/styles";
 import { useLogoContext } from "@/contexts/LogoContext";
 import type { TenantType } from "@/components/product/logos/types";
-import { useAppearanceSearchParams } from "@/hooks/useAppearanceSearchParams";
+import { useAppearanceController } from "@/hooks/useAppearanceController";
 import RoleGuard from "@/components/auth/RoleGuard";
 
 // Theme metadata for better UX
@@ -168,10 +168,10 @@ const tenantMetadata: Record<
 
 // Main component
 export const FabThemeSwitcher: React.FC = () => {
-  const { currentTheme, setTheme, availableThemes } = useThemeContext();
-  const { mode, setMode, systemMode } = useColorScheme();
-  const { currentTenant, setTenant, availableTenants } = useLogoContext();
-  const { updateAppearanceParams } = useAppearanceSearchParams();
+  const { currentTheme, availableThemes } = useThemeContext();
+  const { mode, systemMode } = useColorScheme();
+  const { currentTenant, availableTenants } = useLogoContext();
+  const { applyAppearance } = useAppearanceController();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -184,18 +184,15 @@ export const FabThemeSwitcher: React.FC = () => {
   };
 
   const handleThemeChange = (themeName: ThemeName) => {
-    setTheme(themeName);
-    updateAppearanceParams({ theme: themeName });
+    applyAppearance({ theme: themeName }, { syncUrl: true, pinParams: true });
   };
 
   const handleModeChange = (newMode: ColorMode) => {
-    setMode(newMode);
-    updateAppearanceParams({ mode: newMode });
+    applyAppearance({ mode: newMode }, { syncUrl: true, pinParams: true });
   };
 
   const handleTenantChange = (tenant: TenantType) => {
-    setTenant(tenant);
-    updateAppearanceParams({ logo: tenant });
+    applyAppearance({ logo: tenant }, { syncUrl: true, pinParams: true });
   };
 
   return (

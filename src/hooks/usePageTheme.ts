@@ -8,6 +8,8 @@ import {
 } from "@/contexts/ThemeContext";
 import { useAppearanceUrlSync } from "@/contexts/AppearanceUrlSyncContext";
 import { useColorScheme } from "@mui/material/styles";
+import { useSearchParams } from "next/navigation";
+import { useAppearanceController } from "@/hooks/useAppearanceController";
 import { parseAppearanceUrlParams } from "@/lib/appearanceUrlParams";
 
 /**
@@ -41,20 +43,33 @@ export function usePageTheme(
     restoreOnUnmount?: boolean;
   },
 ) {
-  const { setTheme, currentTheme } = useThemeContext();
-  const { mode, setMode } = useColorScheme();
+  const { currentTheme } = useThemeContext();
+  const { mode } = useColorScheme();
   const { pinned } = useAppearanceUrlSync();
+  const { applyAppearance } = useAppearanceController();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams?.toString() ?? "";
   const previousTheme = useRef<ThemeName>(currentTheme);
   const previousMode = useRef<ColorMode | undefined>(mode);
 
   useEffect(() => {
-    const currentUrlParams =
+    const routerUrlParams = parseAppearanceUrlParams(
+      new URLSearchParams(searchParamsString),
+    );
+
+    const windowUrlParams =
       typeof window !== "undefined"
         ? parseAppearanceUrlParams(new URLSearchParams(window.location.search))
         : null;
 
-    const themePinnedByUrl = pinned.theme || Boolean(currentUrlParams?.theme);
-    const modePinnedByUrl = pinned.mode || Boolean(currentUrlParams?.mode);
+    const themePinnedByUrl =
+      pinned.theme ||
+      Boolean(routerUrlParams.theme) ||
+      Boolean(windowUrlParams?.theme);
+    const modePinnedByUrl =
+      pinned.mode ||
+      Boolean(routerUrlParams.mode) ||
+      Boolean(windowUrlParams?.mode);
 
     // Store the theme and mode that were active when component mounted
     previousTheme.current = currentTheme;
@@ -62,12 +77,12 @@ export function usePageTheme(
 
     // Force the required theme if specified and not already active
     if (requiredTheme && !themePinnedByUrl && currentTheme !== requiredTheme) {
-      setTheme(requiredTheme);
+      applyAppearance({ theme: requiredTheme });
     }
 
     // Force the required mode if specified and not already active
     if (options?.mode && !modePinnedByUrl && mode !== options.mode) {
-      setMode(options.mode);
+      applyAppearance({ mode: options.mode });
     }
 
     // Optional cleanup: restore previous theme/mode on unmount
@@ -78,7 +93,7 @@ export function usePageTheme(
           !themePinnedByUrl &&
           previousTheme.current !== requiredTheme
         ) {
-          setTheme(previousTheme.current);
+          applyAppearance({ theme: previousTheme.current });
         }
         if (
           options.mode &&
@@ -86,7 +101,7 @@ export function usePageTheme(
           previousMode.current &&
           previousMode.current !== options.mode
         ) {
-          setMode(previousMode.current);
+          applyAppearance({ mode: previousMode.current });
         }
       }
     };
