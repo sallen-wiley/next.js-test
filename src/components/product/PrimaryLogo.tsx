@@ -96,9 +96,10 @@ export default function PrimaryLogo({
     }
   };
 
-  const getWiley2025LogomarkColor = () => {
-    return currentMode === "dark" ? "#00d975" : "#003b44";
-  };
+  const activeLogoPath =
+    currentMode === "dark" && logoConfig.dark
+      ? logoConfig.dark
+      : logoConfig.path;
 
   const logoFillColor = getLogoColor();
 
@@ -161,19 +162,7 @@ export default function PrimaryLogo({
               maxHeight: "40px",
             }}
           >
-            {activeTenant === "wiley2025" && (
-              <style>
-                {`
-                  .wiley2025-logomark {
-                    fill: ${getWiley2025LogomarkColor()};
-                  }
-                  .wiley2025-wordmark {
-                    fill: ${logoFillColor};
-                  }
-                `}
-              </style>
-            )}
-            {logoConfig.path}
+            {activeLogoPath}
           </svg>
         </Link>
       </Box>

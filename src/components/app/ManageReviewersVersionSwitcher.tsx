@@ -19,17 +19,17 @@ const ManageReviewersVersionSwitcher: React.FC = () => {
     pathname?.includes("reviewer-dashboard-alternative") ?? false;
 
   const handleSwitch = () => {
-    // Preserve manuscriptId query param
-    const manuscriptId = searchParams?.get("manuscriptId");
-    const queryString = manuscriptId ? `?manuscriptId=${manuscriptId}` : "";
+    // Preserve all current query params, including appearance params.
+    const queryString = searchParams?.toString();
+    const querySuffix = queryString ? `?${queryString}` : "";
 
     if (isAlternative) {
       // Switch to normal version
-      router.push(`/reviewer-dashboard/manage-reviewers${queryString}`);
+      router.push(`/reviewer-dashboard/manage-reviewers${querySuffix}`);
     } else {
       // Switch to alternative version
       router.push(
-        `/reviewer-dashboard-alternative/manage-reviewers${queryString}`,
+        `/reviewer-dashboard-alternative/manage-reviewers${querySuffix}`,
       );
     }
   };

@@ -6,7 +6,9 @@ import {
   type ThemeName,
   type ColorMode,
 } from "@/contexts/ThemeContext";
+import { useAppearanceUrlSync } from "@/contexts/AppearanceUrlSyncContext";
 import { useColorScheme } from "@mui/material/styles";
+import { parseAppearanceUrlParams } from "@/lib/appearanceUrlParams";
 
 /**
  * Force a specific theme and/or color mode when a page loads.
@@ -37,36 +39,50 @@ export function usePageTheme(
   options?: {
     mode?: ColorMode;
     restoreOnUnmount?: boolean;
-  }
+  },
 ) {
   const { setTheme, currentTheme } = useThemeContext();
   const { mode, setMode } = useColorScheme();
+  const { pinned } = useAppearanceUrlSync();
   const previousTheme = useRef<ThemeName>(currentTheme);
   const previousMode = useRef<ColorMode | undefined>(mode);
 
   useEffect(() => {
+    const currentUrlParams =
+      typeof window !== "undefined"
+        ? parseAppearanceUrlParams(new URLSearchParams(window.location.search))
+        : null;
+
+    const themePinnedByUrl = pinned.theme || Boolean(currentUrlParams?.theme);
+    const modePinnedByUrl = pinned.mode || Boolean(currentUrlParams?.mode);
+
     // Store the theme and mode that were active when component mounted
     previousTheme.current = currentTheme;
     previousMode.current = mode;
 
     // Force the required theme if specified and not already active
-    if (requiredTheme && currentTheme !== requiredTheme) {
+    if (requiredTheme && !themePinnedByUrl && currentTheme !== requiredTheme) {
       setTheme(requiredTheme);
     }
 
     // Force the required mode if specified and not already active
-    if (options?.mode && mode !== options.mode) {
+    if (options?.mode && !modePinnedByUrl && mode !== options.mode) {
       setMode(options.mode);
     }
 
     // Optional cleanup: restore previous theme/mode on unmount
     return () => {
       if (options?.restoreOnUnmount) {
-        if (requiredTheme && previousTheme.current !== requiredTheme) {
+        if (
+          requiredTheme &&
+          !themePinnedByUrl &&
+          previousTheme.current !== requiredTheme
+        ) {
           setTheme(previousTheme.current);
         }
         if (
           options.mode &&
+          !modePinnedByUrl &&
           previousMode.current &&
           previousMode.current !== options.mode
         ) {

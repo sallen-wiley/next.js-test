@@ -256,6 +256,7 @@ export default function WileyCopyEditorPage() {
         headerName: "Action",
         minWidth: 140,
         flex: 0.8,
+        hideable: false,
         sortable: false,
         filterable: false,
         renderCell: (params) => (

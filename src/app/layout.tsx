@@ -1,13 +1,16 @@
 import "@/themes/types";
 
+import { Suspense } from "react";
 // import Script from "next/script";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import CssBaseline from "@mui/material/CssBaseline";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LogoProvider } from "@/contexts/LogoContext";
+import { AppearanceUrlSyncProvider } from "@/contexts/AppearanceUrlSyncContext";
 import { HeaderProvider } from "@/contexts/HeaderContext";
 import { AdminActionsProvider } from "@/contexts/AdminActionsContext";
+import AppearanceUrlSynchronizer from "@/components/app/AppearanceUrlSynchronizer";
 import FabThemeSwitcher from "@/components/app/FabThemeSwitcher";
 import AdminActionsFab from "@/components/app/AdminActionsFab";
 import GlobalHeaderWrapper from "@/components/app/GlobalHeaderWrapper";
@@ -41,17 +44,22 @@ export default function RootLayout({
         <AppRouterCacheProvider>
           <ThemeProvider defaultTheme="researchexchange">
             <LogoProvider defaultTenant="wiley2025">
-              <CssBaseline />
-              <AuthWrapper>
-                <HeaderProvider>
-                  <AdminActionsProvider>
-                    <GlobalHeaderWrapper />
-                    {children}
-                    <FabThemeSwitcher />
-                    <AdminActionsFab />
-                  </AdminActionsProvider>
-                </HeaderProvider>
-              </AuthWrapper>
+              <AppearanceUrlSyncProvider>
+                <CssBaseline />
+                <Suspense fallback={null}>
+                  <AppearanceUrlSynchronizer />
+                </Suspense>
+                <AuthWrapper>
+                  <HeaderProvider>
+                    <AdminActionsProvider>
+                      <GlobalHeaderWrapper />
+                      {children}
+                      <FabThemeSwitcher />
+                      <AdminActionsFab />
+                    </AdminActionsProvider>
+                  </HeaderProvider>
+                </AuthWrapper>
+              </AppearanceUrlSyncProvider>
             </LogoProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>

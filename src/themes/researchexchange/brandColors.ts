@@ -55,7 +55,8 @@ export const brandColors = {
     400: "#FFC53D",
     500: "#FAAD14",
     600: "#D48806",
-    700: "#AD6800",
+    // 700: "#AD6800",
+    700: "#ab6200", // Not Wiley.com design system, but WCAG AA accessible contrast with alert 50 @ 4.51:1
     800: "#874D00",
     900: "#613400",
   },

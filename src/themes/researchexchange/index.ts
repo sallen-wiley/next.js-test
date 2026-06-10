@@ -89,7 +89,7 @@ let theme = createTheme({
       main: brandColors.brandColors["System Negative"][600],
     },
     warning: {
-      main: brandColors.brandColors["System Alert"][800],
+      main: brandColors.brandColors["System Alert"][700],
     },
     info: {
       main: brandColors.brandColors["System Info"][700],

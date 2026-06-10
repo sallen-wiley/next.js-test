@@ -128,8 +128,26 @@ The project includes a sophisticated theming system with:
 - **Light/Dark/System Mode**: Full color mode support for all themes
 - **Custom color palettes** with extended neutral, black, and white variants
 - **Custom typography scales** per theme with web font integration
-- **Logo switching** coordinated with theme selection
+- **Logo switching** with independent runtime controls
 - **Consistent design tokens** exposed via Storybook stories
+
+### URL Appearance Presets
+
+Theme, color mode, and logo can be shared through URL query parameters:
+
+- `theme=<themeId>`
+- `mode=<light|dark|system>`
+- `logo=<tenantId>`
+
+Example:
+
+`/reviewer-dashboard?theme=phenom&mode=dark&logo=wiley2025`
+
+Behavior rules:
+
+- URL appearance params take precedence over page-level forced theme defaults and saved local storage values.
+- Appearance params are preserved through in-app navigation while active.
+- Invalid appearance param values are ignored and removed from the URL.
 
 ## Development Workflow
 

@@ -21,6 +21,7 @@ import { useThemeContext, ThemeName, ColorMode } from "@/contexts/ThemeContext";
 import { useColorScheme } from "@mui/material/styles";
 import { useLogoContext } from "@/contexts/LogoContext";
 import type { TenantType } from "@/components/product/logos/types";
+import { useAppearanceSearchParams } from "@/hooks/useAppearanceSearchParams";
 import RoleGuard from "@/components/auth/RoleGuard";
 
 // Theme metadata for better UX
@@ -170,6 +171,7 @@ export const FabThemeSwitcher: React.FC = () => {
   const { currentTheme, setTheme, availableThemes } = useThemeContext();
   const { mode, setMode, systemMode } = useColorScheme();
   const { currentTenant, setTenant, availableTenants } = useLogoContext();
+  const { updateAppearanceParams } = useAppearanceSearchParams();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -183,14 +185,17 @@ export const FabThemeSwitcher: React.FC = () => {
 
   const handleThemeChange = (themeName: ThemeName) => {
     setTheme(themeName);
+    updateAppearanceParams({ theme: themeName });
   };
 
   const handleModeChange = (newMode: ColorMode) => {
     setMode(newMode);
+    updateAppearanceParams({ mode: newMode });
   };
 
   const handleTenantChange = (tenant: TenantType) => {
     setTenant(tenant);
+    updateAppearanceParams({ logo: tenant });
   };
 
   return (

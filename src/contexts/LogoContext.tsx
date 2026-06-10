@@ -2,6 +2,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { TenantType } from "@/components/product/logos/types";
+import {
+  availableTenants,
+  isTenantType,
+  legacyTenantAliases,
+} from "@/components/product/logos/constants";
 
 // Logo context interface
 interface LogoContextType {
@@ -34,35 +39,20 @@ export const LogoProvider: React.FC<LogoProviderProps> = ({
 }) => {
   const [currentTenant, setCurrentTenant] = useState<TenantType>(defaultTenant);
 
-  // Available tenant options
-  const availableTenants: TenantType[] = [
-    "wiley",
-    "wiley2025",
-    "sage",
-    "ieee",
-    "re-light-stacked",
-    "re-bold-stacked",
-    "re-light-allcaps",
-    "re-bold-allcaps",
-    "re-bold",
-    "default",
-  ];
-
   // Load tenant preference from localStorage on mount
   useEffect(() => {
     const savedTenant = localStorage.getItem("app-logo-tenant");
+    const migratedTenant = savedTenant
+      ? legacyTenantAliases[savedTenant]
+      : undefined;
 
-    // Migrate old "researchexchange" value to "re-light-stacked"
-    if (savedTenant === "researchexchange") {
-      setCurrentTenant("re-light-stacked");
-      localStorage.setItem("app-logo-tenant", "re-light-stacked");
-    } else if (
-      savedTenant &&
-      availableTenants.includes(savedTenant as TenantType)
-    ) {
-      setCurrentTenant(savedTenant as TenantType);
+    if (migratedTenant) {
+      setCurrentTenant(migratedTenant);
+      localStorage.setItem("app-logo-tenant", migratedTenant);
+    } else if (savedTenant && isTenantType(savedTenant)) {
+      setCurrentTenant(savedTenant);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Save tenant to localStorage when it changes
   const setTenant = (tenant: TenantType) => {

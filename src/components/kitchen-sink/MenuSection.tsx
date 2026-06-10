@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 
 const profileActions = ["Profile", "My account", "Logout"];
+const activeProfileAction = "My account";
 
 export const MenuSection = React.memo(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -84,7 +85,11 @@ export const MenuSection = React.memo(() => {
               onClose={() => setAnchorEl(null)}
             >
               {profileActions.map((action) => (
-                <MenuItem key={action} onClick={() => setAnchorEl(null)}>
+                <MenuItem
+                  key={action}
+                  selected={action === activeProfileAction}
+                  onClick={() => setAnchorEl(null)}
+                >
                   {action}
                 </MenuItem>
               ))}
