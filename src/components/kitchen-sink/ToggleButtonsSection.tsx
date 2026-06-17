@@ -53,7 +53,12 @@ export const ToggleButtonsSection = React.memo(() => {
   const [enforcedAlignment, setEnforcedAlignment] =
     React.useState<Alignment>("left");
   const [sizeAlignment, setSizeAlignment] = React.useState<Alignment>("left");
-  const [platform, setPlatform] = React.useState("web");
+  const [primaryColorAlignment, setPrimaryColorAlignment] =
+    React.useState<Alignment>("left");
+  const [secondaryColorAlignment, setSecondaryColorAlignment] =
+    React.useState<Alignment>("center");
+  const [textPlatform, setTextPlatform] = React.useState("web");
+  const [standaloneSelected, setStandaloneSelected] = React.useState(false);
   const [view, setView] = React.useState("list");
 
   const handleAlignment = React.useCallback(
@@ -88,14 +93,36 @@ export const ToggleButtonsSection = React.memo(() => {
     [],
   );
 
-  const handlePlatform = React.useCallback(
-    (_event: React.MouseEvent<HTMLElement>, newPlatform: string | null) => {
-      if (newPlatform !== null) {
-        setPlatform(newPlatform);
+  const handlePrimaryColorAlignment = React.useCallback(
+    (_event: React.MouseEvent<HTMLElement>, newAlignment: Alignment | null) => {
+      if (newAlignment !== null) {
+        setPrimaryColorAlignment(newAlignment);
       }
     },
     [],
   );
+
+  const handleSecondaryColorAlignment = React.useCallback(
+    (_event: React.MouseEvent<HTMLElement>, newAlignment: Alignment | null) => {
+      if (newAlignment !== null) {
+        setSecondaryColorAlignment(newAlignment);
+      }
+    },
+    [],
+  );
+
+  const handleTextPlatform = React.useCallback(
+    (_event: React.MouseEvent<HTMLElement>, newPlatform: string | null) => {
+      if (newPlatform !== null) {
+        setTextPlatform(newPlatform);
+      }
+    },
+    [],
+  );
+
+  const handleStandaloneToggle = React.useCallback(() => {
+    setStandaloneSelected((prevSelected) => !prevSelected);
+  }, []);
 
   const handleView = React.useCallback(
     (_event: React.MouseEvent<HTMLElement>, nextView: string | null) => {
@@ -318,21 +345,136 @@ export const ToggleButtonsSection = React.memo(() => {
                     color="text.secondary"
                     sx={{ typography: "mono" as const }}
                   >
-                    Color
+                    Color Variants
                   </Typography>
-                  <ToggleButtonGroup
-                    color="primary"
-                    value={platform}
-                    exclusive
-                    onChange={handlePlatform}
-                    aria-label="platform"
-                    sx={{ mt: 1 }}
-                  >
-                    <ToggleButton value="web">Web</ToggleButton>
-                    <ToggleButton value="android">Android</ToggleButton>
-                    <ToggleButton value="ios">iOS</ToggleButton>
-                  </ToggleButtonGroup>
+                  <Stack spacing={1} sx={{ mt: 1 }}>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "1fr",
+                          sm: "72px minmax(0, 1fr)",
+                        },
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ typography: "mono" as const }}
+                      >
+                        Primary
+                      </Typography>
+                      <ToggleButtonGroup
+                        color="primary"
+                        value={primaryColorAlignment}
+                        exclusive
+                        onChange={handlePrimaryColorAlignment}
+                        aria-label="primary color alignment"
+                      >
+                        <ToggleButton value="left" aria-label="left aligned">
+                          <FormatAlignLeftIcon />
+                        </ToggleButton>
+                        <ToggleButton value="center" aria-label="centered">
+                          <FormatAlignCenterIcon />
+                        </ToggleButton>
+                        <ToggleButton value="right" aria-label="right aligned">
+                          <FormatAlignRightIcon />
+                        </ToggleButton>
+                      </ToggleButtonGroup>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "1fr",
+                          sm: "72px minmax(0, 1fr)",
+                        },
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ typography: "mono" as const }}
+                      >
+                        Secondary
+                      </Typography>
+                      <ToggleButtonGroup
+                        color="secondary"
+                        value={secondaryColorAlignment}
+                        exclusive
+                        onChange={handleSecondaryColorAlignment}
+                        aria-label="secondary color alignment"
+                      >
+                        <ToggleButton value="left" aria-label="left aligned">
+                          <FormatAlignLeftIcon />
+                        </ToggleButton>
+                        <ToggleButton value="center" aria-label="centered">
+                          <FormatAlignCenterIcon />
+                        </ToggleButton>
+                        <ToggleButton value="right" aria-label="right aligned">
+                          <FormatAlignRightIcon />
+                        </ToggleButton>
+                      </ToggleButtonGroup>
+                    </Box>
+                  </Stack>
                 </Box>
+              </Stack>
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ typography: "mono" as const }}
+              >
+                Text-Only Variation
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Standalone text-label toggles for compact platform switching.
+              </Typography>
+
+              <ToggleButtonGroup
+                color="primary"
+                value={textPlatform}
+                exclusive
+                onChange={handleTextPlatform}
+                aria-label="text platform toggle"
+              >
+                <ToggleButton value="web">Web</ToggleButton>
+                <ToggleButton value="android">Android</ToggleButton>
+                <ToggleButton value="ios">iOS</ToggleButton>
+              </ToggleButtonGroup>
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ typography: "mono" as const }}
+              >
+                Standalone Toggle Button
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Single toggle button state managed via the selected prop.
+              </Typography>
+
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <ToggleButton
+                  value="notifications"
+                  selected={standaloneSelected}
+                  onChange={handleStandaloneToggle}
+                  aria-label="standalone notifications toggle"
+                >
+                  Notifications
+                </ToggleButton>
+                <Typography variant="caption" color="text.secondary">
+                  State: {standaloneSelected ? "On" : "Off"}
+                </Typography>
               </Stack>
             </Paper>
 
