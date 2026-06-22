@@ -6,6 +6,7 @@ import {
   FormControl,
   FormControlLabel,
   FormGroup,
+  FormHelperText,
   FormLabel,
   Grid,
   Link,
@@ -93,6 +94,9 @@ export const CheckboxesSection = React.memo(() => {
                   Basic + Label
                 </Typography>
                 <FormGroup>
+                  <FormLabel id="kitchen-checkbox-group-label">
+                    Checkbox group
+                  </FormLabel>
                   <FormControlLabel
                     control={<Checkbox {...checkboxLabel} defaultChecked />}
                     label="Checked by default"
@@ -111,6 +115,7 @@ export const CheckboxesSection = React.memo(() => {
                     control={<Checkbox {...checkboxLabel} />}
                     label="Required"
                   />
+                  <FormHelperText>I am form helper text</FormHelperText>
                 </FormGroup>
               </Box>
 

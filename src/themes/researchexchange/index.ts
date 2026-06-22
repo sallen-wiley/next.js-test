@@ -92,7 +92,7 @@ let theme = createTheme({
       main: brandColors.brandColors["System Alert"][700],
     },
     info: {
-      main: brandColors.brandColors["System Info"][700],
+      main: brandColors.brandColors["System Info"][800],
     },
     success: {
       main: brandColors.brandColors["System Positive"][700],

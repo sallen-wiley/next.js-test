@@ -181,6 +181,7 @@ Behavior rules:
 - **[Database Setup](docs/setup/database-setup.md)** - Supabase configuration and schema
 - **[Theme Development](docs/development/theme-guide.md)** - Theme creation and customization
 - **[Storybook Guide](docs/development/storybook-guide.md)** - Component development workflow
+- **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Property-first MCP flow, resume checklist, and reliable publish process
 
 ### Technologies
 

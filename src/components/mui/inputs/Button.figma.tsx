@@ -28,7 +28,7 @@ figma.connect(
 
       size: figma.enum("Size", {
         Small: "small",
-        Medium: "medium",
+        Medium: undefined,
         Large: "large",
       }),
 
@@ -72,5 +72,5 @@ figma.connect(
         {children}
       </Button>
     ),
-  }
+  },
 );
