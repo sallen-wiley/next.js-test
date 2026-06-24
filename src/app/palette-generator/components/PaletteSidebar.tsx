@@ -28,18 +28,20 @@ import {
   ListItemIcon,
   Grid,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 import SearchIcon from "@mui/icons-material/Search";
 import PublicIcon from "@mui/icons-material/Public";
 import LockIcon from "@mui/icons-material/Lock";
 import StarIcon from "@mui/icons-material/Star";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
 import DownloadIcon from "@mui/icons-material/Download";
 import CodeIcon from "@mui/icons-material/Code";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useRoleAccess } from "@/hooks/useRoles";
 import {
   savePalette,
@@ -47,6 +49,14 @@ import {
   listPublicPalettes,
   deletePalette,
 } from "../services/paletteService";
+import {
+  listLocalDrafts,
+  saveLocalDraft,
+  renameLocalDraft,
+  deleteLocalDraft,
+  getLocalDraftById,
+  type LocalPaletteDraft,
+} from "../services/localDraftService";
 import { PRESET_PALETTES } from "../presets";
 import type { UserPalette, UserPaletteWithAuthor } from "@/lib/supabase";
 import type { HueSet } from "../types";
@@ -61,10 +71,29 @@ interface PaletteSidebarProps {
   onSaveSuccess: (paletteId: string, paletteName: string) => void;
   onLoad: (palette: HueSet[], paletteId?: string, paletteName?: string) => void;
   onExport: (format: ExportFormat) => void;
+  libraryRefreshToken?: number;
 }
 
 type LoadTabValue = "my-palettes" | "presets" | "public";
 type ExportFormat = "json" | "css";
+
+const LOCAL_DRAFT_ID_PREFIX = "local:";
+
+function toLocalPaletteId(draftId: string): string {
+  return `${LOCAL_DRAFT_ID_PREFIX}${draftId}`;
+}
+
+function fromLocalPaletteId(paletteId: string | null): string | null {
+  if (!paletteId || !paletteId.startsWith(LOCAL_DRAFT_ID_PREFIX)) {
+    return null;
+  }
+
+  return paletteId.slice(LOCAL_DRAFT_ID_PREFIX.length);
+}
+
+function isLocalPaletteId(paletteId: string | null): boolean {
+  return fromLocalPaletteId(paletteId) !== null;
+}
 
 export default function PaletteSidebar({
   hues,
@@ -75,7 +104,12 @@ export default function PaletteSidebar({
   onSaveSuccess,
   onLoad,
   onExport,
+  libraryRefreshToken,
 }: PaletteSidebarProps) {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const isAuthenticated = Boolean(user?.id);
+
   // Contrast picker state (top of sidebar)
   // This is passed through props
 
@@ -100,6 +134,11 @@ export default function PaletteSidebar({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [localDrafts, setLocalDrafts] = useState<LocalPaletteDraft[]>([]);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameDraftId, setRenameDraftId] = useState<string | null>(null);
+  const [renameDraftName, setRenameDraftName] = useState("");
+  const [renameError, setRenameError] = useState<string | null>(null);
 
   // Export section state
   const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(
@@ -109,35 +148,75 @@ export default function PaletteSidebar({
     null,
   );
 
+  const localCurrentPaletteId = fromLocalPaletteId(currentPaletteId);
+  const canUpdateExisting = isAuthenticated
+    ? Boolean(currentPaletteId && !isLocalPaletteId(currentPaletteId))
+    : Boolean(localCurrentPaletteId);
+
+  const refreshLocalDrafts = React.useCallback(() => {
+    setLocalDrafts(listLocalDrafts());
+  }, []);
+
   // Sync save form with current palette
   useEffect(() => {
+    if (saveDialogOpen) {
+      return;
+    }
+
     setSaveName(currentPaletteName || "");
-    // isPublic and description will be loaded when editing existing palette
-  }, [currentPaletteName]);
+
+    if (!isAuthenticated) {
+      const draftId = fromLocalPaletteId(currentPaletteId);
+      if (!draftId) {
+        setSaveDescription("");
+        return;
+      }
+
+      const existing = getLocalDraftById(draftId);
+      setSaveDescription(existing?.description || "");
+      return;
+    }
+
+    // Keep description reset for cloud saves unless explicitly changed in dialog.
+    setSaveDescription("");
+  }, [
+    currentPaletteId,
+    currentPaletteName,
+    isAuthenticated,
+    saveDialogOpen,
+  ]);
 
   // Load palettes when tab changes
   useEffect(() => {
     const loadPalettes = async () => {
+      if (authLoading) {
+        return;
+      }
+
       setLoadingPalettes(true);
       setLoadError(null);
 
       try {
         if (loadTab === "my-palettes") {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          if (!user?.id) {
-            throw new Error("User not authenticated");
+          if (isAuthenticated && user?.id) {
+            const palettes = await listUserPalettes(user.id);
+            setMyPalettes(palettes);
+            setLocalDrafts([]);
+          } else {
+            refreshLocalDrafts();
+            setMyPalettes([]);
           }
-          const palettes = await listUserPalettes(user.id);
-          setMyPalettes(palettes);
         } else if (loadTab === "public") {
           const palettes = await listPublicPalettes();
           setPublicPalettes(palettes);
         }
       } catch (err) {
         if (err instanceof Error) {
-          setLoadError(err.message);
+          setLoadError(
+            loadTab === "my-palettes" && !isAuthenticated
+              ? "Sign in to load account palettes."
+              : err.message,
+          );
         } else {
           setLoadError("Failed to load palettes");
         }
@@ -147,7 +226,14 @@ export default function PaletteSidebar({
     };
 
     loadPalettes();
-  }, [loadTab]);
+  }, [
+    authLoading,
+    isAuthenticated,
+    loadTab,
+    refreshLocalDrafts,
+    user?.id,
+    libraryRefreshToken,
+  ]);
 
   // Filter palettes by search term
   const filterPalettes = <T extends UserPalette | UserPaletteWithAuthor>(
@@ -163,7 +249,31 @@ export default function PaletteSidebar({
     );
   };
 
+  const filterLocalDraftsBySearch = (
+    drafts: LocalPaletteDraft[],
+  ): LocalPaletteDraft[] => {
+    if (!searchTerm.trim()) return drafts;
+    const term = searchTerm.toLowerCase();
+    return drafts.filter(
+      (draft) =>
+        draft.name.toLowerCase().includes(term) ||
+        draft.description?.toLowerCase().includes(term),
+    );
+  };
+
   const handleOpenSaveDialog = () => {
+    if (!saveName.trim()) {
+      setSaveName(currentPaletteName || "");
+    }
+
+    if (!isAuthenticated) {
+      const draftId = fromLocalPaletteId(currentPaletteId);
+      if (draftId) {
+        const draft = getLocalDraftById(draftId);
+        setSaveDescription(draft?.description || "");
+      }
+    }
+
     setSaveDialogOpen(true);
     setSaveError(null);
   };
@@ -177,8 +287,15 @@ export default function PaletteSidebar({
     setSaveMenuAnchor(null);
     // Pre-fill with copy suffix and clear palette ID to force new save
     setSaveName(currentPaletteName ? `${currentPaletteName} (Copy)` : "");
-    // Temporarily clear the current palette ID for this save operation
-    // We'll handle this in the save dialog
+
+    if (!isAuthenticated) {
+      const draftId = fromLocalPaletteId(currentPaletteId);
+      if (draftId) {
+        const draft = getLocalDraftById(draftId);
+        setSaveDescription(draft?.description || "");
+      }
+    }
+
     setSaveDialogOpen(true);
     setSaveError(null);
   };
@@ -198,17 +315,35 @@ export default function PaletteSidebar({
     setSaveError(null);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user?.id) {
-        throw new Error("User not authenticated");
+      if (!isAuthenticated) {
+        const localDraft = saveLocalDraft({
+          name: saveName.trim(),
+          description: saveDescription.trim() || undefined,
+          paletteData: hues,
+          draftId:
+            !saveAsNew && localCurrentPaletteId ? localCurrentPaletteId : undefined,
+        });
+
+        refreshLocalDrafts();
+        onSaveSuccess(toLocalPaletteId(localDraft.id), localDraft.name);
+        handleCloseSaveDialog();
+        return;
       }
+
+      if (!user?.id) {
+        setSaveError("Sign in to save this palette to your account.");
+        return;
+      }
+
+      const cloudPaletteId =
+        !saveAsNew && currentPaletteId && !isLocalPaletteId(currentPaletteId)
+          ? currentPaletteId
+          : undefined;
 
       const result = await savePalette(user.id, saveName.trim(), hues, {
         description: saveDescription.trim() || undefined,
         isPublic,
-        paletteId: saveAsNew ? undefined : currentPaletteId || undefined,
+        paletteId: cloudPaletteId,
       });
 
       onSaveSuccess(result.id, result.name);
@@ -255,32 +390,99 @@ export default function PaletteSidebar({
 
     setDeletingId(paletteId);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      if (!isAuthenticated) {
+        const deleted = deleteLocalDraft(paletteId);
+        if (!deleted) {
+          throw new Error("Draft not found");
+        }
+
+        refreshLocalDrafts();
+
+        if (currentPaletteId === toLocalPaletteId(paletteId)) {
+          onSaveSuccess("", "");
+        }
+
+        return;
+      }
+
       if (!user?.id) {
-        throw new Error("User not authenticated");
+        throw new Error("Sign in to delete account palettes.");
       }
 
       await deletePalette(paletteId, user.id);
-      setMyPalettes(myPalettes.filter((p) => p.id !== paletteId));
+      setMyPalettes((prev) => prev.filter((p) => p.id !== paletteId));
 
       // Clear current palette if it was deleted
       if (currentPaletteId === paletteId) {
         onSaveSuccess("", "");
       }
     } catch (err) {
-      console.error("Failed to delete palette:", err);
-      alert("Failed to delete palette");
+      if (err instanceof Error) {
+        setLoadError(err.message);
+      } else {
+        setLoadError("Failed to delete palette");
+      }
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const handleOpenRenameDialog = (
+    draft: LocalPaletteDraft,
+    event: React.MouseEvent,
+  ) => {
+    event.stopPropagation();
+    setRenameDraftId(draft.id);
+    setRenameDraftName(draft.name);
+    setRenameError(null);
+    setRenameDialogOpen(true);
+  };
+
+  const handleConfirmRename = () => {
+    if (!renameDraftId) {
+      return;
+    }
+
+    try {
+      const renamed = renameLocalDraft(renameDraftId, renameDraftName);
+      refreshLocalDrafts();
+
+      if (currentPaletteId === toLocalPaletteId(renameDraftId)) {
+        onSaveSuccess(toLocalPaletteId(renamed.id), renamed.name);
+      }
+
+      setRenameDialogOpen(false);
+      setRenameDraftId(null);
+      setRenameDraftName("");
+      setRenameError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setRenameError(err.message);
+      } else {
+        setRenameError("Failed to rename draft");
+      }
+    }
+  };
+
+  const handleCloseRenameDialog = () => {
+    if (saving) {
+      return;
+    }
+
+    setRenameDialogOpen(false);
+    setRenameDraftId(null);
+    setRenameDraftName("");
+    setRenameError(null);
   };
 
   const handleExport = (format: ExportFormat) => {
     setExportMenuAnchor(null);
     onExport(format);
   };
+
+  const filteredMyPalettes = filterPalettes(myPalettes);
+  const filteredPublicPalettes = filterPalettes(publicPalettes);
+  const filteredLocalDrafts = filterLocalDraftsBySearch(localDrafts);
 
   return (
     <Box
@@ -296,7 +498,7 @@ export default function PaletteSidebar({
         {/* SECTION 1: Save Buttons */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid size={6}>
-            {currentPaletteId ? (
+            {canUpdateExisting ? (
               <>
                 <Button
                   variant="contained"
@@ -306,7 +508,7 @@ export default function PaletteSidebar({
                   fullWidth
                   size="small"
                 >
-                  Update Palette
+                  {isAuthenticated ? "Update Palette" : "Update Local Draft"}
                 </Button>
                 <Menu
                   anchorEl={saveMenuAnchor}
@@ -314,10 +516,18 @@ export default function PaletteSidebar({
                   onClose={() => setSaveMenuAnchor(null)}
                 >
                   <MenuItem onClick={handleUpdateExisting}>
-                    <ListItemText primary="Update Palette" />
+                    <ListItemText
+                      primary={
+                        isAuthenticated
+                          ? "Update Palette"
+                          : "Update Local Draft"
+                      }
+                    />
                   </MenuItem>
                   <MenuItem onClick={handleSaveAsNew}>
-                    <ListItemText primary="Save As New" />
+                    <ListItemText
+                      primary={isAuthenticated ? "Save As New" : "Save Copy"}
+                    />
                   </MenuItem>
                 </Menu>
               </>
@@ -329,7 +539,7 @@ export default function PaletteSidebar({
                 fullWidth
                 size="small"
               >
-                Save Palette
+                {isAuthenticated ? "Save Palette" : "Save Local Draft"}
               </Button>
             )}
           </Grid>
@@ -395,10 +605,32 @@ export default function PaletteSidebar({
             variant="fullWidth"
             sx={{ mb: 2 }}
           >
-            <Tab label="Personal" value="my-palettes" />
+            <Tab
+              label={isAuthenticated ? "Personal" : "Local Drafts"}
+              value="my-palettes"
+            />
             <Tab label="Public" value="public" />
             <Tab label="Presets" value="presets" />
           </Tabs>
+
+          {!isAuthenticated && loadTab === "my-palettes" && (
+            <Alert
+              severity="info"
+              sx={{ mb: 2 }}
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => router.push("/auth/login")}
+                >
+                  Sign In
+                </Button>
+              }
+            >
+              Local drafts are saved only in this browser. Sign in to save and
+              sync palettes to your account.
+            </Alert>
+          )}
 
           {loadTab !== "presets" && (
             <TextField
@@ -434,68 +666,152 @@ export default function PaletteSidebar({
             <List dense sx={{ maxHeight: 400, overflow: "auto" }}>
               {/* My Palettes Tab */}
               {loadTab === "my-palettes" &&
-                filterPalettes(myPalettes).map((palette) => (
-                  <ListItem
-                    key={palette.id}
-                    disablePadding
-                    secondaryAction={
-                      <IconButton
-                        edge="end"
-                        onClick={(e) => handleDeletePalette(palette.id, e)}
-                        disabled={deletingId === palette.id}
-                        size="small"
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    }
-                  >
-                    <ListItemButton
-                      onClick={() =>
-                        handleLoadPalette(
-                          palette.palette_data,
-                          palette.id,
-                          palette.name,
-                        )
-                      }
-                    >
-                      <ListItemText
-                        primary={palette.name}
-                        secondary={
-                          <Stack
-                            direction="row"
-                            spacing={0.5}
-                            alignItems="center"
+                (isAuthenticated
+                  ? filteredMyPalettes.map((palette) => (
+                      <ListItem
+                        key={palette.id}
+                        disablePadding
+                        secondaryAction={
+                          <IconButton
+                            edge="end"
+                            onClick={(e) => handleDeletePalette(palette.id, e)}
+                            disabled={deletingId === palette.id}
+                            size="small"
                           >
-                            {palette.description && (
-                              <Typography variant="caption" sx={{ mr: 1 }}>
-                                {palette.description}
-                              </Typography>
-                            )}
-                            {palette.is_public && (
-                              <Chip
-                                icon={<PublicIcon />}
-                                label="Public"
-                                size="small"
-                                color="primary"
-                              />
-                            )}
-                            {!palette.is_public && (
-                              <Chip
-                                icon={<LockIcon />}
-                                label="Private"
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        }
+                      >
+                        <ListItemButton
+                          onClick={() =>
+                            handleLoadPalette(
+                              palette.palette_data,
+                              palette.id,
+                              palette.name,
+                            )
+                          }
+                        >
+                          <ListItemText
+                            primary={palette.name}
+                            secondary={
+                              <Stack
+                                direction="row"
+                                spacing={0.5}
+                                alignItems="center"
+                              >
+                                {palette.description && (
+                                  <Typography variant="caption" sx={{ mr: 1 }}>
+                                    {palette.description}
+                                  </Typography>
+                                )}
+                                {palette.is_public && (
+                                  <Chip
+                                    icon={<PublicIcon />}
+                                    label="Public"
+                                    size="small"
+                                    color="primary"
+                                  />
+                                )}
+                                {!palette.is_public && (
+                                  <Chip
+                                    icon={<LockIcon />}
+                                    label="Private"
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                )}
+                              </Stack>
+                            }
+                            slotProps={{
+                              secondary: { component: "div" },
+                            }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))
+                  : filteredLocalDrafts.map((draft) => (
+                      <ListItem
+                        key={draft.id}
+                        disablePadding
+                        secondaryAction={
+                          <Stack direction="row" spacing={0.5}>
+                            <IconButton
+                              edge="end"
+                              onClick={(e) => handleOpenRenameDialog(draft, e)}
+                              size="small"
+                              aria-label="Rename local draft"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              edge="end"
+                              onClick={(e) => handleDeletePalette(draft.id, e)}
+                              disabled={deletingId === draft.id}
+                              size="small"
+                              aria-label="Delete local draft"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
                           </Stack>
                         }
-                        slotProps={{
-                          secondary: { component: "div" },
-                        }}
-                      />
-                    </ListItemButton>
+                      >
+                        <ListItemButton
+                          onClick={() =>
+                            handleLoadPalette(
+                              draft.palette_data,
+                              toLocalPaletteId(draft.id),
+                              draft.name,
+                            )
+                          }
+                        >
+                          <ListItemText
+                            primary={draft.name}
+                            secondary={
+                              <Stack
+                                direction="row"
+                                spacing={0.5}
+                                alignItems="center"
+                              >
+                                {draft.description && (
+                                  <Typography variant="caption" sx={{ mr: 1 }}>
+                                    {draft.description}
+                                  </Typography>
+                                )}
+                                <Chip
+                                  icon={<SaveIcon />}
+                                  label="Local"
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              </Stack>
+                            }
+                            slotProps={{
+                              secondary: { component: "div" },
+                            }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    )))}
+
+              {loadTab === "my-palettes" &&
+                (isAuthenticated
+                  ? filteredMyPalettes.length === 0
+                  : filteredLocalDrafts.length === 0) && (
+                  <ListItem>
+                    <ListItemText
+                      primary={
+                        isAuthenticated
+                          ? "No account palettes yet"
+                          : "No local drafts yet"
+                      }
+                      secondary={
+                        isAuthenticated
+                          ? "Save your current palette to start your library."
+                          : "Save a local draft to keep working without signing in."
+                      }
+                    />
                   </ListItem>
-                ))}
+                )}
 
               {/* Presets Tab */}
               {loadTab === "presets" &&
@@ -535,7 +851,7 @@ export default function PaletteSidebar({
 
               {/* Public Tab */}
               {loadTab === "public" &&
-                filterPalettes(publicPalettes).map((palette) => (
+                filteredPublicPalettes.map((palette) => (
                   <ListItem key={palette.id} disablePadding>
                     <ListItemButton
                       onClick={() =>
@@ -576,6 +892,18 @@ export default function PaletteSidebar({
                     </ListItemButton>
                   </ListItem>
                 ))}
+
+              {loadTab === "public" && filteredPublicPalettes.length === 0 && (
+                <ListItem>
+                  <ListItemText primary="No public palettes found" />
+                </ListItem>
+              )}
+
+              {loadTab === "presets" && PRESET_PALETTES.length === 0 && (
+                <ListItem>
+                  <ListItemText primary="No presets available" />
+                </ListItem>
+              )}
             </List>
           )}
         </Box>
@@ -589,13 +917,36 @@ export default function PaletteSidebar({
         fullWidth
       >
         <DialogTitle>
-          {currentPaletteId ? "Update Palette" : "Save Palette"}
+          {canUpdateExisting
+            ? isAuthenticated
+              ? "Update Palette"
+              : "Update Local Draft"
+            : isAuthenticated
+            ? "Save Palette"
+            : "Save Local Draft"}
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {saveError && (
               <Alert severity="error" onClose={() => setSaveError(null)}>
                 {saveError}
+              </Alert>
+            )}
+
+            {!isAuthenticated && (
+              <Alert
+                severity="info"
+                action={
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => router.push("/auth/login")}
+                  >
+                    Sign In
+                  </Button>
+                }
+              >
+                This draft is saved only in this browser.
               </Alert>
             )}
 
@@ -623,12 +974,12 @@ export default function PaletteSidebar({
                 <Checkbox
                   checked={isPublic}
                   onChange={(e) => setIsPublic(e.target.checked)}
-                  disabled={!canMakePublic}
+                  disabled={!canMakePublic || !isAuthenticated}
                 />
               }
               label="Make this palette public"
             />
-            {!canMakePublic && (
+            {isAuthenticated && !canMakePublic && (
               <Typography variant="caption" color="text.secondary">
                 Only admins and designers can make palettes public
               </Typography>
@@ -648,10 +999,48 @@ export default function PaletteSidebar({
             {saving
               ? "Saving..."
               : saveName.endsWith("(Copy)")
-              ? "Save As New"
-              : currentPaletteId
+              ? isAuthenticated
+                ? "Save As New"
+                : "Save Copy"
+              : canUpdateExisting
               ? "Update"
               : "Save"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={renameDialogOpen}
+        onClose={handleCloseRenameDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Rename Local Draft</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {renameError && (
+              <Alert severity="error" onClose={() => setRenameError(null)}>
+                {renameError}
+              </Alert>
+            )}
+            <TextField
+              label="Draft Name"
+              value={renameDraftName}
+              onChange={(event) => setRenameDraftName(event.target.value)}
+              fullWidth
+              required
+              autoFocus
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRenameDialog}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirmRename}
+            disabled={!renameDraftName.trim()}
+          >
+            Rename
           </Button>
         </DialogActions>
       </Dialog>

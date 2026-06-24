@@ -160,7 +160,7 @@ Behavior rules:
 
 - `/` - Main landing page with featured tools and demo links
 - `/kitchen-sink` - Complete MUI component library showcase
-- `/palette-generator` - HSV color palette generator
+- `/palette-generator` - Public HSV color palette generator with guest local drafts and signed-in cloud library
 - `/experiments/workflow-builder` - Workflow builder experiments
 - `/experiments/notifications/admin` - Notification administration
 - `/experiments/notifications/history` - Notification history

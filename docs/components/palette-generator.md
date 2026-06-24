@@ -12,6 +12,32 @@ A sophisticated color palette generator built with Next.js 15, Material-UI v7, a
 - **Lock & Unlock**: Pin specific colors as anchor points for interpolation
 - **Responsive Design**: Fully responsive grid layout using MUI Grid system
 - **Theme Aware**: Integrates seamlessly with your app's theme system
+- **Public Access**: Route is accessible without authentication
+- **Guest Drafts**: Anonymous users can save/load/rename/delete local drafts in-browser
+- **Cloud Palettes**: Signed-in users can save and manage account palettes via Supabase
+- **Post-Login Import**: Local drafts can be imported into account storage after sign-in
+
+## Access and Persistence Model
+
+### Anonymous (Not Signed In)
+
+- Can use the full editor and export JSON/CSS.
+- Can manage local drafts (save, load, rename, delete) stored in browser localStorage.
+- Can browse and load Public Library palettes.
+- Can load built-in Presets.
+- Cannot save/update/delete account palettes in Supabase.
+
+### Authenticated (Signed In)
+
+- Can save/update/delete personal palettes in Supabase-backed storage.
+- Can load personal palettes from account storage.
+- Can browse and load Public Library palettes.
+- Can import existing local drafts into account storage via an import prompt.
+
+### Reserved Cloud Features
+
+- Public-sharing flag for account palettes remains role-gated.
+- Only users with appropriate roles (admin/designer) can create public cloud palettes.
 
 ## Technology Stack
 
@@ -27,7 +53,10 @@ A sophisticated color palette generator built with Next.js 15, Material-UI v7, a
 2. **Lock Anchor Colors**: Select specific shades to serve as interpolation anchor points
 3. **Configure Channels**: Choose which HSV channels (H/S/V) each anchor affects
 4. **Generate Interpolation**: Fill in missing shades with mathematically smooth transitions
-5. **Export**: Download as JSON for direct integration into MUI themes
+5. **Save Draft or Palette**:
+  - Guest: save a local draft in this browser
+  - Signed in: save to account library
+6. **Export**: Download as JSON or CSS variables for direct integration into themes
 
 ## Color Science
 
@@ -90,7 +119,6 @@ const theme = createTheme({
 
 ## Future Enhancements
 
-- Database persistence (Supabase integration)
 - Palette sharing and collaboration
 - Advanced color harmony rules (triadic, analogous, etc.)
 - Import from existing design systems

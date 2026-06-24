@@ -24,12 +24,14 @@ import {
   RadioGroup,
   Radio,
   FormControlLabel,
+  Alert,
 } from "@mui/material";
 // Individual icon imports for better tree-shaking
 import AddIcon from "@mui/icons-material/Add";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import { useHeaderConfig } from "@/contexts/HeaderContext";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 // Type imports
 import type { HueSet } from "./types";
@@ -39,24 +41,28 @@ import { DEFAULT_HUE, migrateHueSet } from "./utils/defaults";
 
 // Component imports
 import HueEditor from "./components/HueEditor";
-import PaletteSaveDialog from "./components/PaletteSaveDialog";
-import PaletteLoadDialog from "./components/PaletteLoadDialog";
 import PaletteSidebar from "./components/PaletteSidebar";
-import { downloadCssVariables } from "./services/paletteService";
+import { downloadCssVariables, savePalette } from "./services/paletteService";
+import {
+  listLocalDrafts,
+  deleteLocalDraft,
+  type LocalPaletteDraft,
+} from "./services/localDraftService";
 
 const CONTRAST_COLOR_STORAGE_KEY = "paletteGenerator.contrastTargetColor";
+const IMPORT_PROMPT_DISMISS_PREFIX = "paletteGenerator.importPromptDismissed.";
 
 type ExportTokenNamingMode = "mui-key" | "hue-name";
 type ExportFormat = "json" | "css";
 
 function PaletteGenerator() {
+  const { user, loading: authLoading } = useAuth();
+
   const [hues, setHues] = useState<HueSet[]>(() => {
     const initialHues = [DEFAULT_HUE];
     return initialHues.map(migrateHueSet);
   });
   const [activeHueId, setActiveHueId] = useState<string>("1");
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [loadDialogOpen, setLoadDialogOpen] = useState(false);
   const [currentPaletteId, setCurrentPaletteId] = useState<string | null>(null);
   const [currentPaletteName, setCurrentPaletteName] = useState<string | null>(
     null,
@@ -71,6 +77,14 @@ function PaletteGenerator() {
     useState<ExportTokenNamingMode>("mui-key");
   const [pendingExportFormat, setPendingExportFormat] =
     useState<ExportFormat>("json");
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [draftsPendingImport, setDraftsPendingImport] = useState<
+    LocalPaletteDraft[]
+  >([]);
+  const [importingDrafts, setImportingDrafts] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
+  const [libraryRefreshToken, setLibraryRefreshToken] = useState(0);
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
@@ -99,6 +113,33 @@ function PaletteGenerator() {
     if (!savedPalette) return hues.length > 0;
     return JSON.stringify(hues) !== JSON.stringify(savedPalette);
   };
+
+  const getImportDismissKey = (userId: string) =>
+    `${IMPORT_PROMPT_DISMISS_PREFIX}${userId}`;
+
+  useEffect(() => {
+    if (authLoading || !user?.id) {
+      return;
+    }
+
+    const localDrafts = listLocalDrafts();
+    if (localDrafts.length === 0) {
+      return;
+    }
+
+    const dismissKey = getImportDismissKey(user.id);
+    const dismissed =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem(dismissKey) === "true";
+
+    if (dismissed) {
+      return;
+    }
+
+    setDraftsPendingImport(localDrafts);
+    setImportError(null);
+    setImportDialogOpen(true);
+  }, [authLoading, user?.id]);
 
   const addHue = () => {
     const newId = String(Date.now());
@@ -241,7 +282,6 @@ function PaletteGenerator() {
     setCurrentPaletteName(paletteName || null);
     setSavedPalette(paletteId ? migratedPalette : null);
 
-    setLoadDialogOpen(false);
     setMobileDrawerOpen(false);
   };
 
@@ -249,8 +289,74 @@ function PaletteGenerator() {
     setCurrentPaletteId(paletteId);
     setCurrentPaletteName(paletteName);
     setSavedPalette([...hues]); // Snapshot current state
-    setSaveDialogOpen(false);
     setMobileDrawerOpen(false);
+  };
+
+  const dismissImportPrompt = () => {
+    if (user?.id && typeof window !== "undefined") {
+      sessionStorage.setItem(getImportDismissKey(user.id), "true");
+    }
+
+    setImportDialogOpen(false);
+    setImportError(null);
+  };
+
+  const handleImportLocalDrafts = async () => {
+    if (!user?.id || draftsPendingImport.length === 0) {
+      setImportDialogOpen(false);
+      return;
+    }
+
+    setImportingDrafts(true);
+    setImportError(null);
+
+    const importedDraftIds: string[] = [];
+    let failed = 0;
+
+    try {
+      for (const draft of draftsPendingImport) {
+        try {
+          await savePalette(user.id, draft.name, draft.palette_data, {
+            description: draft.description,
+            isPublic: false,
+          });
+          importedDraftIds.push(draft.id);
+        } catch {
+          failed += 1;
+        }
+      }
+
+      importedDraftIds.forEach((draftId) => {
+        deleteLocalDraft(draftId);
+      });
+
+      const remainingDrafts = listLocalDrafts();
+      setDraftsPendingImport(remainingDrafts);
+
+      if (importedDraftIds.length > 0) {
+        const label = importedDraftIds.length === 1 ? "draft" : "drafts";
+        setImportNotice(
+          `Imported ${importedDraftIds.length} local ${label} to your account.`,
+        );
+        setLibraryRefreshToken((prev) => prev + 1);
+      }
+
+      if (failed > 0) {
+        const noun = failed === 1 ? "draft" : "drafts";
+        setImportError(
+          `${failed} ${noun} could not be imported and remain local.`,
+        );
+      } else {
+        dismissImportPrompt();
+      }
+
+      if (remainingDrafts.length === 0 && user?.id && typeof window !== "undefined") {
+        sessionStorage.setItem(getImportDismissKey(user.id), "true");
+        setImportDialogOpen(false);
+      }
+    } finally {
+      setImportingDrafts(false);
+    }
   };
 
   // Configure header for palette generator
@@ -294,6 +400,15 @@ function PaletteGenerator() {
                   <Typography variant="body1" color="text.secondary">
                     Generate harmonious color palettes using HSV interpolation.
                   </Typography>
+                  {importNotice && (
+                    <Alert
+                      severity="success"
+                      sx={{ mt: 2 }}
+                      onClose={() => setImportNotice(null)}
+                    >
+                      {importNotice}
+                    </Alert>
+                  )}
                 </Box>
               </Stack>
 
@@ -385,6 +500,7 @@ function PaletteGenerator() {
                   onSaveSuccess={handleSaveSuccess}
                   onLoad={handleLoadPalette}
                   onExport={handleExportRequest}
+                  libraryRefreshToken={libraryRefreshToken}
                 />
               </Box>
             </Grid>
@@ -447,6 +563,7 @@ function PaletteGenerator() {
             onSaveSuccess={handleSaveSuccess}
             onLoad={handleLoadPalette}
             onExport={handleExportRequest}
+            libraryRefreshToken={libraryRefreshToken}
           />
         </Box>
       </Drawer>
@@ -497,22 +614,54 @@ function PaletteGenerator() {
         </DialogActions>
       </Dialog>
 
-      {/* Legacy Save Dialog (for backward compatibility - can be removed) */}
-      <PaletteSaveDialog
-        open={saveDialogOpen}
-        onClose={() => setSaveDialogOpen(false)}
-        currentPalette={hues}
-        currentPaletteId={currentPaletteId}
-        currentPaletteName={currentPaletteName}
-        onSaveSuccess={handleSaveSuccess}
-      />
+      <Dialog
+        open={importDialogOpen}
+        onClose={importingDrafts ? undefined : dismissImportPrompt}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Import Local Drafts?</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              You have {draftsPendingImport.length} local
+              {draftsPendingImport.length === 1 ? " draft" : " drafts"} saved
+              in this browser. Import them to your account as private palettes?
+            </Typography>
 
-      {/* Legacy Load Dialog (for backward compatibility - can be removed) */}
-      <PaletteLoadDialog
-        open={loadDialogOpen}
-        onClose={() => setLoadDialogOpen(false)}
-        onLoad={handleLoadPalette}
-      />
+            {importError && (
+              <Alert severity="warning" onClose={() => setImportError(null)}>
+                {importError}
+              </Alert>
+            )}
+
+            <Stack spacing={1}>
+              {draftsPendingImport.slice(0, 5).map((draft) => (
+                <Typography key={draft.id} variant="body2">
+                  - {draft.name}
+                </Typography>
+              ))}
+              {draftsPendingImport.length > 5 && (
+                <Typography variant="caption" color="text.secondary">
+                  + {draftsPendingImport.length - 5} more drafts
+                </Typography>
+              )}
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={dismissImportPrompt} disabled={importingDrafts}>
+            Not Now
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleImportLocalDrafts}
+            disabled={importingDrafts || draftsPendingImport.length === 0}
+          >
+            {importingDrafts ? "Importing..." : "Import Drafts"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
