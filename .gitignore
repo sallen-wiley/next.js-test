@@ -55,6 +55,8 @@ localStorage.json*
 !.github/prompts/**
 !.github/chatmodes/*Design*
 !.github/chatmodes/*AI*
+!.github/workflows/
+!.github/workflows/**
 !.github/copilot-instructions.md
 
 # Exclude sensitive reviewer data
