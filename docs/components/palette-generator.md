@@ -54,8 +54,10 @@ A sophisticated color palette generator built with Next.js 15, Material-UI v7, a
 3. **Configure Channels**: Choose which HSV channels (H/S/V) each anchor affects
 4. **Generate Interpolation**: Fill in missing shades with mathematically smooth transitions
 5. **Save Draft or Palette**:
-  - Guest: save a local draft in this browser
-  - Signed in: save to account library
+
+- Guest: save a local draft in this browser
+- Signed in: save to account library
+
 6. **Export**: Download as JSON or CSS variables for direct integration into themes
 
 ## Color Science

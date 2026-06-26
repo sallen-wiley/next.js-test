@@ -350,7 +350,11 @@ function PaletteGenerator() {
         dismissImportPrompt();
       }
 
-      if (remainingDrafts.length === 0 && user?.id && typeof window !== "undefined") {
+      if (
+        remainingDrafts.length === 0 &&
+        user?.id &&
+        typeof window !== "undefined"
+      ) {
         sessionStorage.setItem(getImportDismissKey(user.id), "true");
         setImportDialogOpen(false);
       }
@@ -625,8 +629,8 @@ function PaletteGenerator() {
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Typography variant="body2" color="text.secondary">
               You have {draftsPendingImport.length} local
-              {draftsPendingImport.length === 1 ? " draft" : " drafts"} saved
-              in this browser. Import them to your account as private palettes?
+              {draftsPendingImport.length === 1 ? " draft" : " drafts"} saved in
+              this browser. Import them to your account as private palettes?
             </Typography>
 
             {importError && (

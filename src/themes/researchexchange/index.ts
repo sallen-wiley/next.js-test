@@ -129,22 +129,35 @@ let theme = createTheme({
   colorSchemes: {
     dark: {
       palette: {
+        contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
         primary: {
-          main: brandColors.brandColors["Primary Heritage"][300],
+          main: brandColors.brandColors["Primary Data"][600],
           contrastText: brandColors.brandColors["Primary Heritage"][900],
         },
         secondary: {
-          main: brandColors.brandColors["Primary Heritage"][100],
+          main: brandColors.brandColors.Neutral[100],
           contrastText: brandColors.brandColors["Primary Heritage"][900],
+        },
+        error: {
+          main: brandColors.brandColors["System Negative"][300],
+        },
+        warning: {
+          main: brandColors.brandColors["System Alert"][300],
+        },
+        info: {
+          main: brandColors.brandColors["System Info"][300],
+        },
+        success: {
+          main: brandColors.brandColors["System Positive"][300],
         },
         background: {
           default: "#000000",
-          paper: brandColors.brandColors.Neutral[800],
+          paper: brandColors.brandColors.Neutral[900],
         },
         text: {
-          primary: brandColors.brandColors.Neutral[50],
-          secondary: brandColors.brandColors.Neutral[100],
-          disabled: brandColors.brandColors.Neutral[300],
+          primary: "#ffffff",
+          secondary: brandColors.brandColors.Neutral[300],
+          disabled: brandColors.brandColors.Neutral[500],
         },
       },
     },

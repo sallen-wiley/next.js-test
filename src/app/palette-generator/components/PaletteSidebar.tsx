@@ -179,12 +179,7 @@ export default function PaletteSidebar({
 
     // Keep description reset for cloud saves unless explicitly changed in dialog.
     setSaveDescription("");
-  }, [
-    currentPaletteId,
-    currentPaletteName,
-    isAuthenticated,
-    saveDialogOpen,
-  ]);
+  }, [currentPaletteId, currentPaletteName, isAuthenticated, saveDialogOpen]);
 
   // Load palettes when tab changes
   useEffect(() => {
@@ -321,7 +316,9 @@ export default function PaletteSidebar({
           description: saveDescription.trim() || undefined,
           paletteData: hues,
           draftId:
-            !saveAsNew && localCurrentPaletteId ? localCurrentPaletteId : undefined,
+            !saveAsNew && localCurrentPaletteId
+              ? localCurrentPaletteId
+              : undefined,
         });
 
         refreshLocalDrafts();

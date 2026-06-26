@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Box, Grid, Link, Paper, Stack, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { useColorScheme, useTheme } from "@mui/material/styles";
 
 const PALETTE_KEYS = [
   "primary",
@@ -26,6 +26,12 @@ const CSS_COLOR_VALUE_PATTERN =
 type PaletteEntry = {
   variant: string;
   value: string;
+};
+
+type PaletteRecord = Record<string, unknown>;
+
+type ThemeWithColorSchemes = {
+  colorSchemes?: Partial<Record<"light" | "dark", { palette?: PaletteRecord }>>;
 };
 
 function isCssColorValue(value: string): boolean {
@@ -61,9 +67,49 @@ function getPaletteEntries(group: unknown): PaletteEntry[] {
     });
 }
 
+function isPlainObject(value: unknown): value is PaletteRecord {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergePalettes(
+  basePalette: PaletteRecord,
+  modePalette?: PaletteRecord,
+): PaletteRecord {
+  if (!modePalette) {
+    return basePalette;
+  }
+
+  const mergedPalette: PaletteRecord = { ...basePalette };
+
+  for (const [groupKey, modeGroupValue] of Object.entries(modePalette)) {
+    const baseGroupValue = mergedPalette[groupKey];
+
+    if (isPlainObject(baseGroupValue) && isPlainObject(modeGroupValue)) {
+      mergedPalette[groupKey] = { ...baseGroupValue, ...modeGroupValue };
+      continue;
+    }
+
+    mergedPalette[groupKey] = modeGroupValue;
+  }
+
+  return mergedPalette;
+}
+
 export const ThemeColorsSection = React.memo(() => {
   const theme = useTheme();
-  const palette = theme.palette as unknown as Record<string, unknown>;
+  const { mode, systemMode } = useColorScheme();
+
+  const resolvedMode = mode === "system" ? systemMode ?? null : mode ?? null;
+  const basePalette = theme.palette as unknown as PaletteRecord;
+  const modePalette = resolvedMode
+    ? (theme as unknown as ThemeWithColorSchemes).colorSchemes?.[resolvedMode]
+        ?.palette
+    : undefined;
+
+  const palette = React.useMemo(
+    () => mergePalettes(basePalette, modePalette),
+    [basePalette, modePalette],
+  );
 
   return (
     <Grid size={12}>
@@ -77,6 +123,9 @@ export const ThemeColorsSection = React.memo(() => {
       </Typography>
 
       <Stack spacing={0.5} sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Active mode: {resolvedMode ?? "loading"}
+        </Typography>
         <Typography variant="body2" color="text.secondary">
           Pulled from the active MUI theme palette at runtime.
         </Typography>

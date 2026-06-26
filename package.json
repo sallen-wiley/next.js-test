@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev --turbopack",
+    "dev:webpack": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

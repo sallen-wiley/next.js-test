@@ -17,6 +17,19 @@ import {
   Typography,
 } from "@mui/material";
 
+const ALERT_SEVERITIES = [
+  { key: "success", label: "Success" },
+  { key: "info", label: "Info" },
+  { key: "warning", label: "Warning" },
+  { key: "error", label: "Error" },
+] as const;
+
+const ALERT_VARIANTS = [
+  { key: "standard", label: "Standard" },
+  { key: "outlined", label: "Outlined" },
+  { key: "filled", label: "Filled" },
+] as const;
+
 export const AlertsSection = React.memo(() => {
   const [openTransitionAlert, setOpenTransitionAlert] = React.useState(true);
 
@@ -84,21 +97,43 @@ export const AlertsSection = React.memo(() => {
                   gutterBottom
                   sx={{ typography: "mono" as const }}
                 >
-                  Variants
+                  Variants x Theme Colors
                 </Typography>
-                <Stack sx={{ width: "100%" }} spacing={1.5}>
-                  <Alert variant="filled" severity="success">
-                    Filled success alert.
-                  </Alert>
-                  <Alert variant="filled" severity="warning">
-                    Filled warning alert.
-                  </Alert>
-                  <Alert variant="outlined" severity="info">
-                    Outlined info alert.
-                  </Alert>
-                  <Alert variant="outlined" severity="error">
-                    Outlined error alert.
-                  </Alert>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1.5 }}
+                >
+                  Each variant is shown with every theme alert color token.
+                </Typography>
+                <Stack sx={{ width: "100%" }} spacing={2}>
+                  {ALERT_VARIANTS.map((variant) => (
+                    <Box key={variant.key}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{
+                          typography: "mono" as const,
+                          display: "block",
+                          mb: 1,
+                        }}
+                      >
+                        {variant.label}
+                      </Typography>
+                      <Stack spacing={1.25}>
+                        {ALERT_SEVERITIES.map((severity) => (
+                          <Alert
+                            key={`${variant.key}-${severity.key}`}
+                            variant={variant.key}
+                            severity={severity.key}
+                          >
+                            {severity.label} {variant.label.toLowerCase()}{" "}
+                            alert.
+                          </Alert>
+                        ))}
+                      </Stack>
+                    </Box>
+                  ))}
                 </Stack>
               </Box>
 

@@ -35,9 +35,7 @@ function parseDraft(input: unknown): LocalPaletteDraft | null {
       ? input.created_at
       : new Date().toISOString();
   const updatedAt =
-    typeof input.updated_at === "string"
-      ? input.updated_at
-      : createdAt;
+    typeof input.updated_at === "string" ? input.updated_at : createdAt;
   const paletteData = Array.isArray(input.palette_data)
     ? migratePaletteData(input.palette_data as HueSet[])
     : null;
@@ -170,7 +168,10 @@ export function saveLocalDraft(input: {
   return draft;
 }
 
-export function renameLocalDraft(draftId: string, name: string): LocalPaletteDraft {
+export function renameLocalDraft(
+  draftId: string,
+  name: string,
+): LocalPaletteDraft {
   const trimmedName = name.trim();
   if (!trimmedName) {
     throw new Error("Draft name is required");
@@ -190,7 +191,8 @@ export function renameLocalDraft(draftId: string, name: string): LocalPaletteDra
 
   payload.drafts[index] = updated;
   payload.drafts.sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+    (a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
   );
   writePayload(payload);
 
@@ -215,7 +217,8 @@ export function updateLocalDraftDescription(
 
   payload.drafts[index] = updated;
   payload.drafts.sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+    (a, b) =>
+      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
   );
   writePayload(payload);
 
