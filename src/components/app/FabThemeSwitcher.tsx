@@ -122,6 +122,12 @@ const tenantMetadata: Record<
     color: "#2E8B57",
     icon: "🌿",
   },
+  emerald: {
+    label: "Emerald",
+    description: "Emerald publishing brand",
+    color: "#00A291",
+    icon: "💎",
+  },
   ieee: {
     label: "IEEE",
     description: "Electrical and electronics engineering",

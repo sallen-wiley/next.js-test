@@ -2,6 +2,7 @@ export { defaultLogo } from "./default";
 export { wileyLogo } from "./wiley";
 export { wiley2025Logo } from "./wiley2025";
 export { sageLogo } from "./sage";
+export { emeraldLogo } from "./emerald";
 export { ieeeLogo } from "./ieee";
 export { reLightStackedLogo } from "./re-light-stacked";
 export { reBoldStackedLogo } from "./re-bold-stacked";

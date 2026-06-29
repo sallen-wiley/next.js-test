@@ -9,6 +9,7 @@ import {
   wileyLogo,
   wiley2025Logo,
   sageLogo,
+  emeraldLogo,
   ieeeLogo,
   reLightStackedLogo,
   reBoldStackedLogo,
@@ -23,6 +24,7 @@ const tenantLogos: Record<TenantType, LogoConfig> = {
   wiley: wileyLogo,
   wiley2025: wiley2025Logo,
   sage: sageLogo,
+  emerald: emeraldLogo,
   ieee: ieeeLogo,
   "re-light-stacked": reLightStackedLogo,
   "re-bold-stacked": reBoldStackedLogo,
@@ -81,6 +83,7 @@ export default function PrimaryLogo({
     // Light mode colors - tenant specific
     switch (activeTenant) {
       case "sage":
+      case "emerald":
         return "#001F83";
       case "ieee":
         return "#00629B";

@@ -26,6 +26,7 @@ export type TenantType =
   | "wiley"
   | "wiley2025"
   | "sage"
+  | "emerald"
   | "ieee"
   | "re-light-stacked"
   | "re-bold-stacked"
