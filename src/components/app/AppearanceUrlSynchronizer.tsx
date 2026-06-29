@@ -26,10 +26,14 @@ export default function AppearanceUrlSynchronizer() {
   const { currentTheme } = useThemeContext();
   const { currentTenant } = useLogoContext();
   const { mode } = useColorScheme();
-  const { pinned } = useAppearanceUrlSync();
+  const { pinned, pending, clearPendingSync } = useAppearanceUrlSync();
   const { applyAppearance } = useAppearanceController();
 
   useEffect(() => {
+    if (pending.active) {
+      return;
+    }
+
     if (parsedParams.theme || parsedParams.mode || parsedParams.logo) {
       applyAppearance(
         {
@@ -42,6 +46,7 @@ export default function AppearanceUrlSynchronizer() {
     }
   }, [
     applyAppearance,
+    pending.active,
     parsedParams.logo,
     parsedParams.mode,
     parsedParams.theme,
@@ -53,11 +58,50 @@ export default function AppearanceUrlSynchronizer() {
     }
 
     const nextParams = new URLSearchParams(searchParamsString);
+
+    if (pending.active) {
+      const pendingThemeSettled =
+        pending.theme === undefined || currentTheme === pending.theme;
+      const pendingModeSettled =
+        pending.mode === undefined || mode === pending.mode;
+      const pendingLogoSettled =
+        pending.logo === undefined || currentTenant === pending.logo;
+      const pendingThemeInUrl =
+        pending.theme === undefined || parsedParams.theme === pending.theme;
+      const pendingModeInUrl =
+        pending.mode === undefined || parsedParams.mode === pending.mode;
+      const pendingLogoInUrl =
+        pending.logo === undefined || parsedParams.logo === pending.logo;
+
+      if (
+        pendingThemeSettled &&
+        pendingModeSettled &&
+        pendingLogoSettled &&
+        pendingThemeInUrl &&
+        pendingModeInUrl &&
+        pendingLogoInUrl
+      ) {
+        clearPendingSync();
+      }
+    }
+
+    const usePendingTheme = pending.active && pending.theme !== undefined;
+    const usePendingMode = pending.active && pending.mode !== undefined;
+    const usePendingLogo = pending.active && pending.logo !== undefined;
+
     const targetTheme =
-      parsedParams.theme ?? (pinned.theme ? currentTheme : undefined);
-    const targetMode = parsedParams.mode ?? (pinned.mode ? mode : undefined);
+      parsedParams.theme ??
+      (usePendingTheme
+        ? pending.theme
+        : pinned.theme
+        ? currentTheme
+        : undefined);
+    const targetMode =
+      parsedParams.mode ??
+      (usePendingMode ? pending.mode : pinned.mode ? mode : undefined);
     const targetLogo =
-      parsedParams.logo ?? (pinned.logo ? currentTenant : undefined);
+      parsedParams.logo ??
+      (usePendingLogo ? pending.logo : pinned.logo ? currentTenant : undefined);
     let changed = false;
 
     if (targetTheme) {
@@ -116,6 +160,11 @@ export default function AppearanceUrlSynchronizer() {
     parsedParams.mode,
     parsedParams.theme,
     pathname,
+    clearPendingSync,
+    pending.active,
+    pending.logo,
+    pending.mode,
+    pending.theme,
     pinned.logo,
     pinned.mode,
     pinned.theme,

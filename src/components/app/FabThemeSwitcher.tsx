@@ -185,14 +185,17 @@ export const FabThemeSwitcher: React.FC = () => {
 
   const handleThemeChange = (themeName: ThemeName) => {
     applyAppearance({ theme: themeName }, { syncUrl: true, pinParams: true });
+    handleClose();
   };
 
   const handleModeChange = (newMode: ColorMode) => {
     applyAppearance({ mode: newMode }, { syncUrl: true, pinParams: true });
+    handleClose();
   };
 
   const handleTenantChange = (tenant: TenantType) => {
     applyAppearance({ logo: tenant }, { syncUrl: true, pinParams: true });
+    handleClose();
   };
 
   return (
