@@ -23,6 +23,7 @@ Comprehensive documentation for the Next.js + Material-UI Demo Project.
 
 - **[Storybook Guide](development/storybook-guide.md)** - Component development and story creation
 - **[Theme Guide](development/theme-guide.md)** - Theme development and customization workflow
+- **[Image Asset Workflow](development/image-asset-workflow.md)** - Source-first image optimization and generated runtime assets
 - **[Figma Code Connect Runbook](development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow, resume checklist, and component guardrails
 - **[Write Operations Upgrade](development/WRITE_OPERATIONS_UPGRADE.md)** - Adding write operations to the API
 - **[MUI Best Practices](development/MUI_BEST_PRACTICES.md)** - Material-UI implementation standards

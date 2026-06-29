@@ -106,6 +106,45 @@ Open [http://localhost:6006](http://localhost:6006) to view the Storybook interf
 - `npm run build-storybook` - Build Storybook for production
 - `npm run chromatic` - Deploy to Chromatic for visual testing
 
+### Image Pipeline Scripts
+
+- `npm run images:build` - Build optimized images from source assets into `public/images/generated`
+- `npm run images:clean` - Remove generated image derivatives and reset the generated folder
+
+The image build step runs automatically before `npm run dev` and `npm run build`.
+
+## Image Asset Workflow
+
+Use a source-first workflow:
+
+- Place high-resolution source assets in `assets/images/source/` (commit these)
+- Generated, optimized runtime assets are written to `public/images/generated/` (do not commit these)
+- Use `next/image` and point at generated paths (or use the generated manifest)
+
+The build script currently:
+
+- Converts supported raster formats (`.jpg`, `.jpeg`, `.png`, `.tif`, `.tiff`, `.webp`) to optimized `.webp`
+- Auto-rotates based on EXIF metadata
+- Resizes large images down to a max width of `2560px` without enlarging smaller images
+- Writes `public/images/generated/manifest.json` with `src`, `width`, and `height` metadata for each source asset
+
+Example usage with the generated manifest:
+
+```tsx
+import Image from "next/image";
+import imageManifest from "@/../public/images/generated/manifest.json";
+
+const hero = imageManifest["home/hero.jpg"];
+
+<Image
+  src={hero.src}
+  width={hero.width}
+  height={hero.height}
+  alt="Hero"
+  priority
+/>;
+```
+
 ## Key Technologies
 
 - **Next.js 15.3.6** - React framework with App Router

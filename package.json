@@ -7,6 +7,10 @@
     "npm": ">=9.0.0"
   },
   "scripts": {
+    "images:build": "node scripts/images/build-images.mjs",
+    "images:clean": "node scripts/images/build-images.mjs --clean",
+    "predev": "npm run images:build",
+    "prebuild": "npm run images:build",
     "dev": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev --turbopack",
     "dev:webpack": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev",
     "build": "next build",
@@ -37,6 +41,7 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "recharts": "^3.3.0",
+    "sharp": "^0.34.4",
     "swr": "^2.3.6"
   },
   "devDependencies": {

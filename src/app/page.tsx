@@ -84,23 +84,38 @@ function FeaturedCard({ href, icon, title, description }: FeaturedCardProps) {
 }
 
 function Hero() {
-  const imageUrl =
-    "https://images.unsplash.com/photo-1670859956807-049df98c4fb8?auto=format&fit=crop&w=1920&q=80";
+  const lightImageUrl = "/images/generated/pexels-googledeepmind-17485710.webp";
+  const darkImageUrl = "/images/generated/GettyImages-2223272168.webp";
+  const heroTextSx = [
+    {
+      display: "inline-block",
+      px: 1,
+      py: 0.5,
+      bgcolor: "background.paper",
+    },
+  ];
+
   return (
     <Box
-      sx={{
-        width: "100%",
-        minHeight: 240,
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundImage: `url(${imageUrl})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        mb: 4,
-      }}
+      sx={[
+        {
+          width: "100%",
+          minHeight: 240,
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundImage: `url(${lightImageUrl})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          mb: 4,
+        },
+        (theme) =>
+          theme.applyStyles("dark", {
+            backgroundImage: `url(${darkImageUrl})`,
+          }),
+      ]}
     >
       <Box
         sx={{
@@ -119,10 +134,10 @@ function Hero() {
             alignItems: "flex-start",
           }}
         >
-          <Typography variant="h4" component="h1" color="white">
+          <Typography variant="h4" component="h1" sx={heroTextSx}>
             Publishing Platforms UX Test Ground
           </Typography>
-          <Typography variant="body1" component="h2" color="white">
+          <Typography variant="body1" component="h2" sx={heroTextSx}>
             Explore, design, and test publishing solutions with real-world
             visuals
           </Typography>

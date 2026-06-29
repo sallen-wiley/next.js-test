@@ -166,7 +166,22 @@ npm run dev              # Start development server
 npm run build            # Build for production
 npm run storybook        # Start component development
 npm run lint             # Check code quality
+npm run images:build     # Build optimized images from source assets
+npm run images:clean     # Remove generated image derivatives
 ```
+
+## Image Asset Setup
+
+Use this structure for application images:
+
+- Source assets (high-res, committed): `assets/images/source/`
+- Generated runtime assets (optimized, ignored): `public/images/generated/`
+
+Workflow:
+
+1. Add source files to `assets/images/source/` (nested folders are supported)
+2. Run `npm run images:build` (also runs automatically before `npm run dev` and `npm run build`)
+3. Use generated paths from `public/images/generated/manifest.json` with `next/image`
 
 ## Getting Help
 
