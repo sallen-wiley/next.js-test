@@ -47,9 +47,7 @@ export const CardsSection = React.memo(() => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Card>
             <CardContent>
-              <Typography variant="h6" sx={{ typography: "mono" as const }}>
-                Basic Card
-              </Typography>
+              <Typography variant="h6">Basic Card</Typography>
               <Typography variant="body2" color="text.secondary">
                 Use cards to group related content and actions.
               </Typography>
@@ -69,9 +67,7 @@ export const CardsSection = React.memo(() => {
               image="https://picsum.photos/seed/mui-card/600/300"
             />
             <CardContent>
-              <Typography variant="h6" sx={{ typography: "mono" as const }}>
-                Media Card
-              </Typography>
+              <Typography variant="h6">Media Card</Typography>
               <Typography variant="body2" color="text.secondary">
                 Media can be paired with title, description, and actions.
               </Typography>
@@ -86,9 +82,7 @@ export const CardsSection = React.memo(() => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Card variant="outlined">
             <CardContent>
-              <Typography variant="h6" sx={{ typography: "mono" as const }}>
-                Outlined Card
-              </Typography>
+              <Typography variant="h6">Outlined Card</Typography>
               <Typography variant="body2" color="text.secondary">
                 Outlined variant for lower-emphasis surfaces in dense layouts.
               </Typography>

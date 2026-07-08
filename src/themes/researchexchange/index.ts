@@ -67,15 +67,6 @@ let theme = createTheme({
   cssVariables: {
     colorSchemeSelector: "data", // Enable manual mode switching
   },
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 480,
-      md: 641,
-      lg: 1081,
-      xl: 1441,
-    },
-  },
   palette: {
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
@@ -452,62 +443,6 @@ theme = createTheme(theme, {
           paddingLeft: theme.spacing(4),
           paddingRight: theme.spacing(4),
           paddingBottom: theme.spacing(4),
-        }),
-      },
-    },
-
-    MuiContainer: {
-      styleOverrides: {
-        root: ({ theme }: { theme: Theme }) => ({
-          paddingLeft: "15px",
-          paddingRight: "15px",
-          "&.MuiContainer-disableGutters": {
-            paddingLeft: 0,
-            paddingRight: 0,
-          },
-          [theme.breakpoints.up("sm")]: {
-            paddingLeft: "15px",
-            paddingRight: "15px",
-          },
-          [theme.breakpoints.up("md")]: {
-            paddingLeft: "15px",
-            paddingRight: "15px",
-          },
-          [theme.breakpoints.up("lg")]: {
-            paddingLeft: "15px",
-            paddingRight: "15px",
-          },
-          [theme.breakpoints.up("xl")]: {
-            paddingLeft: "15px",
-            paddingRight: "15px",
-          },
-        }),
-        // Set container max-widths when 'Fixed' prop is used (Fixed should be used by default unless specified otherwise)
-        fixed: ({ theme }: { theme: Theme }) => ({
-          maxWidth: "100%",
-          [theme.breakpoints.up("sm")]: {
-            maxWidth: "100%",
-          },
-          [theme.breakpoints.up("md")]: {
-            maxWidth: "100%",
-          },
-          [theme.breakpoints.up("lg")]: {
-            maxWidth: "1290px",
-          },
-          [theme.breakpoints.up("xl")]: {
-            maxWidth: "1630px",
-          },
-        }),
-        // If using fluid or 'fixed=false' containers, ensure container max-widths are same as fixed max-widths
-        maxWidthLg: ({ theme }: { theme: Theme }) => ({
-          [theme.breakpoints.up("lg")]: {
-            maxWidth: "1290px",
-          },
-        }),
-        maxWidthXl: ({ theme }: { theme: Theme }) => ({
-          [theme.breakpoints.up("xl")]: {
-            maxWidth: "1630px",
-          },
         }),
       },
     },

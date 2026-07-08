@@ -96,6 +96,13 @@ export default function KitchenSink() {
               flexWrap="wrap"
               sx={{ mt: 2 }}
             >
+              <Button
+                href="/kitchen-sink/container"
+                size="small"
+                variant="contained"
+              >
+                Container Deep Dive
+              </Button>
               {categoryLinks.map((category) => (
                 <Button
                   key={category.id}
@@ -229,7 +236,8 @@ export default function KitchenSink() {
               Navigation
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Components that move users between destinations and workflow steps.
+              Components that move users between destinations and workflow
+              steps.
             </Typography>
             <Divider sx={{ mt: 2 }} />
           </Grid>
