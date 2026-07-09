@@ -95,7 +95,7 @@ Email: reviewer@test.com
 Password: test1234
 ```
 
-See [Test User Guide](docs/setup/TEST_USER_GUIDE.md) for complete user setup instructions.
+For user setup details, see [Documentation Hub](docs/README.md) and Supabase Authentication > Users.
 
 ## Key Pages to Explore
 
@@ -143,7 +143,7 @@ npm install
 - Verify the Supabase URL and key are correct
 - Check that your Supabase project is active
 - Check browser console for specific error messages
-- Verify database tables are created (see [Database Setup](docs/setup/database-setup.md))
+- Verify database tables are created (see [Database SQL Scripts](database/README.md))
 
 ## Project Structure
 
@@ -199,7 +199,7 @@ If you run into issues:
 
 1. Use the theme switcher FAB (bottom-right corner)
 2. Test all themes in both light and dark modes
-3. Follow the `THEME_COPY_PASTE_GUIDE.md` for creating new themes
+3. Follow the `docs/development/theme-guide.md` guide for creating new themes
 
 ### Component Development
 

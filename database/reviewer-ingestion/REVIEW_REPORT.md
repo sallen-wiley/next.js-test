@@ -128,7 +128,7 @@ All reviewers contain required fields for ingestion:
 
 ### ✅ Deduplication Strategy
 
-The ingestion script ([ingest.js](database/reviewer-ingestion/ingest.js)) uses proper deduplication:
+The ingestion script ([ingest.js](ingest.js)) uses proper deduplication:
 
 1. **Manuscripts:** Deduplicated by `systemId` (UUID)
 2. **Reviewers:** Deduplicated by `email` (unique constraint)
@@ -299,7 +299,7 @@ ls reviewer_suggestions/*.json | parallel -j 4 node database/reviewer-ingestion/
 ### 2. Pre-Ingestion Checklist
 
 - [ ] Verify Supabase connection (`.env.local` configured)
-- [ ] Confirm database schema matches script expectations (see [database/README.md](database/README.md))
+- [ ] Confirm database schema matches script expectations (see [database/README.md](../README.md))
 - [ ] Run test ingestion on 1 file first
 - [ ] Monitor logs for warnings/errors
 - [ ] Check database for expected row counts

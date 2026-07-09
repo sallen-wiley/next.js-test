@@ -15,8 +15,20 @@ For a **brand new database**, run these files **in order**:
 -- 2. Set up Row Level Security policies
 \i 02_rls_policies.sql
 
--- 3. (Optional) Populate with sample data
-\i 03_seed_data.sql
+-- 3. Apply status model updates
+\i 03_status_model_update.sql
+
+-- 4. Move conflict data into reviewer matches
+\i 04_move_conflicts_to_matches.sql
+
+-- 5. Drop deprecated columns
+\i 05_drop_deprecated_columns.sql
+
+-- 6. Add publication matching tables
+\i 06_publication_matches.sql
+
+-- 7. Add palette storage
+\i 07_palette_storage.sql
 ```
 
 ### Reset Existing Database
@@ -27,7 +39,7 @@ To **completely reset** an existing database:
 -- WARNING: Deletes all data!
 \i 00_cleanup.sql
 
--- Then run setup files 01, 02, 03 as above
+-- Then run setup files 01 through 07 as above
 ```
 
 ## File Organization
@@ -44,7 +56,7 @@ To **completely reset** an existing database:
 | `05_drop_deprecated_columns.sql`   | Removes deprecated columns                     | Fifth     |
 | `06_publication_matches.sql`       | Adds publication matching system               | Sixth     |
 | `07_palette_storage.sql`           | Adds palette storage for HSV Palette Generator | Seventh   |
-| `99_export_schema.sql`             | Exports current schema to markdown             | Utility   |
+| `99_export_schema.sql`             | SQL helper for schema metadata exports         | Utility   |
 
 ### Legacy Files (archive folder)
 
@@ -167,7 +179,7 @@ has_any_role(ARRAY['admin', 'editor']) → boolean
 
 **review_invitations.status**:
 
-- `pending`, `accepted`, `declined`, `expired`, `completed`, `overdue`
+- `pending`, `accepted`, `declined`, `report_submitted`, `invalidated`, `revoked`
 
 **potential_reviewers.availability_status**:
 
@@ -192,14 +204,15 @@ has_any_role(ARRAY['admin', 'editor']) → boolean
 
 ## Export Current Schema
 
-To update schema documentation:
+To generate up-to-date schema metadata JSON:
 
-```sql
--- Run this in Supabase SQL Editor
-\i 99_export_schema.sql
-
--- Copy results to: reference/database-schema-export.md
+```bash
+node database/reviewer-ingestion/export-schema.js
 ```
+
+This writes timestamped exports to `database/schema-exports/`.
+
+You can also run `99_export_schema.sql` manually in Supabase SQL Editor when needed.
 
 ## Common Tasks
 
@@ -342,11 +355,11 @@ WHERE status = 'under_review';
 
 ## Best Practices
 
-1. **Always run migrations in order** (00 → 01 → 02 → 03)
+1. **Always run migrations in order** (00 → 01 → ... → 07)
 2. **Test in development** before running in production
 3. **Backup before cleanup** - `00_cleanup.sql` is destructive
 4. **Export schema regularly** using `99_export_schema.sql`
-5. **Keep documentation updated** in `reference/database-schema-export.md`
+5. **Keep schema exports current** in `database/schema-exports/`
 6. **Use transactions** when running multiple statements:
    ```sql
    BEGIN;
@@ -356,6 +369,6 @@ WHERE status = 'under_review';
 
 ## Support
 
-- **Schema Reference**: See `reference/database-schema-export.md`
+- **Schema Reference**: See `database/schema-exports/README.md`
 - **Field Assumptions**: See `docs/development/field-assumptions.md`
-- **Data Setup Guide**: See `docs/setup/DATA_SETUP_GUIDE.md`
+- **Setup Workflow**: See `SETUP_GUIDE.md`

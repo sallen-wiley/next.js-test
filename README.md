@@ -214,10 +214,24 @@ Behavior rules:
 
 ### Documentation
 
+#### Canonical Docs (Day-To-Day Order)
+
+1. **[Setup Guide](SETUP_GUIDE.md)** - Start here for local setup and day-to-day run workflow
+2. **[Database SQL Scripts](database/README.md)** - Migration order, RLS model, and operational queries
+3. **[Schema Exports](database/schema-exports/README.md)** - Current schema export workflow and JSON metadata format
+4. **[Reviewer Ingestion Scripts](database/reviewer-ingestion/README.md)** - JSON ingestion, cleanup, and schema export tooling
+5. **[RoleGuard Usage](docs/ROLEGUARD_USAGE.md)** - Role-based UI access patterns in the app
+6. **[Theme Guide](docs/development/theme-guide.md)** - Theme development and customization workflow
+7. **[Storybook Guide](docs/development/storybook-guide.md)** - Component development and story authoring workflow
+8. **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow
+
+#### Additional References
+
 - **[Setup Guide](SETUP_GUIDE.md)** - Complete setup and development workflow
 - **[Documentation Hub](docs/README.md)** - Comprehensive documentation index
-- **[Authentication Guide](docs/setup/authentication-guide.md)** - Authentication & RBAC system
-- **[Database Setup](docs/setup/database-setup.md)** - Supabase configuration and schema
+- **[Database SQL Scripts](database/README.md)** - Migration order, RLS model, and operational queries
+- **[Schema Exports](database/schema-exports/README.md)** - Current schema export workflow and JSON metadata format
+- **[RoleGuard Usage](docs/ROLEGUARD_USAGE.md)** - Role-based UI access patterns in the app
 - **[Theme Development](docs/development/theme-guide.md)** - Theme creation and customization
 - **[Storybook Guide](docs/development/storybook-guide.md)** - Component development workflow
 - **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Property-first MCP flow, resume checklist, and reliable publish process

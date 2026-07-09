@@ -138,7 +138,7 @@ If needed to revert:
 ```typescript
 export async function getManuscriptById(
   manuscriptId: string,
-  userId: string
+  userId: string,
 ): Promise<Manuscript | null> {
   const isAdmin = await isUserAdmin(userId);
 
@@ -201,6 +201,6 @@ A: Check the `user_role` field:
 
 For questions or issues, refer to:
 
-- Supabase schema: `reference/database-schema-export.md`
+- Supabase schema: `database/schema-exports/README.md`
 - RBAC implementation: `src/lib/rbac.ts`
 - Role types: `src/types/roles.ts`

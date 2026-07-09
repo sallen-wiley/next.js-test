@@ -10,7 +10,11 @@ These files are kept for **historical reference only**. They represent the evolu
 
 - `01_core_tables.sql`
 - `02_rls_policies.sql`
-- `03_seed_data.sql`
+- `03_status_model_update.sql`
+- `04_move_conflicts_to_matches.sql`
+- `05_drop_deprecated_columns.sql`
+- `06_publication_matches.sql`
+- `07_palette_storage.sql`
 
 ## Archive Contents
 
@@ -28,7 +32,7 @@ These files are kept for **historical reference only**. They represent the evolu
 - `remove_editor_id_from_manuscripts.sql` - Removed editor_id FK (superseded by 01_core_tables.sql)
 - `reviewer_matches_rls.sql` - RLS policies (superseded by 02_rls_policies.sql)
 - `schema.sql` - Original schema (superseded by 01_core_tables.sql)
-- `seed_reviewer_matches.sql` - Sample data (superseded by 03_seed_data.sql)
+- `seed_reviewer_matches.sql` - Sample data utility from legacy flow (superseded by current ingestion scripts)
 - `setup.sql` - Original setup script (superseded by 01_core_tables.sql)
 - `update_manuscript_statuses.sql` - Status enum updates (superseded by 01_core_tables.sql)
 - `user_manuscripts_migration.sql` - User-manuscript junction table (superseded by 01_core_tables.sql)
