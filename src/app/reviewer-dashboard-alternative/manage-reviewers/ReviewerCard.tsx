@@ -118,6 +118,23 @@ function ReviewerCard({
                   }}
                 />
               </Stack>
+              {reviewer.searchMatchReasons && reviewer.searchMatchReasons.length > 0 && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    overflow: "hidden",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                  }}
+                >
+                  <Box component="span" fontWeight={700}>
+                    Matched on:
+                  </Box>{" "}
+                  {reviewer.searchMatchReasons.join(" • ")}
+                </Typography>
+              )}
 
               {/* Row 2: Nested Grid - Reviewer Details + Metrics */}
               <Grid container spacing={2} alignItems="flex-start">

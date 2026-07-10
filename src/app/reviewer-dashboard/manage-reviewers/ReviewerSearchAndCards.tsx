@@ -156,7 +156,7 @@ export function ReviewerSearchAndCards({
                   label="Search for reviewers"
                   value={localSearchTerm}
                   onChange={(e) => setLocalSearchTerm(e.target.value)}
-                  placeholder="Search by keyword, email or name..."
+                  placeholder="Search by name, email, affiliation, or keyword..."
                   slotProps={{
                     input: { sx: { backgroundColor: "background.paper" } },
                   }}
