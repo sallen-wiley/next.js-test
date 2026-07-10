@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { AuthProvider, useAuth } from "./AuthProvider";
 import SupabaseAuth from "./SupabaseAuth";
 import FullPageLoader from "../app/FullPageLoader";
+import { supabaseConfigured } from "@/lib/supabase";
+import { useDevAutoLogin } from "@/hooks/useDevAutoLogin";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -39,6 +41,12 @@ function AuthContent({
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
+  const { attempting: autoLoginAttempting } = useDevAutoLogin({
+    enabled: enableAuth,
+    hasUser: !!user,
+    loading,
+  });
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -60,7 +68,7 @@ function AuthContent({
     return <>{children}</>;
   }
 
-  if (loading) {
+  if (loading || autoLoginAttempting) {
     return <FullPageLoader message="Authenticating..." />;
   }
 
@@ -76,11 +84,18 @@ function AuthContent({
 // Main auth wrapper that conditionally enables authentication
 export default function AuthWrapper({ children }: AuthWrapperProps) {
   const [mounted, setMounted] = useState(false);
-  const enableAuth = process.env.NEXT_PUBLIC_ENABLE_AUTH === "true";
+  const authEnabledInEnv = process.env.NEXT_PUBLIC_ENABLE_AUTH === "true";
+  const enableAuth = authEnabledInEnv && supabaseConfigured;
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    if (authEnabledInEnv && !supabaseConfigured) {
+      console.warn(
+        "Authentication is enabled but Supabase environment variables are missing. Running without auth.",
+      );
+    }
+  }, [authEnabledInEnv]);
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {

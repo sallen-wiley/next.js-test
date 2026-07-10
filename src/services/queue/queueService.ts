@@ -12,7 +12,9 @@ export async function getManuscriptQueue(
   // Fetch queue items without join
   const { data, error } = await supabase
     .from("invitation_queue")
-    .select("*")
+    .select(
+      "id, manuscript_id, reviewer_id, queue_position, created_date, scheduled_send_date, priority, notes",
+    )
     .eq("manuscript_id", manuscriptId)
     .order("queue_position", { ascending: true });
 

@@ -15,7 +15,9 @@ export async function getManuscriptInvitations(
   // Fetch invitations without join
   const { data, error } = await supabase
     .from("review_invitations")
-    .select("*")
+    .select(
+      "id, manuscript_id, reviewer_id, invited_date, due_date, status, response_date, queue_position, invitation_round, notes, reminder_count, estimated_completion_date, invitation_expiration_date, report_invalidated_date",
+    )
     .eq("manuscript_id", manuscriptId)
     .order("invited_date", { ascending: false });
 

@@ -8,7 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseConfigured } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -29,6 +29,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -49,6 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!supabaseConfigured) {
+      return { error: new Error("Supabase is not configured.") };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -57,6 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
+    if (!supabaseConfigured) {
+      return { error: new Error("Supabase is not configured.") };
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -65,10 +78,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    if (!supabaseConfigured) {
+      return;
+    }
+
     await supabase.auth.signOut();
   }, []);
 
   const resetPasswordForEmail = useCallback(async (email: string) => {
+    if (!supabaseConfigured) {
+      return { error: new Error("Supabase is not configured.") };
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
     });
@@ -76,6 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updatePassword = useCallback(async (password: string) => {
+    if (!supabaseConfigured) {
+      return { error: new Error("Supabase is not configured.") };
+    }
+
     const { error } = await supabase.auth.updateUser({
       password,
     });

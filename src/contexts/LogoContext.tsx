@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import type { TenantType } from "@/components/product/logos/types";
 import {
   availableTenants,
@@ -55,16 +62,19 @@ export const LogoProvider: React.FC<LogoProviderProps> = ({
   }, []);
 
   // Save tenant to localStorage when it changes
-  const setTenant = (tenant: TenantType) => {
+  const setTenant = useCallback((tenant: TenantType) => {
     setCurrentTenant(tenant);
     localStorage.setItem("app-logo-tenant", tenant);
-  };
+  }, []);
 
-  const contextValue: LogoContextType = {
-    currentTenant,
-    setTenant,
-    availableTenants,
-  };
+  const contextValue: LogoContextType = useMemo(
+    () => ({
+      currentTenant,
+      setTenant,
+      availableTenants,
+    }),
+    [currentTenant, setTenant],
+  );
 
   return (
     <LogoContext.Provider value={contextValue}>{children}</LogoContext.Provider>
