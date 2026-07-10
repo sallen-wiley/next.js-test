@@ -332,20 +332,16 @@ export async function checkReviewersPublishedInJournal(
     batches.map(async (batch) => {
       const { data } = await supabase
         .from("reviewer_publications")
-        .select("reviewer_id, journal_name")
-        .in("reviewer_id", batch);
+        .select("reviewer_id")
+        .in("reviewer_id", batch)
+        .ilike("journal_name", journalName);
       return data || [];
     }),
   );
 
   // Flatten results and build map
   results.flat().forEach((pub) => {
-    if (
-      pub.journal_name &&
-      pub.journal_name.toLowerCase() === journalName.toLowerCase()
-    ) {
-      publishedInJournal.set(pub.reviewer_id, true);
-    }
+    publishedInJournal.set(pub.reviewer_id, true);
   });
 
   return publishedInJournal;
