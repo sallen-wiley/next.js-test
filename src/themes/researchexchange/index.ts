@@ -71,7 +71,7 @@ let theme = createTheme({
     // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: brandColors.brandColors["Primary Heritage"][800],
+      main: brandColors.brandColors["Primary Heritage"][700],
     },
     secondary: {
       main: brandColors.brandColors.Neutral[800],
