@@ -53,7 +53,6 @@ interface WorkflowFormData {
   workflow: WorkflowStep[];
 }
 
-// Mock data for dropdowns
 const assignmentMethods = ["Automatic assignment", "Manual email invitation"];
 
 const issueTypeOptions = ["Regular issue", "Special issue"];

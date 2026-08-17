@@ -11,6 +11,7 @@ import {
   calculateAcceptanceRate,
   daysSince,
 } from "@/utils/reviewerMetrics";
+import { getReviewerSearchMatchReasons } from "@/utils/reviewerSearch";
 import {
   getManuscriptById,
   getManuscriptQueue,
@@ -91,8 +92,6 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
 
-// Mock data removed - using real database queries
-
 export default function ReviewerInvitationDashboard() {
   // Force Phenom theme with light mode on this page (resets on each visit, allows manual switching during session)
   usePageTheme("phenom", { mode: "light" });
@@ -172,22 +171,6 @@ export default function ReviewerInvitationDashboard() {
     fetchManuscript();
   }, [manuscriptId, router]);
 
-  // Fetch queue data when manuscript is loaded
-  React.useEffect(() => {
-    async function fetchQueue() {
-      if (!manuscriptId) return;
-
-      try {
-        const queueData = await getManuscriptQueue(manuscriptId);
-        setSimulatedQueue(queueData);
-      } catch (error) {
-        console.error("Error fetching queue:", error);
-      }
-    }
-
-    fetchQueue();
-  }, [manuscriptId]);
-
   // State for real database data
   const [suggestedReviewers, setSuggestedReviewers] = React.useState<
     PotentialReviewerWithMatch[]
@@ -195,6 +178,7 @@ export default function ReviewerInvitationDashboard() {
   const [allReviewers, setAllReviewers] = React.useState<PotentialReviewer[]>(
     [],
   );
+  const [allReviewersLoaded, setAllReviewersLoaded] = React.useState(false);
   const [invitations, setInvitations] = React.useState<ReviewInvitation[]>([]);
   const [publishedInJournalMap, setPublishedInJournalMap] = React.useState<
     Map<string, boolean>
@@ -250,31 +234,24 @@ export default function ReviewerInvitationDashboard() {
         const [
           reviewersData,
           invitationsData,
-          allReviewersData,
           statusData,
           queueControlData,
+          queueData,
         ] = await Promise.all([
           getManuscriptReviewers(manuscriptId),
           getManuscriptInvitations(manuscriptId),
-          getAllReviewers(),
           getReviewersWithStatus(manuscriptId),
           getQueueControlState(manuscriptId),
+          getManuscriptQueue(manuscriptId),
         ]);
         setSuggestedReviewers(reviewersData);
         setInvitations(invitationsData);
-        setAllReviewers(allReviewersData);
         setReviewersWithStatus(statusData);
         setQueueControl(queueControlData);
-
-        // Check journal publications for all reviewers
-        if (manuscript.journal && allReviewersData.length > 0) {
-          const reviewerIds = allReviewersData.map((r) => r.id);
-          const journalMap = await checkReviewersPublishedInJournal(
-            reviewerIds,
-            manuscript.journal,
-          );
-          setPublishedInJournalMap(journalMap);
-        }
+        setSimulatedQueue(queueData);
+        setAllReviewers([]);
+        setAllReviewersLoaded(false);
+        setPublishedInJournalMap(new Map());
       } catch (error) {
         console.error("Error fetching data:", error);
         showSnackbar("Failed to load data", "error");
@@ -288,6 +265,41 @@ export default function ReviewerInvitationDashboard() {
 
   const [sortBy] = React.useState<string>("match_score");
   const [searchTerm, setSearchTerm] = React.useState("");
+
+  React.useEffect(() => {
+    async function loadAllReviewersForSearch() {
+      if (
+        !manuscriptId ||
+        !manuscript ||
+        allReviewersLoaded ||
+        searchTerm.trim().length === 0
+      ) {
+        return;
+      }
+
+      try {
+        const allReviewersData = await getAllReviewers();
+        setAllReviewers(allReviewersData);
+        setAllReviewersLoaded(true);
+
+        if (manuscript.journal && allReviewersData.length > 0) {
+          const reviewerIds = allReviewersData.map((r) => r.id);
+          const journalMap = await checkReviewersPublishedInJournal(
+            reviewerIds,
+            manuscript.journal,
+          );
+          setPublishedInJournalMap(journalMap);
+        }
+      } catch (error) {
+        console.error("Error loading all reviewers:", error);
+        setSnackbarMessage("Failed to load reviewer directory");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    }
+
+    loadAllReviewersForSearch();
+  }, [allReviewersLoaded, manuscriptId, manuscript, searchTerm]);
 
   // Initialize filters with default values
   const [filters, setFilters] = React.useState<
@@ -374,38 +386,28 @@ export default function ReviewerInvitationDashboard() {
 
   // Filter and sort reviewers
   const filteredReviewers = React.useMemo(() => {
-    // Pre-lowercase the search term once
-    const search = searchTerm.toLowerCase();
+    const search = searchTerm.trim().toLowerCase();
     const hasSearchTerm = search.length > 0;
 
-    const filtered = potentialReviewers.filter((reviewer) => {
+    const filtered = potentialReviewers.flatMap((reviewer) => {
+      const searchMatchReasons = hasSearchTerm
+        ? getReviewerSearchMatchReasons(reviewer, search)
+        : undefined;
+
       // Exclude reviewers who are already invited or queued
       if (invitedOrQueuedIds.has(reviewer.id)) {
-        return false;
+        return [];
       }
 
       // Filter by search term first - if searching, bypass match_score filter
       if (hasSearchTerm) {
-        // Pre-lowercase reviewer fields for comparison
-        const nameLower = reviewer.name.toLowerCase();
-        const affiliationLower = reviewer.affiliation.toLowerCase();
-
-        const matchesSearch =
-          nameLower.includes(search) ||
-          affiliationLower.includes(search) ||
-          reviewer.expertise_areas.some((area) =>
-            area.toLowerCase().includes(search),
-          );
-
-        // If doesn't match search, exclude immediately
-        if (!matchesSearch) {
-          return false;
+        if (!searchMatchReasons || searchMatchReasons.length === 0) {
+          return [];
         }
-        // If matches search, continue to other filters below
       } else {
         // When NOT searching, only show reviewers with a match relationship (match_score > 0)
         if (reviewer.match_score === 0) {
-          return false;
+          return [];
         }
       }
 
@@ -414,12 +416,12 @@ export default function ReviewerInvitationDashboard() {
         filters.hideUnavailable &&
         reviewer.availability_status === "unavailable"
       ) {
-        return false;
+        return [];
       }
 
       // Filter by institutional email
       if (filters.institutionalEmail && !isInstitutionalEmail(reviewer.email)) {
-        return false;
+        return [];
       }
 
       // Filter by country
@@ -429,7 +431,7 @@ export default function ReviewerInvitationDashboard() {
           ?.toLowerCase()
           .includes(filters.country.toLowerCase())
       ) {
-        return false;
+        return [];
       }
 
       // Filter by response time
@@ -438,7 +440,7 @@ export default function ReviewerInvitationDashboard() {
           ? reviewer.average_response_time_hours / 24
           : reviewer.average_review_time_days || 0;
         if (responseTimeDays > filters.responseTimeMax) {
-          return false;
+          return [];
         }
       }
 
@@ -446,7 +448,7 @@ export default function ReviewerInvitationDashboard() {
       if (filters.reviewsLast12Months > 0) {
         const recentReviews = reviewer.publication_count_last_year || 0;
         if (recentReviews < filters.reviewsLast12Months) {
-          return false;
+          return [];
         }
       }
 
@@ -458,14 +460,14 @@ export default function ReviewerInvitationDashboard() {
           totalReviews < filters.totalReviewsMin ||
           totalReviews > filters.totalReviewsMax
         ) {
-          return false;
+          return [];
         }
       }
 
       // Filter by assigned manuscripts
       if (filters.assignedManuscriptsMax > 0) {
         if (reviewer.current_review_load > filters.assignedManuscriptsMax) {
-          return false;
+          return [];
         }
       }
 
@@ -479,13 +481,13 @@ export default function ReviewerInvitationDashboard() {
           filters.publicationYearFrom > 0 &&
           pubYearTo < filters.publicationYearFrom
         ) {
-          return false;
+          return [];
         }
         if (
           filters.publicationYearTo > 0 &&
           pubYearFrom > filters.publicationYearTo
         ) {
-          return false;
+          return [];
         }
       }
 
@@ -493,21 +495,23 @@ export default function ReviewerInvitationDashboard() {
       if (filters.publishedArticlesMin > 0) {
         const totalPublications = reviewer.total_publications || 0;
         if (totalPublications < filters.publishedArticlesMin) {
-          return false;
+          return [];
         }
       }
 
       // Filter by published in journal
       if (filters.publishedInJournal) {
         if (!reviewer.published_in_journal) {
-          return false;
+          return [];
         }
       }
 
-      // Note: inAuthorsGroup filter is disabled (coming soon)
-
-      // All filters passed
-      return true;
+      return [
+        {
+          ...reviewer,
+          searchMatchReasons,
+        },
+      ];
     });
 
     // Sort reviewers
@@ -666,21 +670,21 @@ export default function ReviewerInvitationDashboard() {
   const refreshReviewerLists = async () => {
     if (!manuscriptId || !manuscript) return;
     try {
-      const [reviewersData, allReviewersData] = await Promise.all([
-        getManuscriptReviewers(manuscriptId),
-        getAllReviewers(),
-      ]);
+      const reviewersData = await getManuscriptReviewers(manuscriptId);
       setSuggestedReviewers(reviewersData);
-      setAllReviewers(allReviewersData);
 
-      // Also refresh journal publications if needed
-      if (manuscript.journal && allReviewersData.length > 0) {
-        const reviewerIds = allReviewersData.map((r) => r.id);
-        const journalMap = await checkReviewersPublishedInJournal(
-          reviewerIds,
-          manuscript.journal,
-        );
-        setPublishedInJournalMap(journalMap);
+      if (allReviewersLoaded) {
+        const allReviewersData = await getAllReviewers();
+        setAllReviewers(allReviewersData);
+
+        if (manuscript.journal && allReviewersData.length > 0) {
+          const reviewerIds = allReviewersData.map((r) => r.id);
+          const journalMap = await checkReviewersPublishedInJournal(
+            reviewerIds,
+            manuscript.journal,
+          );
+          setPublishedInJournalMap(journalMap);
+        }
       }
     } catch (error) {
       console.error("Error refreshing reviewer lists:", error);

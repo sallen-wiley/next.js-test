@@ -1,9 +1,28 @@
 // Supabase client configuration with SSR support
-import { createClient } from "@/utils/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/utils/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UserProfile } from "@/types/roles";
 
-// Create the client - now uses SSR-compatible version
-export const supabase = createClient();
+let cachedSupabaseClient: SupabaseClient | null = null;
+
+const getSupabaseClient = (): SupabaseClient => {
+  if (!cachedSupabaseClient) {
+    cachedSupabaseClient = createClient();
+  }
+  return cachedSupabaseClient;
+};
+
+export const supabaseConfigured = isSupabaseConfigured();
+
+// Lazily resolve the browser client so modules that only import types don't
+// crash at startup when env vars are missing.
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const client = getSupabaseClient();
+    const value = Reflect.get(client, prop, client);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
 
 // Type definitions for reviewer invitation system
 
@@ -172,6 +191,7 @@ export interface ManuscriptWithUserRole extends Manuscript {
 export interface PotentialReviewerWithMatch extends PotentialReviewer {
   match_score: number; // 0-1, specific to a manuscript from reviewer_manuscript_matches (display as percentage)
   conflicts_of_interest: string; // Manuscript-specific conflicts from reviewer_manuscript_matches
+  searchMatchReasons?: string[]; // UI-only explanations for why a reviewer matched the current search term
 
   // Calculated fields
   email_is_institutional: boolean; // True if email domain is NOT a public provider (gmail, yahoo, etc.)
