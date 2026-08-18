@@ -2,6 +2,7 @@
 import { createTheme, Theme, Palette } from "@mui/material/styles";
 import type { CSSProperties } from "react";
 import * as brandColors from "./brandColors";
+import { inputBaseClasses } from "@mui/material/InputBase";
 
 // Type augmentations for custom theme properties
 declare module "@mui/material/styles" {
@@ -446,8 +447,32 @@ theme = createTheme(theme, {
         }),
       },
     },
-    MuiTextField: {
-      // Remove defaultProps that depend on JS timing - we'll handle this via CSS
+    MuiInputBase: {
+      styleOverrides: {
+        input: ({ theme }: { theme: Theme }) => ({
+          "&::placeholder": {
+            ...theme.applyStyles("light", {
+              color: theme.colorSchemes.light.palette.text.disabled, // Use disabled text color for placeholder
+              opacity: 1,
+            }),
+            ...theme.applyStyles("dark", {
+              color: theme.colorSchemes.dark.palette.text.disabled, // Use disabled text color for placeholder
+              opacity: 1,
+            }),
+          },
+          [`label[data-shrink=false] + .${inputBaseClasses.formControl} &:focus::placeholder`]:
+            {
+              ...theme.applyStyles("light", {
+                color: theme.colorSchemes.light.palette.text.disabled, // Use disabled text color for placeholder
+                opacity: 1,
+              }),
+              ...theme.applyStyles("dark", {
+                color: theme.colorSchemes.dark.palette.text.disabled, // Use disabled text color for placeholder
+                opacity: 1,
+              }),
+            },
+        }),
+      },
     },
 
     MuiInputLabel: {
