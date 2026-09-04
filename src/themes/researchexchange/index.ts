@@ -69,25 +69,36 @@ let theme = createTheme({
     colorSchemeSelector: "data", // Enable manual mode switching
   },
   palette: {
-    // Base palette configuration that applies to light mode and gets automatically adapted for dark mode
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
     primary: {
-      main: brandColors.brandColors["Primary Heritage"][700],
+      main: brandColors.brandColors["Primary Heritage"][700], // #007A76
+      light: brandColors.brandColors["Primary Heritage"][400], // #00BFB1
+      dark: brandColors.brandColors["Primary Heritage"][900], // #003B44 — contained-button hover
     },
     secondary: {
-      main: brandColors.brandColors.Neutral[800],
+      main: brandColors.brandColors.Neutral[800], // #302F2F
+      light: brandColors.brandColors.Neutral[400], // #C9C7C2
+      dark: brandColors.brandColors.Neutral[900], // #08040D
     },
     error: {
-      main: brandColors.brandColors["System Negative"][600],
+      main: brandColors.brandColors["System Negative"][600], // #CF1322
+      light: brandColors.brandColors["System Negative"][200], // #FFA39E
+      dark: brandColors.brandColors["System Negative"][800], // #820014
     },
     warning: {
-      main: brandColors.brandColors["System Alert"][700],
+      main: brandColors.brandColors["System Alert"][700], // #AB6200
+      light: brandColors.brandColors["System Alert"][300], // #FFD666
+      dark: brandColors.brandColors["System Alert"][900], // #613400
     },
     info: {
-      main: brandColors.brandColors["System Info"][800],
+      main: brandColors.brandColors["System Info"][800], // #0961AF
+      light: brandColors.brandColors["System Info"][400], // #85AEFA
+      dark: brandColors.brandColors["System Info"][900], // #00568B
     },
     success: {
-      main: brandColors.brandColors["System Positive"][700],
+      main: brandColors.brandColors["System Positive"][700], // #237804
+      light: brandColors.brandColors["System Positive"][300], // #95DE64
+      dark: brandColors.brandColors["System Positive"][800], // #135200
     },
     // Custom brand colors using color objects
     neutral: {
@@ -120,6 +131,7 @@ let theme = createTheme({
   },
   colorSchemes: {
     dark: {
+      // Dark mode palette configuration leaning on MUI's ability to infer light/dark theme color versions from the main colors. No parity in Figma as we do not officially support dark mode.
       palette: {
         contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
         primary: {

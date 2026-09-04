@@ -63,7 +63,7 @@ export const AccordionSection = React.memo(() => {
               Basic Pattern
             </Typography>
 
-            <Stack spacing={1}>
+            <Stack>
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="subtitle2">Section One</Typography>
