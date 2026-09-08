@@ -63,6 +63,11 @@ const fontStacks = {
   mono: "'IBM Plex Mono', monospace",
 } as const;
 
+const commonColors = {
+  black: "#000000",
+  white: "#FFFFFF",
+} as const;
+
 // Step 1: Create base theme with palette, typography, shape, etc.
 let theme = createTheme({
   cssVariables: {
@@ -70,6 +75,10 @@ let theme = createTheme({
   },
   palette: {
     contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
+    common: {
+      black: commonColors.black,
+      white: commonColors.white,
+    },
     primary: {
       main: brandColors.brandColors["Primary Heritage"][700], // #007A76
       light: brandColors.brandColors["Primary Heritage"][400], // #00BFB1
@@ -101,32 +110,26 @@ let theme = createTheme({
       dark: brandColors.brandColors["System Positive"][800], // #135200
     },
     // Custom brand colors using color objects
-    neutral: {
-      main: brandColors.brandColors.Neutral[700],
-      light: brandColors.brandColors.Neutral[600],
-      dark: brandColors.brandColors.Neutral[800],
-      contrastText: brandColors.brandColors.Neutral[50],
-    },
     black: {
-      main: "#000000",
-      light: brandColors.brandColors.Neutral[600],
-      dark: brandColors.brandColors.Neutral[800],
-      contrastText: brandColors.brandColors.Neutral[50],
+      main: commonColors.black,
+      light: brandColors.brandColors.Neutral[700],
+      dark: commonColors.black,
+      contrastText: commonColors.white,
     },
     white: {
-      main: "#FFFFFF",
-      light: brandColors.brandColors.Neutral[100],
+      main: commonColors.white,
+      light: commonColors.white,
       dark: brandColors.brandColors.Neutral[400],
-      contrastText: brandColors.brandColors.Neutral[900],
+      contrastText: commonColors.black,
     },
     text: {
-      primary: "#000000",
+      primary: commonColors.black,
       secondary: brandColors.brandColors.Neutral[800],
       disabled: brandColors.brandColors.Neutral[700],
     },
     background: {
       default: brandColors.brandColors.Neutral[50],
-      paper: "#FFFFFF",
+      paper: commonColors.white,
     },
   },
   colorSchemes: {
@@ -136,30 +139,42 @@ let theme = createTheme({
         contrastThreshold: 4.5, // WCAG AA compliant contrast threshold
         primary: {
           main: brandColors.brandColors["Primary Data"][600],
+          light: brandColors.brandColors["Primary Data"][500],
+          dark: brandColors.brandColors["Primary Data"][700],
           contrastText: brandColors.brandColors["Primary Heritage"][900],
         },
         secondary: {
           main: brandColors.brandColors.Neutral[100],
+          light: brandColors.brandColors.Neutral[50],
+          dark: brandColors.brandColors.Neutral[300],
           contrastText: brandColors.brandColors["Primary Heritage"][900],
         },
         error: {
           main: brandColors.brandColors["System Negative"][300],
+          light: brandColors.brandColors["System Negative"][200],
+          dark: brandColors.brandColors["System Negative"][400],
         },
         warning: {
           main: brandColors.brandColors["System Alert"][300],
+          light: brandColors.brandColors["System Alert"][200],
+          dark: brandColors.brandColors["System Alert"][400],
         },
         info: {
           main: brandColors.brandColors["System Info"][300],
+          light: brandColors.brandColors["System Info"][200],
+          dark: brandColors.brandColors["System Info"][400],
         },
         success: {
           main: brandColors.brandColors["System Positive"][300],
+          light: brandColors.brandColors["System Positive"][200],
+          dark: brandColors.brandColors["System Positive"][400],
         },
         background: {
-          default: "#000000",
+          default: brandColors.brandColors.Neutral[900],
           paper: brandColors.brandColors.Neutral[900],
         },
         text: {
-          primary: "#ffffff",
+          primary: commonColors.white,
           secondary: brandColors.brandColors.Neutral[300],
           disabled: brandColors.brandColors.Neutral[500],
         },

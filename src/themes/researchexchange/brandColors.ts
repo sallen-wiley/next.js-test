@@ -1,9 +1,9 @@
 export const brandColors = {
   "Primary Heritage": {
-    50: "#e8faf8",
-    100: "#a7ede4",
-    200: "#5fdcce",
-    300: "#23ccbc",
+    50: "#e8faf8", // not official wiley.com, extrapolated from others
+    100: "#a7ede4", // not official wiley.com, extrapolated from others
+    200: "#5fdcce", // not official wiley.com, extrapolated from others
+    300: "#23ccbc", // not official wiley.com, extrapolated from others
     400: "#00BFB1",
     500: "#00A89F",
     600: "#008F8A",
@@ -21,7 +21,7 @@ export const brandColors = {
     600: "#8C8B89",
     700: "#5D5E5C",
     800: "#302F2F",
-    900: "#08040d",
+    900: "#08040d", // not official wiley.com, extrapolated from others and replaces wiley.com neutral 900 which is #000000. Held at this value pending review: the generator now produces #0D0C0C
   },
   "System Negative": {
     50: "#FFF1F0",
@@ -55,33 +55,33 @@ export const brandColors = {
     400: "#FFC53D",
     500: "#FAAD14",
     600: "#D48806",
-    // 700: "#AD6800",
-    700: "#ab6200", // Not Wiley.com design system, but WCAG AA accessible contrast with alert 50 @ 4.51:1
+    // 700: "#AD6800", // official wiley
+    700: "#ab6200", // Not Wiley.com design system, but WCAG AA accessible contrast with alert 50 @ 4.51:1, custom tuned and not extrapolated from others
     800: "#874D00",
     900: "#613400",
   },
   "System Info": {
-    50: "#F2F7FF",
+    50: "#F2F7FF", // not official wiley.com
     100: "#E0EBFE",
     200: "#C2D6FC",
     300: "#A3C2FB",
     400: "#85AEFA",
     500: "#6799F8",
     600: "#4885F7",
-    700: "#2471D3",
-    800: "#0961AF",
-    900: "#00568B",
+    700: "#2471D3", // not official wiley.com
+    800: "#0961AF", // not official wiley.com
+    900: "#00568B", // not official wiley.com
   },
   "Primary Data": {
-    50: "#edfcf6",
+    50: "#edfcf6", // not official wiley.com, extrapolated from others
     100: "#BFF5DD",
     200: "#9FF0CB",
     300: "#80ECBA",
     400: "#60E7A9",
-    500: "#40E398",
+    500: "#40E298",
     600: "#00D875",
-    700: "#00a359",
-    800: "#005830",
-    900: "#00150c",
+    700: "#00a358", // not official wiley.com, extrapolated from others
+    800: "#005830", // not official wiley.com, extrapolated from others
+    900: "#00150b", // not official wiley.com, extrapolated from others
   },
 };
