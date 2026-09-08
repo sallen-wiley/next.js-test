@@ -59,6 +59,8 @@ export interface HueSet {
 export interface InterpolationPoint {
   x: number;
   y: number;
+  /** Chroma (S*V, 0-1) of the source colour. Only meaningful for hue points, where it gauges how reliable `y` is. */
+  chroma?: number;
 }
 
 // ============================================================================

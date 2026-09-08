@@ -18,6 +18,7 @@ import type { HSV, RGB } from "../types";
  * @returns RGB object with r, g, b values (0-255)
  */
 export const hsvToRgb = (h: number, s: number, v: number): RGB => {
+  h = ((h % 360) + 360) % 360;
   s = s / 100;
   v = v / 100;
 

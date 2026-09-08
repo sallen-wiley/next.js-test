@@ -40,6 +40,8 @@ interface CurveSettings {
   showS: boolean;
   showV: boolean;
   smoothMode: boolean;
+  /** Rotate the hue axis by 180 deg so ramps sitting on the 0/360 seam plot as one line. */
+  hueOffset: boolean;
 }
 
 interface CurveVisualizationProps {
@@ -111,6 +113,10 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     pointIndex: number;
     channel: "h" | "s" | "v";
     originalValue: number;
+    /** Value at the previous frame, used to accumulate hue movement across the 0/360 seam. */
+    lastValue: number;
+    /** Total displacement since drag start. For hue this is unwrapped, so it can exceed 360. */
+    accumulatedChange: number;
   } | null>(null);
 
   // Performance optimization: Reuse drag behaviors instead of creating new ones every render
@@ -163,7 +169,14 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     showS: true,
     showV: true,
     smoothMode: false,
+    hueOffset: false,
   });
+
+  const hueShift = curveSettings.hueOffset ? 180 : 0;
+  const toDisplayHue = useCallback(
+    (hue: number) => (hue + hueShift) % 360,
+    [hueShift],
+  );
 
   // Chart dimensions - make responsive
   const margin = useMemo(
@@ -250,9 +263,9 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     return d3
       .line<ShadeDefinition>()
       .x((d, i) => xScale(i)) // Use index for even spacing
-      .y((d) => yScaleHue(d.hsv.h))
+      .y((d) => yScaleHue(toDisplayHue(d.hsv.h)))
       .curve(d3.curveCardinal.tension(0.1)); // More exaggerated curves (lower tension)
-  }, [xScale, yScaleHue]);
+  }, [xScale, yScaleHue, toDisplayHue]);
 
   const lineS = useMemo(() => {
     return d3
@@ -272,12 +285,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
 
   // Apply Gaussian falloff for smooth mode
   const applyGaussianFalloff = useCallback(
-    (
-      targetIndex: number,
-      newValue: number,
-      originalValue: number,
-      channel: "h" | "s" | "v",
-    ) => {
+    (targetIndex: number, change: number, channel: "h" | "s" | "v") => {
       if (!curveSettings.smoothMode) return null;
 
       const newShades = [...shades];
@@ -311,15 +319,13 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
               : channel === "s"
               ? newShades[i].hsv.s
               : newShades[i].hsv.v;
-          const change = newValue - originalValue;
           const adjustedChange = change * weight;
 
           let adjustedValue: number;
           if (channel === "h") {
-            adjustedValue = Math.max(
-              0,
-              Math.min(360, currentValue + adjustedChange),
-            );
+            // Hue is circular, so a neighbour pushed past an end wraps rather than pinning
+            adjustedValue =
+              (((currentValue + adjustedChange) % 360) + 360) % 360;
             const rgb = hsvToRgb(
               adjustedValue,
               newShades[i].hsv.s,
@@ -448,7 +454,10 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
             );
             return;
           }
-          newValue = Math.max(0, Math.min(360, inverted));
+          // The top and bottom of the axis are the same hue, so an exact 360 would
+          // normalise to 0 and drop a point dragged off the top down to the bottom.
+          const displayed = Math.max(0, Math.min(359.999, inverted));
+          newValue = (((displayed - hueShift) % 360) + 360) % 360;
         } else {
           const inverted = yScale.invert(y);
           // Validate inverted value before clamping
@@ -480,10 +489,23 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           extrapolationMethod: undefined,
         };
 
+        // Hue is circular: measure each frame's movement as the shorter arc and sum it,
+        // so crossing the 0/360 seam reads as a small step rather than a 360 deg jump.
+        if (dragStateRef.current.channel === "h") {
+          const step =
+            ((((newValue - dragStateRef.current.lastValue) % 360) + 540) %
+              360) -
+            180;
+          dragStateRef.current.accumulatedChange += step;
+        } else {
+          dragStateRef.current.accumulatedChange =
+            newValue - dragStateRef.current.originalValue;
+        }
+        dragStateRef.current.lastValue = newValue;
+
         const smoothShades = applyGaussianFalloff(
           dragStateRef.current.pointIndex,
-          newValue,
-          dragStateRef.current.originalValue,
+          dragStateRef.current.accumulatedChange,
           dragStateRef.current.channel,
         );
 
@@ -509,7 +531,9 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         svg
           .selectAll(`.point-${channel}`)
           .data(finalShades)
-          .attr("cy", (d) => scale(d.hsv[channel]));
+          .attr("cy", (d) =>
+            scale(channel === "h" ? toDisplayHue(d.hsv.h) : d.hsv[channel]),
+          );
 
         // Update path immediately for this channel
         if (channel === "h" && lineH) {
@@ -527,6 +551,8 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     [
       yScale,
       yScaleHue,
+      hueShift,
+      toDisplayHue,
       shades,
       applyGaussianFalloff,
       throttledColorUpdate,
@@ -745,6 +771,8 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
             pointIndex: index,
             channel,
             originalValue: d.hsv[channel],
+            lastValue: d.hsv[channel],
+            accumulatedChange: 0,
           };
         })
         .on("drag", function (event) {
@@ -858,7 +886,9 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
         .selectAll(`.point-${channel}`)
         .data(shades)
         .attr("cx", (d, i) => xScale(i)) // Use index for position
-        .attr("cy", (d) => scale(d.hsv[channel]))
+        .attr("cy", (d) =>
+          scale(channel === "h" ? toDisplayHue(d.hsv.h) : d.hsv[channel]),
+        )
         .attr("r", 7) // Same size for both states
         .attr("fill", (d) => {
           // Locked = filled with color, Unlocked = white fill
@@ -879,6 +909,7 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
     xScale,
     yScale,
     yScaleHue,
+    toDisplayHue,
     lineH,
     lineS,
     lineV,
@@ -935,6 +966,26 @@ function D3CurveVisualization({ shades, onUpdate }: CurveVisualizationProps) {
           >
             Value (V)
           </Button>
+        </Grid>
+        <Grid size="auto">
+          <Tooltip title="Rotates the hue axis by 180 deg. Use it when a ramp sits on the 0/360 boundary (reds, pinks) and the hue line appears to jump the full height of the chart. Colours are unaffected.">
+            <span>
+              <Button
+                variant={curveSettings.hueOffset ? "contained" : "outlined"}
+                color="error"
+                size="small"
+                disabled={!curveSettings.showH}
+                onClick={() =>
+                  setCurveSettings((prev) => ({
+                    ...prev,
+                    hueOffset: !prev.hueOffset,
+                  }))
+                }
+              >
+                Shift Hue 180°
+              </Button>
+            </span>
+          </Tooltip>
         </Grid>
         <Grid size="auto">
           <Tooltip title="Applies smooth curve adjustments to adjacent points when dragging">

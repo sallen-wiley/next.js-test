@@ -19,7 +19,7 @@ import type { InterpolationPoint } from "../types";
  */
 export const splineInterpolation = (
   points: InterpolationPoint[],
-  targetIndices: number[]
+  targetIndices: number[],
 ): number[] => {
   if (points.length === 0) return targetIndices.map(() => 50);
   if (points.length === 1) return targetIndices.map(() => points[0].y);
@@ -70,7 +70,7 @@ export const splineInterpolation = (
  */
 export const extrapolateLinear = (
   points: InterpolationPoint[],
-  targetIndices: number[]
+  targetIndices: number[],
 ): number[] => {
   points.sort((a, b) => a.x - b.x);
 
@@ -103,6 +103,102 @@ export const extrapolateLinear = (
 };
 
 // ============================================================================
+// HUE EXTRAPOLATION
+// ============================================================================
+
+/**
+ * Chroma (S*V, 0-1) at which a colour's hue is taken as fully reliable. Below it,
+ * an 8-bit hex round-trip quantises hue to worse than +/-6 degrees and the hue of a
+ * near-neutral is barely a perceptual property at all, so any trend read from it is
+ * discounted proportionally.
+ */
+const HUE_CHROMA_REFERENCE = 0.1;
+
+/**
+ * Rewrite hue control points as continuous phase, so that a fit across the 0/360
+ * boundary takes the short way round instead of sweeping the whole colour wheel.
+ * @param points - Hue control points in degrees
+ * @returns Sorted points whose y-values may fall outside 0-360
+ */
+const unwrapHue = (points: InterpolationPoint[]): InterpolationPoint[] => {
+  const sorted = [...points].sort((a, b) => a.x - b.x);
+  const unwrapped: InterpolationPoint[] = [];
+
+  for (const point of sorted) {
+    const previous = unwrapped[unwrapped.length - 1];
+    if (!previous) {
+      unwrapped.push({ ...point });
+      continue;
+    }
+
+    let y = point.y;
+    while (y - previous.y > 180) y -= 360;
+    while (y - previous.y < -180) y += 360;
+    unwrapped.push({ ...point, y });
+  }
+
+  return unwrapped;
+};
+
+/**
+ * How much of an extrapolated hue slope to trust, given the chroma of the two
+ * control points it was derived from. Points without chroma are trusted fully.
+ */
+const slopeReliability = (
+  a: InterpolationPoint,
+  b: InterpolationPoint,
+): number => {
+  const chroma = Math.min(a.chroma ?? 1, b.chroma ?? 1);
+  return Math.max(0, Math.min(1, chroma / HUE_CHROMA_REFERENCE));
+};
+
+/**
+ * Interpolate and extrapolate hue on the colour wheel rather than on a line.
+ * In range this is the usual spline; beyond the control points the slope is
+ * damped by the chroma of the points that produced it, so a saturated ramp keeps
+ * its genuine hue drift while a near-neutral ramp holds its hue steady.
+ * @param points - Hue control points { x, y, chroma }
+ * @param targetIndices - Array of x-values to interpolate/extrapolate
+ * @returns Array of hue values normalised to 0-360
+ */
+export const extrapolateHue = (
+  points: InterpolationPoint[],
+  targetIndices: number[],
+): number[] => {
+  if (points.length === 0) return targetIndices.map(() => 0);
+
+  const unwrapped = unwrapHue(points);
+  const first = unwrapped[0];
+  const last = unwrapped[unwrapped.length - 1];
+
+  return targetIndices.map((idx) => {
+    let value: number;
+
+    if (idx >= first.x && idx <= last.x) {
+      value = splineInterpolation(unwrapped, [idx])[0];
+    } else if (unwrapped.length === 1) {
+      value = first.y;
+    } else if (idx < first.x) {
+      // LEFT extrapolation (lighter shades)
+      const next = unwrapped[1];
+      const slope =
+        ((next.y - first.y) / (next.x - first.x)) *
+        slopeReliability(first, next);
+      value = first.y + slope * (idx - first.x);
+    } else {
+      // RIGHT extrapolation (darker shades)
+      const previous = unwrapped[unwrapped.length - 2];
+      const slope =
+        ((last.y - previous.y) / (last.x - previous.x)) *
+        slopeReliability(previous, last);
+      value = last.y + slope * (idx - last.x);
+    }
+
+    return ((value % 360) + 360) % 360;
+  });
+};
+
+// ============================================================================
 // ANCHOR-BASED EXTRAPOLATION
 // ============================================================================
 
@@ -110,7 +206,7 @@ export const extrapolateLinear = (
  * Extrapolate with virtual anchor points for white/black
  * @param points - Array of control points { x, y }
  * @param targetIndices - Array of x-values to interpolate/extrapolate
- * @param channel - Color channel: 'h', 's', or 'v'
+ * @param channel - Color channel: 's' or 'v'. Hue is handled by `extrapolateHue`.
  * @param shadeCount - Array of shade indices
  * @param mode - Extrapolation mode: functional, functional-saturated, or expressive
  * @returns Array of interpolated/extrapolated y-values
@@ -118,9 +214,9 @@ export const extrapolateLinear = (
 export const extrapolateWithAnchors = (
   points: InterpolationPoint[],
   targetIndices: number[],
-  channel: "h" | "s" | "v",
+  channel: "s" | "v",
   shadeCount: number[],
-  mode: "functional" | "functional-saturated" | "expressive"
+  mode: "functional" | "functional-saturated" | "expressive",
 ): number[] => {
   // Calculate virtual indices for pure white and pure black anchors
   // These are positioned just outside the actual shade range
@@ -132,15 +228,7 @@ export const extrapolateWithAnchors = (
   const maxLockedIndex = points[points.length - 1].x;
 
   // Add anchors based on channel
-  if (channel === "h") {
-    // Hue: keep constant at edge values
-    if (minLockedIndex > 0) {
-      extendedPoints.unshift({ x: whiteIndex, y: points[0].y });
-    }
-    if (maxLockedIndex < shadeCount.length - 1) {
-      extendedPoints.push({ x: blackIndex, y: points[points.length - 1].y });
-    }
-  } else if (channel === "s") {
+  if (channel === "s") {
     // Saturation: white always has no saturation, dark end depends on mode
     if (minLockedIndex > 0) {
       extendedPoints.unshift({ x: whiteIndex, y: 0 }); // White anchor (light end)
@@ -151,7 +239,22 @@ export const extrapolateWithAnchors = (
       if (mode === "functional") {
         darkS = 0; // Natural black (S=0)
       } else if (mode === "functional-saturated") {
-        darkS = 100; // Rich saturated darks (S=100)
+        // Rich darks: carry on the way the ramp's own saturation is already heading,
+        // up to fully saturated. A climbing ramp keeps climbing; an achromatic ramp
+        // stays achromatic instead of acquiring a colour cast at the dark end.
+        const last = points[points.length - 1];
+        const previous = points[points.length - 2];
+        darkS = previous
+          ? Math.max(
+              0,
+              Math.min(
+                100,
+                last.y +
+                  ((last.y - previous.y) / (last.x - previous.x)) *
+                    (blackIndex - last.x),
+              ),
+            )
+          : last.y;
       } else if (mode === "expressive") {
         // In expressive mode, maintain last saturation level for smoother curves
         darkS = points[points.length - 1].y;
@@ -200,13 +303,12 @@ export const extrapolateWithFallback = (
   targetIndices: number[],
   channel: "h" | "s" | "v",
   shadeCount: number[],
-  mode: "functional" | "functional-saturated" | "expressive"
+  mode: "functional" | "functional-saturated" | "expressive",
 ): { values: number[]; anchorUsed: boolean } => {
-  // Special handling for hue (always constant for monochromatic palettes)
+  // Hue lives on a circle and its reliability varies with chroma, so it gets its
+  // own path rather than the generic linear fit used for S and V.
   if (channel === "h") {
-    // For hue, use linear extrapolation in both modes (hue should be constant)
-    const extrapolated = extrapolateLinear(points, targetIndices);
-    return { values: extrapolated, anchorUsed: false };
+    return { values: extrapolateHue(points, targetIndices), anchorUsed: false };
   }
 
   // FUNCTIONAL MODES: Always use anchors for S and V
@@ -216,7 +318,7 @@ export const extrapolateWithFallback = (
       targetIndices,
       channel,
       shadeCount,
-      mode
+      mode,
     );
     return { values: anchored, anchorUsed: true };
   }

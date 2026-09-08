@@ -28,8 +28,8 @@ import D3CurveVisualization from "../D3CurveVisualization";
 import { getColorName } from "../ColorNameMapper";
 import ShadeConfigurationDialog from "./ShadeConfigurationDialog";
 import ShadeGrid from "./ShadeGrid";
-import { hsvToRgb, rgbToHex, hexToHsv } from "../utils/colorConversions";
-import { extrapolateWithFallback } from "../utils/interpolation";
+import { hexToHsv } from "../utils/colorConversions";
+import { generateShadeColors } from "../utils/shadeGeneration";
 import { MUI_PALETTE_KEYS } from "../utils/defaults";
 import type {
   HueEditorProps,
@@ -111,102 +111,15 @@ export default function HueEditor({
   };
 
   const generateShades = () => {
-    const lockedShades = hue.shades
-      .map((shade: ShadeDefinition, idx: number) => ({ ...shade, index: idx }))
-      .filter((s: ShadeDefinition & { index: number }) => s.locked);
-
-    if (lockedShades.length === 0) return;
-
-    const allIndices = hue.shades.map((_: ShadeDefinition, i: number) => i);
-
-    // HUE: Only use saturated colors (ignore achromatic shades)
-    const hPoints = lockedShades
-      .filter(
-        (s: ShadeDefinition & { index: number }) =>
-          s.selectedForH && s.hsv.s > 1,
-      )
-      .map((s: ShadeDefinition & { index: number }) => ({
-        x: s.index,
-        y: s.hsv.h,
-      }));
-
-    // If no saturated points, find first saturated shade or default to 0
-    const defaultHue = lockedShades.find((s) => s.hsv.s > 1)?.hsv.h ?? 0;
-
-    // SATURATION & VALUE: Use all locked shades (including achromatic)
-    const sPoints = lockedShades
-      .filter((s: ShadeDefinition & { index: number }) => s.selectedForS)
-      .map((s: ShadeDefinition & { index: number }) => ({
-        x: s.index,
-        y: s.hsv.s,
-      }));
-    const vPoints = lockedShades
-      .filter((s: ShadeDefinition & { index: number }) => s.selectedForV)
-      .map((s: ShadeDefinition & { index: number }) => ({
-        x: s.index,
-        y: s.hsv.v,
-      }));
-
-    // Use extrapolation with fallback for each channel
-    const mode = hue.extrapolationMode; // Get mode from hue
-
-    const hResult =
-      hPoints.length > 0
-        ? extrapolateWithFallback(hPoints, allIndices, "h", allIndices, mode)
-        : { values: allIndices.map(() => defaultHue), anchorUsed: false };
-
-    const sResult =
-      sPoints.length > 0
-        ? extrapolateWithFallback(sPoints, allIndices, "s", allIndices, mode)
-        : { values: allIndices.map(() => 50), anchorUsed: false };
-
-    const vResult =
-      vPoints.length > 0
-        ? extrapolateWithFallback(vPoints, allIndices, "v", allIndices, mode)
-        : { values: allIndices.map(() => 50), anchorUsed: false };
-
-    // Check if any channel used anchors
-    const anyAnchorUsed =
-      hResult.anchorUsed || sResult.anchorUsed || vResult.anchorUsed;
-
-    const newShades = hue.shades.map((shade: ShadeDefinition, i: number) => {
-      if (shade.locked) return shade;
-
-      const h = ((hResult.values[i] % 360) + 360) % 360;
-      const s = Math.max(0, Math.min(100, sResult.values[i]));
-      const v = Math.max(0, Math.min(100, vResult.values[i]));
-
-      const rgb = hsvToRgb(h, s, v);
-      const color = rgbToHex(rgb.r, rgb.g, rgb.b);
-
-      // Determine extrapolation method for this shade
-      const minLocked = Math.min(...lockedShades.map((s) => s.index));
-      const maxLocked = Math.max(...lockedShades.map((s) => s.index));
-
-      let extrapolationMethod: "interpolated" | "linear" | "adjusted";
-      if (i >= minLocked && i <= maxLocked) {
-        extrapolationMethod = "interpolated";
-      } else if (anyAnchorUsed) {
-        extrapolationMethod = "adjusted";
-      } else {
-        extrapolationMethod = "linear";
-      }
-
-      return {
-        ...shade,
-        hsv: { h, s, v },
-        color,
-        extrapolationMethod,
-        generationMode: mode, // Store the mode used for generation
-      };
-    });
+    const result = generateShadeColors(hue.shades, hue.extrapolationMode);
+    if (!result) return;
 
     // Show dialog if anchors were used (only in expressive mode)
-    if (anyAnchorUsed && hue.extrapolationMode === "expressive") {
+    if (result.anchorUsed && hue.extrapolationMode === "expressive") {
       setAnchorDialogOpen(true);
     }
 
-    onUpdate({ shades: newShades });
+    onUpdate({ shades: result.shades });
   };
 
   return (
