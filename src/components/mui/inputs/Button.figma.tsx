@@ -10,6 +10,7 @@ figma.connect(
     props: {
       color: figma.enum("Color", {
         Inherit: "inherit",
+        "Inherit (white)": "inherit",
         Primary: "primary",
         Secondary: "secondary",
         Success: "success",
@@ -18,11 +19,13 @@ figma.connect(
         Warning: "warning",
         White: "white",
         Black: "black",
-        Neutral: "neutral",
       }),
 
       disabled: figma.enum("State", {
-        Default: false,
+        Enabled: undefined,
+        Hovered: undefined,
+        Focused: undefined,
+        Pressed: undefined,
         Disabled: true,
       }),
 
@@ -42,12 +45,12 @@ figma.connect(
 
       // Use your existing boolean properties to conditionally include icons
       startIcon: figma.boolean("Start Icon", {
-        true: figma.children("Icon Left"),
+        true: figma.instance("↳ Start Icon"),
         false: undefined,
       }),
 
       endIcon: figma.boolean("End Icon", {
-        true: figma.children("Icon Right"),
+        true: figma.instance("↳ End Icon"),
         false: undefined,
       }),
     },

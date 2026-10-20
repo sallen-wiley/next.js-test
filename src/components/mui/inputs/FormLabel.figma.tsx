@@ -19,14 +19,14 @@ figma.connect(
       }),
 
       disabled: figma.enum("State", {
-        Enabled: false,
+        Enabled: undefined,
         Disabled: true,
-        Error: false,
+        Error: undefined,
       }),
 
       error: figma.enum("State", {
-        Enabled: false,
-        Disabled: false,
+        Enabled: undefined,
+        Disabled: undefined,
         Error: true,
       }),
 

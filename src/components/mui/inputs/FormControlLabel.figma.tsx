@@ -9,15 +9,16 @@ figma.connect(
   {
     props: {
       labelPlacement: figma.enum("Label Placement", {
-        End: "end",
+        // "end" is the MUI default, so omit it rather than restate it.
+        End: undefined,
         Start: "start",
         Top: "top",
         Bottom: "bottom",
       }),
 
-      disabled: figma.boolean("Disabled", {
-        true: true,
-        false: false,
+      disabled: figma.enum("Disabled", {
+        True: true,
+        False: undefined,
       }),
 
       control: figma.children("<Checkbox>"),
@@ -35,5 +36,12 @@ figma.connect(
         label={label.value}
       />
     ),
+
+    links: [
+      {
+        name: "MUI FormControlLabel API",
+        url: "https://mui.com/material-ui/api/form-control-label/",
+      },
+    ],
   },
 );

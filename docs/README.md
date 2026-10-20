@@ -39,12 +39,14 @@ Use this list as the source of truth for active workflows. Everything else in th
 - **[Theme Guide](development/theme-guide.md)** - Theme development and customization workflow
 - **[Image Asset Workflow](development/image-asset-workflow.md)** - Source-first image optimization and generated runtime assets
 - **[Figma Code Connect Runbook](development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow, resume checklist, and component guardrails
+- **[Using Figma designs with Code Connect](development/figma-code-connect-usage.md)** - WIP handoff guide for engineers and agents reproducing a design (evaluate and iterate; not a locked procedure)
 - **[MUI Best Practices](development/MUI_BEST_PRACTICES.md)** - Material-UI implementation standards
 
 ### 📚 Specialized References
 
 - **[Reviewer Data Ingestion Deep Dive](../database/reviewer-ingestion/DATA_INGESTION_README.md)** - Extended ingestion architecture, data format, and troubleshooting
 - **[Figma MCP Guidance](FIGMA_MCP_GUIDANCE.md)** - Team guidance for safe Figma-to-code usage
+- **[Using Figma designs with Code Connect](development/figma-code-connect-usage.md)** - WIP: how engineers and agents should consume mappings when implementing a screen
 - **[Field Assumptions](development/field-assumptions.md)** - Product/UI assumption ledger
 - **[Testing Loading States](TESTING_LOADING_STATES.md)** - QA checklist for standardized loading patterns
 - **[Admin Actions FAB](ADMIN_ACTIONS_FAB.md)** - Context-aware admin action architecture

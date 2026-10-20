@@ -9,15 +9,15 @@ figma.connect(
   {
     props: {
       disabled: figma.enum("Disabled", {
-        Enabled: false,
-        Error: false,
+        Enabled: undefined,
+        Error: undefined,
         Disabled: true,
       }),
 
       error: figma.enum("Disabled", {
-        Enabled: false,
+        Enabled: undefined,
         Error: true,
-        Disabled: false,
+        Disabled: undefined,
       }),
 
       children: figma.string("Value"),

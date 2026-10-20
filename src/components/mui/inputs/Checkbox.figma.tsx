@@ -10,23 +10,24 @@ figma.connect(
     props: {
       checked: figma.enum("Checked", {
         True: true,
-        False: false,
+        False: undefined,
       }),
 
       indeterminate: figma.enum("Indeterminate", {
         True: true,
-        False: false,
+        False: undefined,
       }),
 
       size: figma.enum("Size", {
         Small: "small",
-        Medium: "medium",
-        Large: "large",
+        Medium: undefined,
+        // MUI Checkbox has no "large" size. Omit rather than emit invalid JSX.
+        Large: undefined,
       }),
 
       color: figma.enum("Color", {
         Default: "default",
-        Primary: "primary",
+        Primary: undefined,
         Secondary: "secondary",
         Error: "error",
         Warning: "warning",
@@ -36,10 +37,10 @@ figma.connect(
 
       disabled: figma.enum("State", {
         Disabled: true,
-        Enabled: false,
-        Hovered: false,
-        Focused: false,
-        Pressed: false,
+        Enabled: undefined,
+        Hovered: undefined,
+        Focused: undefined,
+        Pressed: undefined,
       }),
     },
 
@@ -52,5 +53,12 @@ figma.connect(
         disabled={disabled}
       />
     ),
+
+    links: [
+      {
+        name: "MUI Checkbox API",
+        url: "https://mui.com/material-ui/api/checkbox/",
+      },
+    ],
   },
 );
