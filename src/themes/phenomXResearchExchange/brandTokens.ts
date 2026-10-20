@@ -412,7 +412,7 @@ export const designTokens = {
       grey60: "#5D5E5C", // Phenom grey60 → New 700
       grey70: "#5D5E5C", // Phenom grey70 → New 700 (shared)
       grey80: "#302F2F", // Phenom grey80 → New 800
-      grey90: "#08040d", // Phenom grey90 → New 900
+      grey90: "#0D0C0C", // Phenom grey90 → New 900
     },
     tableRows: {
       default: "#ffffff",

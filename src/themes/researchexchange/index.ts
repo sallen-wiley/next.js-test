@@ -87,7 +87,7 @@ let theme = createTheme({
     secondary: {
       main: brandColors.brandColors.Neutral[800], // #302F2F
       light: brandColors.brandColors.Neutral[400], // #C9C7C2
-      dark: brandColors.brandColors.Neutral[900], // #08040D
+      dark: brandColors.brandColors.Neutral[900], // #0D0C0C
     },
     error: {
       main: brandColors.brandColors["System Negative"][600], // #CF1322
@@ -340,6 +340,8 @@ theme = createTheme(theme, {
         }
       `,
     },
+
+    // Button component overrides
     MuiButtonBase: {
       defaultProps: {
         disableRipple: true,
@@ -364,8 +366,50 @@ theme = createTheme(theme, {
         }),
       },
     },
+    MuiButton: {
+      styleOverrides: {
+        sizeLarge: {
+          textTransform: "uppercase",
+        },
+        root: {
+          // Variants for custom sizes
+          variants: [
+            {
+              props: { size: "extraLarge" as const },
+              style: {
+                padding: "12px 32px",
+                fontSize: "1.125rem",
+                lineHeight: 1.5,
+                minHeight: "56px",
+                fontWeight: 600,
+                "& .MuiButton-startIcon": {
+                  marginLeft: 0,
+                  marginRight: "12px",
+                  "& > *:nth-of-type(1)": {
+                    fontSize: "24px",
+                  },
+                },
+                "& .MuiButton-endIcon": {
+                  marginLeft: "12px",
+                  marginRight: 0,
+                  "& > *:nth-of-type(1)": {
+                    fontSize: "24px",
+                  },
+                },
+              },
+            },
+          ],
+        },
+        text: {
+          textDecoration: "underline",
+          "&:hover": {
+            textDecoration: "underline",
+          },
+        },
+      },
+    },
 
-    // Theme-aware components (can access theme values)
+    // Chip component overrides
     MuiChip: {
       styleOverrides: {
         label: {
@@ -374,6 +418,8 @@ theme = createTheme(theme, {
         },
       },
     },
+
+    // Typography component overrides
     MuiTypography: {
       styleOverrides: {
         root: {
@@ -387,60 +433,61 @@ theme = createTheme(theme, {
         },
       },
     },
-    MuiAlert: {
-      styleOverrides: {
-        standardSuccess: ({ theme }: { theme: Theme }) => ({
-          // Light mode custom colors, dark mode uses defaults
-          ...theme.applyStyles("light", {
-            backgroundColor: theme.customPalette.successLightest,
-            color: theme.palette.text.primary,
-          }),
-        }),
-        outlinedSuccess: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            borderColor: theme.palette.success.main,
-            color: theme.palette.success.main,
-          }),
-        }),
-        standardError: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            backgroundColor: theme.customPalette.errorLightest,
-            color: theme.palette.text.primary,
-          }),
-        }),
-        outlinedError: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            borderColor: theme.palette.error.main,
-            color: theme.palette.error.main,
-          }),
-        }),
-        standardInfo: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            backgroundColor: theme.customPalette.infoLightest,
-            color: theme.palette.text.primary,
-          }),
-        }),
-        outlinedInfo: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            borderColor: theme.palette.info.main,
-            color: theme.palette.info.main,
-          }),
-        }),
-        standardWarning: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            backgroundColor: theme.customPalette.warningLightest,
-            color: theme.palette.text.primary,
-          }),
-        }),
-        outlinedWarning: ({ theme }: { theme: Theme }) => ({
-          ...theme.applyStyles("light", {
-            borderColor: theme.palette.warning.main,
-            color: theme.palette.warning.main,
-          }),
-        }),
-      },
-    },
+    // MuiAlert: {
+    //   styleOverrides: {
+    //     standardSuccess: ({ theme }: { theme: Theme }) => ({
+    //       // Light mode custom colors, dark mode uses defaults
+    //       ...theme.applyStyles("light", {
+    //         backgroundColor: theme.customPalette.successLightest,
+    //         color: theme.palette.text.primary,
+    //       }),
+    //     }),
+    //     outlinedSuccess: ({ theme }: { theme: Theme }) => ({
+    //       ...theme.applyStyles("light", {
+    //         borderColor: theme.palette.success.main,
+    //         color: theme.palette.success.main,
+    //       }),
+    //     }),
+    //     standardError: ({ theme }: { theme: Theme }) => ({
+    //       ...theme.applyStyles("light", {
+    //         backgroundColor: theme.customPalette.errorLightest,
+    //         color: theme.palette.text.primary,
+    //       }),
+    //     }),
+    //     outlinedError: ({ theme }: { theme: Theme }) => ({
+    //       ...theme.applyStyles("light", {
+    //         borderColor: theme.palette.error.main,
+    //         color: theme.palette.error.main,
+    //       }),
+    //     }),
+    //     standardInfo: ({ theme }: { theme: Theme }) => ({
+    //       ...theme.applyStyles("light", {
+    //         backgroundColor: theme.customPalette.infoLightest,
+    //         color: theme.palette.text.primary,
+    //       }),
+    //     }),
+    //     outlinedInfo: ({ theme }: { theme: Theme }) => ({
+    //       ...theme.applyStyles("light", {
+    //         borderColor: theme.palette.info.main,
+    //         color: theme.palette.info.main,
+    //       }),
+    //     }),
+    //     standardWarning: ({ theme }: { theme: Theme }) => ({
+    //       ...theme.applyStyles("light", {
+    //         backgroundColor: theme.customPalette.warningLightest,
+    //         color: theme.palette.text.primary,
+    //       }),
+    //     }),
+    //     outlinedWarning: ({ theme }: { theme: Theme }) => ({
+    //       ...theme.applyStyles("light", {
+    //         borderColor: theme.palette.warning.main,
+    //         color: theme.palette.warning.main,
+    //       }),
+    //     }),
+    //   },
+    // },
 
+    // Dialog component overrides
     MuiDialogTitle: {
       styleOverrides: {
         root: ({ theme }: { theme: Theme }) => ({
@@ -450,7 +497,6 @@ theme = createTheme(theme, {
         }),
       },
     },
-
     MuiDialogContent: {
       styleOverrides: {
         root: ({ theme }: { theme: Theme }) => ({
@@ -463,7 +509,6 @@ theme = createTheme(theme, {
         }),
       },
     },
-
     MuiDialogActions: {
       styleOverrides: {
         root: ({ theme }: { theme: Theme }) => ({
@@ -474,6 +519,8 @@ theme = createTheme(theme, {
         }),
       },
     },
+
+    // Input component overrides
     MuiInputBase: {
       styleOverrides: {
         input: ({ theme }: { theme: Theme }) => ({
@@ -573,6 +620,7 @@ theme = createTheme(theme, {
       },
     },
 
+    // Pagination item component overrides
     MuiPaginationItem: {
       styleOverrides: {
         root: ({ theme }: { theme: Theme }) => ({
@@ -592,49 +640,6 @@ theme = createTheme(theme, {
               },
           }),
         }),
-      },
-    },
-
-    MuiButton: {
-      styleOverrides: {
-        sizeLarge: {
-          textTransform: "uppercase",
-        },
-        root: {
-          // Variants for custom sizes
-          variants: [
-            {
-              props: { size: "extraLarge" as const },
-              style: {
-                padding: "12px 32px",
-                fontSize: "1.125rem",
-                lineHeight: 1.5,
-                minHeight: "56px",
-                fontWeight: 600,
-                "& .MuiButton-startIcon": {
-                  marginLeft: 0,
-                  marginRight: "12px",
-                  "& > *:nth-of-type(1)": {
-                    fontSize: "24px",
-                  },
-                },
-                "& .MuiButton-endIcon": {
-                  marginLeft: "12px",
-                  marginRight: 0,
-                  "& > *:nth-of-type(1)": {
-                    fontSize: "24px",
-                  },
-                },
-              },
-            },
-          ],
-        },
-        text: {
-          textDecoration: "underline",
-          "&:hover": {
-            textDecoration: "underline",
-          },
-        },
       },
     },
   },

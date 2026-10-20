@@ -21,7 +21,7 @@ export const brandColors = {
     600: "#8C8B89",
     700: "#5D5E5C",
     800: "#302F2F",
-    900: "#08040d", // not official wiley.com, extrapolated from others and replaces wiley.com neutral 900 which is #000000. Held at this value pending review: the generator now produces #0D0C0C
+    900: "#0D0C0C", // not official wiley.com, extrapolated from others and replaces wiley.com neutral 900 which is #000000
   },
   "System Negative": {
     50: "#FFF1F0",
