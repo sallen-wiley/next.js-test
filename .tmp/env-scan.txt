@@ -1,0 +1,417 @@
+--- top-level files ---
+./.gitattributes
+./.github/copilot-instructions.md
+./.gitignore
+./.mise.toml
+./.prettierignore
+./.storybook/main.ts
+./.storybook/preview.css
+./.storybook/preview.tsx
+./README.md
+./SETUP_GUIDE.md
+./codeConnectChat.md
+./database/00_cleanup.sql
+./database/01_core_tables.sql
+./database/02_rls_policies.sql
+./database/03_status_model_update.sql
+./database/04_move_conflicts_to_matches.sql
+./database/05_drop_deprecated_columns.sql
+./database/06_publication_matches.sql
+./database/07_palette_storage.sql
+./database/99_export_schema.sql
+./database/README.md
+./database/cleanup-archive.ps1
+./database/create_schema_export_function.sql
+./database/run-direct-migration.js
+./database/run-migration.js
+./docs/ADMIN_ACTIONS_FAB.md
+./docs/ADMIN_COMPONENT_PERMISSIONS.md
+./docs/ADMIN_INTERFACE_REVIEW.md
+./docs/ADMIN_OPTIMIZATION_REVIEW.md
+./docs/FIGMA_MCP_GUIDANCE.md
+./docs/README.md
+./docs/ROLEGUARD_USAGE.md
+./docs/TESTING_LOADING_STATES.md
+./eslint.config.mjs
+./extensions.txt
+./figma.config.json
+./next.config.ts
+./package-lock.json
+./package.json
+./project.code-workspace
+./public/file.svg
+./public/globe.svg
+./public/next.svg
+./public/vercel.svg
+./public/window.svg
+./reference/database-schema-export.md
+./scripts/check-figma-node-ids.js
+./scripts/figma-node-props.js
+./scripts/generate-figma-icon-connect.mjs
+./src/middleware.ts
+./tsconfig.json
+--- package manifests and scripts ---
+### package.json
+{
+  "name": "my-mui-app",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0 <=26.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "images:build": "node scripts/images/build-images.mjs",
+    "images:clean": "node scripts/images/build-images.mjs --clean",
+    "predev": "npm run images:build",
+    "prebuild": "npm run images:build",
+    "dev": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev --turbopack",
+    "dev:webpack": "node --experimental-webstorage --localstorage-file=localStorage.json node_modules/next/dist/bin/next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "chromatic": "npx chromatic --project-token=chpt_427a80d49e16b8f"
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@emotion/cache": "^11.14.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.1.0",
+    "@mui/material": "^7.1.0",
+    "@mui/material-nextjs": "^7.1.0",
+    "@mui/x-data-grid": "^8.21.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.75.0",
+    "@types/d3": "^7.4.3",
+    "d3": "^7.9.0",
+    "dotenv": "^17.2.3",
+    "next": "^15.3.6",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "recharts": "^3.3.0",
+    "sharp": "^0.34.4",
+    "swr": "^2.3.6"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.1",
+    "@eslint/eslintrc": "^3",
+    "@figma/code-connect": "^1.3.3",
+    "@storybook/addon-a11y": "^9.0.13",
+    "@storybook/addon-docs": "^9.0.13",
+    "@storybook/nextjs-vite": "^9.0.13",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "chromatic": "^13.2.1",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "eslint-plugin-storybook": "^9.0.13",
+    "playwright": "^1.53.1",
+    "storybook": "^9.0.13",
+    "typescript": "^5",
+    "vitest": "^4.1.11"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.52.3"
+  }
+}
+### next.config.ts
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // Deployment builds use a separate dir so they can't corrupt a running dev server's .next.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
+  // Standalone is only needed by the Figma Make nextjs adapter; Vercel doesn't want the extra trace step.
+  output: process.env.NEXT_BUILD_STANDALONE === "1" ? "standalone" : undefined,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    // Keep this list narrow and explicit.
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "mui.com",
+      },
+      {
+        protocol: "https",
+        hostname: "flagcdn.com",
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+### .mise.toml
+[tools]
+node = "22.12.0"
+npm = "10"
+--- documentation ---
+### README.md
+# Next.js + Material-UI Demo Project
+
+This is a comprehensive [Next.js](https://nextjs.org) project showcasing Material-UI (MUI) components, theming, and design system implementations. The project includes multiple demo pages, Storybook integration, and custom theme switching capabilities.
+
+## Repository Information
+
+This project is maintained in two repositories:
+
+- **Organization Repository**: [`wiley/pp-ux-tooling`](https://github.com/wiley/pp-ux-tooling) - Primary Wiley organization repository
+- **Development Fork**: [`sallen-wiley/next.js-test`](https://github.com/sallen-wiley/next.js-test) - Personal development fork
+
+Changes must be pushed to each repository separately:
+
+### Git Configuration
+
+```bash
+# View configured remotes
+git remote -v
+
+# Push to each repository separately
+git push origin main    # Personal fork
+git push wiley main     # Organization repo
+```
+
+## Features
+
+- **Material-UI v7**: Latest version with emotion styling
+- **Multiple Themes**: 6 custom themes (Default, Sage, Research Exchange, Wiley, Wiley2025, Phenom) with dynamic switching
+- **Light/Dark Mode**: Full color mode support across all themes
+- **Supabase Integration**: PostgreSQL database with authentication and RBAC (configurable)
+- **Custom Components**: Reusable UI components with theme-aware styling
+- **Storybook Integration**: Component documentation and testing
+- **Typography Demo**: Comprehensive font and typography showcase
+- **Kitchen Sink**: Complete component library examples
+- **Figma Integration**: Code Connect for design-to-code workflow
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── admin/              # Admin tools and dashboards
+│   ├── auth/               # Authentication pages
+│   ├── debug/              # System diagnostics and debugging
+│   ├── experiments/        # Experimental features
+│   │   ├── notifications/  # Notification system experiments
+│   ├── palette-generator/ # HSV color palette generator
+│   │   └── workflow-builder/  # Workflow builder experiments
+│   ├── kitchen-sink/       # Component showcase
+│   ├── onboarding-demos/   # User onboarding flows
+│   ├── reset-password/     # Password reset flow
+│   ├── reviewer-dashboard/ # Reviewer invitation system
+│   └── woaa/              # Custom demo page
+├── components/            # Reusable components
+│   ├── app/               # App-level components (headers, FAB)
+│   ├── auth/              # Authentication components
+│   ├── mui/               # MUI component wrappers
+│   ├── product/           # Product-specific components (logos)
+│   └── tokens/            # Design token stories
+├── contexts/              # React contexts (theme, logo, header)
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utilities (Supabase client, RBAC)
+├── services/              # Data services
+├── themes/                # Custom MUI themes (6 themes)
+├── types/                 # TypeScript type definitions
+└── utils/                 # Helper utilities
+database/                  # Supabase SQL schemas and migrations
+docs/                      # Comprehensive documentation
+```
+
+## VS Code Workspace Personalization
+
+For a personalized development environment in VS Code, refer to `project.code-workspace` in the project root. This file contains recommended tasks, settings, and extension suggestions tailored for Storybook, Material-UI, and Next.js workflows. You can further customize your workspace by editing this file to match your preferences.
+
+## Getting Started
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Run the development server:
+
+```bash
+npm run dev
+```
+
+3. Open [http://localhost:3000](http://localhost:3000) to see the application
+
+4. Run Storybook for component development:
+
+```bash
+npm run storybook
+```
+
+Open [http://localhost:6006](http://localhost:6006) to view the Storybook interface.
+
+## Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build the application for production
+- `npm run start` - Start the production server
+- `npm run lint` - Run ESLint for code quality
+- `npm run storybook` - Start Storybook development server
+- `npm run build-storybook` - Build Storybook for production
+- `npm run chromatic` - Deploy to Chromatic for visual testing
+
+### Image Pipeline Scripts
+
+- `npm run images:build` - Build optimized images from source assets into `public/images/generated`
+- `npm run images:clean` - Remove generated image derivatives and reset the generated folder
+
+The image build step runs automatically before `npm run dev` and `npm run build`.
+
+## Image Asset Workflow
+
+Use a source-first workflow:
+
+- Place high-resolution source assets in `assets/images/source/` (commit these)
+- Generated, optimized runtime assets are written to `public/images/generated/` (do not commit these)
+- Use `next/image` and point at generated paths (or use the generated manifest)
+
+The build script currently:
+
+- Converts supported raster formats (`.jpg`, `.jpeg`, `.png`, `.tif`, `.tiff`, `.webp`) to optimized `.webp`
+- Auto-rotates based on EXIF metadata
+- Resizes large images down to a max width of `2560px` without enlarging smaller images
+- Writes `public/images/generated/manifest.json` with `src`, `width`, and `height` metadata for each source asset
+
+Example usage with the generated manifest:
+
+```tsx
+import Image from "next/image";
+import imageManifest from "@/../public/images/generated/manifest.json";
+
+const hero = imageManifest["home/hero.jpg"];
+
+<Image
+  src={hero.src}
+  width={hero.width}
+  height={hero.height}
+  alt="Hero"
+  priority
+/>;
+```
+
+## Key Technologies
+
+- **Next.js 15.3.6** - React framework with App Router
+- **React 19** - Latest React with concurrent features
+- **Material-UI v7.1** - React component library with custom theming
+- **Emotion** - CSS-in-JS styling engine
+- **TypeScript** - Type-safe development with strict mode
+- **Supabase** - Authentication, RBAC, and PostgreSQL database
+- **Storybook 9** - Component development and documentation
+- **Chromatic** - Visual testing and review
+- **Figma Code Connect** - Design-to-code integration
+- **D3.js** - Data visualization for palette tools
+
+## Theme System
+
+The project includes a sophisticated theming system with:
+
+- **Dynamic theme switching** via FloatingActionButton (FAB)
+- **6 Brand Themes**: Default, Sage, Research Exchange, Wiley, Wiley2025, Phenom
+- **Light/Dark/System Mode**: Full color mode support for all themes
+- **Custom color palettes** with extended neutral, black, and white variants
+- **Custom typography scales** per theme with web font integration
+- **Logo switching** with independent runtime controls
+- **Consistent design tokens** exposed via Storybook stories
+
+### URL Appearance Presets
+
+Theme, color mode, and logo can be shared through URL query parameters:
+
+- `theme=<themeId>`
+- `mode=<light|dark|system>`
+- `logo=<tenantId>`
+
+Example:
+
+`/reviewer-dashboard?theme=phenom&mode=dark&logo=wiley2025`
+
+Behavior rules:
+
+- URL appearance params take precedence over page-level forced theme defaults and saved local storage values.
+- Appearance params are preserved through in-app navigation while active.
+- Invalid appearance param values are ignored and removed from the URL.
+
+## Development Workflow
+
+1. **Component Development**: Use Storybook to develop and test components in isolation
+2. **Visual Testing**: Chromatic integration for visual regression testing
+3. **Design Integration**: Figma Code Connect for maintaining design-code consistency
+4. **Type Safety**: Full TypeScript coverage for reliable development
+
+## Demo Pages
+
+- `/` - Main landing page with featured tools and demo links
+- `/kitchen-sink` - Complete MUI component library showcase
+- `/palette-generator` - Public HSV color palette generator with guest local drafts and signed-in cloud library
+- `/experiments/workflow-builder` - Workflow builder experiments
+- `/experiments/notifications/admin` - Notification administration
+- `/experiments/notifications/history` - Notification history
+- `/experiments/notifications/preferences` - Notification preferences
+- `/onboarding-demos` - User onboarding workflow examples
+- `/woaa` - WOAA demo implementation
+- `/reviewer-dashboard` - Reviewer invitation management system
+- `/admin` - Administrative tools and role management
+- `/debug` - System diagnostics and connection testing
+
+## Learn More
+
+### Documentation
+
+#### Canonical Docs (Day-To-Day Order)
+
+1. **[Setup Guide](SETUP_GUIDE.md)** - Start here for local setup and day-to-day run workflow
+2. **[Database SQL Scripts](database/README.md)** - Migration order, RLS model, and operational queries
+3. **[Schema Exports](database/schema-exports/README.md)** - Current schema export workflow and JSON metadata format
+4. **[Reviewer Ingestion Scripts](database/reviewer-ingestion/README.md)** - JSON ingestion, cleanup, and schema export tooling
+5. **[RoleGuard Usage](docs/ROLEGUARD_USAGE.md)** - Role-based UI access patterns in the app
+6. **[Theme Guide](docs/development/theme-guide.md)** - Theme development and customization workflow
+7. **[Storybook Guide](docs/development/storybook-guide.md)** - Component development and story authoring workflow
+8. **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow
+
+#### Additional References
+
+- **[Setup Guide](SETUP_GUIDE.md)** - Complete setup and development workflow
+- **[Documentation Hub](docs/README.md)** - Comprehensive documentation index
+- **[Database SQL Scripts](database/README.md)** - Migration order, RLS model, and operational queries
+- **[Schema Exports](database/schema-exports/README.md)** - Current schema export workflow and JSON metadata format
+- **[RoleGuard Usage](docs/ROLEGUARD_USAGE.md)** - Role-based UI access patterns in the app
+- **[Theme Development](docs/development/theme-guide.md)** - Theme creation and customization
+- **[Storybook Guide](docs/development/storybook-guide.md)** - Component development workflow
+- **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Property-first MCP flow, resume checklist, and reliable publish process
+
+### Technologies
+
+- [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
+- [Material-UI Documentation](https://mui.com/) - Comprehensive MUI component guide
+- [Storybook Documentation](https://storybook.js.org/docs) - Component development best practices
+- [Emotion Documentation](https://emotion.sh/docs) - CSS-in-JS styling guide
+
+## Deployment
+
+### Vercel (Recommended)
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+### Other Platforms
+
+This project can be deployed to any platform that supports Node.js:
+
+- Netlify
+- AWS Amplify
+- Railway
+--- example env files only ---

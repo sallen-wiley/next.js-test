@@ -1,0 +1,126 @@
+--- environment references (excluding env files/deps/git) ---
+./scripts/check-figma-node-ids.js:6:const token = process.env.FIGMA_ACCESS_TOKEN;
+./scripts/generate-figma-icon-connect.mjs:16:const token = process.env.FIGMA_ACCESS_TOKEN;
+./scripts/figma-node-props.js:5:const token = process.env.FIGMA_ACCESS_TOKEN;
+./docs/setup/PASSWORD_RESET_SETUP.md:13:- Added `NEXT_PUBLIC_SITE_URL=http://localhost:3000`
+./docs/setup/PASSWORD_RESET_SETUP.md:102:   NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+./docs/setup/PASSWORD_RESET_SETUP.md:122:- Verify `NEXT_PUBLIC_SITE_URL` matches your domain
+./next.config.ts:5:  distDir: process.env.NEXT_DIST_DIR ?? ".next",
+./next.config.ts:7:  output: process.env.NEXT_BUILD_STANDALONE === "1" ? "standalone" : undefined,
+./codeConnectChat.md:478:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:576:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:603:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:680:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:766:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:784:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:800:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:819:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:835:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:1020:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:1037:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:1064:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:1078:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:1095:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:1196:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:2138:const token=process.env.FIGMA_ACCESS_TOKEN;
+./codeConnectChat.md:2153:const token=process.env.FIGMA_ACCESS_TOKEN;
+./.tmp/env-scan.txt:131:  distDir: process.env.NEXT_DIST_DIR ?? ".next",
+./.tmp/env-scan.txt:133:  output: process.env.NEXT_BUILD_STANDALONE === "1" ? "standalone" : undefined,
+./database/run-migration.js:24:  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+./database/run-migration.js:25:const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+./src/middleware.ts:11:    process.env.NODE_ENV === "development" &&
+./src/utils/reviewerMetrics.ts:6:const PUBLIC_EMAIL_DOMAINS = [
+./src/utils/reviewerMetrics.ts:31:  return !PUBLIC_EMAIL_DOMAINS.includes(domain);
+./src/utils/supabase/server.ts:4:const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./src/utils/supabase/server.ts:5:const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+./src/utils/supabase/client.ts:3:const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./src/utils/supabase/client.ts:4:const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+./src/utils/supabase/client.ts:11:  "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment.";
+./src/utils/supabase/admin.ts:3:const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+./src/utils/supabase/admin.ts:4:const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+./src/hooks/useDevAutoLogin.ts:6:const DEV_EMAIL = process.env.NEXT_PUBLIC_DEV_EMAIL;
+./src/hooks/useDevAutoLogin.ts:7:const DEV_PASSWORD = process.env.NEXT_PUBLIC_DEV_PASSWORD;
+./src/hooks/useDevAutoLogin.ts:11: * NEXT_PUBLIC_DEV_EMAIL and NEXT_PUBLIC_DEV_PASSWORD. Fires once per mount
+./src/hooks/useDevAutoLogin.ts:15: *   NEXT_PUBLIC_DEV_EMAIL=you@example.com
+./src/hooks/useDevAutoLogin.ts:16: *   NEXT_PUBLIC_DEV_PASSWORD=yourdevpassword
+./src/hooks/useDevAutoLogin.ts:34:    const isDev = process.env.NODE_ENV === "development";
+./SETUP_GUIDE.md:26:NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+./SETUP_GUIDE.md:27:NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+./SETUP_GUIDE.md:30:NEXT_PUBLIC_ENABLE_AUTH=false              # Start with auth disabled for easier testing
+./SETUP_GUIDE.md:31:NEXT_PUBLIC_AUTH_TYPE=supabase             # Authentication provider
+./SETUP_GUIDE.md:66:NEXT_PUBLIC_ENABLE_AUTH=false
+./SETUP_GUIDE.md:76:NEXT_PUBLIC_ENABLE_AUTH=true
+./SETUP_GUIDE.md:85:When you enable authentication (`NEXT_PUBLIC_ENABLE_AUTH=true`), you can use these test accounts:
+./SETUP_GUIDE.md:245:1. Set `NEXT_PUBLIC_ENABLE_AUTH=true`
+./SETUP_GUIDE.md:253:NEXT_PUBLIC_ENABLE_AUTH=false    # No login required
+./database/run-direct-migration.js:21:  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+./database/run-direct-migration.js:22:const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+./database/reviewer-ingestion/DATA_INGESTION_README.md:267:  - `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL`)
+./database/reviewer-ingestion/README.md:25:NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+./database/reviewer-ingestion/cleanup.js:47:  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+./database/reviewer-ingestion/cleanup.js:48:const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+./database/reviewer-ingestion/cleanup.js:52:  console.error("  SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
+./database/reviewer-ingestion/export-schema.js:38:  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+./database/reviewer-ingestion/export-schema.js:39:const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+./database/reviewer-ingestion/export-schema.js:43:  console.error("  SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
+./database/reviewer-ingestion/ingest.js:41:  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+./database/reviewer-ingestion/ingest.js:42:const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // Use service role for admin operations
+./database/reviewer-ingestion/ingest.js:46:  console.error("  SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)");
+./database/reviewer-ingestion/ingest.js:52:  console.error("  NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co");
+./src/components/app/FullPageLoader.tsx:19:  showDebug = process.env.NODE_ENV === "development",
+./src/app/admin/page.tsx:208:    const isAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_AUTH === "true";
+./src/app/admin/page.tsx:222:            NEXT_PUBLIC_ENABLE_AUTH=true in your environment to access admin
+./src/app/admin/page.tsx:230:              NEXT_PUBLIC_ENABLE_AUTH ={" "}
+./src/app/admin/page.tsx:231:              {process.env.NEXT_PUBLIC_ENABLE_AUTH || "false"}
+./src/app/admin/page.tsx:234:              NEXT_PUBLIC_AUTH_TYPE ={" "}
+./src/app/admin/page.tsx:235:              {process.env.NEXT_PUBLIC_AUTH_TYPE || "undefined"}
+./src/components/auth/AuthProvider.tsx:94:      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+./src/app/api/dev-source/route.ts:65:  if (process.env.NODE_ENV !== "development") {
+./src/components/auth/AuthWrapper.tsx:14:const PUBLIC_EXACT_PATHS = new Set([
+./src/components/auth/AuthWrapper.tsx:23:const PUBLIC_PREFIX_PATHS = ["/onboarding-demos", "/woaa"];
+./src/components/auth/AuthWrapper.tsx:26:  if (PUBLIC_EXACT_PATHS.has(pathname)) {
+./src/components/auth/AuthWrapper.tsx:30:  return PUBLIC_PREFIX_PATHS.some(
+./src/components/auth/AuthWrapper.tsx:87:  const authEnabledInEnv = process.env.NEXT_PUBLIC_ENABLE_AUTH === "true";
+--- existing make setup ---
+### .figma/make/deploy
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Build into .next-deploy so this never clobbers the supervised dev server's .next.
+# NEXT_BUILD_STANDALONE opts into the server bundle the Make nextjs adapter needs.
+NODE_ENV=production \
+  NEXT_DIST_DIR=.next-deploy \
+  NEXT_BUILD_STANDALONE=1 \
+  npm run build
+
+[[ -d ".next-deploy" ]] || {
+  echo "Expected build output at .next-deploy" >&2
+  exit 1
+}
+
+figma make deploy --build-dir ".next-deploy" --adapter nextjs
+### .figma/make/dev
+#!/usr/bin/env bash
+set -euo pipefail
+
+exec npm run dev -- --hostname 0.0.0.0 --port "$PORT"
+### .figma/make/install
+#!/usr/bin/env bash
+set -euo pipefail
+
+# npm ci rebuilds node_modules from scratch every run, which overruns the
+# code-layer startup window. Reuse a valid tree when dependencies are unchanged.
+stamp="node_modules/.figma-package-metadata.checksum"
+checksum="$(cksum package.json package-lock.json)"
+
+if [[ -d node_modules ]] &&
+  npm ls --depth=0 --silent >/dev/null 2>&1 &&
+  { [[ ! -f "$stamp" ]] || [[ "$(cat "$stamp")" == "$checksum" ]]; }; then
+  printf '%s\n' "$checksum" >"$stamp"
+  exit 0
+fi
+
+npm ci --prefer-offline --no-audit --no-fund
+printf '%s\n' "$checksum" >"$stamp"
+--- lockfiles ---
+./package-lock.json
