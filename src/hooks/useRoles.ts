@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { createClient } from "@/utils/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/utils/supabase/client";
 import {
   UserProfile,
   UserRole,
@@ -23,14 +23,16 @@ export function useUserProfile() {
 
   // Move supabase client inside useEffect to avoid dependency issues
   useEffect(() => {
-    const supabase = createClient();
-    if (!user) {
+    // Supabase is an optional integration; creating the client throws when unconfigured.
+    if (!isSupabaseConfigured() || !user) {
       setProfile(null);
       setLoading(false);
       cachedProfile = null;
       cachedUserId = null;
       return;
     }
+
+    const supabase = createClient();
 
     // If we already have cached profile for this user, use it
     if (cachedUserId === user.id && cachedProfile) {
