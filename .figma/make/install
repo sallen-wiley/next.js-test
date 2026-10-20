@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# npm ci rebuilds node_modules from scratch every run, which overruns the
+# code-layer startup window. Reuse a valid tree when dependencies are unchanged.
+stamp="node_modules/.figma-package-metadata.checksum"
+checksum="$(cksum package.json package-lock.json)"
+
+if [[ -d node_modules ]] &&
+  npm ls --depth=0 --silent >/dev/null 2>&1 &&
+  { [[ ! -f "$stamp" ]] || [[ "$(cat "$stamp")" == "$checksum" ]]; }; then
+  printf '%s\n' "$checksum" >"$stamp"
+  exit 0
+fi
+
+npm ci --prefer-offline --no-audit --no-fund
+printf '%s\n' "$checksum" >"$stamp"
