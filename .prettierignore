@@ -1,0 +1,10 @@
+# Next.js rewrites tsconfig.json on build; formatting it just creates churn.
+tsconfig.json
+
+# Build and vendor output
+.next/
+.next-deploy/
+out/
+storybook-static/
+node_modules/
+public/_piny
