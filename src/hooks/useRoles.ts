@@ -135,7 +135,7 @@ export function useUserProfile() {
   }, [user]); // Remove supabase from dependencies
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!profile) return false;
+    if (!profile || !isSupabaseConfigured()) return false;
 
     const supabase = createClient();
     try {
