@@ -12,6 +12,7 @@ import {
 import { useHeaderConfig } from "@/contexts/HeaderContext";
 import {
   AccordionSection,
+  ArticleSummarySection,
   ThemeColorsSection,
   SpacingSection,
   PaperSection,
@@ -103,6 +104,13 @@ export default function KitchenSink() {
               >
                 Container Deep Dive
               </Button>
+              <Button
+                href="/kitchen-sink/mock-design"
+                size="small"
+                variant="contained"
+              >
+                Mock Design
+              </Button>
               {categoryLinks.map((category) => (
                 <Button
                   key={category.id}
@@ -153,6 +161,7 @@ export default function KitchenSink() {
           <AccordionSection />
           <CardsSection />
           <PaperSection />
+          <ArticleSummarySection />
 
           {/* Inputs */}
           <Grid size={12} id="inputs" sx={{ scrollMarginTop: 88 }}>

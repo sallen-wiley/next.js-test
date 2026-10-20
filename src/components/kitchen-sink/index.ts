@@ -12,6 +12,7 @@ export { SlidersSection } from "./SlidersSection";
 export { ToggleButtonsSection } from "./ToggleButtonsSection";
 export { RatingSection } from "./RatingSection";
 export { AlertsSection } from "./AlertsSection";
+export { ArticleSummarySection } from "./ArticleSummarySection";
 export { DataGridSection } from "./DataGridSection";
 export { ChipsSection } from "./ChipsSection";
 export { AvatarsSection } from "./AvatarsSection";
