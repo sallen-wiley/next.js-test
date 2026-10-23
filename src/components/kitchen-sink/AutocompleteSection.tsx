@@ -49,6 +49,14 @@ const groupedFilmOptions: readonly GroupedFilmOption[] = [...filmOptions]
   .sort((a, b) => a.firstLetter.localeCompare(b.firstLetter));
 
 const freeSoloOptions = filmOptions.map((option) => option.label);
+const visibleChipLimit = 2;
+const defaultFavoriteFilms = [
+  filmOptions[1],
+  filmOptions[4],
+  filmOptions[9],
+  filmOptions[5],
+  filmOptions[8],
+];
 
 function sleep(duration: number): Promise<void> {
   return new Promise((resolve) => {
@@ -211,37 +219,78 @@ export const AutocompleteSection = React.memo(() => {
                 gutterBottom
                 sx={{ typography: "mono" as const }}
               >
-                Multiple Values
+                Multiple Values (Limited Chips)
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Tag selection with default chips and a collapsed tag preview.
+                Use multiple with limitTags={"{2}"} to show the first two
+                selected chips and a +N count when the input is not focused.
               </Typography>
 
               <Autocomplete
                 multiple
-                limitTags={2}
+                limitTags={visibleChipLimit}
                 options={filmOptions}
                 getOptionLabel={(option) => option.label}
-                defaultValue={[filmOptions[1], filmOptions[4], filmOptions[9]]}
-                renderValue={(values, getItemProps) =>
-                  values.map((option, index) => {
-                    const { key, ...itemProps } = getItemProps({ index });
-
-                    return (
-                      <Chip
-                        key={key}
-                        size="small"
-                        label={option.label}
-                        {...itemProps}
-                      />
-                    );
-                  })
-                }
+                defaultValue={defaultFavoriteFilms}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Favorites"
                     placeholder="Pick movies"
+                    helperText="Focus to see all selected chips; click outside to collapse back to two. All selections are retained."
+                  />
+                )}
+              />
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ typography: "mono" as const }}
+              >
+                Multiple Values (Always Limited Chips)
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Use renderValue to show only the first two selected chips and a
+                +N count, even while the input is focused.
+              </Typography>
+
+              <Autocomplete
+                multiple
+                options={filmOptions}
+                getOptionLabel={(option) => option.label}
+                defaultValue={defaultFavoriteFilms}
+                renderValue={(selected, getItemProps) => (
+                  <>
+                    {selected
+                      .slice(0, visibleChipLimit)
+                      .map((option, index) => {
+                        const { key, ...itemProps } = getItemProps({ index });
+
+                        return (
+                          <Chip
+                            key={key}
+                            label={option.label}
+                            {...itemProps}
+                          />
+                        );
+                      })}
+                    {selected.length > visibleChipLimit && (
+                      <span
+                        aria-label={`${selected.length - visibleChipLimit} more selected movies`}
+                      >
+                        +{selected.length - visibleChipLimit}
+                      </span>
+                    )}
+                  </>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Favorites (always limited)"
+                    placeholder="Pick movies"
+                    helperText="Focus to compare: only two chips stay visible. All selections are retained; deselect hidden movies in the dropdown."
                   />
                 )}
               />
