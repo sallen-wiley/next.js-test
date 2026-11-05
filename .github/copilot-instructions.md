@@ -8,18 +8,29 @@ This is a comprehensive demonstration project showcasing Material-UI v7 with cus
 
 ## Repository Configuration
 
-This project uses a dual-remote setup:
+**Canonical guide:** [`docs/development/git-remotes-and-deployment.md`](../docs/development/git-remotes-and-deployment.md)
 
-- **wiley** remote → `wiley/pp-ux-tooling` (Wiley organization repository)
-- **origin** remote → `sallen-wiley/next.js-test` (personal development fork)
+Three remotes; **`origin` (`sallen-wiley/next.js-test`) is primary**:
 
-Changes must be pushed to each repository separately:
+- **origin** → `sallen-wiley/next.js-test` — primary remote; Vercel builds from here
+- **wiley** → `wiley/pp-ux-tooling` — Wiley org publish mirror (`main` only)
+- **rarebush** → `rarebush/ux-tooling` — backup mirror (`main` only)
+
+**Required:**
+
+1. Keep `main` at the same commit on `origin`, `wiley`, and `rarebush`.
+2. Keep `origin/preview` never behind `main` (fast-forward + push after every `main` update).
+3. Do not keep `preview` on `wiley` or `rarebush`.
 
 ```bash
-# Push to each remote separately
 git push origin main
 git push wiley main
+git push rarebush main
+git branch -f preview main
+git push origin preview
 ```
+
+Vercel: `main` → production `https://ux.wileytests.com`; `preview` → `https://ppux2025.vercel.app`.
 
 ## Architecture Overview
 
@@ -281,9 +292,10 @@ mkdir folder                         # Works but prefer New-Item
 
 ## Deployment & Branching
 
-- **Vercel Deployment**: Automated on pushes to main branch
-- **Branch Strategy**: Avoid branches when possible due to access limitations to branch environments
-- **Disruptive Changes**: Use branches only for highly disruptive changes, merge quickly
+- **Vercel (from `origin` only)**: `main` → production (`ux.wileytests.com`); `preview` → preview (`ppux2025.vercel.app`)
+- **Sync**: After updating `main`, push it to all three remotes, then fast-forward and push `origin/preview` so it is never behind
+- **Branch Strategy**: Prefer `main`; use short-lived feature branches only when needed, then delete them from remotes after merge
+- **Details**: `docs/development/git-remotes-and-deployment.md`
 
 ## Figma Integration Workflow
 

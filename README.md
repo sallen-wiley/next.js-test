@@ -4,12 +4,19 @@ This is a comprehensive [Next.js](https://nextjs.org) project showcasing Materia
 
 ## Repository Information
 
-This project is maintained in two repositories:
+This project uses three Git remotes. **`origin` (`sallen-wiley/next.js-test`) is primary** — it owns day-to-day development and Vercel hosting. The other remotes mirror `main` only.
 
-- **Organization Repository**: [`wiley/pp-ux-tooling`](https://github.com/wiley/pp-ux-tooling) - Primary Wiley organization repository
-- **Development Fork**: [`sallen-wiley/next.js-test`](https://github.com/sallen-wiley/next.js-test) - Personal development fork
+| Remote | Repository | Role |
+| --- | --- | --- |
+| `origin` | [`sallen-wiley/next.js-test`](https://github.com/sallen-wiley/next.js-test) | **Primary** — development + Vercel |
+| `wiley` | [`wiley/pp-ux-tooling`](https://github.com/wiley/pp-ux-tooling) | Wiley org publish mirror (`main` only) |
+| `rarebush` | [`rarebush/ux-tooling`](https://github.com/rarebush/ux-tooling) | Backup mirror (`main` only) |
 
-Changes must be pushed to each repository separately:
+**Required sync rules:**
+
+1. Keep `main` at the **same commit** on `origin`, `wiley`, and `rarebush`.
+2. Keep `origin/preview` **never behind** `main` (fast-forward and push after every `main` update).
+3. Do **not** keep a `preview` branch on `wiley` or `rarebush`.
 
 ### Git Configuration
 
@@ -17,11 +24,15 @@ Changes must be pushed to each repository separately:
 # View configured remotes
 git remote -v
 
-# Push to each repository separately
-git push origin main    # Personal fork
-git push wiley main     # Organization repo
+# After landing work on main: sync all remotes, then refresh preview
+git push origin main
+git push wiley main
+git push rarebush main
+git branch -f preview main
+git push origin preview
 ```
 
+Full branch, remote, and hosting rules: **[Git remotes and deployment](docs/development/git-remotes-and-deployment.md)**.
 ## Features
 
 - **Material-UI v7**: Latest version with emotion styling
@@ -225,6 +236,7 @@ Behavior rules:
 7. **[Storybook Guide](docs/development/storybook-guide.md)** - Component development and story authoring workflow
 8. **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow
 9. **[Using Figma designs with Code Connect](docs/development/figma-code-connect-usage.md)** - Selecting React or RPM mappings in Dev Mode and Figma MCP
+10. **[Git remotes and deployment](docs/development/git-remotes-and-deployment.md)** - Primary/mirror remotes, `main`/`preview` sync rules, Vercel hosts
 
 #### Additional References
 
@@ -237,6 +249,7 @@ Behavior rules:
 - **[Storybook Guide](docs/development/storybook-guide.md)** - Component development workflow
 - **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Property-first MCP flow, resume checklist, and reliable publish process
 - **[Using Figma designs with Code Connect](docs/development/figma-code-connect-usage.md)** - Selecting the right mapping in Dev Mode or through Figma MCP, including the RPM label
+- **[Git remotes and deployment](docs/development/git-remotes-and-deployment.md)** - Three-remote sync, preview never behind main, Vercel production/preview hosts
 
 ### Technologies
 
@@ -247,33 +260,29 @@ Behavior rules:
 
 ## Deployment
 
-### Vercel (Recommended)
+Vercel is connected to the **primary** remote (`sallen-wiley/next.js-test` / `origin`):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Branch | Vercel environment | URL |
+| --- | --- | --- |
+| `main` | Production | [https://ux.wileytests.com](https://ux.wileytests.com) |
+| `preview` | Preview | [https://ppux2025.vercel.app](https://ppux2025.vercel.app) |
 
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-### Other Platforms
-
-This project can be deployed to any platform that supports Node.js:
-
-- Netlify
-- AWS Amplify
-- Railway
-- Digital Ocean App Platform
+Pushes to `wiley` or `rarebush` do not drive these deployments. See **[Git remotes and deployment](docs/development/git-remotes-and-deployment.md)** for the required sync sequence.
 
 ## Contributing
 
-1. Create a feature branch from `main` (avoid branches when possible due to deployment constraints)
+1. Prefer committing on `main`; use short-lived feature branches only when needed
 2. Make your changes and test thoroughly
 3. Test with Storybook (`npm run storybook`) and the development server (`npm run dev`)
 4. Commit your changes with clear, descriptive commit messages
-5. Push to both repositories separately:
+5. Sync remotes and keep `preview` current:
    ```bash
    git push origin main
    git push wiley main
+   git push rarebush main
+   git branch -f preview main
+   git push origin preview
    ```
-
 ## Documentation
 
 - **[Main Documentation Hub](docs/README.md)** - Organized guides for setup, development, and components
