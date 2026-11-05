@@ -8,6 +8,7 @@
       "node_modules/**",
       "dist/**",
       ".next/**",
+      "code-connect-test/**",
       "src/components/mui/layout/Container.figma.tsx"
     ],
     "label": "React",

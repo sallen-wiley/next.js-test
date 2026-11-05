@@ -4,7 +4,7 @@
 
 Date: 2026-09-24  
 Audience: engineers implementing a screen, and agents using the Figma MCP  
-Related: [Code Connect mapping runbook](figma-code-connect-runbook.md) (authors of `.figma.tsx` files), [Figma MCP guidance](../FIGMA_MCP_GUIDANCE.md) (do not copy Tailwind into `sx`)
+Related: [Code Connect mapping runbook](figma-code-connect-runbook.md) (authors of `.figma.tsx` files), [Figma MCP guidance](../FIGMA_MCP_GUIDANCE.md) (do not copy Tailwind into `sx`), [Code Connect labels and RPM test](figma-code-connect-labels.md) (custom label behavior and verification)
 
 This note is a draft of how to *consume* published mappings when reproducing a design. Coverage is incomplete, several behaviours were validated on a single fixture, and the mapping set will keep changing. Use it as a hypothesis: if a step disagrees with the file in front of you, trust the file, then tell UX/frontend so this guide can change.
 
@@ -47,7 +47,7 @@ If the designer wrapped the mock in `<Container>`, prefer the parent frame (`moc
 ## For engineers (Dev Mode)
 
 1. Open the **screen frame** in Dev Mode, not only the outermost library instance.
-2. Where a layer shows a Code Connect snippet under the **React** label, use that component from `@mui/material` (or this repo) with those props. Ignore the GitHub URL in the import; search the codebase.
+2. Use the Code Connect label dropdown to select the implementation you need. Choose **React** for the standard MUI implementation; choose **RPM** when working as an RPM engineer. Use the snippet for that label, not another implementation's snippet. Ignore the GitHub URL in the import; search the codebase.
 3. Walk nested instances. Do not copy only the outermost snippet and stop — especially if it is Container, Paper, or Card.
 4. Treat `{/* Code Connect Logic Instance */}` as **missing content**, not as “nothing goes here.”
 5. Treat `{/* Check the design: … */}` as a real caveat. The snippet cannot express something the file shows (for example nested checkbox indent).
@@ -73,7 +73,20 @@ Suggested loop (evaluate; revise if a step is noisy or redundant):
 6. **If the parent is a mapped open host, drill only into instances.** Re-requesting a raw **frame** that lives inside a mapped Container can return that frame’s layout classes with **zero children** (validated 2026-09-22). Re-request the `<Paper>` / `<Button>` **instances** instead. Use `get_metadata` as the child inventory when a frame comes back empty.
 7. **Theme** — translate leftover Tailwind to MUI layout (`Stack`, `Box`, `Grid`) and theme defaults. No `sx` copies of shadows, type ramps, or hex colours unless the product already does that for a documented exception. Named `<Paper>` with a default-looking shadow is `<Paper>` (elevation 1 omitted). See [Paper elevation](#paper-elevation-without-code-connect).
 
-`get_code_connect_map` returning `{}` usually means the wrong `codeConnectLabel` (never pass `MUI React`) or the selection is the component-set node rather than a variant/instance — not “nothing is published.” `get_code_connect_map` also cannot catch an empty slot — it still reports the mapping as published. Only the rendered snippet body (Dev Mode or `get_design_context`) shows `<FormGroup></FormGroup>`.
+`get_code_connect_map` returning `{}` usually means the requested `codeConnectLabel` does not match a published label (for example, `MUI React` when the mapping is published as `React`), or the selection is the component-set node rather than a variant/instance — not “nothing is published.” `get_code_connect_map` also cannot catch an empty slot — it still reports the mapping as published. Only the rendered snippet body (Dev Mode or `get_design_context`) shows `<FormGroup></FormGroup>`.
+
+### Requesting a specific Code Connect label
+
+When a task explicitly targets an implementation other than the standard React one, request that label from `get_design_context` using `clientFrameworks`. For example, for the selected Button instance:
+
+```json
+{
+  "clientFrameworks": "RPM",
+  "clientLanguages": "typescript"
+}
+```
+
+This was verified on 2026-10-23: the same selected Button returned the `AlternateButton` snippet for `RPM` and the MUI `Button` snippet for `React`. Set `clientFrameworks` to the requested label itself (for example, `"RPM"`), not to a comma-separated list containing `RPM` plus `React`, `Next.js`, or `MUI`. Use the exact label shown in Figma's Code Connect dropdown; do not guess or prepend a framework name. If the task does not specify another implementation, use the standard React workflow above.
 
 ### What `get_design_context` emits
 
@@ -270,3 +283,4 @@ Record answers in this list rather than silently updating the steps above.
   Icon/Text InputAdornments, helper text, values, number type and row
   constraints. Documented that label shrink is theme-owned and that empty
   adornment props may remain as harmless `undefined` values.
+- 2026-10-23: Documented selecting the `RPM` Code Connect mapping in Dev Mode and requesting it through Figma MCP with `clientFrameworks: "RPM"`; verified against the same Button instance as the `React` mapping.

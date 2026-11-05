@@ -40,6 +40,7 @@ Use this list as the source of truth for active workflows. Everything else in th
 - **[Image Asset Workflow](development/image-asset-workflow.md)** - Source-first image optimization and generated runtime assets
 - **[Figma Code Connect Runbook](development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow, resume checklist, and component guardrails
 - **[Using Figma designs with Code Connect](development/figma-code-connect-usage.md)** - WIP handoff guide for engineers and agents reproducing a design (evaluate and iterate; not a locked procedure)
+- **[Code Connect labels and RPM test](development/figma-code-connect-labels.md)** - Custom labels, multi-mapping behavior, and the verified RPM/React retrieval example
 - **[MUI Best Practices](development/MUI_BEST_PRACTICES.md)** - Material-UI implementation standards
 
 ### 📚 Specialized References

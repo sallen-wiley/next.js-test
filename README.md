@@ -224,6 +224,7 @@ Behavior rules:
 6. **[Theme Guide](docs/development/theme-guide.md)** - Theme development and customization workflow
 7. **[Storybook Guide](docs/development/storybook-guide.md)** - Component development and story authoring workflow
 8. **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow
+9. **[Using Figma designs with Code Connect](docs/development/figma-code-connect-usage.md)** - Selecting React or RPM mappings in Dev Mode and Figma MCP
 
 #### Additional References
 
@@ -235,6 +236,7 @@ Behavior rules:
 - **[Theme Development](docs/development/theme-guide.md)** - Theme creation and customization
 - **[Storybook Guide](docs/development/storybook-guide.md)** - Component development workflow
 - **[Figma Code Connect Runbook](docs/development/figma-code-connect-runbook.md)** - Property-first MCP flow, resume checklist, and reliable publish process
+- **[Using Figma designs with Code Connect](docs/development/figma-code-connect-usage.md)** - Selecting the right mapping in Dev Mode or through Figma MCP, including the RPM label
 
 ### Technologies
 

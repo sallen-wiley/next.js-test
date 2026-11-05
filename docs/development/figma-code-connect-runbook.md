@@ -235,9 +235,17 @@ Current config behavior:
 - Upload label is `React`
 - Figma file URL is configured in `figma.config.json`
 
-### The label must be `React`
+### Keep the primary mapping label `React`
 
-`codeConnect.label` is not cosmetic. It must stay `React` — a custom value such as `MUI React` silently disables Code Connect substitution in `get_design_context`, which then returns raw Tailwind as if no mappings existed. The same custom label also makes `get_code_connect_map` return `{}` when passed as `codeConnectLabel`. Neither failure produces an error message.
+The main project setup publishes its standard MUI implementation under `React`. Do not change `figma.config.json` to a different label to add a second implementation: keep the primary mapping under `React` and configure/publish the additional mapping from its own setup with the intended label. On 2026-10-23, an independent test setup published the same Button node under `RPM`; `get_design_context` returned distinct snippets when called with `clientFrameworks: "React"` and `clientFrameworks: "RPM"`. See the [usage guide](figma-code-connect-usage.md#requesting-a-specific-code-connect-label) for retrieval and [label research](figma-code-connect-labels.md#live-rpm-label-test) for the test details.
+
+Use the exact label shown in Figma's Code Connect dropdown when a specific implementation is requested. Do not invent a label or rename the main `React` mapping as a substitute.
+
+**Independent publishing:** an RPM engineer can publish mappings for the same Figma components from a separate setup or repository using `label: "RPM"` without replacing the `React` mappings. Isolation comes from distinct labels, not repository boundaries. Publishing under an existing label updates/replaces that label's mappings for the targeted nodes; two repositories publishing under `React` are not isolated.
+
+- Keep RPM publishes labeled `RPM`; do not override them with `--label React`.
+- Scope RPM unpublish operations to `RPM`, never `React`.
+- The verified example covers the same Button node under both labels, not a second Git checkout.
 
 ## Reliable One-Component Workflow
 
@@ -475,9 +483,9 @@ Two further gotchas:
 
 ## Selecting a Whole Frame: Does Code Connect Get Applied?
 
-**Yes — but only if the Code Connect label is `React`.**
+**Yes — request the published Code Connect label.**
 
-This cost real time to find, so it is worth stating plainly: with `"label": "MUI React"` in `figma.config.json`, `get_design_context` silently ignored every mapping and returned full Tailwind expansion, even for verified published components. Changing the label to `React` and republishing made substitution work immediately.
+Earlier requests with `"label": "MUI React"` returned Tailwind instead of snippets; changing the label to `React` resolved that fixture. This did not establish that custom labels are unsupported. The 2026-10-23 test retrieved `RPM` and `React` mappings independently by setting `clientFrameworks` to the desired published label.
 
 With the correct label, `get_design_context` returns:
 
@@ -496,7 +504,7 @@ import { FormControl, FormGroup } from "@mui/material";
 
 No Tailwind, no div soup, caveat comments preserved. The tool also appends instructions telling the agent to drop the `CodeConnectSnippet` wrapper and to locate and use the real component in the codebase.
 
-**Do not change `label` to something descriptive.** It looks like cosmetic metadata and is not. A custom label also breaks `get_code_connect_map` when passed as `codeConnectLabel`. Both failures are silent.
+**Labels affect mapping selection, not just display.** Keep the main setup labeled `React`; publish a separate implementation under its own label and request that label explicitly through `clientFrameworks`. The successful RPM retrieval used `get_design_context`; initial `get_code_connect_map` lookups timed out and did not establish a custom-label restriction.
 
 ### How nesting resolves
 
