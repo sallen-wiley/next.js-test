@@ -19,28 +19,9 @@ figma.connect(
 
       divider: figma.boolean("Divider"),
 
-      disabled: figma.enum("State", {
-        Enabled: undefined,
-        Hovered: undefined,
-        Selected: undefined,
-        Focused: undefined,
-        Pressed: undefined,
-        Disabled: true,
-        FocusedSelected: undefined,
-        HoverSelected: undefined,
-      }),
-
-      selected: figma.enum("State", {
-        Enabled: undefined,
-        Hovered: undefined,
-        Selected: true,
-        Focused: undefined,
-        Pressed: undefined,
-        Disabled: undefined,
-        FocusedSelected: true,
-        HoverSelected: true,
-      }),
-
+      // Figma State (Selected / Disabled / etc.) is visual-only on this
+      // component. MUI ListItem no longer accepts selected/disabled — those
+      // props exist on ListItemButton, which is not a UAX DS Figma component.
       label: figma.string("Label"),
 
       left: figma.boolean("Left Slot?", {
@@ -54,23 +35,8 @@ figma.connect(
       }),
     },
 
-    example: ({
-      dense,
-      disableGutters,
-      divider,
-      disabled,
-      selected,
-      label,
-      left,
-      right,
-    }) => (
-      <ListItem
-        dense={dense}
-        disableGutters={disableGutters}
-        divider={divider}
-        disabled={disabled}
-        selected={selected}
-      >
+    example: ({ dense, disableGutters, divider, label, left, right }) => (
+      <ListItem dense={dense} disableGutters={disableGutters} divider={divider}>
         {left}
         <ListItemText primary={label} />
         {right}

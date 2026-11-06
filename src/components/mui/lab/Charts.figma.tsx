@@ -23,7 +23,7 @@ figma.connect(
         height={300}
         series={[{ data: [4, 3, 5] }]}
         xAxis={[{ data: ["A", "B", "C"], scaleType: "band" }]}
-        slotProps={{ legend: { hidden: hideLegend } }}
+        hideLegend={hideLegend}
       />
     ),
 
@@ -52,7 +52,7 @@ figma.connect(
         height={300}
         series={[{ data: [2, 5, 3] }]}
         xAxis={[{ data: [1, 2, 3] }]}
-        slotProps={{ legend: { hidden: hideLegend } }}
+        hideLegend={hideLegend}
       />
     ),
 

@@ -31,9 +31,9 @@ figma.connect(
       }),
 
       loadingPosition: figma.boolean("Loading End", {
-        true: "end",
+        true: "end" as const,
         false: figma.boolean("Loading Start", {
-          true: "start",
+          true: "start" as const,
           false: undefined,
         }),
       }),

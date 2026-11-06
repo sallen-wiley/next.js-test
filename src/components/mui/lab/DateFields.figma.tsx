@@ -16,7 +16,7 @@ figma.connect(
     },
 
     example: ({ clearable }) => (
-      <DateField label="Date" slotProps={{ field: { clearable } }} />
+      <DateField label="Date" clearable={clearable} />
     ),
 
     links: [
@@ -40,7 +40,7 @@ figma.connect(
     },
 
     example: ({ clearable }) => (
-      <TimeField label="Time" slotProps={{ field: { clearable } }} />
+      <TimeField label="Time" clearable={clearable} />
     ),
 
     links: [
@@ -64,7 +64,7 @@ figma.connect(
     },
 
     example: ({ clearable }) => (
-      <DateTimeField label="Date time" slotProps={{ field: { clearable } }} />
+      <DateTimeField label="Date time" clearable={clearable} />
     ),
 
     links: [
