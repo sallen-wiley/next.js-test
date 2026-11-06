@@ -20,6 +20,7 @@ export { BreadcrumbsSection } from "./BreadcrumbsSection";
 export { CardsSection } from "./CardsSection";
 export { DividerSection } from "./DividerSection";
 export { DrawerSection } from "./DrawerSection";
+export { IconsSection } from "./IconsSection";
 export { ListsSection } from "./ListsSection";
 export { MenuSection } from "./MenuSection";
 export { ProgressSection } from "./ProgressSection";

@@ -1,7 +1,8 @@
 // src/components/mui/inputs/Autocomplete.figma.tsx
-// Figma nests <Select> inside <Autocomplete>; MUI does not. Only "Multiple Value" is a real
-// Figma property, so everything else (label, value, variant) is left for the reader.
-// options/label are placeholders taken from the component's own Figma usage description.
+// Figma nests <Select> inside <Autocomplete>; MUI does not. Harvest input props
+// (label, variant, size, state) from that nested Select and put them on TextField
+// via renderInput — Autocomplete itself has no variant prop.
+// options are placeholders; check the design for the real option list.
 import React from "react";
 import { Autocomplete, TextField } from "@mui/material";
 import figma from "@figma/code-connect";
@@ -17,13 +18,16 @@ figma.connect(
       }),
 
       // Figma nests <Select> as the input field; harvest its real properties from there.
+      // Always emit variant (including outlined) so the nested Select Variant is visible
+      // in the snippet — Autocomplete masters default to Outlined, which would otherwise
+      // look like variant was never mapped.
       select: figma.nestedProps("<Select>", {
         label: figma.string("Label"),
 
         variant: figma.enum("Variant", {
           Standard: "standard",
           Filled: "filled",
-          Outlined: undefined,
+          Outlined: "outlined",
         }),
 
         size: figma.enum("Size", {
@@ -32,18 +36,18 @@ figma.connect(
         }),
 
         disabled: figma.enum("State", {
-          Enabled: false,
-          Hovered: false,
-          Focused: false,
+          Enabled: undefined,
+          Hovered: undefined,
+          Focused: undefined,
           Disabled: true,
-          Error: false,
+          Error: undefined,
         }),
 
         error: figma.enum("State", {
-          Enabled: false,
-          Hovered: false,
-          Focused: false,
-          Disabled: false,
+          Enabled: undefined,
+          Hovered: undefined,
+          Focused: undefined,
+          Disabled: undefined,
           Error: true,
         }),
       }),

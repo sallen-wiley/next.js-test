@@ -29,11 +29,12 @@ figma.connect(
         Contained: "contained",
       }),
 
-      // Derive group size from the first nested Button instance.
-      firstButton: figma.nestedProps("<Button>", {
+      // Derive group size from the first nested Button. Layer names are
+      // "<Button> First|Middle|Last" — exact match required for nestedProps.
+      firstButton: figma.nestedProps("<Button> First", {
         size: figma.enum("Size", {
           Small: "small",
-          Medium: "medium",
+          Medium: undefined,
           Large: "large",
         }),
       }),

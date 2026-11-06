@@ -75,5 +75,12 @@ figma.connect(
         {children}
       </Button>
     ),
+
+    links: [
+      {
+        name: "MUI Button API",
+        url: "https://mui.com/material-ui/api/button/",
+      },
+    ],
   },
 );

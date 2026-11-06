@@ -33,6 +33,7 @@ import {
   ChipsSection,
   DataGridSection,
   DividerSection,
+  IconsSection,
   ListsSection,
   TableSection,
   TooltipSection,
@@ -208,6 +209,7 @@ export default function KitchenSink() {
           <ChipsSection />
           <DataGridSection />
           <DividerSection />
+          <IconsSection />
           <ListsSection />
           <TableSection />
           <TooltipSection />

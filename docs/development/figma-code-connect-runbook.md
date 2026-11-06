@@ -195,8 +195,25 @@ Update on every session. `Published` means parsed, published, and verified in De
 | Autocomplete       | inputs       | divergent composite (renders TextField internally)      | `src/components/mui/inputs/Autocomplete.figma.tsx`       | Published and verified (all 4 variants)            |
 | Container          | layout       | layout wrapper (`figma.children("*")`)                  | `src/components/mui/layout/Container.figma.tsx`          | **Unpublished** 2026-09-22. File kept, excluded from `figma.config.json` so publish does not restore it |
 | TextField          | inputs       | composite (FormHelperText, InputAdornment)              | `src/components/mui/inputs/TextField.figma.tsx`          | Base and multiline Code Connect published and verified (`6570:48313`, `7551:51690`) |
-| Select             | inputs       | composite (MenuItem, InputLabel, FormHelperText)        | —                                                        | Not started                                        |
-| MenuItem           | navigation   | atom                                                    | —                                                        | Not started                                        |
+| Fab                | inputs       | atom (Extended + Round connects)                        | `src/components/mui/inputs/Fab.figma.tsx`                | Published (`6556:38264`) and verified |
+| Rating             | inputs       | atom (Size/Disabled only; Star not mapped)              | `src/components/mui/inputs/Rating.figma.tsx`             | Published (`6562:39624`) |
+| MenuItem           | navigation   | atom                                                    | `src/components/mui/navigation/MenuItem.figma.tsx`       | Published (`6576:50735`) |
+| InputLabel         | inputs       | atom                                                    | `src/components/mui/inputs/InputLabel.figma.tsx`         | Published (`11140:154655`) |
+| Select             | inputs       | composite (FormControl + InputLabel + MenuItem placeholders) | `src/components/mui/inputs/Select.figma.tsx`        | Published (`6570:41424`) and verified |
+| Slider             | inputs       | atom                                                    | `src/components/mui/inputs/Slider.figma.tsx`             | Published (`6562:39045`) |
+| ToggleButton       | inputs       | atom                                                    | `src/components/mui/inputs/ToggleButton.figma.tsx`       | Published (`6601:50975`); Value TEXT added 2026-11-06. **Future:** Color (+ optional fullWidth) — see below |
+| ToggleButtonGroup  | inputs       | composite (ToggleButton)                                | `src/components/mui/inputs/ToggleButtonGroup.figma.tsx`  | Published (`6601:51012`); slot children + unique values 2026-11-06. **Future:** Color / Exclusive? / Full Width? / group disabled — see below |
+| LoadingButton      | inputs       | maps to MUI `Button` loading props                      | `src/components/mui/inputs/LoadingButton.figma.tsx`      | Published (`1634:70207`) |
+| TransferList       | inputs       | —                                                       | —                                                        | Skipped: no MUI `<TransferList>` export (composition demo only) |
+| Avatar / AvatarGroup / Badge / Divider / Tooltip / List family / Table family / ImageListItemBar | data-display | closed atoms/composites | under `src/components/mui/data-display/` | Published 2026-11-05; Avatar icon sizing republished 2026-11-06 (Avatar-owned `sx`/`fontSize`, inherit caveat) |
+| Link / Breadcrumbs / BottomNavigation / Tabs / Pagination / Stepper / SpeedDial / Menu | navigation | closed | under `src/components/mui/navigation/` | Published 2026-11-05 |
+| Alert / Progress / Skeleton / Snackbar / Dialog parts | feedback | closed (Dialog host unmapped) | under `src/components/mui/feedback/` | Published 2026-11-05 |
+| Accordion / AppBar / Toolbar / CardHeader / CardMedia | surfaces | closed parts; Paper/Card hosts stay unmapped | under `src/components/mui/surfaces/` | Published 2026-11-05 |
+| Timeline family | lab | `@mui/lab` | `src/components/mui/lab/Timeline.figma.tsx` | Published 2026-11-05 |
+| DateField / TimeField / DateTimeField | lab | sparse `@mui/x-date-pickers` | `src/components/mui/lab/DateFields.figma.tsx` | Published 2026-11-05 |
+| TreeView / TreeItem | lab | sparse `@mui/x-tree-view` | `src/components/mui/lab/TreeView.figma.tsx` | Published 2026-11-05 |
+| DataGridTable | lab | sparse `@mui/x-data-grid` | `src/components/mui/lab/DataGrid.figma.tsx` | Published (`6603:52661`) |
+| Bar/Line/Pie/Scatter charts | lab | sparse `@mui/x-charts` | `src/components/mui/lab/Charts.figma.tsx` | Published 2026-11-05 |
 
 ### Worklist (MUI documentation order)
 
@@ -206,15 +223,17 @@ Working through MUI's own component order. Inputs:
 2. ~~Button~~ — done
 3. ~~Button Group~~ — done
 4. ~~Checkbox~~ — done
-5. Floating Action Button
+5. ~~Floating Action Button~~ — done
 6. ~~Radio Group~~ — done (Radio → FormControlLabel → RadioGroup)
-7. Rating
-8. Select — `6570:41424`, large set (Variant × Size × State × Active × Has Value)
-9. Slider
+7. ~~Rating~~ — done
+8. ~~Select~~ — done (`6570:41424`)
+9. ~~Slider~~ — done
 10. ~~Switch~~ — done (Switch → FormControlLabel → FormGroup)
-11. Text Field
-12. Transfer List
-13. Toggle Button
+11. ~~Text Field~~ — done
+12. Transfer List — skipped (no MUI component)
+13. ~~Toggle Button~~ — done (+ ToggleButtonGroup, LoadingButton)
+
+**Library coverage pass 2026-11-05:** Waves 2–6 published for closed components. Still intentionally unmapped: Paper, Card, Container (unpublished), Box/Stack/Grid, Dialog/Drawer/Popover hosts, TransferList, chart Elements/*, Spacing/Logos chrome.
 
 ## Required Setup
 
@@ -392,7 +411,7 @@ If Figma exposes one property with values `Enabled | Error | Disabled`, map to t
 ### ButtonGroup sizing rule
 
 - Prefer group-level `size` on `<ButtonGroup />`.
-- Derive size from the first nested `<Button>` using `figma.nestedProps("<Button>", { size: ... })`.
+- Derive size from the first nested button with `figma.nestedProps("<Button> First", { size: ... })` — slot layers are named `<Button> First|Middle|Last`, not `<Button>`.
 - Keep child `<Button>` size props minimal (e.g., map Medium to `undefined`) to avoid redundant per-button size in snippets.
 
 ## Troubleshooting
@@ -587,6 +606,19 @@ Trade-off: the emitted element comes from `FormLabel`'s own mapping, so the snip
 
 `<FormGroup> | <Checkbox>` and `<FormGroup> | <Switch>` make the component itself the `FormGroup`, with a slot of children. The radio component instead wraps a `<RadioGroup>` slot in a `FormControl`. Making them parallel — `<FormControl> | <Checkbox>` with a `<FormGroup>` slot — would match MUI exactly, since `FormGroup` is the true counterpart of `RadioGroup`, and would let all three share one mapping pattern. Not urgent, and it would move node ids again.
 
+### Future enhancement: ToggleButton / ToggleButtonGroup props (noted 2026-11-06)
+
+MUI supports more props than the Figma sets expose. Do **not** chase these until design owns the visuals; then update Code Connect and republish.
+
+| Prop | Where | Figma today | Suggested Figma shape | Code Connect |
+| --- | --- | --- | --- | --- |
+| `color` | both (MUI default `standard`) | missing | Variant axis: Standard, Primary, Secondary, Error, Info, Success, Warning. Prefer **group first** (context), then standalone ToggleButton if needed. Group 6→~42 variants; button 30→~210 if mirrored. | `figma.enum("Color", { Standard: undefined, Primary: "primary", … })` |
+| `exclusive` | group | missing (CC hardcodes `exclusive`) | Boolean `Exclusive?` (default true) | `figma.boolean("Exclusive?", { true: true, false: undefined })` |
+| `fullWidth` | button and/or group | missing | Boolean `Full Width?` | `figma.boolean("Full Width?", { true: true, false: undefined })` |
+| `disabled` | group | only via nested button State | Boolean on the group, or keep child State only | Group-level `disabled` if the boolean exists |
+
+Skip in Figma: `onChange`, `sx`, ripple flags. `value` on the button is already a TEXT prop (`Value`).
+
 ### Control-family gaps found 2026-09-22
 
 - Figma Checkbox and Radio expose `Size=Large`; MUI Checkbox/Radio accept only
@@ -673,6 +705,9 @@ wherever a suffix was stripped.
 ### Outstanding
 
 - Nothing blocking. Container Code Connect unpublished 2026-09-22 (file kept, excluded from publish). Do not map Paper/generic Card as open hosts.
+- TransferList has no MUI export — left unmapped by design.
+- Wave 6 date/chart/tree/datagrid mappings are sparse placeholders; deepen when product needs specific props.
+- `@mui/lab@7.0.0` is installed for Timeline (npm marks that version deprecated; revisit when a stable lab release matching Material 7 is clear).
 - The icon catalog was matched by name and spot-checked, not rendered end to end.
   A name that resolves to a real MUI module is not proof of matching artwork —
   `HomeFilled` and `AccessTimeFilled` both resolved and both were wrong. A
@@ -745,3 +780,28 @@ wherever a suffix was stripped.
   base TextField (`6570:48313`) and multiline (`7551:51690`) across variants,
   states, values, helper text, number type, Icon/Text adornments, and row
   constraints. InputAdornment's Figma library publish is still pending.
+- 2026-11-05: Library coverage pass. Finished Inputs (Fab, Rating, MenuItem,
+  InputLabel, Select, Slider, ToggleButton/Group, LoadingButton). Published
+  closed data-display, feedback, navigation, and surface-part mappings. Added
+  Timeline (`@mui/lab`) plus sparse DateField/TreeView/DataGrid/Charts mappings
+  (`@mui/x-*`). Skipped TransferList and open hosts. 189 node mappings OK;
+  publish under `React` succeeded. Verified Fab, Select, Alert via
+  `get_code_connect_map`.
+- 2026-11-06: Avatar Icon content now splits by Size and emits Avatar-owned
+  `sx` (`fontSize` 35/24/20/16 for 40/32/24/18) with a `fontSize="inherit"`
+  caveat on nested icons. Wrote Figma set descriptions + docs links for
+  `<Avatar>`, `<AvatarGroup>`, `<Button>`, and `<LoadingButton>` (cleared the
+  AvatarGroup JS demo paste). Button Code Connect `links` added.
+- 2026-11-06: Figma library — added `<InputValues>` (`4098:6012`) on the Select
+  page (Presentation Text|Chips, Limit?, Overflow). Replaced Select's buried
+  `AutocompleteTag` frames (72) with exposed `<InputValues>` instances.
+  Autocomplete `Multiple Value=True` uses Presentation=Chips via nested Select.
+  Designer-facing; Code Connect still must not nest Chip children into
+  Autocomplete/Select snippets. Library publish in Figma still required for
+  consumers. Follow-up: detangle Autocomplete from Select; optional
+  `nestedProps` harvest of InputValues for `limitTags` / value arrays.
+- 2026-11-06: ToggleButton gained a `Value` TEXT prop; group masters use
+  left/center/right/justify. ToggleButtonGroup Code Connect matches the
+  `toggleButtons` slot via `figma.children("<ToggleButton>")`. Noted future
+  Figma+CC work for `color` (group-first), `Exclusive?`, `Full Width?`, and
+  group-level `disabled` — see “Future enhancement: ToggleButton / ToggleButtonGroup props”.

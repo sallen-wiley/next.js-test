@@ -18,15 +18,14 @@ The floor is the same as for mappings: **sparse and true beats complete and wron
 
 ## Coverage (check before you start)
 
-Mappings exist for a **small** set of inputs plus Chip, Typography, Icon and
-IconButton. Checkbox, Radio and Switch are connected from atom through labelled
-control and group. TextField is connected for Standard, Filled, Outlined and
-multiline use, including Icon/Text InputAdornments. The standalone SVG icon catalog maps to
-`@mui/icons-material`; the generic SVG `<Icon>` wrapper is mapped only at
-Medium, while its font-icon route supports every size. FormLabel and
-FormHelperText are mapped; **standalone InputLabel is not**. TextField emits its
-label prop directly. Container was unpublished 2026-09-22. Most of MUI is still
-unmapped, including Select, Paper, Card, and layout.
+As of 2026-11-05 most closed library components are mapped under label `React`
+(inputs including Fab/Select/Slider/Toggle/LoadingButton; data-display; feedback;
+navigation; CardHeader/CardMedia/Accordion shell; Timeline; sparse Date/Tree/
+DataGrid/Charts). The standalone SVG icon catalog maps to `@mui/icons-material`.
+**Still unmapped by policy:** Paper, Card, Container (unpublished), Box/Stack/Grid,
+Dialog/Drawer/Popover hosts, TransferList, chart Elements/*, Spacing/Logos chrome.
+TextField emits its label prop directly; InputLabel is also mapped as a standalone
+atom for Select.
 
 The live list is the [Status Tracker](figma-code-connect-runbook.md#status-tracker) in the runbook. If this paragraph and that table disagree, the table wins.
 
@@ -97,7 +96,7 @@ One tool result, several parts concatenated:
 3. A screenshot (visual target, not an implementation asset). Call `get_screenshot` only if this image is missing.
 4. Instruction blob — convert Tailwind, drop `CodeConnectSnippet`, find the real import. **Do not** follow “preserve exact visual design” into `sx`.
 5. “Styles contained in the design” — type ramps and effect style **names** (`elevation/1`, `elevation/7`) for the **whole selection**, not attached to a layer.
-6. Figma **component descriptions** and one docs link per connected component. Checkbox / Radio / Switch / Forms set-level copy is live. Variant JS demos were cleared (1,233 variants) and confirmed gone from MCP after the follow-up library republish.
+6. Figma **component descriptions** and one docs link per connected component. Checkbox / Radio / Switch / Forms / Icon / IconButton / Button / LoadingButton / Avatar / AvatarGroup set-level copy is live. Variant JS demos were cleared (1,233 variants) and confirmed gone from MCP after the follow-up library republish.
 
 It does **not** emit this repo’s `ArticleSummaryCard`, theme `sx`, or `elevation={1}` on a page-level Paper `div`.
 
@@ -215,6 +214,10 @@ A labelled group still needs `FormControl` in code for `disabled` / `error` cont
 
 `<Icon>` has a Color variant so IconButton can recolor the glyph without a fill override. Changing the nested icon's Size keeps that color. Snippets omit `color` because MUI inherits it from the parent. A standalone icon left on Color=Default uses `action/active`.
 
+### Avatar icon sizing
+
+Design locks Avatar Size to nested Icon Size: 40→Large (35), 32→Medium (24), 24→Small (20), 18→Inherit (16). Code Connect treats Avatar as the size authority — Icon content snippets emit `sx` with that `fontSize` and ask for `fontSize="inherit"` on the icon. Nested SVG Code Connect still resolves Medium only.
+
 ### TextField and InputAdornment
 
 Use the connected TextField snippet for its variant, state, type, label, value,
@@ -284,3 +287,4 @@ Record answers in this list rather than silently updating the steps above.
   constraints. Documented that label shrink is theme-owned and that empty
   adornment props may remain as harmless `undefined` values.
 - 2026-10-23: Documented selecting the `RPM` Code Connect mapping in Dev Mode and requesting it through Figma MCP with `clientFrameworks: "RPM"`; verified against the same Button instance as the `React` mapping.
+- 2026-11-05: Updated coverage blurb after the library-wide closed-component publish (Waves 1–6).

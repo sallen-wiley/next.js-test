@@ -13,14 +13,13 @@ interface AuthWrapperProps {
 
 const PUBLIC_EXACT_PATHS = new Set([
   "/",
-  "/kitchen-sink",
   "/palette-generator",
   "/wiley-copyeditor",
   "/experiments/workflow-builder",
   "/reset-password",
 ]);
 
-const PUBLIC_PREFIX_PATHS = ["/onboarding-demos", "/woaa"];
+const PUBLIC_PREFIX_PATHS = ["/kitchen-sink", "/onboarding-demos", "/woaa"];
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT_PATHS.has(pathname)) {
