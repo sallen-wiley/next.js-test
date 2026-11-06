@@ -21,7 +21,7 @@ Comprehensive documentation for the Next.js + Material-UI Demo Project.
 6. **[Theme Guide](development/theme-guide.md)** - Theme development and customization workflow
 7. **[Storybook Guide](development/storybook-guide.md)** - Story authoring and component exploration workflow
 8. **[Figma Code Connect Runbook](development/figma-code-connect-runbook.md)** - Reliable one-component MCP flow and checklist
-9. **[Git remotes and deployment](development/git-remotes-and-deployment.md)** - Primary/mirror remotes, keep `main` synced everywhere, keep `origin/preview` never behind
+9. **[Git remotes and deployment](development/git-remotes-and-deployment.md)** - `origin` for working branches; `wiley` official `main`; `rarebush` backup `main`; keep `origin/preview` current
 
 Use this list as the source of truth for active workflows. Everything else in this hub is supplemental or historical.
 
@@ -42,7 +42,7 @@ Use this list as the source of truth for active workflows. Everything else in th
 - **[Figma Code Connect Runbook](development/figma-code-connect-runbook.md)** - Reliable one-component MCP workflow, resume checklist, and component guardrails
 - **[Using Figma designs with Code Connect](development/figma-code-connect-usage.md)** - WIP handoff guide for engineers and agents reproducing a design (evaluate and iterate; not a locked procedure)
 - **[Code Connect labels and RPM test](development/figma-code-connect-labels.md)** - Custom labels, multi-mapping behavior, and the verified RPM/React retrieval example
-- **[Git remotes and deployment](development/git-remotes-and-deployment.md)** - Three-remote sync rules and Vercel production/preview hosts
+- **[Git remotes and deployment](development/git-remotes-and-deployment.md)** - Working on `origin`; publish `main` to all three; Vercel from `origin`
 - **[MUI Best Practices](development/MUI_BEST_PRACTICES.md)** - Material-UI implementation standards
 
 ### 📚 Specialized References
