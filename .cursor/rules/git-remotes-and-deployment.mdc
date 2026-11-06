@@ -1,0 +1,22 @@
+---
+description: Multi-remote git push — main to origin/wiley/rarebush, keep origin/preview current
+alwaysApply: true
+---
+
+# Git remotes and push (required)
+
+Canonical detail: [docs/development/git-remotes-and-deployment.md](docs/development/git-remotes-and-deployment.md).
+
+When the user asks to **commit and push**, **push**, or **sync remotes** after work lands on `main`:
+
+1. Do **not** stop at the tracked upstream alone (e.g. only `wiley`). Push `main` to **all three** remotes:
+   - `git push origin main`
+   - `git push wiley main`
+   - `git push rarebush main`
+2. Fast-forward `preview` to `main` and push **only** to `origin`:
+   - `git branch -f preview main` (or checkout + ff-only merge)
+   - `git push origin preview`
+3. Never push `preview` to `wiley` or `rarebush`.
+4. Verify with `git rev-list --left-right --count` for `main` vs `origin/main`, `wiley/main`, `rarebush/main`, and `origin/preview` — expect `0	0` each.
+
+`origin` (`sallen-wiley/next.js-test`) drives Vercel; `wiley` / `rarebush` are mirrors only.
