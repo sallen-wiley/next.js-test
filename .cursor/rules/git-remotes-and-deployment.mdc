@@ -1,22 +1,29 @@
 ---
-description: Multi-remote git push — main to origin/wiley/rarebush, keep origin/preview current
+description: Remote roles — origin for working branches; wiley official main; rarebush backup main only
 alwaysApply: true
 ---
 
-# Git remotes and push (required)
+# Git remotes (required)
 
 Canonical detail: [docs/development/git-remotes-and-deployment.md](docs/development/git-remotes-and-deployment.md).
 
-When the user asks to **commit and push**, **push**, or **sync remotes** after work lands on `main`:
+## Remote roles
 
-1. Do **not** stop at the tracked upstream alone (e.g. only `wiley`). Push `main` to **all three** remotes:
-   - `git push origin main`
-   - `git push wiley main`
-   - `git push rarebush main`
-2. Fast-forward `preview` to `main` and push **only** to `origin`:
-   - `git branch -f preview main` (or checkout + ff-only merge)
-   - `git push origin preview`
-3. Never push `preview` to `wiley` or `rarebush`.
-4. Verify with `git rev-list --left-right --count` for `main` vs `origin/main`, `wiley/main`, `rarebush/main`, and `origin/preview` — expect `0	0` each.
+| Remote | Role |
+| --- | --- |
+| `origin` (`sallen-wiley/next.js-test`) | **Working remote** — feature branches, PRs, `preview`, Vercel |
+| `wiley` (`wiley/pp-ux-tooling`) | **Official publication** — `main` only |
+| `rarebush` (`rarebush/ux-tooling`) | **Backup** — `main` only, no other branches |
 
-`origin` (`sallen-wiley/next.js-test`) drives Vercel; `wiley` / `rarebush` are mirrors only.
+## Working branches
+
+- Create, push, and open PRs **only on `origin`**.
+- Never push feature/working branches (or `preview`) to `wiley` or `rarebush`.
+
+## After work lands on `main`
+
+1. Push `main` to **all three**: `origin`, `wiley`, `rarebush`.
+2. Fast-forward `preview` to `main` and push **only** to `origin` (`git branch -f preview main && git push origin preview`).
+3. Verify `0	0` for `main` vs `origin/main`, `wiley/main`, `rarebush/main`, and `origin/preview`.
+
+Do **not** stop at the tracked upstream alone.
