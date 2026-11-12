@@ -64,7 +64,7 @@ export const CardsSection = React.memo(() => {
               component="img"
               height="140"
               alt="abstract gradient placeholder"
-              image="https://picsum.photos/seed/mui-card/600/300"
+              image="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='600' height='300' fill='url(%23grad)'/%3E%3C/svg%3E"
             />
             <CardContent>
               <Typography variant="h6">Media Card</Typography>
