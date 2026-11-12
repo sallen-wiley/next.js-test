@@ -226,7 +226,9 @@ as MUI `InputAdornment`: text stays text, while an icon can contribute its
 mapped `@mui/icons-material` import.
 
 The Research Exchange theme owns `MuiInputLabel.defaultProps.shrink = true`.
-Do not add `InputLabelProps={{ shrink: true }}` or duplicate label positioning
+Select Figma variants always show the shrunk label; there is no empty unshrunk
+label state (`Value?` only toggles nested `<InputValues>`). Do not add
+`InputLabelProps={{ shrink: true }}` or duplicate label positioning
 in a generated implementation. The current external-label positioning and
 outlined-notch removal apply only to Outlined; Standard and Filled intentionally
 retain MUI's compact shrunk-label layout.

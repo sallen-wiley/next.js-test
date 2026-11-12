@@ -2,6 +2,7 @@
 // Figma nests <Select> inside <Autocomplete>; MUI does not. Harvest input props
 // (label, variant, size, state) from that nested Select and put them on TextField
 // via renderInput — Autocomplete itself has no variant prop.
+// Nested Select uses Value? to show <InputValues> (Has Value axis is vestigial).
 // options are placeholders; check the design for the real option list.
 import React from "react";
 import { Autocomplete, TextField } from "@mui/material";
@@ -51,9 +52,12 @@ figma.connect(
           Error: true,
         }),
       }),
+
     },
 
     example: ({ multiple, select }) => (
+      // Check the design: nested Select Value? shows <InputValues> — wire value /
+      // defaultValue (string or array when multiple) from InputValues.Value / chips.
       <Autocomplete
         multiple={multiple}
         disabled={select.disabled}

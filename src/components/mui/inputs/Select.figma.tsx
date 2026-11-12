@@ -7,7 +7,8 @@ const selectNode =
 
 // Active (open menu) is interaction-only and maps to undefined.
 // Menu items are not a Figma property — placeholders match Autocomplete's floor.
-// Has Value shows nested <InputValues>; the string is InputValues.Value.
+// Value? shows nested <InputValues>; the string is InputValues.Value.
+// Has Value was removed from the Figma Select set (confirmed 2026-11-12).
 
 const sharedProps = {
   label: figma.string("Label"),
@@ -50,10 +51,17 @@ const sharedProps = {
   }),
 };
 
+const links = [
+  {
+    name: "MUI Select API",
+    url: "https://mui.com/material-ui/api/select/",
+  },
+];
+
 figma.connect(Select, selectNode, {
   variant: {
     "Helper?": true,
-    "Has Value": "True",
+    "Value?": true,
   },
 
   props: {
@@ -101,18 +109,13 @@ figma.connect(Select, selectNode, {
     </FormControl>
   ),
 
-  links: [
-    {
-      name: "MUI Select API",
-      url: "https://mui.com/material-ui/api/select/",
-    },
-  ],
+  links,
 });
 
 figma.connect(Select, selectNode, {
   variant: {
     "Helper?": true,
-    "Has Value": "False",
+    "Value?": false,
   },
 
   props: {
@@ -153,18 +156,13 @@ figma.connect(Select, selectNode, {
     </FormControl>
   ),
 
-  links: [
-    {
-      name: "MUI Select API",
-      url: "https://mui.com/material-ui/api/select/",
-    },
-  ],
+  links,
 });
 
 figma.connect(Select, selectNode, {
   variant: {
     "Helper?": false,
-    "Has Value": "True",
+    "Value?": true,
   },
 
   props: {
@@ -206,18 +204,13 @@ figma.connect(Select, selectNode, {
     </FormControl>
   ),
 
-  links: [
-    {
-      name: "MUI Select API",
-      url: "https://mui.com/material-ui/api/select/",
-    },
-  ],
+  links,
 });
 
 figma.connect(Select, selectNode, {
   variant: {
     "Helper?": false,
-    "Has Value": "False",
+    "Value?": false,
   },
 
   props: {
@@ -252,10 +245,5 @@ figma.connect(Select, selectNode, {
     </FormControl>
   ),
 
-  links: [
-    {
-      name: "MUI Select API",
-      url: "https://mui.com/material-ui/api/select/",
-    },
-  ],
+  links,
 });

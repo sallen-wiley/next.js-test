@@ -199,7 +199,7 @@ Update on every session. `Published` means parsed, published, and verified in De
 | Rating             | inputs       | atom (Size/Disabled only; Star not mapped)              | `src/components/mui/inputs/Rating.figma.tsx`             | Published (`6562:39624`) |
 | MenuItem           | navigation   | atom                                                    | `src/components/mui/navigation/MenuItem.figma.tsx`       | Published (`6576:50735`) |
 | InputLabel         | inputs       | atom                                                    | `src/components/mui/inputs/InputLabel.figma.tsx`         | Published (`11140:154655`) |
-| Select             | inputs       | composite (FormControl + InputLabel + MenuItem placeholders) | `src/components/mui/inputs/Select.figma.tsx`        | Published (`6570:41424`) and verified |
+| Select             | inputs       | composite (FormControl + InputLabel + MenuItem placeholders) | `src/components/mui/inputs/Select.figma.tsx`        | Published (`6570:41424`). **Value?** gates `<InputValues>`; Figma `Has Value` axis deleted (confirmed 2026-11-12) |
 | Slider             | inputs       | atom                                                    | `src/components/mui/inputs/Slider.figma.tsx`             | Published (`6562:39045`) |
 | ToggleButton       | inputs       | atom                                                    | `src/components/mui/inputs/ToggleButton.figma.tsx`       | Published (`6601:50975`); Value TEXT added 2026-11-06. **Future:** Color (+ optional fullWidth) — see below |
 | ToggleButtonGroup  | inputs       | composite (ToggleButton)                                | `src/components/mui/inputs/ToggleButtonGroup.figma.tsx`  | Published (`6601:51012`); slot children + unique values 2026-11-06. **Future:** Color / Exclusive? / Full Width? / group disabled — see below |
@@ -687,10 +687,12 @@ wherever a suffix was stripped.
 - InputAdornment's Text variant uses a direct text property; its Icon variant
   contains the mapped `<Icon>` instance. Do not convert these to open slots:
   unconstrained or unmapped slot content can disappear from nested snippets.
-- `Has Value` and `Value?` overlap. The mapping treats both as gates so a value
-  emits only when both indicate one is present. This preserves current visuals
-  but the Figma API could be simplified later by removing the legacy
-  floating-label `Has Value` axis.
+- TextField still gates `defaultValue` with both `Has Value` and `Value?`
+  (legacy floating-label empty state). Select dropped empty/unshrunk label
+  variants: library always shows the shrunk label (theme
+  `MuiInputLabel.defaultProps.shrink = true`). **Value?** alone toggles nested
+  `<InputValues>`. The Select Figma `Has Value` axis was fully deleted
+  (confirmed 2026-11-12) — Code Connect restricts on `Helper?` × `Value?` only.
 - Helper presence needs two boolean-restricted TextField connections.
   `figma.textContent()` cannot cross the connected FormHelperText boundary;
   `figma.nestedProps()` correctly harvests its Value only for Helper=True.
@@ -805,3 +807,11 @@ wherever a suffix was stripped.
   `toggleButtons` slot via `figma.children("<ToggleButton>")`. Noted future
   Figma+CC work for `color` (group-first), `Exclusive?`, `Full Width?`, and
   group-level `disabled` — see “Future enhancement: ToggleButton / ToggleButtonGroup props”.
+- 2026-11-09: Select — designers reinstated **Value?** and removed
+  `Has Value=False` variants (no unshrunk empty-label visuals; shrink is
+  theme-owned). Code Connect restricts on `Helper?` × `Value?` and harvests
+  `<InputValues>` only when Value? is on. Updated Select/Autocomplete Figma
+  descriptions.
+- 2026-11-12: Confirmed Select Figma `Has Value` axis fully deleted. Re-landed
+  Value? Code Connect + docs on `main` after the earlier PR merge was lost from
+  history.
