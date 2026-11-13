@@ -12,7 +12,7 @@ export const brandColors = {
     900: "#003B44",
   },
   Neutral: {
-    50: "#F8F8F5",
+    50: "#F5F5F2", // not official wiley.com, tweaked to differentiate more with pure white
     100: "#F2F2EB",
     200: "#E5E4E0",
     300: "#D4D2CF",
