@@ -1,14 +1,20 @@
 "use client";
 import React from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   Box,
+  FormControl,
   Grid,
+  IconButton,
   InputAdornment,
+  InputLabel,
   Link,
+  OutlinedInput,
   Paper,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 
@@ -60,7 +66,7 @@ export const TextFieldSection = React.memo(() => {
       <Stack spacing={0.5} sx={{ mb: 2 }}>
         <Typography variant="body2" color="text.secondary">
           Docs-based text field patterns for common form behaviors, validation,
-          multiline input, and adornments.
+          multiline input, adornments, and label help.
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Reference:{" "}
@@ -202,6 +208,34 @@ export const TextFieldSection = React.memo(() => {
                   }}
                   fullWidth
                 />
+                <FormControl fullWidth>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={0.5}
+                    sx={{ mb: 0.5 }}
+                  >
+                    <InputLabel
+                      shrink
+                      htmlFor="kitchen-sink-project-id"
+                      sx={{ position: "static", transform: "none" }}
+                    >
+                      Project ID
+                    </InputLabel>
+                    <Tooltip title="Used in URLs and API calls. Can’t be changed later.">
+                      <IconButton
+                        size="small"
+                        aria-label="More information about Project ID"
+                      >
+                        <InfoOutlinedIcon fontSize="inherit" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                  <OutlinedInput
+                    id="kitchen-sink-project-id"
+                    placeholder="my-project"
+                  />
+                </FormControl>
               </Stack>
             </Paper>
 
