@@ -123,8 +123,8 @@ let theme = createTheme({
       contrastText: commonColors.black,
     },
     text: {
-      primary: commonColors.black,
-      secondary: brandColors.brandColors.Neutral[800],
+      primary: brandColors.brandColors.Neutral[800],
+      secondary: brandColors.brandColors.Neutral[700],
       disabled: brandColors.brandColors.Neutral[700],
     },
     background: {

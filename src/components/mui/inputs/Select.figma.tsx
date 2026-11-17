@@ -45,8 +45,10 @@ const sharedProps = {
     false: undefined,
   }),
 
+  // Start matches TextField: <InputAdornment> via ↳ Start Instance.
+  // Chevron / Clear? stay Select-specific (IconComponent / custom), not Adorn. End.
   startAdornment: figma.boolean("Adorn. Start?", {
-    true: figma.instance("Start Instance"),
+    true: figma.instance("↳ Start Instance"),
     false: undefined,
   }),
 };
