@@ -80,34 +80,34 @@ let theme = createTheme({
       white: commonColors.white,
     },
     primary: {
-      main: brandColors.brandColors["Primary Heritage"][700], // #007A76
-      light: brandColors.brandColors["Primary Heritage"][400], // #00BFB1
-      dark: brandColors.brandColors["Primary Heritage"][900], // #003B44 — contained-button hover
+      main: brandColors.brandColors["Primary Heritage"][700],
+      light: brandColors.brandColors["Primary Heritage"][400],
+      dark: brandColors.brandColors["Primary Heritage"][900], // contained-button hover
     },
     secondary: {
-      main: brandColors.brandColors.Neutral[800], // #302F2F
-      light: brandColors.brandColors.Neutral[400], // #C9C7C2
-      dark: brandColors.brandColors.Neutral[900], // #0D0C0C
+      main: brandColors.brandColors.Neutral[700],
+      light: brandColors.brandColors.Neutral[400],
+      dark: brandColors.brandColors.Neutral[800],
     },
     error: {
-      main: brandColors.brandColors["System Negative"][600], // #CF1322
-      light: brandColors.brandColors["System Negative"][200], // #FFA39E
-      dark: brandColors.brandColors["System Negative"][800], // #820014
+      main: brandColors.brandColors["System Negative"][600],
+      light: brandColors.brandColors["System Negative"][200],
+      dark: brandColors.brandColors["System Negative"][800],
     },
     warning: {
-      main: brandColors.brandColors["System Alert"][700], // #AB6200
-      light: brandColors.brandColors["System Alert"][300], // #FFD666
-      dark: brandColors.brandColors["System Alert"][900], // #613400
+      main: brandColors.brandColors["System Alert"][700],
+      light: brandColors.brandColors["System Alert"][300],
+      dark: brandColors.brandColors["System Alert"][900],
     },
     info: {
-      main: brandColors.brandColors["System Info"][800], // #0961AF
-      light: brandColors.brandColors["System Info"][400], // #85AEFA
-      dark: brandColors.brandColors["System Info"][900], // #00568B
+      main: brandColors.brandColors["System Info"][800],
+      light: brandColors.brandColors["System Info"][400],
+      dark: brandColors.brandColors["System Info"][900],
     },
     success: {
-      main: brandColors.brandColors["System Positive"][700], // #237804
-      light: brandColors.brandColors["System Positive"][300], // #95DE64
-      dark: brandColors.brandColors["System Positive"][800], // #135200
+      main: brandColors.brandColors["System Positive"][700],
+      light: brandColors.brandColors["System Positive"][300],
+      dark: brandColors.brandColors["System Positive"][800],
     },
     // Custom brand colors using color objects
     black: {
